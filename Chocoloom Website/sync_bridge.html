@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chocoloom Realtime Sync Bridge</title>
+</head>
+<body style="background:transparent;margin:0;padding:0;">
+<script>
+(function() {
+    // Cross-origin and cross-port storage relay bridge
+    function handleSync(data) {
+        if (!data || typeof data !== "object") return;
+        try {
+            if (data.overrides && typeof data.overrides === "object") {
+                const current = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
+                localStorage.setItem("chocoloom_price_overrides", JSON.stringify({ ...current, ...data.overrides }));
+            }
+            if (Array.isArray(data.customProducts)) {
+                localStorage.setItem("chocoloom_custom_products", JSON.stringify(data.customProducts));
+            }
+            if (Array.isArray(data.deletedProducts)) {
+                localStorage.setItem("chocoloom_deleted_products", JSON.stringify(data.deletedProducts));
+            }
+            if (Array.isArray(data.banners)) {
+                localStorage.setItem("chocoloom_banners", JSON.stringify(data.banners));
+            }
+            if (data.type === "RESET") {
+                localStorage.removeItem("chocoloom_price_overrides");
+                localStorage.removeItem("chocoloom_custom_products");
+                localStorage.removeItem("chocoloom_deleted_products");
+            }
+            if (data.type === "SUPABASE_CONFIG_UPDATE") {
+                if (data.url) localStorage.setItem("chocoloom_supabase_url", data.url);
+                if (data.anonKey) localStorage.setItem("chocoloom_supabase_key", data.anonKey);
+            }
+            if (data.type === "NEON_CONFIG_UPDATE" || data.neonUrl) {
+                const nUrl = data.neonUrl || data.url;
+                if (nUrl) localStorage.setItem("chocoloom_neon_url", nUrl);
+            }
+            if (data.type === "CLOUD_CONFIG_UPDATE") {
+                if (data.supabaseUrl) localStorage.setItem("chocoloom_supabase_url", data.supabaseUrl);
+                if (data.supabaseAnonKey) localStorage.setItem("chocoloom_supabase_key", data.supabaseAnonKey);
+                if (data.neonUrl) localStorage.setItem("chocoloom_neon_url", data.neonUrl);
+            }
+
+            // Relay via BroadcastChannel to all tabs on this origin/port
+            if ("BroadcastChannel" in window) {
+                const ch = new BroadcastChannel("chocoloom_orders_bus");
+                ch.postMessage({
+                    type: "PRODUCTS_UPDATED",
+                    action: data.action || "PRICE",
+                    product: data.product,
+                    overrides: data.overrides,
+                    customProducts: data.customProducts,
+                    deletedProducts: data.deletedProducts,
+                    timestamp: Date.now()
+                });
+                setTimeout(() => { try { ch.close(); } catch(e){} }, 500);
+            }
+
+            // Dispatch storage event in this window context
+            try {
+                window.dispatchEvent(new CustomEvent("chocoloom_synced", { detail: data }));
+            } catch(e) {}
+        } catch(err) {
+            console.warn("Sync bridge apply error:", err);
+        }
+    }
+
+    window.addEventListener("message", function(event) {
+        if (!event.data) return;
+        const data = event.data;
+        if (data.type === "CHOCOLOOM_SYNC" || data.type === "PRODUCTS_UPDATED" || data.type === "RESET") {
+            handleSync(data);
+            if (event.source && typeof event.source.postMessage === "function") {
+                try {
+                    event.source.postMessage({ type: "CHOCOLOOM_SYNC_ACK", success: true, timestamp: Date.now() }, "*");
+                } catch(e) {}
+            }
+        }
+    });
+
+    // Notify opener or parent that the bridge is ready
+    try {
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: "CHOCOLOOM_BRIDGE_READY", origin: window.location.origin }, "*");
+        }
+    } catch(e) {}
+})();
+</script>
+</body>
+</html>

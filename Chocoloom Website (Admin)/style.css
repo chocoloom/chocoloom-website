@@ -1,0 +1,15 @@
+/*
+Theme Name: Chocoloom Admin Panel
+Theme URI: https://chocoloom.com
+Author: Chocoloom Team
+Author URI: https://chocoloom.com
+Description: Chocoloom Real-time Bakery Order & Menu Management Admin Dashboard.
+Version: 1.0.0
+Requires at least: 5.8
+Tested up to: 6.7
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+Text Domain: chocoloom-admin
+*/
+
+@import url('styles.css');

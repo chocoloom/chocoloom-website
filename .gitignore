@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Separate mobile app repo (has its own git)
+Chocoloom APP/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+Icon?
+
+# Build Artifacts & Large Archive Files (> 100MB blocked by GitHub)
+*.zip
+*.apk
+*.aab
+*.jks
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.log
+
+# Temporary and Scratch files
+/tmp/
+*.tmp

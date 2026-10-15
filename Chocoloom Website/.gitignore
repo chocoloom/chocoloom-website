@@ -1,0 +1,15 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Large Archives (>100MB exceeds GitHub file limit)
+*.zip
+*.tar.gz
+
+# Node / Dependencies
+node_modules/
+npm-debug.log*
+
+# Temporary & backup files
+*.bak
+scratch/

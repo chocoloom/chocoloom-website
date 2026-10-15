@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chocoloom Admin Panel - Live Bakery Order & Menu Management</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+
+    <!-- Modern Typography: Outfit & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome 6 Pro CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Supabase JS Client v2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Master Catalog Store (All 250+ Handcrafted Cakes & Desserts) -->
+    <script src="data.js"></script>
+
+    <!-- Custom Admin Stylesheet (Dedicated Admin Styles) -->
+    <link rel="stylesheet" href="admin_styles.css?v=5.0">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="assets/logo.png" alt="Chocoloom Logo" class="sidebar-logo">
+                <div class="sidebar-brand-text">
+                    <h2>CHOCOLOOM</h2>
+                    <span>Bakery Admin</span>
+                </div>
+                <button class="sidebar-close-btn" onclick="closeMobileSidebar()" aria-label="Close Sidebar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-link active" id="tabNavOrders" onclick="switchAdminTab('orders')">
+                    <i class="fa-solid fa-bell-concierge"></i>
+                    <span>Live Orders</span>
+                    <span class="nav-badge live-pulse" id="sidebarLiveBadge" style="display: none;">0</span>
+                </button>
+                <button class="nav-link" id="tabNavCards" onclick="switchAdminTab('cards')">
+                    <i class="fa-solid fa-credit-card" style="color: #c084fc;"></i>
+                    <span>VIP Card Orders</span>
+                    <span class="nav-badge" id="sidebarCardsBadge" style="background: rgba(147, 51, 234, 0.25); color: #d8b4fe;">0</span>
+                </button>
+                <button class="nav-link" id="tabNavProducts" onclick="switchAdminTab('products')">
+                    <i class="fa-solid fa-cake-candles"></i>
+                    <span>Menu & Items</span>
+                    <span class="nav-badge" id="sidebarProductsBadge" style="background: rgba(124, 92, 252, 0.25); color: #c4b5fd;">250+</span>
+                </button>
+                <button class="nav-link" id="tabNavAdvertisements" onclick="switchAdminTab('advertisements')">
+                    <i class="fa-solid fa-rectangle-ad" style="color: #f59e0b;"></i>
+                    <span>Advertisements</span>
+                    <span class="nav-badge" id="sidebarBannersBadge" style="background: rgba(245, 158, 11, 0.25); color: #fbbf24;">4</span>
+                </button>
+                <button class="nav-link" onclick="openAddBannerModal()">
+                    <i class="fa-solid fa-plus-circle" style="color: #f59e0b;"></i>
+                    <span>Add Advertisement</span>
+                </button>
+                <button class="nav-link" onclick="openAddProductModal()">
+                    <i class="fa-solid fa-square-plus" style="color: #4ade80;"></i>
+                    <span>Add New Cake</span>
+                </button>
+                <button class="nav-link" onclick="switchAdminTab('orders'); setTimeout(() => { const p = document.querySelector('[data-filter=\'Preparing\']'); if(p) p.click(); }, 100);">
+                    <i class="fa-solid fa-kitchen-set"></i>
+                    <span>Kitchen View</span>
+                </button>
+                <button class="nav-link" onclick="switchAdminTab('orders'); setTimeout(() => { const p = document.querySelector('[data-filter=\'Out for Delivery\']'); if(p) p.click(); }, 100);">
+                    <i class="fa-solid fa-motorcycle"></i>
+                    <span>Dispatches</span>
+                </button>
+                <button class="nav-link" onclick="switchAdminTab('orders'); setTimeout(() => { const p = document.querySelector('[data-filter=\'Delivered\']'); if(p) p.click(); }, 100);">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    <span>Completed</span>
+                </button>
+                <button class="nav-link" onclick="openManualOrderModal()">
+                    <i class="fa-solid fa-receipt"></i>
+                    <span>Manual Order</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="store-status-card" id="storeStatusBtn" style="cursor: pointer;" title="Toggle Store Online/Offline">
+                    <div class="store-status-indicator">
+                        <span class="status-dot" id="storeStatusDot"></span>
+                        <div class="status-text" id="storeStatusText">Accepting Orders</div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #94a3b8;"></i>
+                </div>
+                <button class="sidebar-logout-btn" onclick="lockAdminPortal()" title="Lock Admin Portal">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>Lock Portal</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Mobile Sidebar Backdrop Overlay -->
+        <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
+
+        <!-- Main Workspace -->
+        <main class="main-wrapper">
+            <!-- Top Header -->
+            <header class="top-header">
+                <!-- Mobile App Bar Header (Visible <= 768px) -->
+                <div class="mobile-top-bar">
+                    <button class="mobile-menu-btn" id="mobileMenuToggleBtn" onclick="toggleMobileSidebar()" aria-label="Open Navigation">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="mobile-brand">
+                        <img src="assets/logo.png" alt="Logo" class="mobile-logo">
+                        <span class="mobile-brand-title">CHOCOLOOM</span>
+                    </div>
+                    <div class="mobile-top-actions">
+                        <button class="mobile-action-icon-btn" onclick="openManualOrderModal()" title="Create Manual Order">
+                            <i class="fa-solid fa-cart-plus" style="color: #10b981;"></i>
+                        </button>
+                        <div class="connection-pill compact" title="Database Status">
+                            <span class="status-dot"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="header-left">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchOrdersInput" placeholder="Search Order ID, Customer, Phone, or Cake... (⌘K)">
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <!-- Realtime Connection Pill -->
+                    <div class="connection-pill" id="connectionStatusPill" title="Live Cloud Sync">
+                        <span class="status-dot"></span> Live Cloud Sync
+                    </div>
+
+                    <!-- Audio Chime Toggle -->
+                    <button class="header-btn audio-btn" id="audioToggleBtn" title="Toggle Sound Notification">
+                        <i class="fa-solid fa-volume-high"></i> Sound: ON
+                    </button>
+                    <button class="header-btn" id="testAudioBtn" title="Test Chime Sound">
+                        <i class="fa-solid fa-bell"></i> Test Sound
+                    </button>
+
+                    <!-- Add New Item Button -->
+                    <button class="header-btn primary" onclick="openAddProductModal()" title="Add a new cake or item to your menu">
+                        <i class="fa-solid fa-plus"></i> Add Item
+                    </button>
+
+                    <!-- Manual Customer Order Entry -->
+                    <button class="header-btn manual-order-btn" onclick="openManualOrderModal()" title="Create a manual customer order">
+                        <i class="fa-solid fa-plus-circle"></i> + Manual Order
+                    </button>
+
+                    <!-- Manual Refresh -->
+                    <button class="header-btn" id="refreshOrdersBtn" title="Force Refresh from Supabase Database">
+                        <i class="fa-solid fa-rotate"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Body -->
+            <div class="dashboard-content">
+                <!-- ==================== VIEW 1: ORDERS WORKSPACE ==================== -->
+                <div class="view-section active" id="ordersViewSection">
+                    <!-- KPI Statistics Row -->
+                    <section class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <span>Total Orders</span>
+                                <h3 id="statTotalOrders">0</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                        </div>
+
+                        <div class="stat-card confirmed">
+                            <div class="stat-info">
+                                <span>New & Confirmed</span>
+                                <h3 id="statConfirmedOrders">0</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-bell"></i></div>
+                        </div>
+
+                        <div class="stat-card preparing">
+                            <div class="stat-info">
+                                <span>Baking / Kitchen</span>
+                                <h3 id="statPreparingOrders">0</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-fire-burner"></i></div>
+                        </div>
+
+                        <div class="stat-card out">
+                            <div class="stat-info">
+                                <span>Out for Delivery</span>
+                                <h3 id="statOutOrders">0</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-motorcycle"></i></div>
+                        </div>
+
+                        <div class="stat-card delivered">
+                            <div class="stat-info">
+                                <span>Delivered</span>
+                                <h3 id="statDeliveredOrders">0</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        </div>
+
+                        <div class="stat-card revenue">
+                            <div class="stat-info">
+                                <span>Total Revenue</span>
+                                <h3 id="statTotalRevenue">₹0</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        </div>
+                    </section>
+
+                    <!-- Filter Controls & View Switcher -->
+                    <div class="filter-bar">
+                        <div class="filter-pills">
+                            <button class="filter-pill active" data-filter="ALL">
+                                All Orders <span class="pill-count" id="countPill_ALL">0</span>
+                            </button>
+                            <button class="filter-pill" data-filter="Confirmed">
+                                <i class="fa-solid fa-bell" style="color: #d97706;"></i> Confirmed (New) <span class="pill-count" id="countPill_Confirmed">0</span>
+                            </button>
+                            <button class="filter-pill" data-filter="Preparing">
+                                <i class="fa-solid fa-fire-burner" style="color: #4338ca;"></i> In Kitchen <span class="pill-count" id="countPill_Preparing">0</span>
+                            </button>
+                            <button class="filter-pill" data-filter="Out for Delivery">
+                                <i class="fa-solid fa-motorcycle" style="color: #0284c7;"></i> Out for Delivery <span class="pill-count" id="countPill_Out_for_Delivery">0</span>
+                            </button>
+                            <button class="filter-pill" data-filter="Delivered">
+                                <i class="fa-solid fa-circle-check" style="color: #15803d;"></i> Delivered <span class="pill-count" id="countPill_Delivered">0</span>
+                            </button>
+                            <button class="filter-pill" data-filter="Cancelled">
+                                <i class="fa-solid fa-ban" style="color: #b91c1c;"></i> Cancelled <span class="pill-count" id="countPill_Cancelled">0</span>
+                            </button>
+                        </div>
+
+                        <div class="view-controls">
+                            <button class="view-toggle-btn active" id="viewCardsBtn" title="Kanban / Cards View">
+                                <i class="fa-solid fa-grip"></i> Cards
+                            </button>
+                            <button class="view-toggle-btn" id="viewTableBtn" title="Compact Table View">
+                                <i class="fa-solid fa-list"></i> Table
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Orders Cards Container -->
+                    <div class="orders-grid" id="ordersGridContainer">
+                        <!-- Dynamic Order Cards Rendered via admin.js -->
+                    </div>
+
+                    <!-- Orders Table Container -->
+                    <div class="orders-table-wrapper" id="ordersTableContainer">
+                        <table class="orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Order Ref</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <!-- Dynamic Table Rows Rendered via admin.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ==================== VIEW 2: PRODUCTS & MENU WORKSPACE ==================== -->
+                <div class="view-section" id="productsViewSection">
+                    <!-- Products KPI Stats -->
+                    <section class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <span>Total Products</span>
+                                <h3 id="statTotalProducts">250</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-cake-candles"></i></div>
+                        </div>
+
+                        <div class="stat-card delivered">
+                            <div class="stat-info">
+                                <span>In Stock (Live)</span>
+                                <h3 id="statInStockProducts">245</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        </div>
+
+                        <div class="stat-card" style="border-left: 4px solid #ef4444;">
+                            <div class="stat-info">
+                                <span>Out of Stock</span>
+                                <h3 id="statOutOfStockProducts">5</h3>
+                            </div>
+                            <div class="stat-icon" style="background: #fee2e2; color: #dc2626;"><i class="fa-solid fa-box-archive"></i></div>
+                        </div>
+
+                        <div class="stat-card preparing">
+                            <div class="stat-info">
+                                <span>Categories</span>
+                                <h3 id="statTotalCategories">12</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-layer-group"></i></div>
+                        </div>
+
+                        <div class="stat-card revenue">
+                            <div class="stat-info">
+                                <span>Avg Cake Price</span>
+                                <h3 id="statAvgPrice">₹799</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-tag"></i></div>
+                        </div>
+                    </section>
+
+                    <!-- Products Filter & Action Bar -->
+                    <div class="filter-bar">
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
+                            <div class="search-box" style="max-width: 280px;">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="searchProductsInput" placeholder="Filter cakes by name or category...">
+                            </div>
+
+                            <!-- Category Filter Dropdown -->
+                            <select id="productCategorySelect" style="padding: 9px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); font-weight: 700; font-size: 13px; background: #fff; outline: none; cursor: pointer;">
+                                <option value="ALL">All Categories</option>
+                                <option value="Anniversary Cakes">Anniversary Cakes</option>
+                                <option value="Bento Cakes">Bento Cakes</option>
+                                <option value="Chocolates">Chocolates</option>
+                                <option value="Desserts">Desserts</option>
+                                <option value="Specialty Cakes">Specialty Cakes</option>
+                                <option value="Cartoon Cakes">Cartoon Cakes</option>
+                                <option value="Wedding Cakes">Wedding Cakes</option>
+                                <option value="Cooling Cakes">Cooling Cakes</option>
+                                <option value="Snacks & Munchies">Snacks & Munchies</option>
+                                <option value="Bachelorette Cakes">Bachelorette Cakes</option>
+                                <option value="Half Birthday Cakes">Half Birthday Cakes</option>
+                            </select>
+
+                            <!-- Availability Filter -->
+                            <select id="productStockSelect" style="padding: 9px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); font-weight: 700; font-size: 13px; background: #fff; outline: none; cursor: pointer;">
+                                <option value="ALL">All Stock Status</option>
+                                <option value="IN_STOCK">In Stock Only</option>
+                                <option value="OUT_OF_STOCK">Out of Stock Only</option>
+                            </select>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <button class="header-btn" onclick="syncAllToMainSite()" title="Sync all price and option changes to main website">
+                                <i class="fa-solid fa-cloud-arrow-up" style="color: #3b82f6;"></i> Sync to Site
+                            </button>
+                            <button class="header-btn" onclick="exportDataJsFile()" title="Download updated data.js with all current prices and items">
+                                <i class="fa-solid fa-file-export" style="color: #10b981;"></i> Export data.js
+                            </button>
+                            <button class="header-btn" onclick="resetToDataJs()" title="Reset all overrides to base data.js">
+                                <i class="fa-solid fa-rotate-left"></i> Reset
+                            </button>
+                            <button class="header-btn primary" onclick="openAddProductModal()">
+                                <i class="fa-solid fa-plus"></i> Add New Product
+                            </button>
+                            <div class="view-controls">
+                                <button class="view-toggle-btn active" id="viewProdCardsBtn" title="Cards View" onclick="toggleProductView('cards')">
+                                    <i class="fa-solid fa-grip"></i>
+                                </button>
+                                <button class="view-toggle-btn" id="viewProdTableBtn" title="Table View" onclick="toggleProductView('table')">
+                                    <i class="fa-solid fa-list"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Grid Container -->
+                    <div class="products-grid" id="productsGridContainer">
+                        <!-- Dynamic Product Cards Rendered via admin.js -->
+                    </div>
+
+                    <!-- Products Table Container -->
+                    <div class="orders-table-wrapper" id="productsTableContainer">
+                        <table class="orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Item Name</th>
+                                    <th>Category</th>
+                                    <th>Selling Price</th>
+                                    <th>Original Price</th>
+                                    <th>Stock</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                <!-- Dynamic Product Rows Rendered via admin.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+                <!-- ==================== VIEW: CHOCOWALLET VIP CARD ORDERS WORKSPACE ==================== -->
+                <div class="view-section" id="cardsViewSection">
+                    <!-- Card Orders KPI Row -->
+                    <section class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <span>Total Card Orders</span>
+                                <h3 id="statTotalCards">0</h3>
+                            </div>
+                            <div class="stat-icon" style="background: #f3e8ff; color: #9333ea;"><i class="fa-solid fa-credit-card"></i></div>
+                        </div>
+
+                        <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+                            <div class="stat-info">
+                                <span>Pending Embossing</span>
+                                <h3 id="statPendingCards">0</h3>
+                            </div>
+                            <div class="stat-icon" style="background: #fef3c7; color: #d97706;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        </div>
+
+                        <div class="stat-card out">
+                            <div class="stat-info">
+                                <span>In Transit (BlueDart)</span>
+                                <h3 id="statInTransitCards">0</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                        </div>
+
+                        <div class="stat-card delivered">
+                            <div class="stat-info">
+                                <span>Delivered to Doorstep</span>
+                                <h3 id="statDeliveredCards">0</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        </div>
+
+                        <div class="stat-card revenue">
+                            <div class="stat-info">
+                                <span>Card Revenue</span>
+                                <h3 id="statCardsRevenue">₹0</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        </div>
+                    </section>
+
+                    <!-- Card Orders Filter & Action Bar -->
+                    <div class="filter-bar">
+                        <div class="filter-pills">
+                            <button class="filter-pill active" id="cardFilter_ALL" onclick="filterCardOrders('ALL')">
+                                All Card Orders <span class="pill-count" id="countCardPill_ALL">0</span>
+                            </button>
+                            <button class="filter-pill" id="cardFilter_Pending" onclick="filterCardOrders('Pending Embossing')">
+                                <i class="fa-solid fa-wand-magic-sparkles" style="color: #d97706;"></i> Pending Emboss <span class="pill-count" id="countCardPill_Pending">0</span>
+                            </button>
+                            <button class="filter-pill" id="cardFilter_InTransit" onclick="filterCardOrders('In Transit')">
+                                <i class="fa-solid fa-truck-fast" style="color: #9333ea;"></i> In Transit <span class="pill-count" id="countCardPill_InTransit">0</span>
+                            </button>
+                            <button class="filter-pill" id="cardFilter_Delivered" onclick="filterCardOrders('Delivered')">
+                                <i class="fa-solid fa-circle-check" style="color: #16a34a;"></i> Delivered <span class="pill-count" id="countCardPill_Delivered">0</span>
+                            </button>
+                        </div>
+
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <div class="search-box" style="max-width: 280px;">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="searchCardsInput" placeholder="Search by name, phone, AWB, address..." oninput="handleSearchCards(this.value)">
+                            </div>
+                            <button class="header-btn" onclick="exportCardOrdersCsv()" title="Export Card Shipping Roster to CSV">
+                                <i class="fa-solid fa-file-csv" style="color: #10b981;"></i> Export CSV
+                            </button>
+                            <button class="header-btn primary" onclick="simulateIncomingCardOrder()" title="Simulate a customer ordering a physical card">
+                                <i class="fa-solid fa-bolt"></i> + Test Card Order
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card Orders Data Table -->
+                    <div class="orders-table-wrapper" id="cardOrdersTableWrapper" style="display: block;">
+                        <table class="orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Order Ref</th>
+                                    <th>Embossed Name (Gold Foil)</th>
+                                    <th>Customer & Phone</th>
+                                    <th>Delivery Address</th>
+                                    <th>Card Edition</th>
+                                    <th>BlueDart Tracking</th>
+                                    <th>Payment</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cardOrdersTableBody">
+                                <!-- Populated via admin.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ==================== VIEW 4: ADVERTISEMENTS & HERO BANNERS ==================== -->
+                <div class="view-section" id="advertisementsViewSection">
+                    <!-- Advertisements KPI Stats -->
+                    <section class="stats-grid">
+                        <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+                            <div class="stat-info">
+                                <span>Total Advertisements</span>
+                                <h3 id="statTotalBanners">4</h3>
+                            </div>
+                            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;"><i class="fa-solid fa-rectangle-ad"></i></div>
+                        </div>
+
+                        <div class="stat-card delivered">
+                            <div class="stat-info">
+                                <span>Live on Website</span>
+                                <h3 id="statActiveBanners">4</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        </div>
+
+                        <div class="stat-card" style="border-left: 4px solid #ffd735;">
+                            <div class="stat-info">
+                                <span>Full Graphic Posters</span>
+                                <h3 id="statGraphicBanners">1</h3>
+                            </div>
+                            <div class="stat-icon" style="background: rgba(255, 215, 53, 0.2); color: #b45309;"><i class="fa-solid fa-image"></i></div>
+                        </div>
+
+                        <div class="stat-card preparing">
+                            <div class="stat-info">
+                                <span>Photo Deals</span>
+                                <h3 id="statPhotoBanners">3</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-camera"></i></div>
+                        </div>
+
+                        <div class="stat-card revenue">
+                            <div class="stat-info">
+                                <span>Active Promo Codes</span>
+                                <h3 id="statBannersCoupons">3</h3>
+                            </div>
+                            <div class="stat-icon"><i class="fa-solid fa-ticket"></i></div>
+                        </div>
+                    </section>
+
+                    <!-- Advertisements Filter, Search & Action Bar -->
+                    <div class="filter-bar">
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
+                            <div class="search-box" style="max-width: 280px;">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="searchBannersInput" placeholder="Search title, tag, promo code..." oninput="handleSearchBanners(this.value)">
+                            </div>
+
+                            <div class="filter-pills" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <button class="filter-pill active" id="bannerFilter_ALL" onclick="filterBanners('ALL')">All Banners</button>
+                                <button class="filter-pill" id="bannerFilter_GRAPHIC" onclick="filterBanners('GRAPHIC')">Graphic Posters</button>
+                                <button class="filter-pill" id="bannerFilter_PHOTO" onclick="filterBanners('PHOTO')">Photo Deals</button>
+                                <button class="filter-pill" id="bannerFilter_ACTIVE" onclick="filterBanners('ACTIVE')">Active Only</button>
+                            </div>
+                        </div>
+
+                        <!-- Device Preview Simulation Toggle & Add Button -->
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <div class="device-preview-toggle-bar">
+                                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Preview Mode:</span>
+                                <button class="preview-mode-btn active" id="btnPreviewDesktop" onclick="setBannersPreviewMode('desktop')" title="View how banners scale on Desktop / Laptops">
+                                    <i class="fa-solid fa-laptop"></i> Desktop (1024×244)
+                                </button>
+                                <button class="preview-mode-btn" id="btnPreviewMobile" onclick="setBannersPreviewMode('mobile')" title="View how banners adapt on Mobile Phones">
+                                    <i class="fa-solid fa-mobile-screen"></i> Mobile (Adaptive)
+                                </button>
+                            </div>
+
+                            <button class="header-btn" onclick="syncBannersToServer(true)" title="Force sync advertisements to live website">
+                                <i class="fa-solid fa-arrows-rotate"></i> Sync Live
+                            </button>
+
+                            <button class="header-btn" onclick="exportCatalogOverridesFile()" title="Download catalog_overrides.json directly to disk">
+                                <i class="fa-solid fa-file-arrow-down"></i> Download JSON
+                            </button>
+
+                            <button class="header-btn primary" onclick="openAddBannerModal()" title="Create and publish a new advertisement banner">
+                                <i class="fa-solid fa-plus"></i> + Add Advertisement
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Guidance Banner Explaining Desktop vs Mobile Sizes -->
+                    <div class="ad-size-guide-card">
+                        <div class="ad-guide-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                        <div class="ad-guide-content">
+                            <h4>Responsive Advertisement Sizing Guide</h4>
+                            <p>
+                                <strong>Desktop Banners:</strong> Best aspect ratio is <strong>1024 × 244 px</strong> (~4.2 : 1) for wide edge-to-edge billboard displays.<br>
+                                <strong>Mobile Adaptation:</strong> Upload an optional <strong>Mobile Image</strong> (e.g. 600 × 260 px) with larger text for phones, or leave it blank to let Chocoloom automatically scale your desktop banner proportionally without empty gaps.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Advertisements Cards Grid Container -->
+                    <div class="banners-grid-wrapper" id="bannersGridContainer">
+                        <!-- Populated dynamically via admin.js -->
+                    </div>
+                </div>
+
+                </div>
+        </main>
+
+        <!-- Modern Mobile Bottom Navigation Bar (Visible <= 768px) -->
+        <nav class="mobile-bottom-nav" id="mobileBottomNav">
+            <button class="mobile-nav-item active" id="mobNavOrders" onclick="switchAdminTab('orders')">
+                <i class="fa-solid fa-bell-concierge"></i>
+                <span>Orders</span>
+                <span class="mobile-nav-badge" id="mobBadgeOrders" style="display: none;">0</span>
+            </button>
+            <button class="mobile-nav-item" id="mobNavCards" onclick="switchAdminTab('cards')">
+                <i class="fa-solid fa-credit-card"></i>
+                <span>VIP Cards</span>
+                <span class="mobile-nav-badge" id="mobBadgeCards" style="display: none;">0</span>
+            </button>
+            <button class="mobile-nav-item center-action" onclick="openAddProductModal()" title="Add Product">
+                <div class="center-action-btn">
+                    <i class="fa-solid fa-plus"></i>
+                </div>
+                <span>Add Cake</span>
+            </button>
+            <button class="mobile-nav-item" id="mobNavProducts" onclick="switchAdminTab('products')">
+                <i class="fa-solid fa-cake-candles"></i>
+                <span>Menu</span>
+            </button>
+            <button class="mobile-nav-item" id="mobNavAds" onclick="switchAdminTab('advertisements')">
+                <i class="fa-solid fa-rectangle-ad"></i>
+                <span>Ads</span>
+            </button>
+            <button class="mobile-nav-item" onclick="toggleMobileSidebar()">
+                <i class="fa-solid fa-bars-staggered"></i>
+                <span>More</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- ==================== MANUAL ORDER MODAL ==================== -->
+    <div class="admin-modal-overlay" id="manualOrderModal" onclick="if(event.target === this) closeAdminModal('manualOrderModal')">
+        <div class="admin-modal-card" style="max-width: 680px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.03) 100%);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); display: flex; align-items: center; justify-content: center; color: white;">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: var(--text-primary);">Create Manual Order</h3>
+                        <p style="margin: 2px 0 0 0; font-size: 12px; color: var(--text-secondary);">Record phone, counter, walk-in, or WhatsApp orders</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" class="header-btn" onclick="fillSampleManualOrder()" title="Auto-fill sample test data" style="font-size: 12px; padding: 6px 10px; background: #f8fafc; border: 1px dashed #cbd5e1;">
+                        <i class="fa-solid fa-wand-magic-sparkles" style="color: #10b981;"></i> Auto-Fill Sample
+                    </button>
+                    <button class="modal-close-btn" onclick="closeAdminModal('manualOrderModal')" title="Close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body" style="padding: 20px 24px;">
+                <form id="manualOrderForm" onsubmit="handleManualOrderSubmit(event)" style="display: flex; flex-direction: column; gap: 16px;">
+                    <!-- Customer Information Section -->
+                    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-user"></i> Customer Information
+                        </div>
+                        <div class="form-row-2">
+                            <div class="form-group">
+                                <label for="manualCustName">Customer Name *</label>
+                                <input type="text" id="manualCustName" placeholder="e.g. Pooja Reddy" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="manualCustPhone">Phone Number *</label>
+                                <input type="tel" id="manualCustPhone" placeholder="e.g. +91 98765 43210" required>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 10px;">
+                            <label for="manualCustAddress">Delivery Address *</label>
+                            <input type="text" id="manualCustAddress" placeholder="e.g. Koramangala 5th Block, Bengaluru - 560034" required>
+                        </div>
+                    </div>
+
+                    <!-- Item / Cake Details Section -->
+                    <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-cake-candles"></i> Cake & Item Details
+                        </div>
+                        <div class="form-row-2">
+                            <div class="form-group">
+                                <label for="manualProductSelect">Select Product / Cake *</label>
+                                <select id="manualProductSelect" onchange="onManualProductSelectChange(this.value)" required>
+                                    <option value="">-- Choose Cake from Catalog --</option>
+                                    <option value="custom">✏️ Custom Cake / Item...</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="manualCustomNameGroup" style="display: none;">
+                                <label for="manualCustomName">Custom Cake Name *</label>
+                                <input type="text" id="manualCustomName" placeholder="e.g. Custom Blueberry Truffle">
+                            </div>
+                            <div class="form-group">
+                                <label for="manualWeightSelect">Size / Weight</label>
+                                <select id="manualWeightSelect" onchange="recalcManualOrderTotal()">
+                                    <option value="0.5 KG">0.5 KG</option>
+                                    <option value="1.0 KG" selected>1.0 KG</option>
+                                    <option value="1.5 KG">1.5 KG</option>
+                                    <option value="2.0 KG">2.0 KG</option>
+                                    <option value="1 Piece">1 Piece / Standard</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row-3" style="margin-top: 10px;">
+                            <div class="form-group">
+                                <label for="manualItemPrice">Price (₹) *</label>
+                                <input type="number" id="manualItemPrice" placeholder="e.g. 799" min="0" step="1" required oninput="recalcManualOrderTotal()">
+                            </div>
+                            <div class="form-group">
+                                <label for="manualItemQty">Quantity</label>
+                                <input type="number" id="manualItemQty" value="1" min="1" step="1" required oninput="recalcManualOrderTotal()">
+                            </div>
+                            <div class="form-group">
+                                <label for="manualCoolingCheck" style="display: flex; align-items: center; gap: 6px; cursor: pointer; margin-top: 22px;">
+                                    <input type="checkbox" id="manualCoolingCheck" onchange="recalcManualOrderTotal()" style="width: auto; cursor: pointer;">
+                                    <span>Chilled Cooling (+₹50)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 10px;">
+                            <label for="manualCakeNote">Custom Message / Notes on Cake</label>
+                            <input type="text" id="manualCakeNote" placeholder="e.g. Happy Birthday Sweetheart 💕">
+                        </div>
+                    </div>
+
+                    <!-- Payment, Status & Charges -->
+                    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-credit-card"></i> Order Status & Payment
+                        </div>
+                        <div class="form-row-3">
+                            <div class="form-group">
+                                <label for="manualPaymentMethod">Payment Mode</label>
+                                <select id="manualPaymentMethod">
+                                    <option value="UPI / Razorpay">UPI / Online Paid</option>
+                                    <option value="Cash on Delivery" selected>Cash on Delivery</option>
+                                    <option value="Counter Cash / POS">Counter Cash / POS</option>
+                                    <option value="Credit / Debit Card">Credit / Debit Card</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="manualPaymentStatus">Payment Status</label>
+                                <select id="manualPaymentStatus">
+                                    <option value="completed">Completed / Paid</option>
+                                    <option value="pending" selected>Pending</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="manualOrderStatus">Initial Order Status</label>
+                                <select id="manualOrderStatus">
+                                    <option value="Confirmed" selected>Confirmed</option>
+                                    <option value="Preparing">Preparing</option>
+                                    <option value="Out for Delivery">Out for Delivery</option>
+                                    <option value="Delivered">Delivered</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row-3" style="margin-top: 10px;">
+                            <div class="form-group">
+                                <label for="manualDeliveryFee">Delivery Fee (₹)</label>
+                                <input type="number" id="manualDeliveryFee" value="35" min="0" step="1" oninput="recalcManualOrderTotal()">
+                            </div>
+                            <div class="form-group">
+                                <label for="manualPlatformFee">Platform Fee (₹)</label>
+                                <input type="number" id="manualPlatformFee" value="6" min="0" step="1" oninput="recalcManualOrderTotal()">
+                            </div>
+                            <div class="form-group">
+                                <label for="manualGstFee">Taxes / GST (₹)</label>
+                                <input type="number" id="manualGstFee" value="15" min="0" step="1" oninput="recalcManualOrderTotal()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bill Summary Bar -->
+                    <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <span style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #059669; letter-spacing: 0.5px;">Calculated Bill Amount</span>
+                            <div style="font-size: 12px; color: var(--text-secondary);" id="manualBillBreakdown">Items: ₹0 + Packaging: ₹0 + Delivery & Taxes: ₹56</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Total Payable</span>
+                            <div style="font-size: 22px; font-weight: 900; color: #059669;" id="manualTotalDisplay">₹56</div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
+                        <button type="button" class="header-btn" onclick="closeAdminModal('manualOrderModal')">Cancel</button>
+                        <button type="submit" class="header-btn manual-order-btn" style="padding: 10px 24px; font-size: 14px; font-weight: 800;">
+                            <i class="fa-solid fa-check"></i> Place Manual Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Drilldown Modal -->
+    <div class="admin-modal-overlay" id="orderDetailsModal" onclick="if(event.target === this) closeAdminModal('orderDetailsModal')">
+        <div class="admin-modal-card">
+            <div class="modal-header">
+                <h3>Order Information</h3>
+                <button class="modal-close-btn" onclick="closeAdminModal('orderDetailsModal')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <!-- Populated via admin.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ADD / EDIT PRODUCT MODAL ==================== -->
+    <div class="admin-modal-overlay" id="productModal" onclick="if(event.target === this) closeAdminModal('productModal')">
+        <div class="admin-modal-card" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3 id="productModalTitle">Add New Cake / Product</h3>
+                <button class="modal-close-btn" onclick="closeAdminModal('productModal')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="productForm" onsubmit="handleProductFormSubmit(event)" class="prod-form-grid">
+                    <input type="hidden" id="prodFormId">
+
+                    <!-- Name & Category -->
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Product / Cake Name *</label>
+                            <input type="text" id="prodInputName" placeholder="e.g. Belgian Chocolate Truffle Cake" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="prodInputCategory" required onchange="window.handleAdminCategoryChange(this.value)">
+                                <option value="Anniversary Cakes">Anniversary Cakes</option>
+                                <option value="Bento Cakes">Bento Cakes</option>
+                                <option value="Specialty Cakes">Specialty Cakes</option>
+                                <option value="Chocolates">Chocolates</option>
+                                <option value="Desserts">Desserts</option>
+                                <option value="Wedding Cakes">Wedding Cakes</option>
+                                <option value="Cartoon Cakes">Cartoon Cakes</option>
+                                <option value="Cooling Cakes">Cooling Cakes</option>
+                                <option value="Snacks & Munchies">Snacks & Munchies</option>
+                                <option value="Bachelorette Cakes">Bachelorette Cakes</option>
+                                <option value="Half Birthday Cakes">Half Birthday Cakes</option>
+                            </select>
+                        </div>
+                    </div>
+
+
+                    
+
+                    <!-- Pricing -->
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Selling Price (₹) *</label>
+                            <input type="number" id="prodInputPrice" placeholder="e.g. 749" min="1" step="1" required oninput="autoComputeWeightPrices(this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Original / Strike Price (₹)</label>
+                            <input type="number" id="prodInputOrigPrice" placeholder="e.g. 999" min="1" step="1">
+                        </div>
+                    </div>
+
+                    <!-- Product Image Upload & Auto Link Generator -->
+                    <div class="form-group" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px; margin-bottom: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label style="font-weight: 800; font-size: 13px; margin: 0; display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-image" style="color: #7c5cfc;"></i> Product Image / Cake Photo *
+                            </label>
+                            <span id="productImageStatusBadge" style="font-size: 11px; font-weight: 700; color: #34d399; display: none;">
+                                <i class="fa-solid fa-circle-check"></i> Link Generated
+                            </span>
+                        </div>
+
+                        <!-- Drag & Drop / Click Upload Box -->
+                        <div class="upload-dropzone" id="productImageDropzone" style="border: 2px dashed rgba(124, 92, 252, 0.4); border-radius: 12px; padding: 16px 14px; text-align: center; background: rgba(124, 92, 252, 0.04); cursor: pointer; transition: all 0.25s ease;" onclick="document.getElementById('productFileInput').click()" ondragover="event.preventDefault(); this.style.borderColor='#7c5cfc'; this.style.background='rgba(124,92,252,0.1)';" ondragleave="this.style.borderColor='rgba(124, 92, 252, 0.4)'; this.style.background='rgba(124,92,252,0.04)';" ondrop="handleProductImageDrop(event)">
+                            <input type="file" id="productFileInput" accept="image/*" onchange="handleProductImageFileSelect(this)" style="display: none;">
+                            
+                            <div id="productUploadPrompt" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                                <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(124, 92, 252, 0.15); color: #7c5cfc; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </div>
+                                <div>
+                                    <strong style="color: #ffffff; font-size: 13.5px; display: block;">Click to Upload Image from Device</strong>
+                                    <span style="font-size: 11.5px; color: var(--text-muted);">PNG, JPG, WEBP • Automatically uploads & generates direct link</span>
+                                </div>
+                                <button type="button" class="upload-btn" style="pointer-events: none; margin-top: 2px; padding: 7px 14px; font-size: 12px;">
+                                    <i class="fa-solid fa-folder-open"></i> Browse Files
+                                </button>
+                            </div>
+
+                            <!-- Uploading / Processing Animation -->
+                            <div id="productUploadSpinner" style="display: none; flex-direction: column; align-items: center; gap: 10px; padding: 10px 0;">
+                                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 26px; color: #7c5cfc;"></i>
+                                <span style="font-size: 12.5px; font-weight: 700; color: #ffffff;">Uploading image & generating direct link...</span>
+                            </div>
+                        </div>
+
+                        <!-- Live Preview Thumbnail with Remove Action -->
+                        <div id="productImagePreviewContainer" style="display: none; margin-top: 10px; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; align-items: center; gap: 12px;">
+                            <img id="productImagePreviewImg" src="" alt="Preview" style="width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1.5px solid rgba(124, 92, 252, 0.4);">
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                                    <span style="font-size: 11px; font-weight: 800; color: #34d399;"><i class="fa-solid fa-link"></i> Generated Link Ready</span>
+                                    <button type="button" onclick="clearProductUploadedImage()" style="background: none; border: none; color: #ef4444; font-size: 11.5px; font-weight: 700; cursor: pointer; padding: 2px 6px; border-radius: 4px;">
+                                        <i class="fa-solid fa-trash-can"></i> Remove
+                                    </button>
+                                </div>
+                                <div id="productImagePreviewUrlText" style="font-size: 11px; color: #94a3b8; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Auto-Generated / Custom Image Link Input Field -->
+                        <div style="margin-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 600;">Image Link / URL (Auto-filled on upload):</span>
+                                <span style="font-size: 11px; color: var(--text-muted);">Auto-generated</span>
+                            </div>
+                            <div style="position: relative;">
+                                <i class="fa-solid fa-link" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 12px;"></i>
+                                <input type="text" id="prodInputImage" placeholder="Upload an image above or paste a custom URL here" style="padding-left: 32px;" oninput="updateProductImagePreview(this.value)">
+                            </div>
+                        </div>
+
+                        <!-- Quick Presets -->
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
+                            Quick Preset Photos:
+                            <a href="javascript:void(0)" onclick="setPresetImage('https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80')" style="color: var(--primary); text-decoration: none; margin-left: 4px;">Chocolate</a> •
+                            <a href="javascript:void(0)" onclick="setPresetImage('https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&auto=format&fit=crop&q=80')" style="color: var(--primary); text-decoration: none; margin-left: 4px;">Strawberry</a> •
+                            <a href="javascript:void(0)" onclick="setPresetImage('https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80')" style="color: var(--primary); text-decoration: none; margin-left: 4px;">Truffle</a> •
+                            <a href="javascript:void(0)" onclick="setPresetImage('https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=600&auto=format&fit=crop&q=80')" style="color: var(--primary); text-decoration: none; margin-left: 4px;">Belgian Bar</a>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="prodInputDesc" rows="2" placeholder="Brief description of the cake, flavor notes, toppings, etc."></textarea>
+                    </div>
+
+                    <!-- Customization Feature Toggles (Cake Weight & Cooling) -->
+                    <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; margin: 16px 0;">
+                        <div style="font-size: 13px; font-weight: 800; color: #1e293b; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                            <span style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-sliders" style="color: var(--primary);"></i>
+                                Product Customization Features
+                            </span>
+                            <span style="font-size: 11px; font-weight: 600; color: #64748b;">(Turn OFF for chocolates, snacks, jars, single items)</span>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <!-- Toggle 1: Cake KG Weight Options -->
+                            <label style="display: flex; align-items: flex-start; gap: 10px; background: #ffffff; border: 1.5px solid #7c5cfc; border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: all 0.2s;" id="labelHasWeight">
+                                <input type="checkbox" id="prodInputHasWeight" checked onchange="window.toggleAdminWeightSection(this.checked)" style="accent-color: #7c5cfc; width: 18px; height: 18px; margin-top: 2px;">
+                                <div>
+                                    <div style="font-size: 12.5px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-weight-scale" style="color: #7c5cfc;"></i>
+                                        <span>Cake KG Weight Options</span>
+                                    </div>
+                                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+                                        0.5 KG, 1.0 KG, 1.5 KG, 2.0 KG choices
+                                    </div>
+                                </div>
+                            </label>
+
+                            <!-- Toggle 2: Cooling Cake Temperature -->
+                            <label style="display: flex; align-items: flex-start; gap: 10px; background: #ffffff; border: 1.5px solid #0284c7; border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: all 0.2s;" id="labelHasCooling">
+                                <input type="checkbox" id="prodInputHasCooling" checked onchange="window.toggleAdminCoolingSection(this.checked)" style="accent-color: #0284c7; width: 18px; height: 18px; margin-top: 2px;">
+                                <div>
+                                    <div style="font-size: 12.5px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-snowflake" style="color: #0284c7;"></i>
+                                        <span>Cooling Temperature</span>
+                                    </div>
+                                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+                                        Normal vs Chilled Cooling choice
+                                    </div>
+                                </div>
+                            </label>
+
+                            <!-- Toggle 3: Cake Flavours Selection -->
+                            <label style="display: flex; align-items: flex-start; gap: 10px; background: #ffffff; border: 1.5px solid #db2777; border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: all 0.2s;" id="labelHasFlavours">
+                                <input type="checkbox" id="prodInputHasFlavours" checked onchange="window.toggleAdminFlavoursSection(this.checked)" style="accent-color: #db2777; width: 18px; height: 18px; margin-top: 2px;">
+                                <div>
+                                    <div style="font-size: 12.5px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-wand-magic-sparkles" style="color: #db2777;"></i>
+                                        <span>Cake Flavours Options</span>
+                                    </div>
+                                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+                                        Customer selects flavour in cart
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Weight-Based Pricing (0.5 KG, 1 KG, 1.5 KG, 2 KG, 3 KG) -->
+                    <div class="weight-inputs-box" id="adminWeightInputsBox">
+                        <div class="weight-inputs-box-title" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-scale-balanced" style="color: var(--primary);"></i>
+                                <span>Cake Size & Weight Pricing Options</span>
+                            </div>
+                            <span id="weightStatusBadge" style="font-size: 10.5px; font-weight: 800; color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 999px;">ACTIVE</span>
+                        </div>
+
+                        <div id="adminNoWeightNote" style="display: none; background: #f1f5f9; border-radius: 10px; padding: 12px 14px; font-size: 12px; color: #475569; text-align: center; margin: 8px 0;">
+                            <i class="fa-solid fa-circle-info" style="color: #7c5cfc; margin-right: 4px;"></i>
+                            <strong>Single Unit Item:</strong> Cake weight options are disabled. This item sells directly at the selling price.
+                        </div>
+
+                        <div id="adminWeightPricingFields">
+                            <div class="form-row-3">
+                                <div class="form-group">
+                                    <label>0.5 KG Price (₹)</label>
+                                    <input type="number" id="prodInputPrice05" placeholder="Base Price">
+                                </div>
+                                <div class="form-group">
+                                    <label>1.0 KG Price (₹)</label>
+                                    <input type="number" id="prodInputPrice10" placeholder="+₹400">
+                                </div>
+                                <div class="form-group">
+                                    <label>1.5 KG Price (₹)</label>
+                                    <input type="number" id="prodInputPrice15" placeholder="+₹800">
+                                </div>
+                            </div>
+                            <div class="form-row-2">
+                                <div class="form-group">
+                                    <label>2.0 KG Price (₹)</label>
+                                    <input type="number" id="prodInputPrice20" placeholder="+₹1200">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cooling Temperature Surcharge -->
+                        <div id="adminCoolingContainer" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
+                            <div id="adminNoCoolingNote" style="display: none; background: #f1f5f9; border-radius: 8px; padding: 8px 12px; font-size: 11.5px; color: #64748b; text-align: center; margin-bottom: 6px;">
+                                <i class="fa-solid fa-circle-info" style="color: #0284c7; margin-right: 4px;"></i>
+                                Cooling temperature surcharge is disabled for this item.
+                            </div>
+                            <div id="adminCoolingPriceField" class="form-group" style="margin-bottom: 0;">
+                                <label style="display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-snowflake" style="color: #0284c7;"></i>
+                                    <span>Chilled Cooling Cake Surcharge (₹)</span>
+                                </label>
+                                <input type="number" id="prodInputCoolingPrice" value="50" placeholder="50">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cake Flavours Configuration Box -->
+                    <div class="weight-inputs-box" id="adminFlavoursBox" style="margin-top: 14px; border: 1.5px solid #fbcfe8; background: #fff5f9; border-radius: 14px; padding: 14px;">
+                        <div class="weight-inputs-box-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #fce7f3; padding-bottom: 8px; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-wand-magic-sparkles" style="color: #db2777;"></i>
+                                <span style="font-weight: 800; color: #9d174d; font-size: 13px;">Cake Flavours Selection (Cart Customization)</span>
+                            </div>
+                            <span id="flavoursStatusBadge" style="font-size: 10.5px; font-weight: 800; color: #db2777; background: #fce7f3; padding: 2px 8px; border-radius: 999px;">ACTIVE</span>
+                        </div>
+
+                        <div id="adminNoFlavoursNote" style="display: none; background: #f1f5f9; border-radius: 10px; padding: 12px 14px; font-size: 12px; color: #475569; text-align: center; margin: 8px 0;">
+                            <i class="fa-solid fa-circle-info" style="color: #db2777; margin-right: 4px;"></i>
+                            <strong>Flavour selection disabled:</strong> This item sells in its standard default recipe without prompting customers for flavour.
+                        </div>
+
+                        <div id="adminFlavoursContent">
+                            <!-- Default Pre-Selected Flavour -->
+                            <div class="form-group" style="margin-bottom: 8px;">
+                                <label style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">
+                                    <span><i class="fa-solid fa-crown" style="color: #db2777; margin-right: 4px;"></i> Default Pre-Selected Cake Flavour</span>
+                                    <span style="font-size: 11px; color: #9d174d; font-weight: 600;">(Selected by default when popup opens)</span>
+                                </label>
+                                <select id="prodInputFlavour" style="width: 100%; padding: 8px 12px; border: 1.5px solid #f472b6; border-radius: 8px; background: #ffffff; font-size: 12.5px; font-weight: 600; color: #0f172a; outline: none;">
+                                    <option value="">Auto-Detect from Cake Name</option>
+                                    <option value="Dutch Chocolate Truffle">🍫 Dutch Chocolate Truffle</option>
+                                    <option value="Classic Black Forest">🍒 Classic Black Forest</option>
+                                    <option value="Royal Red Velvet">❤️ Royal Red Velvet</option>
+                                    <option value="Butterscotch Crunch">🧈 Butterscotch Crunch</option>
+                                    <option value="Fresh Pineapple">🍍 Fresh Pineapple</option>
+                                    <option value="Classic Vanilla Bean">🍦 Classic Vanilla Bean</option>
+                                    <option value="Black Currant Delight">🫐 Black Currant Delight</option>
+                                    <option value="Alphonso Mango">🥭 Alphonso Mango</option>
+                                    <option value="Fresh Strawberry">🍓 Fresh Strawberry</option>
+                                    <option value="Royal Rasmalai Fusion">🍮 Royal Rasmalai Fusion</option>
+                                    <option value="Ferrero Nutty Hazelnut">🌰 Ferrero Nutty Hazelnut</option>
+                                </select>
+                            </div>
+
+                            <!-- Flavour Prices Header & Quick Action Buttons -->
+                            <div style="border-top: 1px dashed #fbcfe8; padding-top: 12px; margin-top: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-tags" style="color: #db2777;"></i>
+                                        <span style="font-size: 12px; font-weight: 800; color: #9d174d;">Cake Flavour Surcharges & Pricing (₹)</span>
+                                    </div>
+                                    <div style="display: flex; gap: 6px;">
+                                        <button type="button" onclick="window.setAllFlavourPrices(0)" style="background: #ffffff; border: 1.5px solid #f472b6; color: #db2777; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">All ₹0 (Free)</button>
+                                        <button type="button" onclick="window.resetDefaultFlavourPrices()" style="background: #fdf2f8; border: 1.5px solid #db2777; color: #9d174d; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">Standard Pricing</button>
+                                    </div>
+                                </div>
+
+                                <!-- Normal Cake Flavours (Available for Normal & Cooling) -->
+                                <div style="font-size: 11px; font-weight: 800; color: #be185d; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+                                    <span>🎂 Normal & Cooling Shared Flavours (5 Standard Flavours)</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍦 Vanilla (₹)</label>
+                                        <input type="number" id="flavourPrice_vanilla" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #fbcfe8; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🧈 Butterscotch (₹)</label>
+                                        <input type="number" id="flavourPrice_butterscotch" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #fbcfe8; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍓 Strawberry (₹)</label>
+                                        <input type="number" id="flavourPrice_strawberry" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #fbcfe8; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍍 Pineapple (₹)</label>
+                                        <input type="number" id="flavourPrice_pineapple" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #fbcfe8; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍫 Chocolate (₹)</label>
+                                        <input type="number" id="flavourPrice_chocolate" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #fbcfe8; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                        <input type="hidden" id="flavourPrice_chocolate_truffle" value="0">
+                                    </div>
+                                </div>
+
+                                <!-- Cooling-Exclusive Flavours -->
+                                <div style="font-size: 11px; font-weight: 800; color: #0284c7; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+                                    <span>❄️ Cooling Cakes Exclusive (10 Additional Flavours)</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🫐 Blueberry (₹)</label>
+                                        <input type="number" id="flavourPrice_blueberry" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍇 Black Currant (₹)</label>
+                                        <input type="number" id="flavourPrice_black_currant" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍒 Black Forest (₹)</label>
+                                        <input type="number" id="flavourPrice_black_forest" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🥛 Milk Badam (₹)</label>
+                                        <input type="number" id="flavourPrice_milk_badam" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍯 Honey Almond (₹)</label>
+                                        <input type="number" id="flavourPrice_honey_almond" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">❤️ Red Velvet (₹)</label>
+                                        <input type="number" id="flavourPrice_red_velvet" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍰 White Forest (₹)</label>
+                                        <input type="number" id="flavourPrice_white_forest" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍮 Caramel (₹)</label>
+                                        <input type="number" id="flavourPrice_caramel" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍨 Milky Butterscotch (₹)</label>
+                                        <input type="number" id="flavourPrice_milky_butterscotch" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🫧 Nutty Bubble (₹)</label>
+                                        <input type="number" id="flavourPrice_nutty_bubble" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                </div>
+
+                                <div style="font-size: 11px; color: #64748b; margin-top: 10px; line-height: 1.4; background: rgba(255,255,255,0.85); padding: 8px 12px; border-radius: 8px; border: 1px solid #fce7f3;">
+                                    <i class="fa-solid fa-circle-info" style="color: #db2777; margin-right: 4px;"></i>
+                                    Enter <strong>0</strong> for free flavours. Flavours with price greater than 0 will show <strong>+₹X</strong> on the website and be added to the cake price.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Toggles: Veg, Campus Special, In Stock -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 10px 0;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
+                            <input type="checkbox" id="prodInputIsVeg" checked style="accent-color: #16a34a; width: 16px; height: 16px;">
+                            <span>🌱 100% Pure Veg</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
+                            <input type="checkbox" id="prodInputIsUni" style="accent-color: #7c5cfc; width: 16px; height: 16px;">
+                            <span>🎓 Uni Chocoloom Campus Special</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
+                            <input type="checkbox" id="prodInputInStock" checked style="accent-color: #16a34a; width: 16px; height: 16px;">
+                            <span>🟢 In Stock & Live</span>
+                        </label>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+                        <button type="button" class="header-btn" onclick="closeAdminModal('productModal')">Cancel</button>
+                        <button type="submit" class="header-btn primary" id="saveProductBtn">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== QUICK PRICE UPDATE MODAL ==================== -->
+    <div class="admin-modal-overlay" id="quickPriceModal" onclick="if(event.target === this) closeAdminModal('quickPriceModal')">
+        <div class="admin-modal-card" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Update Item Price</h3>
+                <button class="modal-close-btn" onclick="closeAdminModal('quickPriceModal')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="quickPriceForm" onsubmit="handleQuickPriceSubmit(event)" style="display: flex; flex-direction: column; gap: 14px;">
+                    <input type="hidden" id="quickPriceProdId">
+                    <div style="font-weight: 800; font-size: 15px;" id="quickPriceProdName">Product Name</div>
+
+                    <div class="form-group">
+                        <label>New Selling Price (₹) *</label>
+                        <input type="number" id="quickPriceNewVal" min="1" step="1" required style="font-size: 18px; font-weight: 800; color: var(--primary);">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Original / Strike Price (₹)</label>
+                        <input type="number" id="quickPriceOrigVal" min="1" step="1">
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
+                        <button type="button" class="header-btn" onclick="closeAdminModal('quickPriceModal')">Cancel</button>
+                        <button type="submit" class="header-btn primary">
+                            <i class="fa-solid fa-check"></i> Apply Price
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Thermal Receipt & KOT Print Container (active during window.print()) -->
+    <div id="printableReceiptContainer" style="display: none;"></div>
+
+    <!-- Security PIN Lock Screen Overlay -->
+    <div class="admin-auth-overlay" id="adminAuthOverlay">
+        <div class="auth-card" id="authCardBox">
+            <div class="auth-logo-badge">
+                <img src="assets/logo.png" alt="Chocoloom Logo">
+            </div>
+            <h2 class="auth-title">Chocoloom Staff Access</h2>
+            <p class="auth-subtitle">Enter your 4-digit security PIN to unlock</p>
+
+            <!-- 4 PIN Boxes -->
+            <div class="pin-inputs-wrap">
+                <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox1" autofocus autocomplete="off">
+                <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox2" autocomplete="off">
+                <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox3" autocomplete="off">
+                <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox4" autocomplete="off">
+            </div>
+
+            <div class="auth-error" id="authErrorMsg"></div>
+
+            <!-- Touch / Click Keypad -->
+            <div class="keypad-grid">
+                <button type="button" class="keypad-btn" onclick="pressKeypad('1')">1</button>
+                <button type="button" class="keypad-btn" onclick="pressKeypad('2')">2</button>
+                <button type="button" class="keypad-btn" onclick="pressKeypad('3')">3</button>
+                <button type="button" class="keypad-btn" onclick="pressKeypad('4')">4</button>
+                <button type="button" class="keypad-btn" onclick="pressKeypad('5')">5</button>
+                <button type="button" class="keypad-btn" onclick="pressKeypad('6')">6</button>
+                <button type="button" class="keypad-btn" onclick="pressKeypad('7')">7</button>
+                <button type="button" class="keypad-btn" onclick="pressKeypad('8')">8</button>
+                <button type="button" class="keypad-btn" onclick="pressKeypad('9')">9</button>
+                <button type="button" class="keypad-btn action-key" onclick="clearPin()">Clear</button>
+                <button type="button" class="keypad-btn" onclick="pressKeypad('0')">0</button>
+                <button type="button" class="keypad-btn action-key" onclick="backspacePin()" title="Backspace"><i class="fa-solid fa-delete-left"></i></button>
+            </div>
+
+            <div class="auth-remember-row">
+                <label class="auth-remember-label">
+                    <input type="checkbox" id="authRememberCheckbox" checked>
+                    <span>Remember on this browser</span>
+                </label>
+            </div>
+
+            <button type="button" class="auth-unlock-btn" onclick="verifyPin()">
+                <i class="fa-solid fa-lock-open"></i> Unlock Dashboard
+            </button>
+
+            <div class="auth-footer-hint" style="cursor: pointer;" onclick="quickFillPin('2026')" title="Click to quickly unlock with Staff PIN 2026">
+                <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> Staff Security PIN: <strong>2026</strong> <span style="font-size: 11px; opacity: 0.85;">(Click to unlock)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cloud Database & Server Configuration Modal (Supabase & Neon Postgres) -->
+    <div class="modal-backdrop" id="cloudConfigModal" style="display: none !important;">
+        <div class="admin-modal" style="max-width: 580px;">
+            <div class="modal-header">
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-cloud-bolt" style="color: #7c5cfc;"></i> Cloud Database Settings
+                    </h3>
+                    <p style="margin: 4px 0 0; font-size: 13px; color: #64748b;">
+                        Live cloud sync across Supabase & Neon Serverless Postgres for real-time prices & orders
+                    </p>
+                </div>
+                <button class="modal-close-btn" onclick="closeAdminModal('cloudConfigModal')">×</button>
+            </div>
+
+            <!-- Cloud Provider Tabs -->
+            <div style="display: flex; gap: 8px; padding: 12px 20px 0; border-bottom: 1px solid #e2e8f0; background: #fafafa;">
+                <button type="button" id="tabBtnSupabase" onclick="switchCloudTab('supabase')" style="padding: 10px 16px; border: none; background: transparent; font-size: 13px; font-weight: 700; color: #7c5cfc; border-bottom: 2px solid #7c5cfc; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-cloud-bolt" style="color: #10b981;"></i> Supabase Cloud
+                </button>
+                <button type="button" id="tabBtnNeon" onclick="switchCloudTab('neon')" style="padding: 10px 16px; border: none; background: transparent; font-size: 13px; font-weight: 700; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-bolt" style="color: #00e599;"></i> Neon Postgres (Serverless)
+                </button>
+            </div>
+
+            <div class="modal-body" style="padding: 20px;">
+                <!-- Tab 1: Supabase Configuration -->
+                <div id="cloudTabSupabase">
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 11px; font-weight: 800; color: #475569; letter-spacing: 0.5px; margin-bottom: 6px;">
+                            SUPABASE PROJECT URL
+                        </label>
+                        <input type="text" id="supabaseConfigUrl" placeholder="https://your-project.supabase.co" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; font-family: monospace;">
+                    </div>
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 11px; font-weight: 800; color: #475569; letter-spacing: 0.5px; margin-bottom: 6px;">
+                            SUPABASE ANON / PUBLIC API KEY
+                        </label>
+                        <input type="text" id="supabaseConfigKey" placeholder="sb_publishable_... or eyJhbGci..." style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; font-family: monospace;">
+                    </div>
+                    <div id="supabaseConnectionStatusBox" style="padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
+                        <i class="fa-solid fa-circle-info" style="color: #64748b;"></i> Checking Supabase connection...
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 6px;">
+                        <button class="modal-btn secondary" type="button" onclick="testSupabaseConnection(true)" style="font-size: 12px; padding: 7px 12px;">
+                            <i class="fa-solid fa-vial"></i> Test Supabase Connection
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Neon Postgres Configuration -->
+                <div id="cloudTabNeon" style="display: none;">
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 12px; color: #334155; line-height: 1.5;">
+                        <strong style="color: #0f172a;"><i class="fa-solid fa-lightbulb" style="color: #f59e0b;"></i> Where to find your Neon Connection String:</strong><br>
+                        1. Open <a href="https://console.neon.tech" target="_blank" style="color: #7c5cfc; font-weight: 700; text-decoration: underline;">console.neon.tech</a> &rarr; open your project.<br>
+                        2. Click <strong>Connect</strong> &rarr; copy the <code>postgresql://...</code> URI string.<br>
+                        3. Paste it below and click <strong>Test Neon Connection</strong>.
+                    </div>
+                    <div style="margin-bottom: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label style="font-size: 11px; font-weight: 800; color: #475569; letter-spacing: 0.5px; margin: 0;">
+                                NEON POSTGRES CONNECTION STRING
+                            </label>
+                            <a href="https://console.neon.tech" target="_blank" style="font-size: 11px; color: #7c5cfc; text-decoration: none; font-weight: 600;">
+                                Neon Console <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>
+                        </div>
+                        <input type="text" id="neonConfigUrl" placeholder="postgresql://user:password@ep-cool-snowflake-123456.us-east-2.aws.neon.tech/neondb?sslmode=require" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; font-family: monospace;">
+                        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
+                            Direct native HTTPS query engine — connects instantly from browser without backend proxies.
+                        </div>
+                    </div>
+                    <div id="neonConnectionStatusBox" style="padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
+                        <i class="fa-solid fa-circle-info" style="color: #64748b;"></i> Enter your Neon connection string above to connect.
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;">
+                        <button class="modal-btn secondary" type="button" onclick="testNeonConnection(true)" style="font-size: 12px; padding: 7px 12px;">
+                            <i class="fa-solid fa-vial"></i> Test Neon Connection
+                        </button>
+                        <button class="modal-btn secondary" type="button" onclick="syncAllProductsToNeon()" style="font-size: 12px; padding: 7px 12px; color: #0284c7; border-color: #bae6fd; background: #f0f9ff;">
+                            <i class="fa-solid fa-arrows-rotate"></i> Auto-Setup & Sync Products to Neon
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                    <button class="modal-btn secondary" type="button" onclick="closeAdminModal('cloudConfigModal')">Cancel</button>
+                    <button class="modal-btn primary" type="button" onclick="saveCloudServerConfig()">
+                        <i class="fa-solid fa-floppy-disk"></i> Save & Reconnect All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ADD / EDIT ADVERTISEMENT MODAL ==================== -->
+    <div class="admin-modal-overlay" id="bannerModal" onclick="if(event.target === this) closeAdminModal('bannerModal')">
+        <div class="admin-modal-card" style="max-width: 820px; max-height: 92vh; overflow-y: auto;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                        <i class="fa-solid fa-rectangle-ad"></i>
+                    </div>
+                    <div>
+                        <h3 id="bannerModalTitle" style="margin: 0; font-size: 18px; font-weight: 800;">Add New Advertisement</h3>
+                        <p style="margin: 2px 0 0 0; font-size: 12px; color: var(--text-muted);">Configure title, desktop/mobile images, discount & interactive action</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" onclick="closeAdminModal('bannerModal')" aria-label="Close Modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="bannerForm" onsubmit="handleBannerFormSubmit(event)" class="banner-form-grid">
+                    <input type="hidden" id="bannerFormId">
+
+                    <!-- Advertisement Format / Type Selection -->
+                    <div class="form-group" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px;">
+                        <label style="font-weight: 800; font-size: 13px; margin-bottom: 8px; display: block;">Advertisement Style / Format *</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <label class="banner-type-card active" id="cardTypeGraphic">
+                                <input type="radio" name="bannerTypeOption" value="graphic" id="typeOptionGraphic" checked onchange="handleBannerTypeChange('graphic')">
+                                <div class="type-card-content">
+                                    <div class="type-icon"><i class="fa-solid fa-paint-roller"></i></div>
+                                    <div>
+                                        <strong>Full Graphic Poster</strong>
+                                        <span>Edge-to-edge designed poster (like Tombola, festive sale)</span>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="banner-type-card" id="cardTypePhoto">
+                                <input type="radio" name="bannerTypeOption" value="photo" id="typeOptionPhoto" onchange="handleBannerTypeChange('photo')">
+                                <div class="type-card-content">
+                                    <div class="type-icon"><i class="fa-solid fa-camera-retro"></i></div>
+                                    <div>
+                                        <strong>Photo & Text Deal</strong>
+                                        <span>Background photo with Chocoloom headline, description & CTA</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Title & Category -->
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Advertisement Title *</label>
+                            <input type="text" id="bannerInputTitle" placeholder="e.g. TOMBOLA: Try Your Luck! or Belgian Truffle Extravaganza" required oninput="updateModalLivePreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Category / Target Section *</label>
+                            <input type="text" id="bannerInputCategory" placeholder="e.g. Tombola, Uni Chocoloom, Desserts, Chocolates" required oninput="updateModalLivePreview()">
+                        </div>
+                    </div>
+
+                    <!-- Tag & Tag Icon -->
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Top Tag / Badge Label</label>
+                            <input type="text" id="bannerInputTag" placeholder="e.g. 🎟️ COMMUNITY TOMBOLA • PLAY & WIN" oninput="updateModalLivePreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Tag Icon (FontAwesome)</label>
+                            <input type="text" id="bannerInputTagIcon" placeholder="e.g. fa-solid fa-ticket or fa-solid fa-sparkles" value="fa-solid fa-ticket" oninput="updateModalLivePreview()">
+                        </div>
+                    </div>
+
+                    <!-- Desktop Banner Image -->
+                    <div class="form-group image-upload-box">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label style="font-weight: 800; font-size: 13px;">Desktop Banner Image * <span style="font-weight: 450; font-size: 11px; color: var(--text-muted);">(Recommended: 1024 × 244 px, ~4:1 ratio)</span></label>
+                            <span class="size-pill">1024 × 244 px</span>
+                        </div>
+                        <div class="upload-dropzone" id="desktopDropzone">
+                            <input type="file" id="bannerDesktopFileInput" accept="image/*" onchange="handleBannerFileSelect(this, 'desktop')" style="display: none;">
+                            <button type="button" class="upload-btn" onclick="document.getElementById('bannerDesktopFileInput').click()">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Upload From Computer
+                            </button>
+                            <span style="font-size: 12px; color: var(--text-muted); margin: 0 8px;">OR</span>
+                            <input type="text" id="bannerInputDesktopImage" placeholder="Paste image URL or assets path (e.g. assets/tombola-banner.png)" style="flex: 1;" required oninput="updateModalLivePreview()">
+                        </div>
+                        <div class="preset-links">
+                            <span>Presets:</span>
+                            <a href="javascript:void(0)" onclick="setModalDesktopImage('assets/tombola-banner.png?v=3')">Tombola Yellow Banner</a> •
+                            <a href="javascript:void(0)" onclick="setModalDesktopImage('https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1600&auto=format&fit=crop&q=80')">Belgian Truffle Photo</a> •
+                            <a href="javascript:void(0)" onclick="setModalDesktopImage('https://images.unsplash.com/photo-1541167760496-1628856ab772?w=1600&auto=format&fit=crop&q=80')">Campus Coffee Store</a>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Banner Image (Optional) -->
+                    <div class="form-group image-upload-box" style="border-left: 3px solid #38bdf8;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label style="font-weight: 800; font-size: 13px;">Mobile Banner Image (Optional) <span style="font-weight: 450; font-size: 11px; color: var(--text-muted);">(Recommended: 600 × 260 px, ~2.3:1)</span></label>
+                            <span class="size-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">600 × 260 px</span>
+                        </div>
+                        <div class="upload-dropzone" id="mobileDropzone">
+                            <input type="file" id="bannerMobileFileInput" accept="image/*" onchange="handleBannerFileSelect(this, 'mobile')" style="display: none;">
+                            <button type="button" class="upload-btn" onclick="document.getElementById('bannerMobileFileInput').click()">
+                                <i class="fa-solid fa-mobile-screen"></i> Upload Mobile Version
+                            </button>
+                            <span style="font-size: 12px; color: var(--text-muted); margin: 0 8px;">OR</span>
+                            <input type="text" id="bannerInputMobileImage" placeholder="Leave empty to auto-scale desktop image on phones" style="flex: 1;" oninput="updateModalLivePreview()">
+                        </div>
+                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 5px;">
+                            💡 <em>Tip: If left blank, your desktop poster will automatically scale to fit phones without any black gaps or cutoff!</em>
+                        </div>
+                    </div>
+
+                    <!-- Background Color & Palette -->
+                    <div class="form-group">
+                        <label>Banner Background Color</label>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <input type="color" id="bannerInputBgColor" value="#ffd735" oninput="document.getElementById('bannerInputBgHex').value = this.value; updateModalLivePreview();" style="width: 44px; height: 38px; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer; padding: 2px;">
+                            <input type="text" id="bannerInputBgHex" value="#ffd735" placeholder="#ffd735" style="width: 120px;" oninput="document.getElementById('bannerInputBgColor').value = this.value; updateModalLivePreview();">
+                            <div class="color-chips" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                <button type="button" class="color-chip" style="background: #ffd735;" onclick="setModalBgColor('#ffd735')" title="Tombola Yellow"></button>
+                                <button type="button" class="color-chip" style="background: #110722;" onclick="setModalBgColor('#110722')" title="Midnight Dark"></button>
+                                <button type="button" class="color-chip" style="background: #e11d48;" onclick="setModalBgColor('#e11d48')" title="Rose Red"></button>
+                                <button type="button" class="color-chip" style="background: #7c3aed;" onclick="setModalBgColor('#7c3aed')" title="Royal Purple"></button>
+                                <button type="button" class="color-chip" style="background: #0284c7;" onclick="setModalBgColor('#0284c7')" title="Ocean Blue"></button>
+                                <button type="button" class="color-chip" style="background: #271008;" onclick="setModalBgColor('#271008')" title="Choco Dark"></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Discount Text & Coupon Code -->
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Floating Discount Ribbon Text</label>
+                            <input type="text" id="bannerInputDiscount" placeholder="e.g. EVERY PRIZE A WINNER! • £1 A STRIP or FLAT 50% OFF" oninput="updateModalLivePreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Promo / Coupon Code</label>
+                            <input type="text" id="bannerInputCode" placeholder="e.g. TOMBOLA50" style="text-transform: uppercase;" oninput="updateModalLivePreview()">
+                        </div>
+                    </div>
+
+                    <!-- Call To Action (CTA) & Interactive Action -->
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Call to Action (CTA) Text</label>
+                            <input type="text" id="bannerInputCta" placeholder="e.g. Play Tombola Now or Claim 50% OFF" oninput="updateModalLivePreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>When Customer Clicks Advertisement</label>
+                            <select id="bannerInputCtaAction" onchange="updateModalLivePreview()">
+                                <option value="tombola_game">🎲 Open Interactive Tombola Game Modal</option>
+                                <option value="redirect_url">🔗 Redirect / Open External Link (Play Now URL)</option>
+                                <option value="custom_url">🌐 Navigate to Custom URL</option>
+                                <option value="copy_coupon">📋 Copy Coupon Code Directly</option>
+                                <option value="category">🍰 Filter Products by Category</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Destination Redirect URL / Play Now Link -->
+                    <div class="form-group" id="groupBannerRedirectUrl">
+                        <label style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 800; font-size: 13px;">
+                                <i class="fa-solid fa-arrow-up-right-from-square" style="color: #38bdf8; margin-right: 4px;"></i>
+                                Redirect Link / Destination URL
+                            </span>
+                            <span style="font-size: 11px; color: var(--text-muted); font-weight: 400;">Where users go when clicking Play Now</span>
+                        </label>
+                        <div style="position: relative; margin-top: 4px;">
+                            <i class="fa-solid fa-link" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px;"></i>
+                            <input type="text" id="bannerInputRedirectUrl" placeholder="e.g. https://your-game-link.com or /tombola or #game" style="padding-left: 36px;" oninput="updateModalLivePreview()">
+                        </div>
+                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 5px;">
+                            💡 When provided, clicking the advertisement or "Play Now" button will redirect customers to this link.
+                        </div>
+                    </div>
+
+                    <!-- Coming Soon Status Toggle -->
+                    <div class="form-group" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; padding: 12px 14px; margin-top: 4px;">
+                        <label class="checkbox-label" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin: 0;">
+                            <div>
+                                <strong style="font-size: 13px; color: #fbbf24; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-clock-rotate-left"></i> Mark Advertisement as "Coming Soon"
+                                </strong>
+                                <span style="font-size: 11.5px; color: var(--text-muted); display: block; margin-top: 3px;">
+                                    Displays a prominent glowing "COMING SOON" badge on the banner and alerts visitors on click
+                                </span>
+                            </div>
+                            <input type="checkbox" id="bannerInputIsComingSoon" onchange="updateModalLivePreview()" style="width: 18px; height: 18px; accent-color: #f59e0b; cursor: pointer;">
+                        </label>
+                    </div>
+
+                    <!-- Subtitle / Description (Visible for Photo Deals) -->
+                    <div class="form-group" id="groupBannerSubtitle" style="display: none;">
+                        <label>Subtitle / Description</label>
+                        <textarea id="bannerInputSubtitle" rows="2" placeholder="e.g. Handcrafted with 100% Belgian cocoa & rich fresh dairy. Indulge in confectionery luxury!" oninput="updateModalLivePreview()"></textarea>
+                    </div>
+
+                    <!-- Active / Visible Toggle -->
+                    <div class="form-group" style="margin-top: 4px;">
+                        <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="bannerInputIsActive" checked>
+                            <span style="font-weight: 700; font-size: 13.5px;">Publish & Make Active Live on Website</span>
+                        </label>
+                    </div>
+
+                    <!-- Live Responsive Simulation Preview inside Modal -->
+                    <div class="modal-preview-section">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">
+                                Live Interactive Preview:
+                            </span>
+                            <div class="preview-tab-pills">
+                                <button type="button" class="preview-tab-pill active" id="modalPreviewTabDesktop" onclick="setModalPreviewDevice('desktop')">
+                                    <i class="fa-solid fa-laptop"></i> Desktop (1024×244)
+                                </button>
+                                <button type="button" class="preview-tab-pill" id="modalPreviewTabMobile" onclick="setModalPreviewDevice('mobile')">
+                                    <i class="fa-solid fa-mobile-screen"></i> Mobile Screen
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Preview Sandbox Box -->
+                        <div class="preview-sandbox-box" id="modalPreviewContainer">
+                            <!-- Populated in real-time by updateModalLivePreview() -->
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-color);">
+                        <button type="button" class="modal-btn secondary" onclick="closeAdminModal('bannerModal')">Cancel</button>
+                        <button type="submit" class="modal-btn primary" id="btnSaveBanner">
+                            <i class="fa-solid fa-check"></i> Save & Publish Advertisement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Admin Controller -->
+    <script src="admin.js?v=3.3"></script>
+
+    <!-- Physical VIP Card Embossing Preview & Courier Shipping Label Modal -->
+    <div class="admin-modal-overlay" id="cardShippingLabelModal" onclick="if(event.target === this) closeAdminModal('cardShippingLabelModal')">
+        <div class="admin-modal-card" style="max-width: 680px; width: 92%;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-crown" style="color: #eab308;"></i> VIP Physical Card Embossing & BlueDart Shipping Label</h3>
+                <button class="modal-close-btn" onclick="closeAdminModal('cardShippingLabelModal')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="cardShippingLabelContent">
+                <!-- Populated via admin.js openCardLabelModal() -->
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
