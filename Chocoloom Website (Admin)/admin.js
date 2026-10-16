@@ -277,8 +277,11 @@ window.testSupabaseConnection = async function(showToastMsg = true) {
     const statusBox = document.getElementById('supabaseConnectionStatusBox');
     const urlInput = document.getElementById('supabaseConfigUrl');
     const keyInput = document.getElementById('supabaseConfigKey');
-    const url = urlInput ? urlInput.value.trim().replace(/\/$/, '') : SUPABASE_CONFIG.url;
-    const key = keyInput ? keyInput.value.trim() : SUPABASE_CONFIG.anonKey;
+    const url = (urlInput && urlInput.value.trim()) ? urlInput.value.trim().replace(/\/$/, '') : (localStorage.getItem('chocoloom_supabase_url') || SUPABASE_CONFIG.url);
+    const key = (keyInput && keyInput.value.trim()) ? keyInput.value.trim() : (localStorage.getItem('chocoloom_supabase_key') || SUPABASE_CONFIG.anonKey);
+
+    if (urlInput && !urlInput.value.trim()) urlInput.value = url;
+    if (keyInput && !keyInput.value.trim()) keyInput.value = key;
 
     if (!url || !key) {
         if (showToastMsg) showToast('Please enter both Supabase URL & Key', 'fa-solid fa-triangle-exclamation', '#f59e0b');
@@ -451,7 +454,9 @@ function getNeonClient() {
 window.testNeonConnection = async function(showToastMsg = true) {
     const statusBox = document.getElementById('neonConnectionStatusBox');
     const inputUrl = document.getElementById('neonConfigUrl');
-    let rawUrl = inputUrl ? inputUrl.value.trim() : (localStorage.getItem('chocoloom_neon_url') || '');
+    let rawUrl = (inputUrl && inputUrl.value.trim()) ? inputUrl.value.trim() : (localStorage.getItem('chocoloom_neon_url') || NEON_CONFIG.url || DEFAULT_NEON_URL);
+
+    if (inputUrl && !inputUrl.value.trim()) inputUrl.value = rawUrl;
 
     if (!rawUrl) {
         if (statusBox) {
@@ -539,7 +544,7 @@ window.testNeonConnection = async function(showToastMsg = true) {
 
 // Initialize Neon on Startup
 async function initNeon() {
-    const neonUrl = (localStorage.getItem('chocoloom_neon_url') || NEON_CONFIG.url || '').trim();
+    const neonUrl = (localStorage.getItem('chocoloom_neon_url') || NEON_CONFIG.url || DEFAULT_NEON_URL || '').trim();
     if (neonUrl) {
         try {
             await testNeonConnection(false);
@@ -3944,12 +3949,15 @@ async function syncProductToSupabase(prod) {
         }
 
         let syncErr = null;
-        if (prod.sql_id) {
-            const { error } = await supabaseClient.from("products").update(payload).eq("id", prod.sql_id);
+        let updated = false;
+        if (prod.sql_id && !String(prod.sql_id).startsWith('choco_') && !String(prod.sql_id).startsWith('uni_')) {
+            const { data, error } = await supabaseClient.from("products").update(payload).eq("id", prod.sql_id).select("id");
             syncErr = error;
-        } else {
+            if (data && data.length > 0) updated = true;
+        }
+        if (!updated) {
             // Check if product already exists by name before inserting
-            const { data: existing } = await supabaseClient.from("products").select("id").eq("name", prod.name).limit(1);
+            const { data: existing } = await supabaseClient.from("products").select("id").ilike("name", prod.name.trim()).limit(1);
             if (existing && existing.length > 0) {
                 prod.sql_id = existing[0].id;
                 const { error } = await supabaseClient.from("products").update(payload).eq("id", prod.sql_id);

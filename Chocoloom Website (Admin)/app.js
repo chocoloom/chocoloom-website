@@ -1,3 +1,49 @@
+// Universal Asset & Image URL Resolver for WordPress & Local Environments
+if (!window.getThemeAssetUrl) {
+    window.getThemeAssetUrl = function(path) {
+        if (!path || typeof path !== 'string') return path;
+        path = path.trim();
+        if (!path) return '';
+        if (/^(https?:|\/\/|data:|blob:)/i.test(path)) return path;
+        const wpConfig = (typeof window !== 'undefined' && (window.CHOCOLOOM_WP_CONFIG || (window.parent && window.parent.CHOCOLOOM_WP_CONFIG))) || {};
+        const themeUri = wpConfig.themeUri ? wpConfig.themeUri.replace(/\/+$/, '') : '';
+        if (themeUri) return `${themeUri}/${path.replace(/^\/+/, '')}`;
+        return path;
+    };
+}
+
+if (!window.getAppUrl) {
+    window.getAppUrl = function(target) {
+        if (!target || typeof target !== 'string') return target;
+        const wpConfig = (typeof window !== 'undefined' && (window.CHOCOLOOM_WP_CONFIG || (window.parent && window.parent.CHOCOLOOM_WP_CONFIG))) || {};
+        if (!wpConfig.isWordPress) return target;
+        const homeUrl = (wpConfig.homeUrl || '/').replace(/\/+$/, '');
+        const cleanTarget = target.split('?')[0].split('#')[0].replace(/^\/+/, '');
+        const queryAndHash = target.slice(cleanTarget.length + (target.indexOf(cleanTarget) > -1 ? target.indexOf(cleanTarget) : 0));
+
+        if (cleanTarget === 'uni-chocoloom.html' || cleanTarget === 'uni-chocoloom') {
+            const cleanQuery = queryAndHash.startsWith('?') ? queryAndHash.slice(1) : queryAndHash;
+            return `${homeUrl}/?page=uni-chocoloom${cleanQuery ? '&' + cleanQuery : ''}`;
+        }
+        if (cleanTarget === 'chocowallet.html' || cleanTarget === 'chocowallet') {
+            const cleanQuery = queryAndHash.startsWith('?') ? queryAndHash.slice(1) : queryAndHash;
+            return `${homeUrl}/?page=chocowallet${cleanQuery ? '&' + cleanQuery : ''}`;
+        }
+        if (cleanTarget === 'login.html' || cleanTarget === 'login') {
+            const cleanQuery = queryAndHash.startsWith('?') ? queryAndHash.slice(1) : queryAndHash;
+            return `${homeUrl}/?page=login${cleanQuery ? '&' + cleanQuery : ''}`;
+        }
+        if (cleanTarget === 'landing.html' || cleanTarget === 'landing') {
+            const cleanQuery = queryAndHash.startsWith('?') ? queryAndHash.slice(1) : queryAndHash;
+            return `${homeUrl}/?page=landing${cleanQuery ? '&' + cleanQuery : ''}`;
+        }
+        if (cleanTarget === 'order.html' || cleanTarget === 'order' || cleanTarget === 'index.html') {
+            return `${homeUrl}/${queryAndHash}`;
+        }
+        return target;
+    };
+}
+
 // Global Application State & Razorpay Config
 window.RAZORPAY_KEY_ID = 'rzp_live_TY0ywET3NDwC4O';
 
@@ -12,11 +58,16 @@ let initialSelectedLoc = SWIGGY_DATA.locations[0];
 if (savedLocationData) {
     try {
         const parsedLoc = JSON.parse(savedLocationData);
-        if (parsedLoc && parsedLoc.name) {
+        // If parsed location is an old dummy non-Bhimavaram city, reset it to Bhimavaram
+        const nonBvrmCities = ['bengaluru', 'bangalore', 'mumbai', 'delhi', 'hyderabad', 'pune', 'chennai'];
+        const isOldDummy = parsedLoc && parsedLoc.city && nonBvrmCities.some(c => parsedLoc.city.toLowerCase().includes(c));
+        if (parsedLoc && parsedLoc.name && !isOldDummy) {
             initialSelectedLoc = parsedLoc;
             if (!SWIGGY_DATA.locations.some(l => l.name === parsedLoc.name && l.city === parsedLoc.city)) {
                 SWIGGY_DATA.locations.unshift(parsedLoc);
             }
+        } else {
+            localStorage.setItem('chocoloom_location', JSON.stringify(SWIGGY_DATA.locations[0]));
         }
     } catch (e) {}
 }
@@ -27,14 +78,22 @@ try {
     if (rawUser) savedUserSession = JSON.parse(rawUser);
 } catch (e) {}
 
-let savedCustProfile = { name: '', phone: '', street: '', city: 'Bengaluru', pincode: '', notes: '', paymentMethod: 'UPI / Online' };
+let savedCustProfile = { name: '', phone: '', street: '', city: 'Bhimavaram', pincode: '534204', notes: '', paymentMethod: 'UPI / Online' };
 try {
     const rawCust = localStorage.getItem('chocoloom_customer_profile');
-    if (rawCust) savedCustProfile = { ...savedCustProfile, ...JSON.parse(rawCust) };
+    if (rawCust) {
+        const parsedCust = JSON.parse(rawCust);
+        if (parsedCust && parsedCust.city && ['bengaluru', 'bangalore', 'mumbai', 'delhi'].includes(parsedCust.city.toLowerCase())) {
+            parsedCust.city = 'Bhimavaram';
+            parsedCust.pincode = '534204';
+        }
+        savedCustProfile = { ...savedCustProfile, ...parsedCust };
+    }
 } catch (e) {}
 
 const isCardPurchasedInitial = (function() {
-    try { return localStorage.getItem('chocoloom_wallet_card_purchased') === 'true'; } catch(e) { return false; }
+    try { return localStorage.getItem('chocoloom_wallet_card_purchased') === 'true'; } catch(e) {}
+    return false;
 })();
 
 // Default paymentMethod: Always UPI / Online since ChocoWallet is Coming Soon
@@ -208,9 +267,9 @@ window.buyChocowalletCard = function(details = {}) {
     const defaultHolder = (AppState.currentUser?.name || AppState.customerProfile?.name || 'Mohith Kumar').trim();
     const holderName = (details.cardHolderName || defaultHolder || 'CHOCOLOOM VIP').toUpperCase();
     const phone = details.phone || AppState.currentUser?.phone || AppState.customerProfile?.phone || '+91 98765 43210';
-    const street = details.street || AppState.customerProfile?.street || 'Road No. 12, Jubilee Hills';
-    const city = details.city || AppState.customerProfile?.city || 'Bengaluru';
-    const pincode = details.pincode || AppState.customerProfile?.pincode || '560001';
+    const street = details.street || AppState.customerProfile?.street || 'SRKR Campus Road, Chinna Amiram';
+    const city = details.city || AppState.customerProfile?.city || 'Bhimavaram';
+    const pincode = details.pincode || AppState.customerProfile?.pincode || '534204';
     const edition = details.edition || 'Matte Black Titanium VIP';
 
     const lastFour = Math.floor(1000 + Math.random() * 9000);
@@ -383,7 +442,7 @@ window.buyChocowalletCard = function(details = {}) {
                 bc.postMessage({ type: 'NEW_ORDER', order: cardOrderRecord });
                 bc.close();
             }
-        } catch(e) {}
+        } catch (e) {}
     } catch (e) {}
 
     if (AppState.customerProfile) {
@@ -427,8 +486,8 @@ window.showCardOrderTransitModal = function(givenCardData = null) {
     const lastFour = (cardData.cardNumber ? cardData.cardNumber.slice(-4) : (cardData.maskedNumber ? cardData.maskedNumber.slice(-4) : '8842'));
     const trackingCode = physical.trackingNumber || 'BD88429108IN';
     const courier = physical.courier || 'BlueDart Express Air Priority';
-    const city = physical.shippingAddress ? physical.shippingAddress.split(',').pop().trim() : (AppState.customerProfile?.city || 'Bengaluru');
-    const address = physical.shippingAddress || (AppState.customerProfile?.street ? `${AppState.customerProfile.street}, ${AppState.customerProfile.city || ''} - ${AppState.customerProfile.pincode || ''}` : 'Bengaluru, 560001');
+    const city = physical.shippingAddress ? physical.shippingAddress.split(',').pop().trim() : (AppState.customerProfile?.city || 'Bhimavaram');
+    const address = physical.shippingAddress || (AppState.customerProfile?.street ? `${AppState.customerProfile.street}, ${AppState.customerProfile.city || ''} - ${AppState.customerProfile.pincode || ''}` : 'SRKR Campus Road, Bhimavaram, 534204');
     const phone = physical.phone || (AppState.currentUser?.phone || AppState.customerProfile?.phone || '+91 98765 43210');
     const edition = cardData.edition || 'Matte Black Titanium VIP';
     const bal = window.getChocowalletBalance();
@@ -707,7 +766,7 @@ window.closeCardTransitModal = function(scrollToTracker = false) {
     }
     if (scrollToTracker) {
         if (!window.location.pathname.includes('chocowallet.html')) {
-            window.location.href = 'chocowallet.html#physicalTrackerCard';
+            window.location.href = window.getAppUrl('chocowallet.html#physicalTrackerCard');
             return;
         }
         const trackerEl = document.getElementById('physicalTrackerCard');
@@ -743,7 +802,7 @@ window.openBuyCardModal = function() {
     const defaultHolder = (AppState.currentUser?.name || AppState.customerProfile?.name || 'Mohith Kumar').trim();
     const phone = AppState.currentUser?.phone || AppState.customerProfile?.phone || '';
     const street = AppState.customerProfile?.street || '';
-    const city = AppState.customerProfile?.city || 'Bengaluru';
+    const city = AppState.customerProfile?.city || 'Bhimavaram';
     const pincode = AppState.customerProfile?.pincode || '';
 
     modal.innerHTML = `
@@ -842,7 +901,7 @@ window.handleModalBuyCardSubmit = function(e) {
 };
 
 window.openChocowalletModal = function() {
-    window.location.href = 'chocowallet.html';
+    window.location.href = window.getAppUrl('chocowallet.html');
 };
 
 window.closeChocowalletModal = function() {
@@ -916,8 +975,17 @@ const SUPABASE_CONFIG = {
 
 const DEFAULT_NEON_URL = 'postgresql://neondb_owner:npg_yrd3JMAzmWg2@ep-bold-math-b5bam8cm-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
 
+function sanitizeNeonUrl(raw) {
+    if (!raw || typeof raw !== 'string') return DEFAULT_NEON_URL;
+    let s = raw.trim();
+    if (s.includes('ep-bold-math-b5bam8cm') && !s.includes('ep-bold-math-b5bam8cm-pooler.c-7')) {
+        s = s.replace(/ep-bold-math-b5bam8cm(-pooler)?(\.[a-z0-9-]+)?\.aws\.neon\.tech/g, 'ep-bold-math-b5bam8cm-pooler.c-7.us-east-2.aws.neon.tech');
+    }
+    return s;
+}
+
 const NEON_CONFIG = {
-    url: (savedNeonUrl || DEFAULT_NEON_URL).trim()
+    url: sanitizeNeonUrl(savedNeonUrl || DEFAULT_NEON_URL)
 };
 
 let supabaseClient = null;
@@ -941,6 +1009,11 @@ function parseNeonConnectionString(raw) {
     s = s.replace(/^(?:psql\s+)?['"]?/, '').replace(/['"]?$/, '');
     s = s.replace(/^DATABASE_URL\s*=\s*['"]?/, '').replace(/['"]?$/, '');
     s = s.replace(/\s+/g, '').trim();
+
+    // Auto-normalize any ep-bold-math-b5bam8cm host to verified working pooled endpoint
+    if (s.includes('ep-bold-math-b5bam8cm') && !s.includes('ep-bold-math-b5bam8cm-pooler.c-7')) {
+        s = s.replace(/ep-bold-math-b5bam8cm(-pooler)?(\.[a-z0-9-]+)?\.aws\.neon\.tech/g, 'ep-bold-math-b5bam8cm-pooler.c-7.us-east-2.aws.neon.tech');
+    }
 
     const protoIdx = s.indexOf('://');
     if (protoIdx === -1) return null;
@@ -1034,7 +1107,16 @@ function createNeonSql(connString) {
 }
 
 function getNeonClient() {
-    const raw = localStorage.getItem('chocoloom_neon_url') || NEON_CONFIG.url;
+    let raw = localStorage.getItem('chocoloom_neon_url');
+    if (raw) {
+        const sanitized = sanitizeNeonUrl(raw);
+        if (sanitized !== raw) {
+            localStorage.setItem('chocoloom_neon_url', sanitized);
+            raw = sanitized;
+        }
+    } else {
+        raw = NEON_CONFIG.url;
+    }
     if (!raw || !raw.trim()) return null;
     const parsed = parseNeonConnectionString(raw);
     if (!parsed) return null;
@@ -1143,6 +1225,11 @@ function applyNeonProductsToCatalog(liveProducts, showToastNotification = false)
             cooling_price_1_5kg: cooling15,
             cooling_price_2kg: cooling20,
             cooling_price_3kg: cooling30,
+            cooling_price_charge: cooling05,
+            has_flavours: r.has_flavours !== undefined ? (r.has_flavours === true || r.has_flavours === 'true') : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(category),
+            flavour: r.flavour || (existing ? existing.flavour : ''),
+            default_flavour: r.default_flavour || r.flavour || (existing ? existing.default_flavour : 'Auto-Detect from Cake Name'),
+            flavour_prices: (typeof r.flavour_prices === 'object' && r.flavour_prices !== null) ? r.flavour_prices : (existing && existing.flavour_prices ? existing.flavour_prices : {}),
             description: r.description || (existing ? existing.description : ''),
             image: finalImage,
             image_url: finalImage,
@@ -1255,7 +1342,7 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
 
         if (match) {
             // Apply fresh live price from database
-            if (effectivePrice > 0 && match.price !== effectivePrice) {
+            if (match.price !== effectivePrice) {
                 match.price = effectivePrice;
                 anyPriceUpdated = true;
                 updatedCount++;
@@ -1450,7 +1537,7 @@ if (typeof window !== 'undefined') {
             if (typeof window.loadCatalogFromNeon === 'function') {
                 await window.loadCatalogFromNeon(false);
             }
-        } catch(e) {}
+        } catch (e) {}
     }, 8000);
 
     // Auto-refresh live catalog immediately when user switches back to this tab (debounced 2s)
@@ -1532,7 +1619,7 @@ async function loadServerCatalogOverrides() {
                             }
                         }
 
-                        if (data.overrides && Object.keys(data.overrides).length > 0) {
+                        if (data.overrides && Object.keys(data.overrides).length > 0 && !window._neonDatabaseLoaded) {
                             const curO = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
                             if (JSON.stringify(curO) !== JSON.stringify({ ...curO, ...data.overrides })) {
                                 localStorage.setItem("chocoloom_price_overrides", JSON.stringify({ ...curO, ...data.overrides }));
@@ -1580,9 +1667,9 @@ async function loadServerCatalogOverrides() {
                         break;
                     }
                 }
-            } catch(err) {}
+            } catch (err) {}
         }
-    } catch(e) {}
+    } catch (e) {}
 }
 
 // ==================== SUPABASE ORDER PROCESSING ENGINE ====================
@@ -1613,8 +1700,8 @@ function createSupabaseOrderPayload() {
     const custName = (nameEl ? nameEl.value : AppState.customerProfile?.name || '').trim() || 'Guest Customer';
     const custPhone = (phoneEl ? phoneEl.value : AppState.customerProfile?.phone || '').trim() || '+91 98765 43210';
     const custStreet = (streetEl ? streetEl.value : AppState.customerProfile?.street || '').trim();
-    const custCity = (cityEl ? cityEl.value : AppState.customerProfile?.city || AppState.selectedLocation?.city || 'Bengaluru').trim();
-    const custPincode = (pincodeEl ? pincodeEl.value : AppState.customerProfile?.pincode || '').trim();
+    const custCity = (cityEl ? cityEl.value : AppState.customerProfile?.city || AppState.selectedLocation?.city || 'Bhimavaram').trim();
+    const custPincode = (pincodeEl ? pincodeEl.value : AppState.customerProfile?.pincode || '534204').trim();
     const custNotes = (notesEl ? notesEl.value : AppState.customerProfile?.notes || '').trim();
     const payMethod = (AppState.customerProfile && AppState.customerProfile.paymentMethod) ? AppState.customerProfile.paymentMethod : 'Chocowallet Card';
 
@@ -1622,7 +1709,7 @@ function createSupabaseOrderPayload() {
     const fullAddressParts = [custStreet, custCity, custPincode ? `PIN: ${custPincode}` : ''].filter(Boolean);
     const fullAddress = fullAddressParts.length > 0 ? fullAddressParts.join(', ') : `${custCity}, India`;
 
-    // Map cart items with structured weight & cooling customization options
+    // Map cart items with structured weight, dietary & cooling customization options
     const itemsSummary = validCart.map(item => {
         const dish = item.dish || {};
         const p = Number(dish.price || 0);
@@ -1632,11 +1719,15 @@ function createSupabaseOrderPayload() {
         const isCooling = Boolean(dish.isCooling);
         const coolingOpt = (dish.has_cooling === false) ? 'Standard' : (dish.coolingOption || (isCooling ? 'Cooling Cake' : 'Normal Cake'));
         const coolingP = (dish.has_cooling === false) ? 0 : Number(dish.coolingPrice || 0);
-        const weightP = Number(dish.weightPrice || (p - coolingP));
+        const isEggless = Boolean(dish.isEggless);
+        const egglessP = Number(dish.egglessPrice || 0);
+        const egglessOpt = dish.isEggless !== undefined ? (isEggless ? `100% Eggless (+₹${egglessP})` : 'With Egg') : null;
+        const weightP = Number(dish.weightPrice || (p - coolingP - egglessP));
         const msg = dish.customMessage || null;
         const optParts = [];
         if (flv) optParts.push(`Flavour: ${flv}`);
         if (dish.has_weight !== false && w !== 'Standard') optParts.push(w);
+        if (egglessOpt) optParts.push(isEggless ? `🌱 ${egglessOpt}` : `🥚 ${egglessOpt}`);
         if (dish.has_cooling !== false && coolingOpt !== 'Standard') optParts.push(`${coolingOpt}${coolingP > 0 ? ` (+₹${coolingP})` : ''}`);
         if (msg) optParts.push(`Note: "${msg}"`);
         const optSummary = optParts.length > 0 ? optParts.join(' | ') : 'Standard Unit';
@@ -1649,6 +1740,9 @@ function createSupabaseOrderPayload() {
             selected_flavour: flv,
             selected_weight: w,
             weight_price: weightP,
+            is_eggless: isEggless,
+            eggless_price: egglessP,
+            dietary_option: egglessOpt || (dish.isVeg ? 'Veg' : 'Standard'),
             is_cooling: isCooling,
             cooling_option: coolingOpt,
             cooling_price: coolingP,
@@ -1664,8 +1758,8 @@ function createSupabaseOrderPayload() {
         };
     });
 
-    // Formulate a concise summary of items with weight & cooling for easy viewing in any SQL client
-    const itemsTextSummary = itemsSummary.map(it => `${it.quantity}x ${it.name} (${it.selected_flavour ? it.selected_flavour + ', ' : ''}${it.selected_weight}, ${it.is_cooling ? 'Cooling (+₹' + it.cooling_price + ')' : 'Normal'})`).join('; ');
+    // Formulate a concise summary of items with weight, dietary & cooling for easy viewing in any SQL client
+    const itemsTextSummary = itemsSummary.map(it => `${it.quantity}x ${it.name} (${it.selected_flavour ? it.selected_flavour + ', ' : ''}${it.selected_weight}${it.is_eggless !== undefined ? (it.is_eggless ? ', 🌱 Eggless' : ', 🥚 With Egg') : ''}, ${it.is_cooling ? 'Cooling (+₹' + it.cooling_price + ')' : 'Normal'})`).join('; ');
     const combinedNotes = [custNotes, `[Order Items: ${itemsTextSummary}]`].filter(Boolean).join(' | ');
 
     return {
@@ -2107,14 +2201,979 @@ function hideSiteLoadingSplash() {
         setTimeout(() => {
             try {
                 if (splash.parentNode) splash.parentNode.removeChild(splash);
-            } catch(e) {}
+            } catch (e) {}
         }, 400);
     }
 }
 window.hideSiteLoadingSplash = hideSiteLoadingSplash;
 
+// ==================== BESPOKE STUDIO & CUSTOM CREATIONS (APPLE iOS STYLE) ====================
+const NORMAL_PHOTO_CAKE_FLAVOURS = [
+    'Vanilla',
+    'Butterscotch',
+    'Strawberry',
+    'Pineapple',
+    'Chocolate'
+];
+
+const COOLING_PHOTO_CAKE_FLAVOURS = [
+    'Vanilla',
+    'Butterscotch',
+    'Strawberry',
+    'Pineapple',
+    'Blueberry',
+    'Black Currant',
+    'Chocolate',
+    'Black Forest',
+    'Milk Badam',
+    'Honey Almond',
+    'Red Velvet',
+    'White Forest',
+    'Caramel',
+    'Milky Butterscotch',
+    'Nutty Bubble'
+];
+
+const BespokeState = {
+    photoCake: {
+        weight: '1.0 kg',
+        category: 'normal',
+        flavor: 'Vanilla',
+        isEggless: false,
+        message: '',
+        date: '',
+        time: '',
+        notes: '',
+        photoUrl: ''
+    },
+    stepCake: {
+        tiers: 2,
+        price: 2499,
+        weight: '3.0 kg',
+        tier1: 'Belgian Dark Chocolate Truffle (Base Tier)',
+        tier2: 'Red Velvet Cream Cheese (Mid Tier)',
+        tier3: 'Vanilla Bean & Wild Berry (Top Tier)',
+        finishTheme: '24K Gold Foil & Fresh Floral Luxe',
+        isEggless: true,
+        message: '',
+        date: '',
+        notes: ''
+    },
+    waveBox: {
+        size: 8,
+        price: 899,
+        ribbon: 'Royal Gold Luxe',
+        message: '',
+        items: {
+            'Belgian Dark Chocolate Truffle': 2,
+            'Fudge Walnut Brownie Bite': 2,
+            'French Berry Macaron': 2,
+            'Hazelnut Praline Bonbon': 2
+        }
+    }
+};
+
+const WAVE_ARTISAN_ITEMS = [
+    { name: 'Belgian Dark Chocolate Truffle', desc: '70% dark ganache rolled in cocoa' },
+    { name: 'Fudge Walnut Brownie Bite', desc: 'Slow-baked gooey brownie squares' },
+    { name: 'French Berry Macaron', desc: 'Crisp almond shell with strawberry center' },
+    { name: 'Hazelnut Praline Bonbon', desc: 'Roasted hazelnuts & smooth milk choco' },
+    { name: 'Salted Caramel Tart Bite', desc: 'Buttery tart with sea-salt caramel' },
+    { name: 'Red Velvet Cake Pop', desc: 'Cream cheese swirl coated in white choco' },
+    { name: 'White Chocolate Pistachio Truffle', desc: 'Persian pistachio with velvet white' },
+    { name: 'Lotus Biscoff Crunch Square', desc: 'Speculoos crust with molten biscoff' }
+];
+
+function ensureBespokeModalsDOM() {
+    if (document.getElementById('photoReferenceModalBackdrop')) return;
+
+    const modalHTML = `
+    <!-- 1. PHOTO REFERENCE MODAL -->
+    <div class="bespoke-modal-backdrop" id="photoReferenceModalBackdrop" onclick="if(event.target===this) closePhotoReferenceModal();">
+        <div class="bespoke-modal-container" role="dialog" aria-modal="true" aria-labelledby="photoModalTitle">
+            <div class="ios-sheet-handle"></div>
+            <div class="bespoke-modal-header">
+                <span class="bespoke-modal-badge" style="background: rgba(79, 70, 229, 0.1); color: #4f46e5;">
+                    <i class="fa-solid fa-camera-retro"></i> 100% Custom Cake Design
+                </span>
+                <h3 class="bespoke-modal-title" id="photoModalTitle">Order by Reference Photo</h3>
+                <p class="bespoke-modal-sub">Upload your dream cake from Pinterest or Instagram</p>
+                <button type="button" class="ios-modal-close-btn" onclick="closePhotoReferenceModal()" aria-label="Close modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="bespoke-modal-body">
+                <!-- 1. Cake Reference Photo -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label">
+                        <span><i class="fa-solid fa-cloud-arrow-up"></i> Cake Reference Photo</span>
+                        <span style="font-size: 11px; color: #64748b; font-weight: normal;">JPG, PNG, WebP</span>
+                    </label>
+                    <div class="bespoke-upload-box" id="photoUploadDropzone" onclick="document.getElementById('photoCakeFileInput').click();">
+                        <i class="fa-solid fa-images" style="font-size: 32px; color: #4f46e5; margin-bottom: 8px;"></i>
+                        <div style="font-size: 13px; font-weight: 700; color: #1e293b;">Click to upload or drag photo here</div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 3px;">Pinterest screenshot, Instagram post or sketch</div>
+                        <input type="file" id="photoCakeFileInput" accept="image/*" style="display:none;" onchange="handlePhotoCakeFileSelect(event)">
+                    </div>
+                    <div class="bespoke-preview-img-wrap" id="photoCakePreviewWrap" style="display:none;">
+                        <img id="photoCakePreviewImg" src="" alt="Cake Reference Preview">
+                        <button type="button" class="bespoke-remove-photo-btn" onclick="removePhotoCakePreview()" title="Remove photo">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. Image URL -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label">
+                        <span><i class="fa-solid fa-link"></i> Image URL</span>
+                        <span style="font-size: 11px; color: #64748b; font-weight: normal;">Optional</span>
+                    </label>
+                    <input type="url" class="bespoke-input" id="photoCakeUrlInput" placeholder="Or paste Pinterest / Instagram image link..." onchange="handlePhotoCakeUrlChange(this.value)">
+                </div>
+
+                <!-- 3. Cake Weight / Servings & 4. Short red disclaimer -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label">
+                        <span><i class="fa-solid fa-weight-scale"></i> Cake Weight / Servings</span>
+                    </label>
+                    <div class="ios-segmented-control" id="photoWeightSegments">
+                        <button type="button" class="ios-segment-btn" onclick="setPhotoWeight('0.5 kg', this)">0.5 kg</button>
+                        <button type="button" class="ios-segment-btn active" onclick="setPhotoWeight('1.0 kg', this)">1.0 kg</button>
+                        <button type="button" class="ios-segment-btn" onclick="setPhotoWeight('1.5 kg', this)">1.5 kg</button>
+                        <button type="button" class="ios-segment-btn" onclick="setPhotoWeight('2.0 kg', this)">2.0 kg</button>
+                        <button type="button" class="ios-segment-btn" onclick="setPhotoWeight('3.0 kg+', this)">3.0 kg+</button>
+                    </div>
+                    <div class="photo-weight-disclaimer" style="color: #dc2626; font-size: 11.5px; font-weight: 600; line-height: 1.4; margin-top: 5px; display: flex; align-items: flex-start; gap: 6px;">
+                        <span style="font-size: 13px; line-height: 1;">⚠️</span>
+                        <span>Selected weight is subject to design feasibility. Final weight and price will be confirmed via WhatsApp.</span>
+                    </div>
+                </div>
+
+                <!-- 5. Normal / Cooling category -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label">
+                        <span><i class="fa-solid fa-layer-group"></i> Cake Category</span>
+                    </label>
+                    <div class="ios-segmented-control" id="photoCakeCategorySegments">
+                        <button type="button" class="ios-segment-btn active" id="photoCatNormalBtn" onclick="setPhotoCakeCategory('normal', this)">🎂 Normal Cakes</button>
+                        <button type="button" class="ios-segment-btn" id="photoCatCoolingBtn" onclick="setPhotoCakeCategory('cooling', this)">❄️ Cooling Cakes</button>
+                    </div>
+                </div>
+
+                <!-- 6. Category-specific cake flavour -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label">
+                        <span><i class="fa-solid fa-wand-magic-sparkles"></i> Cake Flavour</span>
+                        <span id="photoFlavourCategoryBadge" style="font-size: 11px; color: #4f46e5; font-weight: 700;">Normal Cakes (5 Flavours)</span>
+                    </label>
+                    <select class="bespoke-select" id="photoCakeFlavorSelect" onchange="BespokeState.photoCake.flavor = this.value;">
+                        <option value="Vanilla" selected>Vanilla</option>
+                        <option value="Butterscotch">Butterscotch</option>
+                        <option value="Strawberry">Strawberry</option>
+                        <option value="Pineapple">Pineapple</option>
+                        <option value="Chocolate">Chocolate</option>
+                    </select>
+                </div>
+
+                <!-- 7. Egg / Eggless selection -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label">
+                        <span><i class="fa-solid fa-egg"></i> Cake Type (Egg / Eggless)</span>
+                        <span id="photoEgglessBadge" style="font-size: 11px; font-weight: 700; color: #64748b;">Regular base price</span>
+                    </label>
+                    <div class="ios-segmented-control" id="photoEggSegments">
+                        <button type="button" class="ios-segment-btn active" id="photoEggBtnEgg" onclick="setPhotoEggOption(false, this)">🥚 With Egg</button>
+                        <button type="button" class="ios-segment-btn" id="photoEggBtnEggless" onclick="setPhotoEggOption(true, this)">🌱 100% Pure Eggless</button>
+                    </div>
+                    <div id="photoEgglessNote" style="font-size: 11.5px; color: #64748b; font-weight: 600; margin-top: 3px;">
+                        Standard recipe with egg. Regular base price.
+                    </div>
+                </div>
+
+                <!-- 8. Message / Name on Cake -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label"><span><i class="fa-solid fa-pen-nib"></i> Message / Name on Cake</span></label>
+                    <input type="text" class="bespoke-input" id="photoCakeMessageInput" placeholder="e.g. Happy 21st Birthday Diya! ✨" oninput="BespokeState.photoCake.message = this.value;">
+                </div>
+
+                <!-- 9. Required Date & Time -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label"><span><i class="fa-regular fa-calendar-check"></i> Required Date & Time</span></label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="date" class="bespoke-input" id="photoCakeDateInput" onchange="BespokeState.photoCake.date = this.value;">
+                        <input type="time" class="bespoke-input" id="photoCakeTimeInput" onchange="BespokeState.photoCake.time = this.value;">
+                    </div>
+                </div>
+
+                <!-- 10. Special Design Notes -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label"><span><i class="fa-regular fa-message"></i> Special Design Notes</span></label>
+                    <textarea class="bespoke-textarea" id="photoCakeNotesInput" rows="2" placeholder="Mention color palette, dietary requests or specific topper requirements..." oninput="BespokeState.photoCake.notes = this.value;"></textarea>
+                </div>
+            </div>
+            <!-- 11. Existing submit / WhatsApp action -->
+            <div class="bespoke-modal-actions">
+                <button type="button" class="bespoke-action-btn-whatsapp" onclick="sendPhotoCakeToWhatsApp()" style="width: 100%; flex: 1; justify-content: center; font-size: 14.5px; padding: 14px 20px;">
+                    <i class="fa-brands fa-whatsapp" style="font-size: 18px;"></i> Order on WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. STEP CAKE MODAL -->
+    <div class="bespoke-modal-backdrop" id="stepCakeModalBackdrop" onclick="if(event.target===this) closeStepCakeModal();">
+        <div class="bespoke-modal-container" role="dialog" aria-modal="true" aria-labelledby="stepModalTitle">
+            <div class="ios-sheet-handle"></div>
+            <div class="bespoke-modal-header">
+                <span class="bespoke-modal-badge" style="background: rgba(217, 119, 6, 0.1); color: #b45309;">
+                    <i class="fa-solid fa-layer-group"></i> Grand Celebrations
+                </span>
+                <h3 class="bespoke-modal-title" id="stepModalTitle">Customise Step Cake</h3>
+                <p class="bespoke-modal-sub">Multi-tier tiered masterpieces for weddings & milestones</p>
+                <button type="button" class="ios-modal-close-btn" onclick="closeStepCakeModal()" aria-label="Close modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="bespoke-modal-body">
+                <!-- Tier Choice (iOS Segmented Control) -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label">
+                        <span><i class="fa-solid fa-crown"></i> Select Tier Architecture</span>
+                        <span id="stepTierPriceBadge" style="color: #b45309; font-weight: 800;">₹2,499</span>
+                    </label>
+                    <div class="ios-segmented-control" id="stepTierSegments">
+                        <button type="button" class="ios-segment-btn active" onclick="setStepTierCount(2, 2499, '3.0 kg', this)">2-Tier Step Cake (approx 3.0 kg)</button>
+                        <button type="button" class="ios-segment-btn" onclick="setStepTierCount(3, 4299, '5.0 kg', this)">3-Tier Grand Royal (approx 5.0 kg)</button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Tier Diagram Visualizer -->
+                <div class="step-cake-diagram" id="stepCakeDiagram">
+                    <div class="step-tier-block step-tier-3" id="stepTierBlock3" style="display:none;">Top Tier (1.0 kg)</div>
+                    <div class="step-tier-block step-tier-2" id="stepTierBlock2">Top / Mid Tier (1.0 kg)</div>
+                    <div class="step-tier-block step-tier-1" id="stepTierBlock1">Base Foundation Tier (2.0 kg)</div>
+                </div>
+
+                <!-- Tier 1 Base Flavour -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label"><span><i class="fa-solid fa-layer-group"></i> Base Tier Flavour (Foundation)</span></label>
+                    <select class="bespoke-select" id="stepTier1Select" onchange="BespokeState.stepCake.tier1 = this.value;">
+                        <option value="Belgian Dark Chocolate Truffle" selected>Belgian Dark Chocolate Truffle</option>
+                        <option value="Dutch Truffle & Hazelnut">Dutch Truffle & Hazelnut</option>
+                        <option value="Royal Rasmalai Cream">Royal Rasmalai Cream</option>
+                        <option value="Red Velvet Cream Cheese">Red Velvet Cream Cheese</option>
+                    </select>
+                </div>
+
+                <!-- Tier 2 Mid/Top Flavour -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label"><span><i class="fa-solid fa-layer-group"></i> 2nd Tier Flavour</span></label>
+                    <select class="bespoke-select" id="stepTier2Select" onchange="BespokeState.stepCake.tier2 = this.value;">
+                        <option value="Red Velvet Cream Cheese" selected>Red Velvet Cream Cheese</option>
+                        <option value="Belgian Dark Chocolate Truffle">Belgian Dark Chocolate Truffle</option>
+                        <option value="Fresh Strawberry Berry Bliss">Fresh Strawberry Berry Bliss</option>
+                        <option value="Lotus Biscoff Salted Caramel">Lotus Biscoff Salted Caramel</option>
+                    </select>
+                </div>
+
+                <!-- Tier 3 Top Flavour (shown for 3 tier) -->
+                <div class="bespoke-form-group" id="stepTier3Group" style="display:none;">
+                    <label class="bespoke-label"><span><i class="fa-solid fa-layer-group"></i> Top Tier Flavour</span></label>
+                    <select class="bespoke-select" id="stepTier3Select" onchange="BespokeState.stepCake.tier3 = this.value;">
+                        <option value="Vanilla Bean & Wild Berry" selected>Vanilla Bean & Wild Berry</option>
+                        <option value="French Hazelnut Praline">French Hazelnut Praline</option>
+                        <option value="Belgian Truffle Chocolate">Belgian Truffle Chocolate</option>
+                    </select>
+                </div>
+
+                <!-- Luxury Finish & Theme -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label"><span><i class="fa-solid fa-sparkles"></i> Luxury Finish & Theme</span></label>
+                    <select class="bespoke-select" id="stepThemeSelect" onchange="BespokeState.stepCake.finishTheme = this.value;">
+                        <option value="24K Edible Gold Foil & Fresh Floral Luxe" selected>24K Edible Gold Foil & Fresh Floral Luxe</option>
+                        <option value="Minimalist Textured Buttercream & Macarons">Minimalist Textured Buttercream & Macarons</option>
+                        <option value="Royal Pearl & Ivory Lace Wedding Elegance">Royal Pearl & Ivory Lace Wedding Elegance</option>
+                        <option value="Modern Geometric & Chocolate Geode">Modern Geometric & Chocolate Geode</option>
+                    </select>
+                </div>
+
+                <!-- Eggless Switch -->
+                <div class="ios-switch-row">
+                    <div class="ios-switch-label">
+                        <span>🌱 100% Pure Eggless</span>
+                        <span>Multi-tier stability with 100% eggless sponge</span>
+                    </div>
+                    <label class="ios-switch">
+                        <input type="checkbox" id="stepEgglessToggle" checked onchange="BespokeState.stepCake.isEggless = this.checked;">
+                        <span class="ios-switch-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Custom Acrylic / Gold Topper -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label"><span><i class="fa-solid fa-crown"></i> Custom Topper Inscription</span></label>
+                    <input type="text" class="bespoke-input" id="stepTopperInput" placeholder="e.g. Mr & Mrs Sharma / Happy 50th Anniversary" oninput="BespokeState.stepCake.message = this.value;">
+                </div>
+
+                <!-- Required Event Date -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label"><span><i class="fa-regular fa-calendar-check"></i> Event Date & Venue Delivery Slot</span></label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="date" class="bespoke-input" id="stepDateInput" onchange="BespokeState.stepCake.date = this.value;">
+                        <input type="time" class="bespoke-input" id="stepTimeInput" onchange="BespokeState.stepCake.time = this.value;">
+                    </div>
+                </div>
+            </div>
+            <div class="bespoke-modal-actions">
+                <button type="button" class="bespoke-action-btn-primary" onclick="addStepCakeToCart()" style="background: linear-gradient(180deg, #d97706 0%, #b45309 100%);">
+                    <i class="fa-solid fa-bag-shopping"></i> <span id="stepCakeCartBtnText">Add Step Cake • ₹2,499</span>
+                </button>
+                <button type="button" class="bespoke-action-btn-whatsapp" onclick="sendStepCakeToWhatsApp()">
+                    <i class="fa-brands fa-whatsapp"></i> Order on WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. CHOCOLOOM WAVE BOX MODAL -->
+    <div class="bespoke-modal-backdrop" id="waveBoxModalBackdrop" onclick="if(event.target===this) closeWaveBoxModal();">
+        <div class="bespoke-modal-container" role="dialog" aria-modal="true" aria-labelledby="waveModalTitle">
+            <div class="ios-sheet-handle"></div>
+            <div class="bespoke-modal-header">
+                <span class="bespoke-modal-badge" style="background: rgba(219, 39, 119, 0.1); color: #be185d;">
+                    <i class="fa-solid fa-box-open"></i> Signature Luxe Hamper
+                </span>
+                <h3 class="bespoke-modal-title" id="waveModalTitle">Chocoloom Wave Box</h3>
+                <p class="bespoke-modal-sub">Hand-curate an artisan dessert collection in our keepsake box</p>
+                <button type="button" class="ios-modal-close-btn" onclick="closeWaveBoxModal()" aria-label="Close modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="bespoke-modal-body">
+                <!-- Box Size Selection (iOS Segmented Control) -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label">
+                        <span><i class="fa-solid fa-cubes"></i> Select Box Size</span>
+                        <span id="waveBoxPriceBadge" style="color: #be185d; font-weight: 800;">₹899</span>
+                    </label>
+                    <div class="ios-segmented-control" id="waveBoxSegments">
+                        <button type="button" class="ios-segment-btn" onclick="setWaveBoxSize(4, 499, this)">Petite (4 Treats)</button>
+                        <button type="button" class="ios-segment-btn active" onclick="setWaveBoxSize(8, 899, this)">Classic (8 Treats)</button>
+                        <button type="button" class="ios-segment-btn" onclick="setWaveBoxSize(12, 1349, this)">Grand (12 Treats)</button>
+                    </div>
+                </div>
+
+                <!-- Live Counter Status -->
+                <div class="ios-grouped-box" style="display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-size: 13px; font-weight: 700; color: #1e293b;">
+                        <i class="fa-solid fa-basket-shopping" style="color: #db2777; margin-right: 6px;"></i> Selected Treats
+                    </span>
+                    <span style="font-size: 13px; font-weight: 800; color: #db2777;">
+                        <span id="waveSelectedCountText">8</span> / <span id="waveTargetCountText">8</span>
+                    </span>
+                </div>
+
+                <!-- Artisan Treats Selection Grid -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label"><span><i class="fa-solid fa-cookie-bite"></i> Pick Your Handcrafted Treats</span></label>
+                    <div class="wave-items-grid" id="waveItemsGrid">
+                        <!-- Populated by renderWaveItemsGrid() -->
+                    </div>
+                </div>
+
+                <!-- Satin Ribbon Color -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label"><span><i class="fa-solid fa-ribbon"></i> Keepsake Ribbon Finish</span></label>
+                    <select class="bespoke-select" id="waveRibbonSelect" onchange="BespokeState.waveBox.ribbon = this.value;">
+                        <option value="Royal Gold Luxe" selected>Royal Gold Luxe (Signature)</option>
+                        <option value="Blush Pink Satin">Blush Pink Satin</option>
+                        <option value="Midnight Navy Velvet">Midnight Navy Velvet</option>
+                        <option value="Emerald Green Silk">Emerald Green Silk</option>
+                    </select>
+                </div>
+
+                <!-- Handwritten Card Note -->
+                <div class="bespoke-form-group">
+                    <label class="bespoke-label"><span><i class="fa-solid fa-envelope-open-text"></i> Complimentary Handwritten Card</span></label>
+                    <input type="text" class="bespoke-input" id="waveCardInput" placeholder="Write your heartfelt message..." oninput="BespokeState.waveBox.message = this.value;">
+                </div>
+            </div>
+            <div class="bespoke-modal-actions">
+                <button type="button" class="bespoke-action-btn-primary" onclick="addWaveBoxToCart()" style="background: linear-gradient(180deg, #db2777 0%, #be185d 100%);">
+                    <i class="fa-solid fa-bag-shopping"></i> <span id="waveBoxCartBtnText">Add Wave Box • ₹899</span>
+                </button>
+                <button type="button" class="bespoke-action-btn-whatsapp" onclick="sendWaveBoxToWhatsApp()">
+                    <i class="fa-brands fa-whatsapp"></i> Order on WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    renderWaveItemsGrid();
+}
+
+// Global Modal Openers and Closers
+window.openPhotoReferenceModal = function() {
+    ensureBespokeModalsDOM();
+    const modal = document.getElementById('photoReferenceModalBackdrop');
+    if (modal) {
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    if (typeof initPhotoReferenceFormUI === 'function') {
+        initPhotoReferenceFormUI();
+    }
+};
+
+window.closePhotoReferenceModal = function() {
+    const modal = document.getElementById('photoReferenceModalBackdrop');
+    if (modal) {
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+};
+
+window.openStepCakeModal = function() {
+    ensureBespokeModalsDOM();
+    const modal = document.getElementById('stepCakeModalBackdrop');
+    if (modal) {
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+};
+
+window.closeStepCakeModal = function() {
+    const modal = document.getElementById('stepCakeModalBackdrop');
+    if (modal) {
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+};
+
+window.openWaveBoxModal = function() {
+    ensureBespokeModalsDOM();
+    const modal = document.getElementById('waveBoxModalBackdrop');
+    if (modal) {
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+};
+
+window.closeWaveBoxModal = function() {
+    const modal = document.getElementById('waveBoxModalBackdrop');
+    if (modal) {
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+};
+
+// 1. Photo Reference Logic
+function initPhotoReferenceFormUI() {
+    const s = BespokeState.photoCake;
+    
+    // Set min date to today
+    const dateInput = document.getElementById('photoCakeDateInput');
+    if (dateInput) {
+        try {
+            dateInput.min = new Date().toISOString().split('T')[0];
+        } catch (e) {}
+    }
+
+    // Sync Category Segments
+    const catNormalBtn = document.getElementById('photoCatNormalBtn');
+    const catCoolingBtn = document.getElementById('photoCatCoolingBtn');
+    if (catNormalBtn && catCoolingBtn) {
+        catNormalBtn.classList.toggle('active', s.category !== 'cooling');
+        catCoolingBtn.classList.toggle('active', s.category === 'cooling');
+    }
+
+    // Populate Flavours
+    renderPhotoFlavourOptions();
+
+    // Sync Weight Segments
+    const weightSegments = document.querySelectorAll('#photoWeightSegments .ios-segment-btn');
+    weightSegments.forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.trim() === s.weight);
+    });
+
+    // Sync Egg / Eggless Segments
+    const eggBtn = document.getElementById('photoEggBtnEgg');
+    const egglessBtn = document.getElementById('photoEggBtnEggless');
+    if (eggBtn && egglessBtn) {
+        eggBtn.classList.toggle('active', !s.isEggless);
+        egglessBtn.classList.toggle('active', Boolean(s.isEggless));
+    }
+
+    updatePhotoCakeEgglessDisplay();
+}
+
+function renderPhotoFlavourOptions() {
+    const s = BespokeState.photoCake;
+    const category = s.category || 'normal';
+    const flavours = category === 'cooling' ? COOLING_PHOTO_CAKE_FLAVOURS : NORMAL_PHOTO_CAKE_FLAVOURS;
+    const select = document.getElementById('photoCakeFlavorSelect');
+    const badge = document.getElementById('photoFlavourCategoryBadge');
+
+    if (badge) {
+        badge.textContent = category === 'cooling' ? 'Cooling Cakes (15 Flavours)' : 'Normal Cakes (5 Flavours)';
+        badge.style.color = category === 'cooling' ? '#0284c7' : '#4f46e5';
+    }
+
+    if (!select) return;
+
+    // Clear previously selected flavour if not valid for newly selected category
+    if (!flavours.includes(s.flavor)) {
+        s.flavor = flavours[0];
+    }
+
+    select.innerHTML = flavours.map(f => `
+        <option value="${f}" ${f === s.flavor ? 'selected' : ''}>${f}</option>
+    `).join('');
+
+    select.value = s.flavor;
+}
+
+window.setPhotoCakeCategory = function(category, btnEl) {
+    BespokeState.photoCake.category = category;
+    if (btnEl && btnEl.parentNode) {
+        btnEl.parentNode.querySelectorAll('.ios-segment-btn').forEach(b => b.classList.remove('active'));
+        btnEl.classList.add('active');
+    }
+    renderPhotoFlavourOptions();
+};
+
+window.setPhotoWeight = function(weight, priceOrBtn, btnEl) {
+    const el = (priceOrBtn && priceOrBtn.nodeType) ? priceOrBtn : btnEl;
+    BespokeState.photoCake.weight = weight;
+    if (el && el.parentNode) {
+        el.parentNode.querySelectorAll('.ios-segment-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
+    updatePhotoCakeEgglessDisplay();
+};
+
+window.setPhotoEggOption = function(isEggless, btnEl) {
+    BespokeState.photoCake.isEggless = Boolean(isEggless);
+    if (btnEl && btnEl.parentNode) {
+        btnEl.parentNode.querySelectorAll('.ios-segment-btn').forEach(b => b.classList.remove('active'));
+        btnEl.classList.add('active');
+    }
+    updatePhotoCakeEgglessDisplay();
+};
+
+window.togglePhotoCakeEggless = function(checked) {
+    BespokeState.photoCake.isEggless = Boolean(checked);
+    updatePhotoCakeEgglessDisplay();
+};
+
+function updatePhotoCakeEgglessDisplay() {
+    const s = BespokeState.photoCake;
+    const badge = document.getElementById('photoEgglessBadge');
+    const note = document.getElementById('photoEgglessNote');
+
+    if (!s.isEggless) {
+        if (badge) {
+            badge.textContent = 'Regular base price';
+            badge.style.color = '#64748b';
+        }
+        if (note) {
+            note.innerHTML = '🥚 Standard recipe with egg. Regular base price.';
+            note.style.color = '#64748b';
+        }
+        return;
+    }
+
+    let surchargeBadge = '+₹118';
+    let surchargeNote = '🌱 Eggless surcharge: <strong>+₹118</strong> (+₹59 per 0.5 kg)';
+
+    if (s.weight === '0.5 kg') {
+        surchargeBadge = '+₹59';
+        surchargeNote = '🌱 Eggless surcharge: <strong>+₹59</strong> (+₹59 per 0.5 kg)';
+    } else if (s.weight === '1.0 kg') {
+        surchargeBadge = '+₹118';
+        surchargeNote = '🌱 Eggless surcharge: <strong>+₹118</strong> (+₹59 per 0.5 kg)';
+    } else if (s.weight === '1.5 kg') {
+        surchargeBadge = '+₹177';
+        surchargeNote = '🌱 Eggless surcharge: <strong>+₹177</strong> (+₹59 per 0.5 kg)';
+    } else if (s.weight === '2.0 kg') {
+        surchargeBadge = '+₹236';
+        surchargeNote = '🌱 Eggless surcharge: <strong>+₹236</strong> (+₹59 per 0.5 kg)';
+    } else if (s.weight === '3.0 kg+') {
+        surchargeBadge = '+₹59 / 0.5 kg';
+        surchargeNote = '🌱 Eggless surcharge: <strong>Calculated based on actual confirmed weight</strong> via WhatsApp (+₹59 per 0.5 kg)';
+    }
+
+    if (badge) {
+        badge.textContent = surchargeBadge;
+        badge.style.color = '#16a34a';
+    }
+    if (note) {
+        note.innerHTML = surchargeNote;
+        note.style.color = '#16a34a';
+    }
+}
+
+window.handlePhotoCakeFileSelect = function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        BespokeState.photoCake.photoUrl = e.target.result;
+        const previewWrap = document.getElementById('photoCakePreviewWrap');
+        const previewImg = document.getElementById('photoCakePreviewImg');
+        const dropzone = document.getElementById('photoUploadDropzone');
+        if (previewWrap && previewImg) {
+            previewImg.src = e.target.result;
+            previewWrap.style.display = 'block';
+            if (dropzone) dropzone.style.display = 'none';
+        }
+    };
+    reader.readAsDataURL(file);
+};
+
+window.removePhotoCakePreview = function() {
+    BespokeState.photoCake.photoUrl = '';
+    const previewWrap = document.getElementById('photoCakePreviewWrap');
+    const dropzone = document.getElementById('photoUploadDropzone');
+    const fileInput = document.getElementById('photoCakeFileInput');
+    if (previewWrap) previewWrap.style.display = 'none';
+    if (dropzone) dropzone.style.display = 'block';
+    if (fileInput) fileInput.value = '';
+};
+
+window.handlePhotoCakeUrlChange = function(url) {
+    if (!url) return;
+    BespokeState.photoCake.photoUrl = url.trim();
+    const previewWrap = document.getElementById('photoCakePreviewWrap');
+    const previewImg = document.getElementById('photoCakePreviewImg');
+    const dropzone = document.getElementById('photoUploadDropzone');
+    if (previewWrap && previewImg) {
+        previewImg.src = url.trim();
+        previewWrap.style.display = 'block';
+        if (dropzone) dropzone.style.display = 'none';
+    }
+};
+
+window.sendPhotoCakeToWhatsApp = function() {
+    const s = BespokeState.photoCake;
+    const urlInput = document.getElementById('photoCakeUrlInput');
+    const dateInput = document.getElementById('photoCakeDateInput');
+    const timeInput = document.getElementById('photoCakeTimeInput');
+    const msgInput = document.getElementById('photoCakeMessageInput');
+    const notesInput = document.getElementById('photoCakeNotesInput');
+
+    const photoUrl = (urlInput ? urlInput.value.trim() : '') || s.photoUrl || '';
+    const dateVal = (dateInput ? dateInput.value.trim() : '') || s.date || '';
+    const timeVal = (timeInput ? timeInput.value.trim() : '') || s.time || '';
+    const cakeMessage = (msgInput ? msgInput.value.trim() : '') || s.message || '';
+    const designNotes = (notesInput ? notesInput.value.trim() : '') || s.notes || '';
+
+    // Validation: Require reference photo or URL
+    if (!photoUrl && !s.photoUrl) {
+        if (typeof showToast === 'function') {
+            showToast('Please upload a reference photo or paste an image link', 'fa-solid fa-camera-retro', '#ef4444');
+        } else {
+            alert('Please upload a reference photo or paste an image link.');
+        }
+        if (urlInput) urlInput.focus();
+        return;
+    }
+
+    // Validation: Require date
+    if (!dateVal) {
+        if (typeof showToast === 'function') {
+            showToast('Please select your required delivery / event date', 'fa-regular fa-calendar-check', '#ef4444');
+        } else {
+            alert('Please select your required delivery date.');
+        }
+        if (dateInput) dateInput.focus();
+        return;
+    }
+
+    // Eggless surcharge representation
+    let surchargeText = 'None (Regular Base Price)';
+    if (s.isEggless) {
+        if (s.weight === '0.5 kg') surchargeText = '+₹59 (+₹59 per 0.5 kg)';
+        else if (s.weight === '1.0 kg') surchargeText = '+₹118 (+₹59 per 0.5 kg)';
+        else if (s.weight === '1.5 kg') surchargeText = '+₹177 (+₹59 per 0.5 kg)';
+        else if (s.weight === '2.0 kg') surchargeText = '+₹236 (+₹59 per 0.5 kg)';
+        else if (s.weight === '3.0 kg+') surchargeText = 'To be calculated based on actual confirmed weight (+₹59 per 0.5 kg)';
+        else surchargeText = '+₹59 per 0.5 kg';
+    }
+
+    const categoryLabel = s.category === 'cooling' ? 'Cooling Cakes' : 'Normal Cakes';
+    const eggLabel = s.isEggless ? '100% Pure Eggless' : 'With Egg';
+
+    let photoText = 'Customer will attach photo directly in this chat';
+    if (photoUrl && /^https?:\/\//i.test(photoUrl)) {
+        photoText = photoUrl;
+    } else if (s.photoUrl && s.photoUrl.startsWith('data:image')) {
+        photoText = '[Reference photo uploaded — will share directly in chat]';
+    }
+
+    const text = 
+`*🎂 CHOCOLOOM – REFERENCE PHOTO CAKE ENQUIRY*
+
+• *Cake Category:* ${categoryLabel}
+• *Selected Flavour:* ${s.flavor || 'Vanilla'}
+• *Preferred Weight:* ${s.weight || '1.0 kg'}
+• *Cake Type:* ${eggLabel}
+• *Eggless Surcharge:* ${surchargeText}
+• *Message / Name on Cake:* ${cakeMessage || 'None'}
+• *Required Date:* ${dateVal}
+• *Required Time:* ${timeVal || 'Anytime'}
+• *Reference Photo / Link:* ${photoText}
+• *Special Design Notes:* ${designNotes || 'None'}
+
+⚠️ *Reminder:* Selected weight is subject to design feasibility. Final weight and price will be confirmed via WhatsApp.
+
+_Please review my cake design and confirm feasibility & pricing!_ ✨`;
+
+    const encoded = encodeURIComponent(text);
+    const targetUrl = `https://wa.me/919849783788?text=${encoded}`;
+    const win = window.open(targetUrl, '_blank');
+    if (!win || win.closed || typeof win.closed === 'undefined') {
+        window.location.href = targetUrl;
+    }
+    closePhotoReferenceModal();
+};
+
+// 2. Step Cake Logic
+window.setStepTierCount = function(count, price, weight, btnEl) {
+    BespokeState.stepCake.tiers = count;
+    BespokeState.stepCake.price = price;
+    BespokeState.stepCake.weight = weight;
+
+    if (btnEl && btnEl.parentNode) {
+        btnEl.parentNode.querySelectorAll('.ios-segment-btn').forEach(b => b.classList.remove('active'));
+        btnEl.classList.add('active');
+    }
+
+    const badge = document.getElementById('stepTierPriceBadge');
+    if (badge) badge.innerText = `₹${price.toLocaleString()}`;
+    const btnText = document.getElementById('stepCakeCartBtnText');
+    if (btnText) btnText.innerText = `Add Step Cake • ₹${price.toLocaleString()}`;
+
+    const tier3Block = document.getElementById('stepTierBlock3');
+    const tier3Group = document.getElementById('stepTier3Group');
+    if (count === 3) {
+        if (tier3Block) tier3Block.style.display = 'flex';
+        if (tier3Group) tier3Group.style.display = 'flex';
+    } else {
+        if (tier3Block) tier3Block.style.display = 'none';
+        if (tier3Group) tier3Group.style.display = 'none';
+    }
+};
+
+window.addStepCakeToCart = function() {
+    if (!Array.isArray(AppState.cart)) AppState.cart = [];
+    const state = BespokeState.stepCake;
+    const currentRest = SWIGGY_DATA && SWIGGY_DATA.restaurants ? SWIGGY_DATA.restaurants[0] : null;
+
+    const bespokeDish = {
+        id: 'step_cake_' + Date.now(),
+        name: `${state.tiers}-Step Celebration Cake (${state.weight})`,
+        price: state.price,
+        selectedWeight: state.weight,
+        selectedFlavour: state.tiers === 3 ? `Base: ${state.tier1} | Mid: ${state.tier2} | Top: ${state.tier3}` : `Base: ${state.tier1} | Top: ${state.tier2}`,
+        customMessage: state.message || state.finishTheme,
+        isVeg: state.isEggless,
+        image: 'assets/logo.png',
+        category: 'Grand Step Cake'
+    };
+
+    AppState.cart.push({
+        cartItemId: 'step_cart_' + Date.now(),
+        dish: bespokeDish,
+        quantity: 1,
+        restaurant: currentRest
+    });
+
+    if (typeof saveCart === 'function') saveCart();
+    if (typeof updateCartUI === 'function') updateCartUI();
+    closeStepCakeModal();
+
+    if (typeof showToast === 'function') {
+        showToast(`👑 ${state.tiers}-Tier Grand Cake added to Bag!`, 'fa-solid fa-crown', '#d97706');
+    }
+};
+
+window.sendStepCakeToWhatsApp = function() {
+    const s = BespokeState.stepCake;
+    const msg = `*NEW GRAND STEP CAKE ENQUIRY* 🎂👑\n\n` +
+        `• *Architecture:* ${s.tiers}-Tier Step Cake (${s.weight})\n` +
+        `• *Base Tier Flavour:* ${s.tier1}\n` +
+        `• *2nd Tier Flavour:* ${s.tier2}\n` +
+        (s.tiers === 3 ? `• *Top Tier Flavour:* ${s.tier3}\n` : '') +
+        `• *Luxury Theme:* ${s.finishTheme}\n` +
+        `• *Dietary:* ${s.isEggless ? '100% Eggless 🌱' : 'Standard with Egg'}\n` +
+        `• *Topper Inscription:* ${s.message || 'Custom'}\n` +
+        `• *Event Date:* ${s.date || 'To be decided'}\n` +
+        `• *Est. Price:* ₹${s.price.toLocaleString()}\n\n` +
+        `_Please confirm delivery slot & consultation._ ✨`;
+
+    const encoded = encodeURIComponent(msg);
+    window.open(`https://wa.me/919849783788?text=${encoded}`, '_blank');
+    closeStepCakeModal();
+};
+
+// 3. Wave Box Logic
+window.setWaveBoxSize = function(size, price, btnEl) {
+    BespokeState.waveBox.size = size;
+    BespokeState.waveBox.price = price;
+
+    if (btnEl && btnEl.parentNode) {
+        btnEl.parentNode.querySelectorAll('.ios-segment-btn').forEach(b => b.classList.remove('active'));
+        btnEl.classList.add('active');
+    }
+
+    const badge = document.getElementById('waveBoxPriceBadge');
+    if (badge) badge.innerText = `₹${price}`;
+    const btnText = document.getElementById('waveBoxCartBtnText');
+    if (btnText) btnText.innerText = `Add Wave Box • ₹${price}`;
+
+    const targetEl = document.getElementById('waveTargetCountText');
+    if (targetEl) targetEl.innerText = size;
+
+    // Normalize counts to fit new size
+    normalizeWaveItemsCount();
+    renderWaveItemsGrid();
+};
+
+function normalizeWaveItemsCount() {
+    const total = Object.values(BespokeState.waveBox.items).reduce((a, b) => a + b, 0);
+    const target = BespokeState.waveBox.size;
+    if (total > target) {
+        let diff = total - target;
+        for (let key in BespokeState.waveBox.items) {
+            if (BespokeState.waveBox.items[key] > 0) {
+                const sub = Math.min(BespokeState.waveBox.items[key], diff);
+                BespokeState.waveBox.items[key] -= sub;
+                diff -= sub;
+                if (diff <= 0) break;
+            }
+        }
+    }
+}
+
+function renderWaveItemsGrid() {
+    const container = document.getElementById('waveItemsGrid');
+    if (!container) return;
+
+    const totalSelected = Object.values(BespokeState.waveBox.items).reduce((a, b) => a + b, 0);
+    const countEl = document.getElementById('waveSelectedCountText');
+    if (countEl) countEl.innerText = totalSelected;
+
+    container.innerHTML = WAVE_ARTISAN_ITEMS.map(item => {
+        const qty = BespokeState.waveBox.items[item.name] || 0;
+        return `
+            <div class="wave-item-card">
+                <div>
+                    <div class="wave-item-info">${item.name}</div>
+                    <div style="font-size: 10.5px; color: #64748b;">${item.desc}</div>
+                </div>
+                <div class="wave-qty-controls">
+                    <button type="button" class="wave-qty-btn" onclick="changeWaveItemQty('${item.name}', -1)">-</button>
+                    <span class="wave-qty-val">${qty}</span>
+                    <button type="button" class="wave-qty-btn" onclick="changeWaveItemQty('${item.name}', 1)">+</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+window.changeWaveItemQty = function(itemName, delta) {
+    const current = BespokeState.waveBox.items[itemName] || 0;
+    const totalSelected = Object.values(BespokeState.waveBox.items).reduce((a, b) => a + b, 0);
+    const limit = BespokeState.waveBox.size;
+
+    if (delta > 0 && totalSelected >= limit) {
+        if (typeof showToast === 'function') {
+            showToast(`Box is full (${limit}/${limit} treats)! Increase box size or reduce an item.`, 'fa-solid fa-circle-info', '#db2777');
+        }
+        return;
+    }
+
+    const next = Math.max(0, current + delta);
+    BespokeState.waveBox.items[itemName] = next;
+    renderWaveItemsGrid();
+};
+
+window.addWaveBoxToCart = function() {
+    const totalSelected = Object.values(BespokeState.waveBox.items).reduce((a, b) => a + b, 0);
+    const limit = BespokeState.waveBox.size;
+    if (totalSelected < limit) {
+        if (typeof showToast === 'function') {
+            showToast(`Please select ${limit - totalSelected} more treat(s) to complete your ${limit}-pack Wave Box!`, 'fa-solid fa-basket-shopping', '#db2777');
+        }
+        return;
+    }
+
+    if (!Array.isArray(AppState.cart)) AppState.cart = [];
+    const state = BespokeState.waveBox;
+    const currentRest = SWIGGY_DATA && SWIGGY_DATA.restaurants ? SWIGGY_DATA.restaurants[0] : null;
+
+    const treatsSummary = Object.entries(state.items)
+        .filter(([_, q]) => q > 0)
+        .map(([name, q]) => `${q}x ${name}`)
+        .join(', ');
+
+    const bespokeDish = {
+        id: 'wave_box_' + Date.now(),
+        name: `Chocoloom Wave Box (${state.size} Luxury Treats)`,
+        price: state.price,
+        selectedWeight: `${state.size} Treats Box`,
+        selectedFlavour: treatsSummary,
+        customMessage: state.message ? `Ribbon: ${state.ribbon} | Note: "${state.message}"` : `Ribbon: ${state.ribbon}`,
+        isVeg: true,
+        image: 'assets/logo.png',
+        category: 'Luxury Hamper'
+    };
+
+    AppState.cart.push({
+        cartItemId: 'wave_cart_' + Date.now(),
+        dish: bespokeDish,
+        quantity: 1,
+        restaurant: currentRest
+    });
+
+    if (typeof saveCart === 'function') saveCart();
+    if (typeof updateCartUI === 'function') updateCartUI();
+    closeWaveBoxModal();
+
+    if (typeof showToast === 'function') {
+        showToast(`🎁 Luxury Wave Box added to Bag!`, 'fa-solid fa-gift', '#db2777');
+    }
+};
+
+window.sendWaveBoxToWhatsApp = function() {
+    const s = BespokeState.waveBox;
+    const treatsList = Object.entries(s.items)
+        .filter(([_, q]) => q > 0)
+        .map(([name, q]) => `  • ${q}x ${name}`)
+        .join('\n');
+
+    const msg = `*NEW CHOCOLOOM WAVE BOX ORDER* 🎁🍫\n\n` +
+        `• *Box Size:* ${s.size} Artisan Treats\n` +
+        `• *Keepsake Ribbon:* ${s.ribbon}\n` +
+        `• *Curated Treats Selection:*\n${treatsList || '  • Baker Curated Choice'}\n` +
+        `• *Handwritten Note Card:* "${s.message || 'With warmest compliments'}"\n` +
+        `• *Box Price:* ₹${s.price}\n\n` +
+        `_Please package with love in the magnetic keepsake box._ ✨`;
+
+    const encoded = encodeURIComponent(msg);
+    window.open(`https://wa.me/919849783788?text=${encoded}`, '_blank');
+    closeWaveBoxModal();
+};
+
 // Initialize Application
 function initApp() {
+    // Ensure Bespoke Modals DOM is mounted
+    try { ensureBespokeModalsDOM(); } catch(e) { console.warn("Bespoke modals init:", e); }
+
     // Check if on dedicated Uni Chocoloom store page FIRST
     if (window.location.pathname.includes('uni-chocoloom') || window.IS_UNI_CHOCOLOOM_PAGE) {
         window.IS_UNI_CHOCOLOOM_PAGE = true;
@@ -2160,11 +3219,9 @@ function initApp() {
 
     // Automatically detect user location / college without blocking UI
     autoDetectLocation();
-    // Connect to Cloud Database & Realtime asynchronously in the background
-    setTimeout(() => {
-        initSupabaseSync();
-        loadServerCatalogOverrides();
-    }, 150);
+    // Connect to Cloud Database immediately on app boot
+    initSupabaseSync();
+    loadServerCatalogOverrides();
 
     // Clean up any historical duplicate orders in localStorage
     try {
@@ -2252,7 +3309,7 @@ function getActiveHeroBanners() {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed) && parsed.length > 0) savedBanners = parsed;
         }
-    } catch(e) {}
+    } catch (e) {}
 
     let banners = savedBanners || (window.SWIGGY_DATA ? (SWIGGY_DATA.banners || SWIGGY_DATA.heroBanners || []) : []);
 
@@ -2268,12 +3325,12 @@ function getActiveHeroBanners() {
         }
         
         const fallback = ban.fallbackImage ? ban.fallbackImage.trim() : (isTombola ? 'assets/tombola-banner.png?v=3' : img);
-        const isComingSoon = ban.isComingSoon !== undefined ? Boolean(ban.isComingSoon) : (isTombola ? true : false);
+        const isComingSoon = isTombola ? true : (ban.isComingSoon !== undefined ? Boolean(ban.isComingSoon) : false);
         const redirectUrl = ban.redirectUrl || ban.url || ban.link || '';
-        const discountText = ban.discountText || (isTombola ? (isComingSoon ? 'COMING SOON • EVERY PRIZE A WINNER!' : 'EVERY PRIZE A WINNER! • £1 A STRIP') : '');
-        const ctaText = ban.cta || (isTombola ? (isComingSoon ? 'Play Tombola (Coming Soon)' : 'Play Tombola Now') : 'Claim Offer');
+        const discountText = isTombola ? 'COMING SOON • EVERY PRIZE A WINNER!' : (ban.discountText || '');
+        const ctaText = isTombola ? 'COMING SOON' : (ban.cta || 'Claim Offer');
         const code = ban.code || (isTombola ? 'TOMBOLA50' : '');
-        const ctaAction = ban.ctaAction || (redirectUrl ? 'redirect_url' : (isTombola ? 'tombola_game' : 'copy_coupon'));
+        const ctaAction = isTombola ? 'coming_soon' : (ban.ctaAction || (redirectUrl ? 'redirect_url' : 'copy_coupon'));
         const bgColor = ban.bgColor || (ban.isGraphicBanner ? '#ffd735' : '#110722');
 
         return {
@@ -2295,7 +3352,7 @@ function getActiveHeroBanners() {
     if (needsCacheUpdate && banners.length > 0) {
         try {
             localStorage.setItem("chocoloom_banners", JSON.stringify(banners));
-        } catch(e) {}
+        } catch (e) {}
     }
 
     // Only display banners marked as active
@@ -2525,15 +3582,10 @@ window.handleBannerClick = function(bannerId, e) {
         return;
     }
 
-    // 2. If marked Coming Soon (and no redirect link), show Coming Soon announcement modal
-    if (ban.isComingSoon) {
+    // 2. If Tombola or marked Coming Soon, show Coming Soon announcement modal
+    const isTombola = ban.id === 'b_tombola' || (ban.id && ban.id.includes('tombola')) || ban.ctaAction === 'tombola_game' || ban.ctaAction === 'coming_soon';
+    if (isTombola || ban.isComingSoon) {
         window.showTombolaComingSoonModal(ban);
-        return;
-    }
-
-    // 3. Tombola Game Modal
-    if (ban.ctaAction === 'tombola_game' || (ban.id && ban.id.includes('tombola'))) {
-        if (typeof openTombolaGameModal === 'function') openTombolaGameModal(e);
         return;
     }
 
@@ -2578,8 +3630,8 @@ window.ensureTombolaComingSoonModalDOM = function() {
                 <div class="coming-soon-perk-item"><i class="fa-solid fa-gift"></i> Win free Belgian desserts & celebration cakes</div>
             </div>
             <div class="coming-soon-btn-group">
-                <button type="button" class="btn-coming-soon-preview" onclick="window.closeTombolaComingSoonModal(); if(typeof openTombolaGameModal === 'function') openTombolaGameModal();">
-                    <i class="fa-solid fa-play"></i> Preview Drum Roll Game
+                <button type="button" class="btn-coming-soon-preview" onclick="window.closeTombolaComingSoonModal(); if(typeof scrollToOrderingCatalog === 'function') scrollToOrderingCatalog();">
+                    <i class="fa-solid fa-cake-candles"></i> Explore Delicious Desserts
                 </button>
                 <button type="button" class="btn-coming-soon-close" onclick="window.closeTombolaComingSoonModal()">
                     Got it, Can't Wait!
@@ -2661,8 +3713,8 @@ function renderBanners() {
             <!-- Floating Interactive Action Bar -->
             <div class="hero-graphic-cta-container">
                 <button class="hero-ad-cta-btn tombola-cta-btn" onclick="handleBannerClick('${ban.id}', event)">
-                    <i class="${isTombola ? 'fa-solid fa-dice' : 'fa-solid fa-bolt'}" style="color: #ffffff; font-size: 15px;"></i>
-                    <span>${ban.cta || (isTombola ? (isComingSoon ? 'PLAY TOMBOLA (COMING SOON)' : 'PLAY TOMBOLA NOW') : 'CLAIM OFFER')}</span>
+                    <i class="${isTombola ? 'fa-solid fa-hourglass-start' : 'fa-solid fa-bolt'}" style="color: #ffffff; font-size: 15px;"></i>
+                    <span>${isTombola ? 'COMING SOON' : (ban.cta || 'CLAIM OFFER')}</span>
                     <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-arrow-right'}"></i>
                 </button>
                 
@@ -2844,7 +3896,7 @@ window.resetCategoryFilter = function() {
     try {
         const cleanUrl = window.location.pathname;
         window.history.pushState({ category: null }, '', cleanUrl);
-    } catch(e) {}
+        } catch (e) {}
     updateCategoryViewState();
     renderCategories();
     renderFilterPills();
@@ -2860,7 +3912,7 @@ window.filterByCategory = function(categoryName) {
     // 1. If clicking Uni Chocoloom from any other page, navigate to uni-chocoloom.html
     if (isUni) {
         if (!window.IS_UNI_CHOCOLOOM_PAGE) {
-            window.location.href = 'uni-chocoloom.html';
+            window.location.href = window.getAppUrl('uni-chocoloom.html');
             return;
         }
         // If already on uni-chocoloom.html, activate/toggle Uni Chocoloom
@@ -2876,7 +3928,7 @@ window.filterByCategory = function(categoryName) {
     // 2. If on uni-chocoloom.html and user clicks ANY other category (e.g. Wedding Cakes, Bachelorette Cakes, Desserts):
     // Open in new page: Navigate to order.html with this category pre-selected!
     if (window.IS_UNI_CHOCOLOOM_PAGE) {
-        window.location.href = `order.html?category=${encodeURIComponent(categoryName)}`;
+        window.location.href = window.getAppUrl(`order.html?category=${encodeURIComponent(categoryName)}`);
         return;
     }
 
@@ -2886,13 +3938,13 @@ window.filterByCategory = function(categoryName) {
         try {
             const cleanUrl = window.location.pathname;
             window.history.pushState({ category: null }, '', cleanUrl);
-        } catch(e) {}
+        } catch (e) {}
     } else {
         AppState.activeCategory = categoryName;
         try {
             const newUrl = `${window.location.pathname}?category=${encodeURIComponent(categoryName)}`;
             window.history.pushState({ category: categoryName }, '', newUrl);
-        } catch(e) {}
+        } catch (e) {}
     }
 
     updateCategoryViewState();
@@ -2948,63 +4000,147 @@ function getAllProducts() {
         deletedIds = JSON.parse(localStorage.getItem('chocoloom_deleted_products') || '[]');
         priceOverrides = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
         customProducts = JSON.parse(localStorage.getItem('chocoloom_custom_products') || '[]');
-    } catch(e) {}
+        } catch (e) {}
 
     // Filter out deleted items
     list = list.filter(p => !deletedIds.includes(p.id) && (!p.sql_id || !deletedIds.includes(p.sql_id)));
 
-    // Apply price & detail overrides
-    list.forEach(item => {
-        const key = item.sql_id || item.id;
-        const over = priceOverrides[key] || priceOverrides[item.id] || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
-        if (over) {
-            if (over.price !== undefined) item.price = Number(over.price);
-            if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
-            if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
-            if (over.name) item.name = over.name;
-            if (over.category) item.category = over.category;
-            if (over.description) item.description = over.description;
-            if (over.image) item.image = over.image;
-            if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
-            if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
-            if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
-            if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
-            if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
-            if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
-            if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
-            if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
-            if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
-            if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
-            if (over.isVeg !== undefined) item.isVeg = Boolean(over.isVeg);
-            if (over.isUniSpecial !== undefined) item.isUniSpecial = Boolean(over.isUniSpecial);
-            if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
-            if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
+    // Apply price & detail overrides (Only as fallback when live Cloud Database is not loaded)
+    if (!window._neonDatabaseLoaded) {
+        list.forEach(item => {
+            const key = item.sql_id || item.id;
+            const over = priceOverrides[key] || priceOverrides[item.id] || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
+            if (over) {
+                if (over.price !== undefined) item.price = Number(over.price);
+                if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
+                if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
+                if (over.name) item.name = over.name;
+                if (over.category) item.category = over.category;
+                if (over.description) item.description = over.description;
+                if (over.image) item.image = window.getThemeAssetUrl(over.image);
+                if (over.image_url) { item.image = window.getThemeAssetUrl(over.image_url); item.image_url = item.image; }
+                if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
+                if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
+                if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
+                if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
+                if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
+                if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
+                if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
+                if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
+                if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
+                if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
+                if (over.isVeg !== undefined) item.isVeg = Boolean(over.isVeg);
+                if (over.isUniSpecial !== undefined) item.isUniSpecial = Boolean(over.isUniSpecial);
+                if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
+                if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
                 if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
                 if (over.flavour !== undefined) item.flavour = over.flavour;
                 if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
-            if (over.isDirectAdd !== undefined) item.isDirectAdd = Boolean(over.isDirectAdd);
-        }
-    });
+                if (over.isDirectAdd !== undefined) item.isDirectAdd = Boolean(over.isDirectAdd);
+            }
+        });
+    }
 
-    // Prepend custom added products from admin
+    // Prepend custom added products from admin if not already in list
     customProducts.forEach(newProd => {
         if (!deletedIds.includes(newProd.id)) {
-            const existingIdx = list.findIndex(p => p.id === newProd.id || (p.sql_id && p.sql_id === newProd.sql_id));
+            const existingIdx = list.findIndex(p => p.id === newProd.id || (p.sql_id && p.sql_id === newProd.sql_id) || (p.name && newProd.name && p.name.toLowerCase().trim() === newProd.name.toLowerCase().trim()));
             const itemData = {
                 ...newProd,
+                image: window.getThemeAssetUrl(newProd.image || newProd.image_url || ''),
+                image_url: window.getThemeAssetUrl(newProd.image_url || newProd.image || ''),
                 restaurantId: rest ? rest.id : 'rest_chocoloom_flagship',
                 restaurantName: rest ? rest.name : 'Chocoloom Flagship Bakery & Confectionery'
             };
             if (existingIdx !== -1) {
-                list[existingIdx] = { ...list[existingIdx], ...itemData };
+                if (!window._neonDatabaseLoaded) {
+                    list[existingIdx] = { ...list[existingIdx], ...itemData };
+                }
             } else {
                 list.unshift(itemData);
             }
         }
     });
 
+    // Fisher-Yates Shuffle algorithm for product items (keeping out-of-stock items at the end)
+    function shuffleProductCatalog(items) {
+        if (!Array.isArray(items) || items.length <= 1) return items;
+        const available = [];
+        const unavailable = [];
+        items.forEach(item => {
+            if (item && item.is_available === false) {
+                unavailable.push(item);
+            } else {
+                available.push(item);
+            }
+        });
+
+        // Modern Fisher-Yates unbiased shuffle
+        for (let i = available.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const temp = available[i];
+            available[i] = available[j];
+            available[j] = temp;
+        }
+
+        return [...available, ...unavailable];
+    }
+    window.shuffleProductCatalog = shuffleProductCatalog;
+
+    // Automatically shuffle product items on visit so visitors discover a fresh variety
+    list = shuffleProductCatalog(list);
+
     _cachedProductsList = list;
     return list;
+}
+window.getAllProducts = getAllProducts;
+
+// Interactive or automated catalog reshuffle
+window.shuffleCatalogProducts = function(showFeedback = true) {
+    if (!_cachedProductsList || _cachedProductsList.length === 0) {
+        getAllProducts();
+    }
+    if (typeof window.shuffleProductCatalog === 'function') {
+        _cachedProductsList = window.shuffleProductCatalog(_cachedProductsList);
+    }
+
+    const btn = document.getElementById('catalogShuffleBtn');
+    if (btn) {
+        btn.classList.add('spinning');
+        setTimeout(() => btn.classList.remove('spinning'), 600);
+    }
+
+    const grid = document.getElementById('productsGrid') || (typeof DOM !== 'undefined' ? DOM.restaurantsGrid : null);
+    if (grid) {
+        grid.classList.remove('shuffling');
+        void grid.offsetWidth; // trigger DOM reflow for CSS animation
+        grid.classList.add('shuffling');
+        setTimeout(() => grid.classList.remove('shuffling'), 500);
+    }
+
+    if (typeof renderProductsGrid === 'function') {
+        renderProductsGrid(true);
+    }
+
+    if (showFeedback && typeof showToast === 'function') {
+        showToast('Menu shuffled! Discover fresh handcrafted treats ✨', 'fa-solid fa-shuffle', '#7c5cfc');
+    }
+};
+
+// Automatic background refresh if user returns to tab after 5+ mins of inactivity
+let _lastAutoShuffleTime = Date.now();
+if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && !document.hidden) {
+            const now = Date.now();
+            if (now - _lastAutoShuffleTime > 5 * 60 * 1000 && (!AppState.searchQuery || AppState.searchQuery.trim() === '')) {
+                _lastAutoShuffleTime = now;
+                if (typeof window.shuffleCatalogProducts === 'function') {
+                    window.shuffleCatalogProducts(false);
+                }
+            }
+        }
+    });
 }
 
 // Render Dynamic Category & Filter Pills with Live Accurate Counts
@@ -3252,13 +4388,15 @@ function createProductCardHtml(prod, idPrefix = '') {
     const restId = prod.restaurantId || 'rest_chocoloom_flagship';
     const cardId = idPrefix ? `${idPrefix}_productCard_${prod.id}` : `productCard_${prod.id}`;
     const btnBoxId = idPrefix ? `${idPrefix}_prodBtnBox_${prod.id}` : `prodBtnBox_${prod.id}`;
+    const safeProdId = String(prod.id || '').replace(/'/g, "\\'");
+    const safeRestId = String(restId || '').replace(/'/g, "\\'");
 
     const hasDiscount = prod.originalPrice && Number(prod.originalPrice) > Number(prod.price);
     const discountPercent = hasDiscount ? Math.round(((Number(prod.originalPrice) - Number(prod.price)) / Number(prod.originalPrice)) * 100) : 0;
     const isWishlisted = Array.isArray(AppState.wishlist) && AppState.wishlist.includes(prod.id);
 
     return `
-        <div class="product-card" id="${cardId}" onclick="handleCardClick(event, '${prod.id}', '${restId}')">
+        <div class="product-card" id="${cardId}" onclick="handleCardClick(event, '${safeProdId}', '${safeRestId}')">
             <div class="product-img-box">
                 <img src="${prod.image}" alt="${prod.name}" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80'">
                 ${prod.is_available === false ? `
@@ -3278,7 +4416,7 @@ function createProductCardHtml(prod, idPrefix = '') {
                         ${discountPercent}% OFF
                     </span>
                 ` : '')))}
-                <button class="card-heart-btn" onclick="toggleWishlist(event, '${prod.id}')" title="Favorite" aria-label="Favorite">
+                <button class="card-heart-btn" onclick="toggleWishlist(event, '${safeProdId}')" title="Favorite" aria-label="Favorite">
                     <i class="${isWishlisted ? 'fa-solid fa-heart active' : 'fa-regular fa-heart'}"></i>
                 </button>
             </div>
@@ -3307,12 +4445,12 @@ function createProductCardHtml(prod, idPrefix = '') {
                             </button>
                         ` : (qty > 0 ? `
                             <div class="qty-counter-box">
-                                <button class="qty-btn" onclick="event.stopPropagation(); updateItemQuantity('${prod.id}', -1)" aria-label="Decrease">−</button>
+                                <button class="qty-btn" onclick="event.stopPropagation(); updateItemQuantity('${safeProdId}', -1)" aria-label="Decrease">−</button>
                                 <span class="qty-val">${qty}</span>
-                                <button class="qty-btn" onclick="event.stopPropagation(); updateItemQuantity('${prod.id}', 1)" aria-label="Increase">+</button>
+                                <button class="qty-btn" onclick="event.stopPropagation(); updateItemQuantity('${safeProdId}', 1)" aria-label="Increase">+</button>
                             </div>
                         ` : `
-                            <button class="direct-add-btn" onclick="event.stopPropagation(); addToCart('${prod.id}', '${restId}')">
+                            <button class="direct-add-btn" onclick="event.stopPropagation(); addToCart('${safeProdId}', '${safeRestId}')">
                                 <span>ADD</span>
                                 <i class="fa-solid fa-plus"></i>
                             </button>
@@ -3377,7 +4515,7 @@ function createCuratedCollectionsWidgetHtml() {
                     <div class="curated-cover-overlay" style="background: linear-gradient(0deg, rgba(124,44,163,0.82) 0%, rgba(124,44,163,0.18) 60%, transparent 100%);"></div>
                     <div class="curated-cover-content">
                         <span class="curated-cover-heading">Cartoon Cakes</span>
-                        <span class="curated-cover-sub">Whimsical &amp; Colourful Magic 🎨</span>
+                        <span class="curated-cover-sub">Whimsical & Colourful Magic 🎨</span>
                         <button type="button" class="curated-card-btn" style="background: rgba(255,255,255,0.22); border: 1.5px solid rgba(255,255,255,0.5); backdrop-filter: blur(6px);">Explore &rarr;</button>
                     </div>
                 </div>
@@ -3693,19 +4831,39 @@ window.closeCart = function() {
 
 
 // ==================== CAKE FLAVOURS CONFIGURATION ====================
-const CAKE_FLAVOURS = [
-    { id: 'chocolate_truffle', name: 'Dutch Chocolate Truffle', icon: '🍫', desc: 'Rich Belgian dark cocoa & truffle', extraPrice: 0, tier: 'Classic' },
-    { id: 'black_forest', name: 'Classic Black Forest', icon: '🍒', desc: 'Chocolate sponge, cherries & cream', extraPrice: 0, tier: 'Classic' },
-    { id: 'pineapple', name: 'Fresh Pineapple', icon: '🍍', desc: 'Tropical pineapple & light whipped cream', extraPrice: 0, tier: 'Classic' },
-    { id: 'vanilla', name: 'Classic Vanilla Bean', icon: '🍦', desc: 'Pure aromatic Madagascar vanilla', extraPrice: 0, tier: 'Classic' },
-    { id: 'butterscotch', name: 'Butterscotch Crunch', icon: '🧈', desc: 'Caramel sponge & roasted praline', extraPrice: 0, tier: 'Classic' },
-    { id: 'red_velvet', name: 'Royal Red Velvet', icon: '❤️', desc: 'Red cocoa sponge & cream cheese', extraPrice: 50, tier: 'Deluxe' },
-    { id: 'black_currant', name: 'Black Currant Delight', icon: '🫐', desc: 'Tangy-sweet berry glaze & cream', extraPrice: 50, tier: 'Deluxe' },
-    { id: 'strawberry', name: 'Fresh Strawberry', icon: '🍓', desc: 'Strawberry crush & whipped cream', extraPrice: 50, tier: 'Deluxe' },
-    { id: 'mango', name: 'Alphonso Mango', icon: '🥭', desc: 'Sweet seasonal mango compote & cream', extraPrice: 50, tier: 'Deluxe' },
-    { id: 'rasmalai', name: 'Royal Rasmalai Fusion', icon: '🍮', desc: 'Cardamom, saffron & rich milk rabdi', extraPrice: 100, tier: 'Gourmet' },
-    { id: 'hazelnut_ferrero', name: 'Ferrero Nutty Hazelnut', icon: '🌰', desc: 'Roasted hazelnuts & Nutella chocolate', extraPrice: 100, tier: 'Gourmet' }
+// 5 Normal Room Temperature Cake Flavours
+const NORMAL_CAKE_FLAVOURS = [
+    { id: 'vanilla', name: 'Vanilla', icon: '🍦', desc: 'Pure aromatic classic vanilla', extraPrice: 0, tier: 'Classic' },
+    { id: 'butterscotch', name: 'Butterscotch', icon: '🧈', desc: 'Caramel sponge & crunchy praline', extraPrice: 0, tier: 'Classic' },
+    { id: 'strawberry', name: 'Strawberry', icon: '🍓', desc: 'Sweet strawberry compote & fresh cream', extraPrice: 0, tier: 'Classic' },
+    { id: 'pineapple', name: 'Pineapple', icon: '🍍', desc: 'Tropical pineapple & light whipped cream', extraPrice: 0, tier: 'Classic' },
+    { id: 'chocolate', name: 'Chocolate', icon: '🍫', desc: 'Rich Belgian chocolate sponge & truffle', extraPrice: 0, tier: 'Classic' }
 ];
+
+// 15 Chilled Cooling Cake Flavours
+const COOLING_CAKE_FLAVOURS = [
+    { id: 'vanilla', name: 'Vanilla', icon: '🍦', desc: 'Pure aromatic classic vanilla', extraPrice: 0, tier: 'Classic' },
+    { id: 'butterscotch', name: 'Butterscotch', icon: '🧈', desc: 'Caramel sponge & crunchy praline', extraPrice: 0, tier: 'Classic' },
+    { id: 'strawberry', name: 'Strawberry', icon: '🍓', desc: 'Sweet strawberry compote & fresh cream', extraPrice: 0, tier: 'Classic' },
+    { id: 'pineapple', name: 'Pineapple', icon: '🍍', desc: 'Tropical pineapple & light whipped cream', extraPrice: 0, tier: 'Classic' },
+    { id: 'blueberry', name: 'Blueberry', icon: '🫐', desc: 'Luscious wild blueberry compote & cream', extraPrice: 0, tier: 'Deluxe' },
+    { id: 'black_currant', name: 'Black Currant', icon: '🍇', desc: 'Tangy-sweet black currant glaze & cream', extraPrice: 0, tier: 'Deluxe' },
+    { id: 'chocolate', name: 'Chocolate', icon: '🍫', desc: 'Rich Belgian chocolate sponge & truffle', extraPrice: 0, tier: 'Classic' },
+    { id: 'black_forest', name: 'Black Forest', icon: '🍒', desc: 'Dark chocolate, cherries & whipped cream', extraPrice: 0, tier: 'Classic' },
+    { id: 'milk_badam', name: 'Milk Badam', icon: '🥛', desc: 'Rich saffron milk & roasted almonds', extraPrice: 0, tier: 'Royal' },
+    { id: 'honey_almond', name: 'Honey Almond', icon: '🍯', desc: 'Golden wild honey & toasted almonds', extraPrice: 0, tier: 'Royal' },
+    { id: 'red_velvet', name: 'Red Velvet', icon: '❤️', desc: 'Velvety red sponge & cream cheese', extraPrice: 0, tier: 'Deluxe' },
+    { id: 'white_forest', name: 'White Forest', icon: '🍰', desc: 'White chocolate curls & sweet cherries', extraPrice: 0, tier: 'Classic' },
+    { id: 'caramel', name: 'Caramel', icon: '🍮', desc: 'Golden salted caramel swirl & cream', extraPrice: 0, tier: 'Deluxe' },
+    { id: 'milky_butterscotch', name: 'Milky Butterscotch', icon: '🍨', desc: 'Creamy milk fudge & butterscotch crunch', extraPrice: 0, tier: 'Deluxe' },
+    { id: 'nutty_bubble', name: 'Nutty Bubble', icon: '🫧', desc: 'Loaded roasted nuts & bubble chocolate', extraPrice: 0, tier: 'Royal' }
+];
+
+// Master list containing all flavours
+const CAKE_FLAVOURS = COOLING_CAKE_FLAVOURS;
+window.NORMAL_CAKE_FLAVOURS = NORMAL_CAKE_FLAVOURS;
+window.COOLING_CAKE_FLAVOURS = COOLING_CAKE_FLAVOURS;
+window.CAKE_FLAVOURS = CAKE_FLAVOURS;
 
 function getFlavourExtraPrice(dish, flavourName) {
     if (!dish || !flavourName) return 0;
@@ -3714,33 +4872,48 @@ function getFlavourExtraPrice(dish, flavourName) {
         if (dish.flavour_prices[flavourName] !== undefined) {
             return Number(dish.flavour_prices[flavourName]) || 0;
         }
-        // Match by id or substring
-        const found = CAKE_FLAVOURS.find(f => f.name.toLowerCase() === flavourName.toLowerCase() || f.id.toLowerCase() === flavourName.toLowerCase());
+        // Match by id or substring or altId
+        const found = COOLING_CAKE_FLAVOURS.find(f => f.name.toLowerCase() === flavourName.toLowerCase() || f.id.toLowerCase() === flavourName.toLowerCase());
         if (found) {
             if (dish.flavour_prices[found.id] !== undefined) return Number(dish.flavour_prices[found.id]) || 0;
             if (dish.flavour_prices[found.name] !== undefined) return Number(dish.flavour_prices[found.name]) || 0;
+            if (found.id === 'chocolate' && dish.flavour_prices['chocolate_truffle'] !== undefined) return Number(dish.flavour_prices['chocolate_truffle']) || 0;
         }
     }
-    // Fallback to CAKE_FLAVOURS default extra price if defined
-    const fObj = CAKE_FLAVOURS.find(f => f.name.toLowerCase() === flavourName.toLowerCase() || f.id.toLowerCase() === flavourName.toLowerCase());
+    // Fallback to COOLING_CAKE_FLAVOURS default extra price if defined
+    const fObj = COOLING_CAKE_FLAVOURS.find(f => f.name.toLowerCase() === flavourName.toLowerCase() || f.id.toLowerCase() === flavourName.toLowerCase());
     return (fObj && fObj.extraPrice) ? Number(fObj.extraPrice) : 0;
 }
 
-function detectDefaultFlavour(dish) {
-    if (dish && dish.flavour && dish.flavour.trim()) return dish.flavour.trim();
+function detectDefaultFlavour(dish, isNormalOnly = false) {
+    const activeList = isNormalOnly ? NORMAL_CAKE_FLAVOURS : COOLING_CAKE_FLAVOURS;
+    if (dish && dish.flavour && dish.flavour.trim()) {
+        const found = activeList.find(f => f.name.toLowerCase() === dish.flavour.trim().toLowerCase() || f.id.toLowerCase() === dish.flavour.trim().toLowerCase());
+        if (found) return found.name;
+    }
     const text = `${(dish && dish.name) || ''} ${(dish && dish.category) || ''}`.toLowerCase();
-    if (text.includes('red velvet')) return 'Royal Red Velvet';
-    if (text.includes('black forest')) return 'Classic Black Forest';
-    if (text.includes('pineapple')) return 'Fresh Pineapple';
-    if (text.includes('butterscotch') || text.includes('caramel')) return 'Butterscotch Crunch';
-    if (text.includes('mango')) return 'Alphonso Mango';
-    if (text.includes('black currant') || text.includes('currant')) return 'Black Currant Delight';
-    if (text.includes('strawberry')) return 'Fresh Strawberry';
-    if (text.includes('rasmalai')) return 'Royal Rasmalai Fusion';
-    if (text.includes('hazelnut') || text.includes('ferrero') || text.includes('nutella')) return 'Ferrero Nutty Hazelnut';
-    if (text.includes('vanilla')) return 'Classic Vanilla Bean';
-    if (text.includes('choco') || text.includes('truffle') || text.includes('fudge') || text.includes('dark')) return 'Dutch Chocolate Truffle';
-    return 'Dutch Chocolate Truffle'; // Most loved signature flavour
+    if (isNormalOnly) {
+        if (text.includes('butterscotch')) return 'Butterscotch';
+        if (text.includes('strawberry')) return 'Strawberry';
+        if (text.includes('pineapple')) return 'Pineapple';
+        if (text.includes('choco') || text.includes('truffle') || text.includes('fudge') || text.includes('dark')) return 'Chocolate';
+        return 'Vanilla';
+    }
+    if (text.includes('black forest')) return 'Black Forest';
+    if (text.includes('white forest')) return 'White Forest';
+    if (text.includes('red velvet')) return 'Red Velvet';
+    if (text.includes('blueberry')) return 'Blueberry';
+    if (text.includes('black currant') || text.includes('currant')) return 'Black Currant';
+    if (text.includes('milk badam') || text.includes('badam')) return 'Milk Badam';
+    if (text.includes('honey almond') || text.includes('almond')) return 'Honey Almond';
+    if (text.includes('caramel')) return 'Caramel';
+    if (text.includes('milky butterscotch')) return 'Milky Butterscotch';
+    if (text.includes('nutty bubble') || text.includes('bubble')) return 'Nutty Bubble';
+    if (text.includes('butterscotch')) return 'Butterscotch';
+    if (text.includes('strawberry')) return 'Strawberry';
+    if (text.includes('pineapple')) return 'Pineapple';
+    if (text.includes('choco') || text.includes('truffle') || text.includes('fudge') || text.includes('dark')) return 'Chocolate';
+    return 'Chocolate';
 }
 
 window.selectCustomFlavour = function(flavourName) {
@@ -3785,6 +4958,18 @@ function getCoolingCharge(dish, weightKey) {
         if (weightKey === "3kg") return Math.round(baseCool * 4.5);
     }
     return config.defaultCoolingPrice;
+}
+
+function getEgglessPrice(weightKey) {
+    const unitsMap = {
+        'half_kg': 1,
+        '1kg': 2,
+        '1_5kg': 3,
+        '2kg': 4,
+        '3kg': 6
+    };
+    const units = unitsMap[weightKey] || 1;
+    return units * 59;
 }
 
 // Current customization state
@@ -3832,14 +5017,15 @@ window.openCustomizationModal = function(dishId, restaurantId) {
 
     // Check if category indicates cooling cake default
     const isCoolingCategory = (dish.category || '').toLowerCase().includes('cooling') || (dish.name || '').toLowerCase().includes('cooling');
-
-    const defaultFlavour = detectDefaultFlavour(dish);
+    const initialCooling = (dish.has_cooling !== false) ? isCoolingCategory : false;
+    const defaultFlavour = detectDefaultFlavour(dish, !initialCooling);
     currentCustomization = {
         dish: dish,
         restaurant: restaurant,
         selectedWeightKey: 'half_kg',
         selectedFlavour: defaultFlavour,
-        isCooling: isCoolingCategory,
+        isEggless: false,
+        isCooling: initialCooling,
         customMessage: ''
     };
 
@@ -3851,6 +5037,8 @@ window.openCustomizationModal = function(dishId, restaurantId) {
 window.closeCustomizationModal = function() {
     const modal = document.getElementById('cakeCustomizationModalBackdrop');
     if (modal) modal.classList.remove('open');
+    const modalFooter = document.querySelector('.customization-modal-footer');
+    if (modalFooter) modalFooter.style.display = 'flex';
     currentCustomization = null;
 };
 
@@ -3859,9 +5047,33 @@ function renderCustomizationModalContent() {
     const body = document.getElementById('customizationModalBody');
     if (!body) return;
 
+    // Progressive React Enhancement: Mount interactive React Cake Studio
+    if (window.ChocoloomReact && typeof window.ChocoloomReact.mountCakeCustomizer === 'function') {
+        body.innerHTML = '<div id="reactCakeStudioRoot"></div>';
+        const modalFooter = document.querySelector('.customization-modal-footer');
+        if (modalFooter) modalFooter.style.display = 'none';
+
+        window.ChocoloomReact.mountCakeCustomizer('reactCakeStudioRoot', currentCustomization.dish, (updatedDetails) => {
+            if (updatedDetails) {
+                if (updatedDetails.selectedWeightKey) currentCustomization.selectedWeightKey = updatedDetails.selectedWeightKey;
+                if (updatedDetails.selectedFlavour) currentCustomization.selectedFlavour = updatedDetails.selectedFlavour;
+                currentCustomization.isCooling = Boolean(updatedDetails.isCooling);
+                currentCustomization.isEggless = Boolean(updatedDetails.isEggless);
+                currentCustomization.customMessage = updatedDetails.customMessage || '';
+                if (updatedDetails.unitPrice) currentCustomization.unitPrice = updatedDetails.unitPrice;
+            }
+            confirmAddCustomizedItem();
+        });
+        return;
+    }
+
+    const modalFooter = document.querySelector('.customization-modal-footer');
+    if (modalFooter) modalFooter.style.display = 'flex';
+
     const dish = currentCustomization.dish;
     const currentWeightKey = currentCustomization.selectedWeightKey || 'half_kg';
     const isCooling = Boolean(currentCustomization.isCooling);
+    const isEggless = Boolean(currentCustomization.isEggless);
     const customMsg = currentCustomization.customMessage || '';
     const currentFlavour = currentCustomization.selectedFlavour || detectDefaultFlavour(dish);
 
@@ -3873,10 +5085,11 @@ function renderCustomizationModalContent() {
     const currentCoolingCharge = (hasCooling && isCooling) ? selectedCoolingPrice : 0;
     const hasFlavours = dish.has_flavours !== false;
     const selectedFlavourPrice = hasFlavours ? getFlavourExtraPrice(dish, currentFlavour) : 0;
-    const totalUnit = selectedWeightPrice + currentCoolingCharge + selectedFlavourPrice;
+    const currentEgglessPrice = isEggless ? getEgglessPrice(currentWeightKey) : 0;
+    const totalUnit = selectedWeightPrice + currentCoolingCharge + selectedFlavourPrice + currentEgglessPrice;
 
     const dishImg = dish.image || 'assets/logo.png';
-    const isVeg = dish.isVeg !== false;
+    const isVeg = isEggless;
     const categoryName = dish.category || 'Specialty Cakes';
 
     body.innerHTML = `
@@ -3887,6 +5100,9 @@ function renderCustomizationModalContent() {
                 <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
                     <span class="${isVeg ? 'veg-icon' : 'non-veg-icon'}"></span>
                     <span style="font-size: 11px; font-weight: 700; color: var(--primary); background: rgba(124, 92, 252, 0.1); padding: 1px 6px; border-radius: 4px;">${categoryName}</span>
+                    <span style="font-size: 10.5px; font-weight: 700; color: ${isEggless ? '#15803d' : '#b45309'}; background: ${isEggless ? '#dcfce7' : '#fef3c7'}; padding: 1px 6px; border-radius: 4px;">
+                        ${isEggless ? '🌱 100% Eggless' : '🥚 With Egg'}
+                    </span>
                 </div>
                 <h4 class="customization-product-title" title="${dish.name}">${dish.name}</h4>
                 <div class="customization-product-meta">
@@ -3936,19 +5152,106 @@ function renderCustomizationModalContent() {
         </div>
         `}
 
-        <!-- Section: Choose Cake Flavour -->
+        <!-- Section 2: Dietary Preference (Egg or Eggless) -->
+        <div class="customization-section-card">
+            <div class="customization-section-header">
+                <div class="customization-section-title">
+                    <i class="fa-solid fa-seedling" style="color: #16a34a;"></i>
+                    <span>Egg or Eggless Option</span>
+                </div>
+                <span class="customization-badge-required active"><i class="fa-solid fa-check"></i> Required</span>
+            </div>
+
+            <div class="custom-options-grid">
+                <!-- With Egg (Regular) Option -->
+                <label class="custom-option-label ${!isEggless ? 'selected' : ''}" onclick="selectCustomEggless(false)">
+                    <div class="custom-option-left">
+                        <div class="custom-option-radio"></div>
+                        <div>
+                            <div class="custom-option-name" style="display: flex; align-items: center; gap: 6px;">
+                                <span>🥚 With Egg (Regular)</span>
+                            </div>
+                            <div class="custom-option-desc">Authentic classic bakery recipe</div>
+                        </div>
+                    </div>
+                    <div class="custom-option-price" style="color: #64748b; font-size: 12px; font-weight: 800;">FREE (+₹0)</div>
+                </label>
+
+                <!-- 100% Pure Eggless Option -->
+                <label class="custom-option-label ${isEggless ? 'selected' : ''}" onclick="selectCustomEggless(true)">
+                    <div class="custom-option-left">
+                        <div class="custom-option-radio"></div>
+                        <div>
+                            <div class="custom-option-name" style="display: flex; align-items: center; gap: 6px;">
+                                <span>🌱 100% Pure Eggless</span>
+                                <span style="font-size: 10px; font-weight: 800; color: #15803d; background: #dcfce7; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0;">PURE VEG</span>
+                            </div>
+                            <div class="custom-option-desc">Freshly prepared in dedicated eggless bakery line (+₹59 each 1/2 kg)</div>
+                        </div>
+                    </div>
+                    <div class="custom-option-price" style="color: #16a34a; font-size: 13px; font-weight: 800;">+₹${getEgglessPrice(currentWeightKey)}</div>
+                </label>
+            </div>
+        </div>
+
+        ${hasCooling ? `
+        <!-- Section 3: Choose Cake Cooling Option -->
+        <div class="customization-section-card">
+            <div class="customization-section-header">
+                <div class="customization-section-title">
+                    <i class="fa-solid fa-snowflake" style="color: #0284c7;"></i>
+                    <span>Cake Cooling Option</span>
+                </div>
+                <span class="customization-badge-required active"><i class="fa-solid fa-check"></i> Required</span>
+            </div>
+
+            <div class="custom-options-grid">
+                <!-- Normal Cake Option -->
+                <label class="custom-option-label ${!isCooling ? 'selected' : ''}" onclick="selectCustomCooling(false)">
+                    <div class="custom-option-left">
+                        <div class="custom-option-radio"></div>
+                        <div>
+                            <div class="custom-option-name">🎂 Normal Cakes</div>
+                            <div class="custom-option-desc">Room temperature baked cake (5 classic flavours)</div>
+                        </div>
+                    </div>
+                    <div class="custom-option-price" style="color: #16a34a; font-size: 12px; font-weight: 800;">FREE (+₹0)</div>
+                </label>
+
+                <!-- Chilled Cooling Cake Option -->
+                <label class="custom-option-label ${isCooling ? 'selected' : ''}" onclick="selectCustomCooling(true)">
+                    <div class="custom-option-left">
+                        <div class="custom-option-radio"></div>
+                        <div>
+                            <div class="custom-option-name" style="display: flex; align-items: center;">
+                                ❄️ Cooling Cakes
+                                <span class="cooling-badge-ice"><i class="fa-solid fa-snowflake"></i> ICE COOL</span>
+                            </div>
+                            <div class="custom-option-desc">Specially chilled in cold storage (15 gourmet flavours)</div>
+                        </div>
+                    </div>
+                    <div class="custom-option-price" style="color: #0284c7;">+₹${selectedCoolingPrice}</div>
+                </label>
+            </div>
+        </div>
+        ` : ''}
+
+        ${dish.has_flavours !== false ? `
+        <!-- Section 4: Choose Cake Flavour -->
         <div class="customization-section-card">
             <div class="customization-section-header">
                 <div class="customization-section-title">
                     <i class="fa-solid fa-wand-magic-sparkles" style="color: #db2777;"></i>
                     <span>Select Cake Flavour</span>
                 </div>
-                <span class="customization-badge-required active"><i class="fa-solid fa-check"></i> Required</span>
+                <span class="customization-badge-required active" style="${isCooling ? 'background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;' : 'background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8;'}">
+                    ${isCooling ? '<i class="fa-solid fa-snowflake"></i> 15 Cooling Flavours' : '<i class="fa-solid fa-cake-candles"></i> 5 Normal Flavours'}
+                </span>
             </div>
 
             <div class="custom-flavour-grid">
-                ${CAKE_FLAVOURS.map(f => {
-                    const isSelected = (currentFlavour === f.name);
+                ${(isCooling ? COOLING_CAKE_FLAVOURS : NORMAL_CAKE_FLAVOURS).map(f => {
+                    const isSelected = (currentFlavour.toLowerCase() === f.name.toLowerCase() || currentFlavour.toLowerCase() === f.id.toLowerCase());
                     const extraP = getFlavourExtraPrice(dish, f.name);
                     return `
                         <div class="custom-flavour-card ${isSelected ? 'selected' : ''}" onclick="selectCustomFlavour('${f.name}')">
@@ -3965,50 +5268,9 @@ function renderCustomizationModalContent() {
                 }).join('')}
             </div>
         </div>
-
-        ${hasCooling ? `
-        <!-- Section: Choose Cake Cooling Option -->
-        <div class="customization-section-card">
-            <div class="customization-section-header">
-                <div class="customization-section-title">
-                    <i class="fa-solid fa-snowflake" style="color: #0284c7;"></i>
-                    <span>Cake Cooling Option</span>
-                </div>
-                <span class="customization-badge-required active"><i class="fa-solid fa-check"></i> Required</span>
-            </div>
-
-            <div class="custom-options-grid">
-                <!-- Normal Cake Option -->
-                <label class="custom-option-label ${!isCooling ? 'selected' : ''}" onclick="selectCustomCooling(false)">
-                    <div class="custom-option-left">
-                        <div class="custom-option-radio"></div>
-                        <div>
-                            <div class="custom-option-name">🎂 Normal Room Temperature Cake</div>
-                            <div class="custom-option-desc">Standard fresh baked sponge & cream</div>
-                        </div>
-                    </div>
-                    <div class="custom-option-price" style="color: #16a34a; font-size: 12px; font-weight: 800;">FREE (+₹0)</div>
-                </label>
-
-                <!-- Chilled Cooling Cake Option -->
-                <label class="custom-option-label ${isCooling ? 'selected' : ''}" onclick="selectCustomCooling(true)">
-                    <div class="custom-option-left">
-                        <div class="custom-option-radio"></div>
-                        <div>
-                            <div class="custom-option-name" style="display: flex; align-items: center;">
-                                ❄️ Chilled Cooling Cake
-                                <span class="cooling-badge-ice"><i class="fa-solid fa-snowflake"></i> ICE COOL</span>
-                            </div>
-                            <div class="custom-option-desc">Specially chilled in cryogenic cool-storage for extra refreshing taste</div>
-                        </div>
-                    </div>
-                    <div class="custom-option-price" style="color: #0284c7;">+₹${selectedCoolingPrice}</div>
-                </label>
-            </div>
-        </div>
         ` : ''}
 
-        <!-- Section 3: Cake Message / Notes (Optional) -->
+        <!-- Section 5: Cake Message / Notes (Optional) -->
         <div class="customization-section-card">
             <div class="customization-section-header">
                 <div class="customization-section-title">
@@ -4034,9 +5296,20 @@ window.selectCustomWeight = function(weightKey) {
     renderCustomizationModalContent();
 };
 
+window.selectCustomEggless = function(isEggless) {
+    if (!currentCustomization) return;
+    currentCustomization.isEggless = Boolean(isEggless);
+    renderCustomizationModalContent();
+};
+
 window.selectCustomCooling = function(isCooling) {
     if (!currentCustomization) return;
     currentCustomization.isCooling = Boolean(isCooling);
+    const activeFlavours = currentCustomization.isCooling ? COOLING_CAKE_FLAVOURS : NORMAL_CAKE_FLAVOURS;
+    const isFlavourValid = activeFlavours.some(f => f.name.toLowerCase() === (currentCustomization.selectedFlavour || '').toLowerCase() || f.id.toLowerCase() === (currentCustomization.selectedFlavour || '').toLowerCase());
+    if (!isFlavourValid) {
+        currentCustomization.selectedFlavour = detectDefaultFlavour(currentCustomization.dish, !currentCustomization.isCooling);
+    }
     renderCustomizationModalContent();
 };
 
@@ -4056,6 +5329,7 @@ window.confirmAddCustomizedItem = function() {
     const restaurant = currentCustomization.restaurant;
     const weightKey = currentCustomization.selectedWeightKey || 'half_kg';
     const isCooling = Boolean(currentCustomization.isCooling);
+    const isEggless = Boolean(currentCustomization.isEggless);
     const customMsg = (currentCustomization.customMessage || '').trim();
 
     const hasWeight = dish.has_weight !== false;
@@ -4064,16 +5338,17 @@ window.confirmAddCustomizedItem = function() {
     const weightOpt = WEIGHT_CONFIG.find(w => w.key === weightKey) || WEIGHT_CONFIG[0];
     const weightPrice = hasWeight ? getWeightPrice(dish, weightKey) : Number(dish.price || 0);
     const coolingPrice = (hasCooling && isCooling) ? getCoolingCharge(dish, weightKey) : 0;
+    const egglessPrice = isEggless ? getEgglessPrice(weightKey) : 0;
     const selectedFlavour = currentCustomization.selectedFlavour || detectDefaultFlavour(dish);
     const flavourPrice = (dish.has_flavours !== false) ? getFlavourExtraPrice(dish, selectedFlavour) : 0;
-    const finalUnitPrice = weightPrice + coolingPrice + flavourPrice;
+    const finalUnitPrice = weightPrice + coolingPrice + flavourPrice + egglessPrice;
 
     // Sanitize any corrupt cart items
     if (!Array.isArray(AppState.cart)) AppState.cart = [];
     AppState.cart = AppState.cart.filter(c => c && c.dish && (c.dish.id || c.dish.name));
 
-    // Unique Cart Item ID combining dish identity, selected weight, cooling option, and custom message
-    const cartItemId = `${dish.id || dish.sql_id || dish.name}_${encodeURIComponent(selectedFlavour)}_${hasWeight ? weightKey : 'fixed'}_${(hasCooling && isCooling) ? 'cooling' : 'normal'}_${encodeURIComponent(customMsg)}`;
+    // Unique Cart Item ID combining dish identity, selected weight, eggless option, cooling option, and custom message
+    const cartItemId = `${dish.id || dish.sql_id || dish.name}_${encodeURIComponent(selectedFlavour)}_${hasWeight ? weightKey : 'fixed'}_${isEggless ? 'eggless' : 'egg'}_${(hasCooling && isCooling) ? 'cooling' : 'normal'}_${encodeURIComponent(customMsg)}`;
 
     const customizedDish = {
         ...dish,
@@ -4086,6 +5361,10 @@ window.confirmAddCustomizedItem = function() {
         flavour: selectedFlavour,
         flavourPrice: flavourPrice,
         weightPrice: weightPrice,
+        isEggless: isEggless,
+        egglessOption: isEggless ? '100% Pure Eggless' : 'With Egg',
+        egglessPrice: egglessPrice,
+        isVeg: isEggless,
         isCooling: hasCooling ? isCooling : false,
         coolingOption: hasCooling ? (isCooling ? 'Cooling Cake' : 'Normal Cake') : 'Standard',
         coolingPrice: coolingPrice,
@@ -4097,6 +5376,7 @@ window.confirmAddCustomizedItem = function() {
         (c.dish.id === dish.id || (c.dish.sql_id && dish.sql_id && c.dish.sql_id === dish.sql_id) || (c.dish.name === dish.name)) &&
         c.dish.selectedFlavour === selectedFlavour &&
         c.dish.selectedWeightKey === (hasWeight ? weightKey : 'standard') &&
+        Boolean(c.dish.isEggless) === isEggless &&
         Boolean(c.dish.isCooling) === (hasCooling && isCooling) &&
         (c.dish.customMessage || '') === customMsg
     ));
@@ -4119,7 +5399,8 @@ window.confirmAddCustomizedItem = function() {
     renderProductsGrid();
     closeCustomizationModal();
 
-    showToast(`Added ${dish.name} (${selectedFlavour}, ${hasWeight ? weightOpt.weightTag : '1 Unit'}) to Cart!`, 'fa-solid fa-cake-candles', '#7c5cfc');
+    const dietaryToast = isEggless ? '🌱 Eggless' : '🥚 With Egg';
+    showToast(`Added ${dish.name} (${dietaryToast} • ${selectedFlavour}, ${hasWeight ? weightOpt.weightTag : '1 Unit'}) to Cart!`, 'fa-solid fa-cake-candles', '#7c5cfc');
     openCart();
 };
 
@@ -4298,6 +5579,12 @@ function updateCartUI() {
     const totalItems = AppState.cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
     const itemTotal = AppState.cart.reduce((sum, item) => sum + ((Number(item.dish?.price) || 0) * (Number(item.quantity) || 1)), 0);
 
+    window.getCartItemCount = function() { return totalItems; };
+    window.calculateCartTotal = function() { return itemTotal; };
+    try {
+        window.dispatchEvent(new CustomEvent('chocoloom_cart_updated', { detail: { count: totalItems, total: itemTotal } }));
+    } catch (e) {}
+
     const badgeEl = document.getElementById('cartCountBadge') || DOM.cartCountBadge;
     if (badgeEl) badgeEl.textContent = totalItems;
     const mobBadgeEl = document.getElementById('mobileCartBadge') || DOM.mobileCartBadge;
@@ -4340,7 +5627,7 @@ function updateCartUI() {
     const restImg = currentRest.image || 'assets/logo.png';
     const restName = currentRest.name || 'Chocoloom Flagship Bakery';
     const restDist = currentRest.distance || '1.2 km';
-    const locName = AppState.selectedLocation?.name || 'Bengaluru';
+    const locName = AppState.selectedLocation?.name || 'Bhimavaram';
 
     // Calculate Bill & Coupon Discount
     const deliveryFee = 35;
@@ -4445,8 +5732,12 @@ function updateCartUI() {
                                 <span class="cart-item-title" style="font-size: 13px; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block;" title="${dish.name || 'Cake'}">${dish.name || 'Artisan Cake'}</span>
                             </div>
 
-                            <!-- Weight and Cooling Option Tags -->
+                            <!-- Weight, Dietary and Cooling Option Tags -->
                             <div class="cart-item-tags">
+                                ${dish.isEggless !== undefined ? `
+                                <span class="cart-tag ${dish.isEggless ? 'cart-tag-veg' : 'cart-tag-egg'}">
+                                    ${dish.isEggless ? `🌱 Eggless${dish.egglessPrice > 0 ? ` (+₹${dish.egglessPrice})` : ''}` : '🥚 With Egg'}
+                                </span>` : ''}
                                 ${dish.selectedFlavour ? `<span class="cart-tag cart-tag-flavour" style="background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; font-weight: 700;"><i class="fa-solid fa-wand-magic-sparkles"></i> ${dish.selectedFlavour}</span>` : ''}
                                 ${(dish.has_weight !== false && dish.selectedWeight && dish.selectedWeight !== 'Standard') ? `<span class="cart-tag cart-tag-weight"><i class="fa-solid fa-weight-scale"></i> ${dish.selectedWeight}</span>` : ''}
                                 ${(dish.has_cooling !== false && dish.coolingOption && dish.coolingOption !== 'Standard' && dish.coolingOption !== 'Fresh & Ready') ? `
@@ -4458,7 +5749,7 @@ function updateCartUI() {
 
                             <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 4px;">
                                 <span style="font-size: 11px; color: var(--primary); font-weight: 600; background: rgba(124, 92, 252, 0.1); padding: 1px 6px; border-radius: 4px;">${itemCat}</span>
-                                <span style="font-size: 12px; color: #64748b; font-weight: 600;">₹${price} each ${dish.coolingPrice > 0 ? `<span style="font-size: 11px; color: #0284c7;">(Cake ₹${dish.weightPrice || (price - dish.coolingPrice)} + ❄️ Cooling ₹${dish.coolingPrice})</span>` : ''}</span>
+                                <span style="font-size: 12px; color: #64748b; font-weight: 600;">₹${price} each ${((dish.coolingPrice > 0) || (dish.egglessPrice > 0)) ? `<span style="font-size: 11px; color: #0284c7;">(Cake ₹${dish.weightPrice || (price - (dish.coolingPrice || 0) - (dish.egglessPrice || 0))}${dish.egglessPrice > 0 ? ` + 🌱 Eggless ₹${dish.egglessPrice}` : ''}${dish.coolingPrice > 0 ? ` + ❄️ Cooling ₹${dish.coolingPrice}` : ''})</span>` : ''}</span>
                             </div>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0;">
@@ -4718,6 +6009,12 @@ function updateCartUI() {
             </div>
         </div>
     `;
+
+    // Automatically keep search page results in sync if search overlay is open
+    const searchOverlay = document.getElementById('searchPageOverlay');
+    if (searchOverlay && searchOverlay.classList.contains('open') && typeof renderSearchPageContent === 'function') {
+        renderSearchPageContent();
+    }
 }
 
 window.applyUniCoupon = function() {
@@ -4756,9 +6053,50 @@ function getDistanceKm(lat1, lon1, lat2, lon2) {
 // Intelligent College Detection Algorithm for Uni Chocoloom
 function matchCollegeByLocation(areaName = '', cityName = '', stateName = '', lat = null, lng = null, fullAddress = '') {
     const colleges = SWIGGY_DATA.colleges || [];
-    // Currently, Uni Chocoloom is available exclusively at S.R.K.R. Engineering College
-    const srkr = colleges.find(c => c.id === 'col_srkr') || colleges[0];
-    return srkr;
+    if (!colleges || colleges.length === 0) return null;
+
+    const queryStr = `${areaName} ${cityName} ${stateName} ${fullAddress}`.toLowerCase();
+
+    // 1. Text keyword match against registered colleges
+    for (const col of colleges) {
+        if (Array.isArray(col.matchKeywords)) {
+            for (const kw of col.matchKeywords) {
+                if (kw && queryStr.includes(kw.toLowerCase())) {
+                    return col;
+                }
+            }
+        }
+        if (col.name && queryStr.includes(col.name.toLowerCase())) return col;
+        if (col.shortName && queryStr.includes(col.shortName.toLowerCase())) return col;
+    }
+
+    // 2. Spatial GPS Haversine proximity matching
+    if (lat != null && lng != null) {
+        let closestCol = null;
+        let minDistance = Infinity;
+
+        for (const col of colleges) {
+            if (col.lat != null && col.lng != null) {
+                const dist = getDistanceKm(lat, lng, col.lat, col.lng);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    closestCol = col;
+                }
+            }
+        }
+
+        // If user is within 10 km of a recognized college campus, match that campus!
+        if (closestCol && minDistance <= 10) {
+            return closestCol;
+        }
+    }
+
+    // Default to SRKR if in Bhimavaram region (lat ~ 16.5, lng ~ 81.5)
+    if (lat != null && lng != null && Math.abs(lat - 16.54) < 0.25 && Math.abs(lng - 81.5) < 0.25) {
+        return colleges.find(c => c.id === 'col_srkr') || colleges[0];
+    }
+
+    return null;
 }
 
 // Select College / Campus
@@ -4932,36 +6270,72 @@ function renderLocationsList(query = '') {
         return;
     }
 
+    const q = (query || '').toLowerCase().trim();
     const filtered = SWIGGY_DATA.locations.filter(loc => 
-        loc.name.toLowerCase().includes(query.toLowerCase()) || 
-        loc.city.toLowerCase().includes(query.toLowerCase()) ||
-        loc.landmark.toLowerCase().includes(query.toLowerCase())
+        (loc.name && loc.name.toLowerCase().includes(q)) || 
+        (loc.city && loc.city.toLowerCase().includes(q)) ||
+        (loc.landmark && loc.landmark.toLowerCase().includes(q)) ||
+        (loc.pincode && loc.pincode.includes(q))
     );
 
-    DOM.locationsList.innerHTML = filtered.map(loc => `
-        <div style="padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'" onclick="selectLocation('${loc.id}')">
-            <i class="fa-solid fa-location-dot" style="color: var(--primary); font-size: 18px;"></i>
-            <div>
-                <div style="font-weight: 700; font-size: 14px; color: var(--dark);">${loc.name}, ${loc.city}</div>
-                <div style="font-size: 12px; color: var(--text-muted);">${loc.landmark}</div>
+    if (filtered.length === 0) {
+        DOM.locationsList.innerHTML = `
+            <div style="padding: 24px 16px; text-align: center; color: var(--text-muted); background: #f8fafc; border-radius: var(--radius-sm); border: 1px dashed var(--border-color);">
+                <i class="fa-solid fa-map-location-dot" style="font-size: 28px; color: #94a3b8; margin-bottom: 8px;"></i>
+                <div style="font-weight: 700; font-size: 14px; color: #334155;">No matching location in Bhimavaram</div>
+                <div style="font-size: 12px; margin-top: 4px;">Chocoloom currently delivers exclusively in Bhimavaram & surrounding areas.</div>
+                <button type="button" onclick="selectLocation('loc_bvrm_1')" style="margin-top: 10px; background: var(--primary); color: #fff; border: none; padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                    Select SRKR Campus / Chinna Amiram
+                </button>
             </div>
-        </div>
-    `).join('');
+        `;
+        return;
+    }
+
+    DOM.locationsList.innerHTML = filtered.map(loc => {
+        const isCurrent = AppState.selectedLocation && AppState.selectedLocation.id === loc.id;
+        return `
+            <div style="padding: 12px 14px; border-radius: var(--radius-sm); border: 1.5px solid ${isCurrent ? 'var(--primary)' : 'var(--border-color)'}; background: ${isCurrent ? 'rgba(124, 58, 237, 0.04)' : '#fff'}; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='${isCurrent ? 'rgba(124, 58, 237, 0.04)' : '#fff'}'" onclick="selectLocation('${loc.id}')">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: ${isCurrent ? 'var(--primary)' : '#f3e8ff'}; color: ${isCurrent ? '#fff' : 'var(--primary)'}; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;">
+                    <i class="fa-solid fa-location-dot"></i>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <span style="font-weight: 800; font-size: 13.5px; color: var(--dark);">${escapeHtml(loc.name)}</span>
+                        ${isCurrent ? '<span style="background: #ecfdf5; color: #047857; font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 999px;">ACTIVE</span>' : ''}
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                        ${escapeHtml(loc.landmark || '')} ${loc.pincode ? `• PIN: ${loc.pincode}` : ''}
+                    </div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0;">
+                    <span style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; padding: 3px 8px; border-radius: 999px; border: 1px solid #a7f3d0;">
+                        DELIVERY ZONE
+                    </span>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // Locate Location via Browser GPS & Automatic IP Geolocation API
+// Geographic Center of Bhimavaram: 16.5449° N, 81.5212° E
 window.autoDetectLocation = function(isManual = false) {
-    // If not manually requested and a location is already saved, use saved location immediately
+    const BVRM_CENTER_LAT = 16.5449;
+    const BVRM_CENTER_LNG = 81.5212;
+    const MAX_DELIVERY_RADIUS_KM = 8.0;
+
+    // If not manually requested and a location is already saved, verify it
     if (!isManual) {
         try {
             const saved = localStorage.getItem('chocoloom_location');
             if (saved) {
                 const parsed = JSON.parse(saved);
                 if (parsed && (parsed.name || parsed.city)) {
-                    return; // Location already available, zero delay!
+                    return; // Location already available
                 }
             }
-        } catch(e) {}
+        } catch (e) {}
     }
 
     const gpsBtn = document.getElementById('useGpsLocationBtn');
@@ -4969,102 +6343,176 @@ window.autoDetectLocation = function(isManual = false) {
         gpsBtn.innerHTML = `
             <div class="gps-btn-icon" style="background: rgba(22, 163, 74, 0.2);"><i class="fa-solid fa-spinner fa-spin" style="color: #16a34a;"></i></div>
             <div style="text-align: left;">
-                <div style="font-weight: 800; font-size: 14px; color: #16a34a;">Detecting Exact Campus...</div>
-                <div style="font-size: 12px; color: var(--text-muted);">Acquiring GPS coordinates & matching college</div>
+                <div style="font-weight: 800; font-size: 14px; color: #16a34a;">Pinpointing Exact GPS...</div>
+                <div style="font-size: 12px; color: var(--text-muted);">Acquiring satellite coordinates & Bhimavaram delivery zone check</div>
             </div>
         `;
     }
 
     if (isManual) {
-        showToast('Detecting your exact college campus...', 'fa-solid fa-graduation-cap', '#16a34a');
+        showToast('Acquiring high-precision GPS coordinates...', 'fa-solid fa-location-crosshairs', '#16a34a');
     }
 
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                
-                try {
-                    // Reverse geocoding via OpenStreetMap Nominatim API with 2.5s timeout
-                    const geoController = typeof AbortController !== 'undefined' ? new AbortController() : null;
-                    const geoTimer = geoController ? setTimeout(() => geoController.abort(), 2500) : null;
-                    let res;
-                    try {
-                        res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
-                            headers: { 'Accept-Language': 'en' },
-                            signal: geoController ? geoController.signal : undefined
-                        });
-                    } finally {
-                        if (geoTimer) clearTimeout(geoTimer);
-                    }
-                    
-                    if (res && res.ok) {
-                        const data = await res.json();
-                        const addr = data.address || {};
-                        const areaName = addr.suburb || addr.neighbourhood || addr.road || addr.village || addr.town || addr.residential || 'Current Location';
-                        const cityName = addr.city || addr.state_district || addr.county || addr.town || 'Your Area';
-                        const stateName = addr.state || 'India';
-                        const fullDisplayName = data.display_name || '';
-
-                        // If on Uni Chocoloom, detect exact college / university campus!
-                        if (window.IS_UNI_CHOCOLOOM_PAGE) {
-                            const matchedCol = matchCollegeByLocation(areaName, cityName, stateName, lat, lng, fullDisplayName);
-                            if (matchedCol) {
-                                selectCollege(matchedCol, isManual ? `🎓 Campus Detected: ${matchedCol.shortName || matchedCol.name}!` : null);
-                                return;
-                            }
-                        }
-
-                        const gpsLoc = {
-                            id: `loc_gps_${Date.now()}`,
-                            name: areaName,
-                            city: cityName,
-                            state: stateName,
-                            landmark: `Live GPS: ${lat.toFixed(3)}° N, ${lng.toFixed(3)}° E`,
-                            lat: lat,
-                            lng: lng,
-                            isGPS: true
-                        };
-
-                        setDetectedLocation(gpsLoc, isManual ? `📍 Located at ${areaName}, ${cityName}!` : null);
-                        return;
-                    }
-                } catch (err) {
-                    console.warn('Reverse geocoding error:', err);
-                }
-
-                // If on Uni Chocoloom, check distance match with raw lat/lng
-                if (window.IS_UNI_CHOCOLOOM_PAGE) {
-                    const matchedCol = matchCollegeByLocation('', '', '', lat, lng, '');
-                    if (matchedCol) {
-                        selectCollege(matchedCol, isManual ? `🎓 Campus Detected: ${matchedCol.shortName || matchedCol.name}!` : null);
-                        return;
-                    }
-                }
-
-                // Fallback location with live coordinates
-                const fallbackGps = {
-                    id: `loc_gps_${Date.now()}`,
-                    name: 'Current Location',
-                    city: 'Bengaluru',
-                    state: 'Karnataka',
-                    landmark: `GPS Coordinates: (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
-                    lat: lat,
-                    lng: lng,
-                    isGPS: true
-                };
-                setDetectedLocation(fallbackGps, isManual ? `📍 GPS Located: ${lat.toFixed(4)}°, ${lng.toFixed(4)}°` : null);
-            },
-            async (error) => {
-                console.info('GPS not available/denied, falling back to IP Geolocation');
-                await detectLocationViaIP(isManual);
-            },
-            { enableHighAccuracy: false, timeout: 3000, maximumAge: 300000 }
-        );
-    } else {
+    if (!navigator.geolocation) {
         detectLocationViaIP(isManual);
+        return;
     }
+
+    const executeReverseGeocode = async (lat, lng, accuracyMeters) => {
+        let areaName = 'Current Location';
+        let cityName = 'Bhimavaram';
+        let stateName = 'Andhra Pradesh';
+        let fullDisplayName = '';
+        let resolved = false;
+
+        // Calculate distance from Bhimavaram town center
+        const distFromBvrmKm = getDistanceKm(lat, lng, BVRM_CENTER_LAT, BVRM_CENTER_LNG);
+        const inBhimavaramZone = distFromBvrmKm <= MAX_DELIVERY_RADIUS_KM;
+
+        // 1. Try OpenStreetMap Nominatim with zoom 18 for rooftop precision
+        try {
+            const geoController = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            const geoTimer = geoController ? setTimeout(() => geoController.abort(), 6500) : null;
+            let res;
+            try {
+                res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+                    headers: { 'Accept-Language': 'en' },
+                    signal: geoController ? geoController.signal : undefined
+                });
+            } finally {
+                if (geoTimer) clearTimeout(geoTimer);
+            }
+
+            if (res && res.ok) {
+                const data = await res.json();
+                const addr = data.address || {};
+                
+                // Specific venue, campus, building, village or street
+                areaName = data.name || addr.amenity || addr.building || addr.college || addr.university || addr.suburb || addr.neighbourhood || addr.village || addr.residential || addr.road || 'Current Location';
+                cityName = addr.city || addr.town || addr.county || addr.municipality || (addr.village ? addr.village : null) || addr.state_district || 'Bhimavaram';
+                stateName = addr.state || 'Andhra Pradesh';
+                fullDisplayName = data.display_name || '';
+                resolved = true;
+            }
+        } catch (err) {
+            console.warn('Primary reverse geocoding error:', err);
+        }
+
+        // 2. Fast secondary fallback if Nominatim timed out
+        if (!resolved) {
+            try {
+                const bdcController = typeof AbortController !== 'undefined' ? new AbortController() : null;
+                const bdcTimer = bdcController ? setTimeout(() => bdcController.abort(), 3500) : null;
+                let bdcRes;
+                try {
+                    bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`, {
+                        signal: bdcController ? bdcController.signal : undefined
+                    });
+                } finally {
+                    if (bdcTimer) clearTimeout(bdcTimer);
+                }
+                if (bdcRes && bdcRes.ok) {
+                    const bdcData = await bdcRes.json();
+                    if (bdcData) {
+                        areaName = bdcData.locality || bdcData.subLocality || bdcData.principalSubdivision || 'Current Location';
+                        cityName = bdcData.city || bdcData.locality || 'Bhimavaram';
+                        stateName = bdcData.principalSubdivision || 'Andhra Pradesh';
+                        fullDisplayName = `${areaName}, ${cityName}, ${stateName}`;
+                        resolved = true;
+                    }
+                }
+            } catch (bdcErr) {
+                console.warn('Secondary reverse geocoder error:', bdcErr);
+            }
+        }
+
+        // If on Uni Chocoloom, detect exact college / university campus!
+        if (window.IS_UNI_CHOCOLOOM_PAGE) {
+            const matchedCol = matchCollegeByLocation(areaName, cityName, stateName, lat, lng, fullDisplayName);
+            if (matchedCol) {
+                const distKm = (matchedCol.lat != null && matchedCol.lng != null) ? getDistanceKm(lat, lng, matchedCol.lat, matchedCol.lng) : null;
+                const distText = distKm != null ? ` (${distKm < 1 ? Math.round(distKm * 1000) + 'm' : distKm.toFixed(1) + 'km'})` : '';
+                selectCollege(matchedCol, isManual ? `🎓 Campus Detected: ${matchedCol.shortName || matchedCol.name}${distText}!` : null);
+                return;
+            }
+        }
+
+        // Find nearest known Bhimavaram locality for smart snapping / reference landmark
+        let closestLoc = null;
+        let minD = 999999;
+        for (const loc of SWIGGY_DATA.locations) {
+            if (loc.lat && loc.lng) {
+                const d = getDistanceKm(lat, lng, loc.lat, loc.lng);
+                if (d < minD) {
+                    minD = d;
+                    closestLoc = loc;
+                }
+            }
+        }
+
+        const accuracyNotice = (accuracyMeters && accuracyMeters < 100) ? ` (±${Math.round(accuracyMeters)}m)` : '';
+        let finalAreaName = areaName;
+        let finalCityName = inBhimavaramZone ? 'Bhimavaram' : cityName;
+        let finalStateName = inBhimavaramZone ? 'Andhra Pradesh' : stateName;
+        let landmarkText = `GPS: ${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E${accuracyNotice}`;
+
+        if (inBhimavaramZone && closestLoc && minD < 1.8) {
+            landmarkText = `Near ${closestLoc.name} (${minD < 1 ? Math.round(minD * 1000) + 'm' : minD.toFixed(1) + 'km'}) • GPS ${accuracyNotice}`;
+        }
+
+        const gpsLoc = {
+            id: `loc_gps_${Date.now()}`,
+            name: finalAreaName,
+            city: finalCityName,
+            state: finalStateName,
+            landmark: landmarkText,
+            lat: lat,
+            lng: lng,
+            isGPS: true,
+            isOutOfZone: !inBhimavaramZone,
+            distFromBvrmKm: distFromBvrmKm
+        };
+
+        if (inBhimavaramZone) {
+            // Also update customer profile defaults for frictionless ordering
+            if (AppState.customerProfile) {
+                AppState.customerProfile.city = 'Bhimavaram';
+                if (!AppState.customerProfile.pincode && closestLoc && closestLoc.pincode) {
+                    AppState.customerProfile.pincode = closestLoc.pincode;
+                }
+            }
+            setDetectedLocation(gpsLoc, isManual ? `📍 Perfect Location: ${finalAreaName}, Bhimavaram${accuracyNotice} (Delivery Available)!` : null);
+        } else {
+            setDetectedLocation(gpsLoc, isManual ? `📍 Located at ${finalAreaName}, ${cityName} (${distFromBvrmKm.toFixed(0)} km from Bhimavaram). Note: Orders can only be delivered within Bhimavaram & surroundings.` : null);
+        }
+    };
+
+    // Attempt 1: High Accuracy Hardware GPS (10s timeout, 0 maximum age for fresh satellite/Wi-Fi lock)
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+            executeReverseGeocode(lat, lng, accuracy);
+        },
+        (error) => {
+            console.warn('High-accuracy GPS attempt failed (' + error.message + '), trying standard accuracy fallback...');
+            // Attempt 2: Standard Accuracy Fallback (6s timeout)
+            navigator.geolocation.getCurrentPosition(
+                (fallbackPosition) => {
+                    const lat = fallbackPosition.coords.latitude;
+                    const lng = fallbackPosition.coords.longitude;
+                    executeReverseGeocode(lat, fallbackPosition.coords.accuracy);
+                },
+                async (fallbackError) => {
+                    console.info('GPS not available or denied, checking IP Geolocation...');
+                    await detectLocationViaIP(isManual);
+                },
+                { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 }
+            );
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
 };
 
 window.detectGPSLocation = function() {
@@ -5074,7 +6522,7 @@ window.detectGPSLocation = function() {
 async function detectLocationViaIP(isManual = false) {
     try {
         const ipController = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        const ipTimer = ipController ? setTimeout(() => ipController.abort(), 2000) : null;
+        const ipTimer = ipController ? setTimeout(() => ipController.abort(), 2500) : null;
         let res;
         try {
             res = await fetch('https://ipwho.is/', { signal: ipController ? ipController.signal : undefined });
@@ -5085,6 +6533,9 @@ async function detectLocationViaIP(isManual = false) {
         if (res && res.ok) {
             const data = await res.json();
             if (data.success && data.city) {
+                const distToBvrm = (data.latitude && data.longitude) ? getDistanceKm(data.latitude, data.longitude, 16.5449, 81.5212) : 999999;
+                const inZone = distToBvrm <= 8.0;
+
                 if (window.IS_UNI_CHOCOLOOM_PAGE) {
                     const matchedCol = matchCollegeByLocation(data.city, data.region || data.city, data.country, data.latitude, data.longitude, '');
                     if (matchedCol) {
@@ -5093,18 +6544,30 @@ async function detectLocationViaIP(isManual = false) {
                     }
                 }
 
-                const ipLoc = {
-                    id: `loc_ip_${Date.now()}`,
-                    name: data.city,
-                    city: data.region || data.city,
-                    state: data.country || 'India',
-                    landmark: `Auto IP: ${data.city} (${data.postal || ''})`,
-                    lat: data.latitude,
-                    lng: data.longitude,
-                    isIP: true
-                };
-                setDetectedLocation(ipLoc, isManual ? `📍 Auto-detected location: ${data.city}, ${data.region || data.country}!` : null);
-                return;
+                if (inZone) {
+                    const ipLoc = {
+                        id: `loc_ip_${Date.now()}`,
+                        name: data.city,
+                        city: 'Bhimavaram',
+                        state: 'Andhra Pradesh',
+                        landmark: `Auto IP: ${data.city} (${data.postal || ''})`,
+                        lat: data.latitude,
+                        lng: data.longitude,
+                        isIP: true,
+                        isOutOfZone: false
+                    };
+                    setDetectedLocation(ipLoc, isManual ? `📍 Auto-detected location: ${data.city}, Bhimavaram!` : null);
+                    return;
+                } else {
+                    // Mobile ISP cellular gateway (e.g. Hyderabad/Bangalore tower for Jio/Airtel in AP)
+                    if (isManual) {
+                        showToast(`📍 IP shows ${data.city} (Cellular Gateway). Delivery is available exclusively in Bhimavaram & surroundings. Please select your local Bhimavaram area.`, 'fa-solid fa-map-pin', '#f59e0b', 4500);
+                        const m = document.getElementById('locationModalBackdrop') || DOM.locationModalBackdrop;
+                        if (m) m.classList.add('open');
+                    }
+                    resetGpsBtn();
+                    return;
+                }
             }
         }
     } catch (e) {
@@ -5112,7 +6575,6 @@ async function detectLocationViaIP(isManual = false) {
     }
     resetGpsBtn();
 }
-
 
 function setDetectedLocation(newLoc, toastMsg) {
     const exists = SWIGGY_DATA.locations.find(l => l.name === newLoc.name && l.city === newLoc.city);
@@ -5131,7 +6593,7 @@ function setDetectedLocation(newLoc, toastMsg) {
         DOM.locationModalBackdrop.classList.remove('open');
     }
     if (toastMsg) {
-        showToast(toastMsg, 'fa-solid fa-location-crosshairs', '#10b981');
+        showToast(toastMsg, 'fa-solid fa-location-crosshairs', newLoc.isOutOfZone ? '#f59e0b' : '#10b981');
     }
     resetGpsBtn();
 }
@@ -5159,12 +6621,186 @@ function resetGpsBtn() {
             <div class="gps-btn-icon"><i class="fa-solid fa-crosshairs"></i></div>
             <div style="text-align: left;">
                 <div style="font-weight: 800; font-size: 14px; color: var(--primary);">Use Current Location</div>
-                <div style="font-size: 12px; color: var(--text-muted);">Using GPS for precise delivery address</div>
+                <div style="font-size: 12px; color: var(--text-muted);">High-precision GPS for Bhimavaram delivery address</div>
             </div>
             <i class="fa-solid fa-chevron-right" style="color: var(--primary); margin-left: auto;"></i>
         `;
     }
 }
+
+// ==================== BHIMAVARAM & SURROUNDINGS DELIVERY VALIDATION SYSTEM ====================
+window.validateBhimavaramDeliveryZone = function(addressObj = {}) {
+    const BVRM_LAT = 16.5449;
+    const BVRM_LNG = 81.5212;
+    const MAX_ALLOWED_KM = 8.0;
+
+    const lat = addressObj.lat != null ? Number(addressObj.lat) : (AppState.selectedLocation?.lat != null ? Number(AppState.selectedLocation.lat) : null);
+    const lng = addressObj.lng != null ? Number(addressObj.lng) : (AppState.selectedLocation?.lng != null ? Number(AppState.selectedLocation.lng) : null);
+
+    const city = (addressObj.city || AppState.customerProfile?.city || AppState.selectedLocation?.city || '').trim().toLowerCase();
+    const pincode = (addressObj.pincode || AppState.customerProfile?.pincode || '').toString().trim();
+    const street = (addressObj.street || addressObj.address || AppState.customerProfile?.street || AppState.customerProfile?.address || '').trim().toLowerCase();
+    const fullText = `${street} ${city} ${pincode}`.toLowerCase();
+
+    // Blocked major non-Bhimavaram cities
+    const blockedCities = ['bengaluru', 'bangalore', 'mumbai', 'delhi', 'hyderabad', 'chennai', 'pune', 'kolkata', 'visakhapatnam', 'vizag', 'vijayawada', 'guntur', 'kakinada', 'rajahmundry', 'tirupati', 'noida', 'gurugram'];
+    for (const bCity of blockedCities) {
+        if (city === bCity || (city.includes(bCity) && !city.includes('bhimavaram'))) {
+            return {
+                allowed: false,
+                invalidCity: true,
+                message: `Chocoloom currently delivers exclusively in Bhimavaram and surrounding areas (within 8 km). Orders cannot be placed to ${addressObj.city || bCity}.`
+            };
+        }
+    }
+
+    // Valid Bhimavaram regional PIN codes
+    const validBvrmPincodes = [
+        '534201', // Bhimavaram Town, Market, J.P. Rd
+        '534202', // Balusumudi, DNR College, Kovvada, Vishnupur
+        '534203', // Gunupudi
+        '534204', // Chinna Amiram, SRKR Campus, Pedda Amiram, GVR Nagar
+        '534205', // Anjaneya Nagar
+        '534206', // Dirusumarru Rd
+        '534207', // Dirusumarru
+        '534208', // Rayalam
+        '534210', // Mogalthur Rd area
+        '534199', // Undi Road, Losarigutlapadu
+        '534237', // Kalla, Seesali
+        '534243', // Pennada, BIET
+        '534244', // Vissakoderu, Veeravasaram
+        '534247'  // Palakollu Rd border
+    ];
+
+    if (/^\d{6}$/.test(pincode)) {
+        if (!validBvrmPincodes.includes(pincode)) {
+            return {
+                allowed: false,
+                invalidPincode: true,
+                message: `Pincode ${pincode} is outside our Bhimavaram delivery zone. We deliver to Bhimavaram & surrounding PIN codes (534201–534208, 534204, 534244, etc.).`
+            };
+        }
+    }
+
+    // Allowed local area and campus keywords
+    const allowedKeywords = [
+        'bhimavaram', 'bhimaavaram', 'bvrm', 'amiram', 'chinna amiram', 'pedda amiram',
+        'sriramapuram', 'srkr', 'vishnupur', 'kovvada', 'svecw', 'vitb', 'bvrit',
+        'balusumudi', 'somavaram', 'dnr', 'gunupudi', 'dirusumarru', 'rayalam',
+        'undi', 'vissakoderu', 'veeravasaram', 'gollalakoderu', 'pennada', 'kalla',
+        'seesali', 'kumudavalli', 'yenamadurru', 'palakollu road', 'akividu road',
+        'west godavari', 'biet', 'kgrl', 'csn', 'housing board', 'mavullamma',
+        'gvr nagar', 'subbarao peta'
+    ];
+
+    const hasKeyword = allowedKeywords.some(kw => fullText.includes(kw));
+
+    if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+        const distKm = getDistanceKm(lat, lng, BVRM_LAT, BVRM_LNG);
+        if (distKm <= MAX_ALLOWED_KM) {
+            return { allowed: true, distanceKm: distKm };
+        }
+        if (distKm > MAX_ALLOWED_KM && !hasKeyword) {
+            return {
+                allowed: false,
+                isGpsOutOfZone: true,
+                distanceKm: distKm,
+                message: `Your GPS position is located ${distKm.toFixed(0)} km away from Bhimavaram. Chocoloom accepts orders exclusively within Bhimavaram and surrounding areas.`
+            };
+        }
+    }
+
+    if (hasKeyword || city === 'bhimavaram' || city.includes('bhimavaram') || city === 'bhimavaram surroundings') {
+        return { allowed: true };
+    }
+
+    return {
+        allowed: false,
+        invalidCity: true,
+        message: 'Delivery is currently available exclusively in Bhimavaram and surrounding areas (within 8 km). Please enter a Bhimavaram address or college campus.'
+    };
+};
+
+// Out-of-Zone Interactive Modal
+window.showOutOfZoneOrderModal = function(zoneValidation = {}) {
+    let backdrop = document.getElementById('outOfZoneModalBackdrop');
+    if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'outOfZoneModalBackdrop';
+        backdrop.style.cssText = 'position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px); z-index: 999999; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.25s ease;';
+        document.body.appendChild(backdrop);
+    }
+
+    const message = zoneValidation.message || 'Chocoloom delivers exclusively in Bhimavaram and surrounding areas (within 8 km).';
+
+    backdrop.innerHTML = `
+        <div style="background: #fff; max-width: 480px; width: 100%; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); overflow: hidden; border: 1.5px solid #fed7aa; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+            <div style="background: linear-gradient(135deg, #fff7ed, #ffedd5); padding: 22px 24px; border-bottom: 1px solid #fed7aa; display: flex; align-items: center; gap: 14px;">
+                <div style="width: 46px; height: 46px; border-radius: 14px; background: #ea580c; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.3);">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #9a3412;">Bhimavaram Delivery Zone (8 km Max)</h3>
+                    <p style="margin: 3px 0 0; font-size: 12.5px; color: #c2410c; font-weight: 600;">Fresh Artisanal Bakes & Chocolates</p>
+                </div>
+            </div>
+            <div style="padding: 22px 24px;">
+                <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 14px; margin-bottom: 18px; display: flex; gap: 10px;">
+                    <i class="fa-solid fa-circle-info" style="color: #d97706; font-size: 16px; margin-top: 2px;"></i>
+                    <div style="font-size: 13px; color: #92400e; line-height: 1.5;">
+                        ${escapeHtml(message)}
+                    </div>
+                </div>
+                <div style="font-size: 12.5px; color: #64748b; line-height: 1.5; margin-bottom: 20px;">
+                    Chocoloom fulfills orders exclusively across <strong>Bhimavaram Town</strong>, college campuses (<strong>SRKR, Vishnu VITB/SVECW, DNR</strong>), and nearby surroundings within an <strong>8 km radius</strong>.
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button type="button" id="switchToBvrmBtn" style="background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; border: none; padding: 12px 18px; border-radius: 12px; font-weight: 800; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35); transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <i class="fa-solid fa-location-arrow"></i> Deliver to SRKR Campus / Bhimavaram
+                    </button>
+                    <button type="button" id="editAddressCloseBtn" style="background: #f8fafc; color: #475569; border: 1.5px solid #cbd5e1; padding: 11px 18px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;">
+                        Edit Delivery Address
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    backdrop.style.display = 'flex';
+
+    const switchBtn = document.getElementById('switchToBvrmBtn');
+    if (switchBtn) {
+        switchBtn.onclick = () => {
+            backdrop.style.display = 'none';
+            selectLocation('loc_bvrm_1');
+            const cityEl = document.getElementById('checkoutCustCity');
+            const pinEl = document.getElementById('checkoutCustPincode');
+            const streetEl = document.getElementById('checkoutCustStreet');
+            if (cityEl) cityEl.value = 'Bhimavaram';
+            if (pinEl) pinEl.value = '534204';
+            if (streetEl && !streetEl.value) streetEl.value = 'SRKR Engineering College Campus, Chinna Amiram';
+            if (AppState.customerProfile) {
+                AppState.customerProfile.city = 'Bhimavaram';
+                AppState.customerProfile.pincode = '534204';
+                if (!AppState.customerProfile.street) AppState.customerProfile.street = 'SRKR Engineering College Campus, Chinna Amiram';
+                try { localStorage.setItem('chocoloom_customer_profile', JSON.stringify(AppState.customerProfile)); } catch(e){}
+            }
+            showToast('Delivery address updated to SRKR Campus, Bhimavaram!', 'fa-solid fa-circle-check', '#16a34a');
+        };
+    }
+
+    const editBtn = document.getElementById('editAddressCloseBtn');
+    if (editBtn) {
+        editBtn.onclick = () => {
+            backdrop.style.display = 'none';
+            const cityEl = document.getElementById('checkoutCustCity');
+            if (cityEl) {
+                cityEl.focus();
+                cityEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        };
+    }
+};
 
 window.selectLocation = function(locId) {
     const loc = SWIGGY_DATA.locations.find(l => l.id === locId);
@@ -5539,7 +7175,7 @@ function syncLiveCatalogState() {
         deletedIds = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
         priceOverrides = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
         customProducts = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
-    } catch(e) {}
+    } catch (e) {}
 
     const rest = SWIGGY_DATA && SWIGGY_DATA.restaurants && SWIGGY_DATA.restaurants[0] ? SWIGGY_DATA.restaurants[0] : null;
     let menu = rest ? rest.menu : null;
@@ -5550,36 +7186,38 @@ function syncLiveCatalogState() {
             rest.menu = menu;
         }
 
-        // 2. Apply price & detail overrides
-        menu.forEach(item => {
-            const key = item.sql_id || item.id;
-            const over = priceOverrides[key] || priceOverrides[item.id] || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
-            if (over) {
-                if (over.price !== undefined) item.price = Number(over.price);
-                if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
-                if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
-                if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
-                if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
-                if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
-                if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
-                if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
-                if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
-                if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
-                if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
-                if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
-                if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
-                if (over.name) item.name = over.name;
-                if (over.category) item.category = over.category;
-                if (over.image) item.image = over.image;
-                if (over.image_url) { item.image = over.image_url; item.image_url = over.image_url; }
-                if (over.discount_price !== undefined) item.discount_price = Number(over.discount_price);
-                if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
-                if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
-                if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
-                if (over.flavour !== undefined) item.flavour = over.flavour;
-                if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
-            }
-        });
+        // 2. Apply price & detail overrides (Only as fallback when live Cloud Database is not loaded)
+        if (!window._neonDatabaseLoaded) {
+            menu.forEach(item => {
+                const key = item.sql_id || item.id;
+                const over = priceOverrides[key] || priceOverrides[item.id] || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
+                if (over) {
+                    if (over.price !== undefined) item.price = Number(over.price);
+                    if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
+                    if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
+                    if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
+                    if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
+                    if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
+                    if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
+                    if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
+                    if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
+                    if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
+                    if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
+                    if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
+                    if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
+                    if (over.name) item.name = over.name;
+                    if (over.category) item.category = over.category;
+                    if (over.image) item.image = window.getThemeAssetUrl(over.image);
+                    if (over.image_url) { item.image = window.getThemeAssetUrl(over.image_url); item.image_url = item.image; }
+                    if (over.discount_price !== undefined) item.discount_price = Number(over.discount_price);
+                    if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
+                    if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
+                    if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
+                    if (over.flavour !== undefined) item.flavour = over.flavour;
+                    if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
+                }
+            });
+        }
 
         // 3. Prepend custom added products
         if (Array.isArray(customProducts) && customProducts.length > 0) {
@@ -5618,12 +7256,16 @@ function syncCartItemPrices() {
             const wKey = cartItem.dish.selectedWeightKey || 'half_kg';
             const weightP = typeof getWeightPrice === "function" ? getWeightPrice(fresh, wKey) : Number(fresh.price);
             const coolingP = cartItem.dish.isCooling ? (typeof getCoolingCharge === "function" ? getCoolingCharge(fresh, wKey) : Number(cartItem.dish.coolingPrice || 0)) : 0;
-            const unitP = weightP + coolingP;
+            const isEggless = Boolean(cartItem.dish.isEggless);
+            const egglessP = isEggless ? (typeof getEgglessPrice === "function" ? getEgglessPrice(wKey) : Number(cartItem.dish.egglessPrice || 0)) : 0;
+            const flavourP = Number(cartItem.dish.flavourPrice || 0);
+            const unitP = weightP + coolingP + egglessP + flavourP;
 
             if (cartItem.dish.price !== unitP || cartItem.dish.weightPrice !== weightP) {
                 cartItem.dish.price = unitP;
                 cartItem.dish.weightPrice = weightP;
                 cartItem.dish.coolingPrice = coolingP;
+                cartItem.dish.egglessPrice = egglessP;
                 changed = true;
             }
         }
@@ -5799,6 +7441,19 @@ if (typeof window !== "undefined" && "BroadcastChannel" in window) {
                 }
             }
 
+            if (data.type === "ORDER_DELETED") {
+                const delNum = data.order_number;
+                try {
+                    let history = JSON.parse(localStorage.getItem('chocoloom_orders_history') || '[]');
+                    history = history.filter(o => o.order_number !== delNum && o.id !== delNum);
+                    localStorage.setItem('chocoloom_orders_history', JSON.stringify(history));
+                } catch(e) {}
+                if (AppState.activeOrder && (AppState.activeOrder.order_number === delNum || AppState.activeOrder.id === delNum)) {
+                    AppState.activeOrder = null;
+                    if (typeof closeOrderSuccessModal === 'function') closeOrderSuccessModal();
+                }
+            }
+
             if (data.type === "CLOUD_CONFIG_UPDATE" || data.type === "NEON_CONFIG_UPDATE") {
                 if (data.neonUrl) localStorage.setItem("chocoloom_neon_url", data.neonUrl);
                 if (data.supabaseUrl) localStorage.setItem("chocoloom_supabase_url", data.supabaseUrl);
@@ -5914,6 +7569,34 @@ window.proceedToCheckout = async function() {
             else if (!streetVal && streetEl) streetEl.focus();
             else if (!cityVal && cityEl) cityEl.focus();
             else if (!pincodeVal && pincodeEl) pincodeEl.focus();
+            return;
+        }
+
+        // ==================== STRICT BHIMAVARAM & SURROUNDINGS DELIVERY RESTRICTION ====================
+        const zoneValidation = (typeof window.validateBhimavaramDeliveryZone === 'function')
+            ? window.validateBhimavaramDeliveryZone({
+                street: streetVal,
+                city: cityVal,
+                pincode: pincodeVal,
+                lat: AppState.selectedLocation?.lat,
+                lng: AppState.selectedLocation?.lng
+            })
+            : { allowed: true };
+
+        if (!zoneValidation.allowed) {
+            isOrderCheckoutActive = false;
+            if (errBanner) {
+                errBanner.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <strong>Delivery Restricted:</strong> ${zoneValidation.message}`;
+                errBanner.style.display = 'block';
+                errBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            if (cityEl && zoneValidation.invalidCity) cityEl.style.borderColor = '#ef4444';
+            if (pincodeEl && zoneValidation.invalidPincode) pincodeEl.style.borderColor = '#ef4444';
+            if (streetEl && zoneValidation.isGpsOutOfZone) streetEl.style.borderColor = '#ef4444';
+
+            if (typeof window.showOutOfZoneOrderModal === 'function') {
+                window.showOutOfZoneOrderModal(zoneValidation);
+            }
             return;
         }
 
@@ -6394,7 +8077,7 @@ function bindEvents() {
     if (navOffers) {
         navOffers.addEventListener('click', (e) => {
             e.preventDefault();
-            window.location.href = 'uni-chocoloom.html';
+            window.location.href = window.getAppUrl('uni-chocoloom.html');
         });
     }
 
@@ -6446,25 +8129,30 @@ function bindEvents() {
     if (mobFood) {
         mobFood.addEventListener('click', () => {
             if (window.IS_UNI_CHOCOLOOM_PAGE) {
-                window.location.href = 'order.html';
+                window.location.href = window.getAppUrl('order.html');
                 return;
             }
             updateMobileNavActive(mobFood);
-            document.querySelector('.service-tab[data-service="food"]')?.click();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (typeof window.switchToFoodView === 'function') {
+                window.switchToFoodView();
+            } else {
+                document.querySelector('.service-tab[data-service="food"]')?.click();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         });
     }
 
     if (mobInsta) {
         mobInsta.addEventListener('click', () => {
+            if (window.IS_UNI_CHOCOLOOM_PAGE) {
+                window.location.href = window.getAppUrl('order.html#gamezone');
+                return;
+            }
             updateMobileNavActive(mobInsta);
-            if (typeof openTombolaGameModal === 'function') {
-                openTombolaGameModal();
-            } else if (document.querySelector('.service-tab[data-service="instamart"]')) {
-                document.querySelector('.service-tab[data-service="instamart"]')?.click();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-                showToast('Welcome to Chocoloom Game Zone!', 'fa-solid fa-gamepad', '#7c3aed');
+            if (typeof window.switchToGameZone === 'function') {
+                window.switchToGameZone();
+            } else if (typeof window.showTombolaComingSoonModal === 'function') {
+                window.showTombolaComingSoonModal();
             }
         });
     }
@@ -6507,7 +8195,7 @@ function bindEvents() {
             }
             e.preventDefault();
             updateMobileNavActive(mobOffers);
-            window.location.href = 'uni-chocoloom.html';
+            window.location.href = window.getAppUrl('uni-chocoloom.html');
         });
     }
 
@@ -6516,6 +8204,15 @@ function bindEvents() {
         studentModalBackdrop.addEventListener('click', (e) => {
             if (e.target === studentModalBackdrop) {
                 closeStudentOfferModal();
+            }
+        });
+    }
+
+    const cakeModalBackdrop = document.getElementById('cakeCustomizationModalBackdrop');
+    if (cakeModalBackdrop) {
+        cakeModalBackdrop.addEventListener('click', (e) => {
+            if (e.target === cakeModalBackdrop) {
+                closeCustomizationModal();
             }
         });
     }
@@ -6742,109 +8439,27 @@ let tombolaGameState = {
 };
 
 window.ensureTombolaModalDOM = function() {
-    if (document.getElementById('tombolaModalBackdrop')) return;
-    const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop tombola-modal-backdrop';
-    backdrop.id = 'tombolaModalBackdrop';
-    backdrop.onclick = function(e) {
-        if (e.target === backdrop) closeTombolaGameModal();
-    };
-    backdrop.innerHTML = `
-        <div class="menu-modal-container tombola-modal-container" id="tombolaModalContainer" onclick="event.stopPropagation()">
-            <button class="modal-close-btn tombola-close-btn" onclick="closeTombolaGameModal()" aria-label="Close Tombola">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <!-- Hero Header with Poster Banner Motif -->
-            <div class="tombola-modal-header">
-                <div class="tombola-header-badge">
-                    <i class="fa-solid fa-ticket"></i>
-                    <span>EVERY PRIZE A WINNER! • £1 A STRIP</span>
-                </div>
-                <h2 class="tombola-title-art">TOMBOLA</h2>
-                <p class="tombola-sub-text">
-                    <strong>TRY YOUR LUCK!</strong> Thank you for supporting our community. Pick your strip, roll the drum & match numbers to win delicious bakery rewards!
-                </p>
-            </div>
-
-            <div class="tombola-modal-body">
-                <!-- Retro Ticket Strip Card -->
-                <div class="tombola-ticket-wrapper">
-                    <div class="tombola-strip-ribbon">
-                        <span class="strip-label">OFFICIAL TOMBOLA STRIP</span>
-                        <span class="strip-cost">£1 / ₹50</span>
-                    </div>
-                    <div class="tombola-strip-grid" id="tombolaStripGrid">
-                        <!-- Populated dynamically with strip numbers -->
-                    </div>
-                    <div class="tombola-strip-footer">
-                        <span>SERIES #CH-2026</span>
-                        <span>GUARANTEED PRIZE ON MATCH</span>
-                    </div>
-                </div>
-
-                <!-- Live Drum Arena -->
-                <div class="tombola-drum-arena">
-                    <div class="tombola-ball-display-wrap">
-                        <div class="tombola-ball-slot" id="tombolaBallSlot">
-                            <div class="tombola-active-ball" id="tombolaActiveBall">?</div>
-                        </div>
-                        <div class="tombola-status-msg" id="tombolaStatusMsg">
-                            Ready! Tap the button below to draw your lucky ball.
-                        </div>
-                    </div>
-
-                    <div class="tombola-action-btns">
-                        <button class="tombola-draw-btn" id="tombolaDrawBtn" onclick="drawTombolaLuckyBall()">
-                            <i class="fa-solid fa-dice" id="tombolaDrawIcon"></i>
-                            <span id="tombolaDrawText">ROLL & DRAW LUCKY BALL</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Winning Celebration Box (Shown on match) -->
-                <div class="tombola-winner-box" id="tombolaWinnerBox" style="display: none;">
-                    <div class="tombola-trophy-badge">🏆 BINGO WINNER!</div>
-                    <h3 class="winner-title">Congratulations! You Won!</h3>
-                    <p class="winner-desc">You matched a lucky number! Here is your exclusive 50% community discount:</p>
-                    <div class="tombola-coupon-reveal">
-                        <div class="coupon-reveal-code">TOMBOLA50</div>
-                        <div class="coupon-reveal-tag">50% OFF (MAX ₹150)</div>
-                    </div>
-                    <div class="winner-actions">
-                        <button class="tombola-claim-btn" onclick="applyTombolaCoupon()">
-                            <i class="fa-solid fa-gift"></i>
-                            <span>APPLY 50% OFF & ORDER NOW</span>
-                        </button>
-                        <button class="tombola-play-again-btn" onclick="resetTombolaGame()">
-                            <i class="fa-solid fa-rotate-right"></i>
-                            <span>Roll Again</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(backdrop);
+    if (typeof window.ensureTombolaComingSoonModalDOM === 'function') {
+        window.ensureTombolaComingSoonModalDOM();
+    }
 };
 
 window.openTombolaGameModal = function(e) {
-    if (e) e.stopPropagation();
-    window.ensureTombolaModalDOM();
+    if (e && e.stopPropagation) e.stopPropagation();
     const modal = document.getElementById('tombolaModalBackdrop');
     if (modal) {
-        modal.classList.add('open');
-        document.body.style.overflow = 'hidden';
+        modal.classList.remove('open');
     }
-    renderTombolaStrip();
+    window.showTombolaComingSoonModal();
 };
 
 window.closeTombolaGameModal = function() {
     const modal = document.getElementById('tombolaModalBackdrop');
     if (modal) {
         modal.classList.remove('open');
-        document.body.style.overflow = '';
     }
+    window.closeTombolaComingSoonModal();
+    document.body.style.overflow = '';
 };
 
 window.renderTombolaStrip = function() {
@@ -6862,67 +8477,10 @@ window.renderTombolaStrip = function() {
 };
 
 window.drawTombolaLuckyBall = function() {
-    if (tombolaGameState.isRolling) return;
-    tombolaGameState.isRolling = true;
-
-    const ball = document.getElementById('tombolaActiveBall');
-    const msg = document.getElementById('tombolaStatusMsg');
-    const btn = document.getElementById('tombolaDrawBtn');
-    const icon = document.getElementById('tombolaDrawIcon');
-    const btnText = document.getElementById('tombolaDrawText');
-
-    if (btn) btn.disabled = true;
-    if (icon) icon.className = 'fa-solid fa-spinner fa-spin';
-    if (btnText) btnText.textContent = 'ROLLING THE DRUM...';
-    if (msg) msg.textContent = 'Drum is spinning... rolling lucky number!';
-
-    // Rapid shuffle animation for 1.2s
-    let rollCount = 0;
-    const pool = [1, 3, 4, 7, 8, 14, 16, 17, 21, 23, 24, 29, 33, 39, 41];
-    const shuffleTimer = setInterval(() => {
-        rollCount++;
-        const randomNum = pool[Math.floor(Math.random() * pool.length)];
-        if (ball) ball.textContent = String(randomNum).padStart(2, '0');
-        if (ball) ball.style.transform = `rotate(${rollCount * 45}deg) scale(1.1)`;
-    }, 80);
-
-    setTimeout(() => {
-        clearInterval(shuffleTimer);
-
-        // Pick one of the remaining strip numbers to guarantee a winning match!
-        const remaining = tombolaGameState.stripNumbers.filter(n => !tombolaGameState.matchedNumbers.includes(n));
-        const winningNum = remaining.length > 0 ? remaining[Math.floor(Math.random() * remaining.length)] : 17;
-
-        tombolaGameState.matchedNumbers.push(winningNum);
-        tombolaGameState.lastDrawnBall = winningNum;
-        tombolaGameState.hasWon = true;
-
-        if (ball) {
-            ball.textContent = String(winningNum).padStart(2, '0');
-            ball.style.transform = 'rotate(0deg) scale(1.15)';
-            ball.classList.add('winner-ball-drop');
-        }
-
-        renderTombolaStrip();
-
-        if (msg) msg.innerHTML = `🎉 <strong>MATCH! Ball #${winningNum} drawn!</strong> Every prize a winner!`;
-        if (btn) btn.disabled = false;
-        if (icon) icon.className = 'fa-solid fa-dice';
-        if (btnText) btnText.textContent = 'DRAW ANOTHER BALL';
-
-        // Play celebration audio chime & confetti
-        if (typeof playCardCelebrationChime === 'function') playCardCelebrationChime();
-        if (typeof launchCardOrderConfetti === 'function') launchCardOrderConfetti();
-
-        // Reveal winning banner
-        const winBox = document.getElementById('tombolaWinnerBox');
-        if (winBox) {
-            winBox.style.display = 'block';
-            winBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-
-        tombolaGameState.isRolling = false;
-    }, 1200);
+    if (typeof showToast === 'function') {
+        showToast('⏳ Community Tombola game is coming soon! Stay tuned.', 'fa-solid fa-hourglass-start', '#f59e0b');
+    }
+    return;
 };
 
 window.applyTombolaCoupon = function() {
@@ -7176,6 +8734,7 @@ function renderSearchPageContent() {
 // ==================== USER AUTHENTICATION & PROFILE ENGINE ====================
 
 // Primary User Save to Supabase 'users' table
+// Primary User Save to Supabase 'users' table (Used only during explicit registration / onboarding)
 async function saveUserToSupabase(userData) {
     if (!userData) return null;
     const client = getSupabaseClient();
@@ -7183,7 +8742,6 @@ async function saveUserToSupabase(userData) {
     const cleanEmail = String(userData.email || '').trim().toLowerCase() || null;
     const cleanName = String(userData.name || 'Customer').trim();
     const payload = {
-        id: userData.id || ('usr_' + (cleanPhone || Date.now())),
         name: cleanName,
         email: cleanEmail,
         phone: cleanPhone,
@@ -7195,33 +8753,57 @@ async function saveUserToSupabase(userData) {
         addresses: Array.isArray(userData.addresses) ? userData.addresses : (userData.address ? [{ address: userData.address, label: 'Delivery', added_at: new Date().toISOString() }] : []),
         updated_at: new Date().toISOString()
     };
-
-    const conflictCol = payload.email ? 'email' : (payload.phone ? 'phone' : 'id');
+    if (userData.id) payload.id = userData.id;
 
     if (client) {
         try {
-            const { data, error } = await client
-                .from('users')
-                .upsert([payload], { onConflict: conflictCol })
-                .select();
-            if (!error && data && data.length > 0) {
-                console.log('✅ User saved in Supabase (Primary Database):', cleanName, payload.email || payload.phone);
-                return data[0];
+            // Check if user already exists by phone or email
+            let existingId = null;
+            if (cleanPhone) {
+                const { data: byPhone } = await client.from('users').select('id').eq('phone', cleanPhone).limit(1);
+                if (byPhone && byPhone.length > 0) existingId = byPhone[0].id;
+            }
+            if (!existingId && cleanEmail) {
+                const { data: byEmail } = await client.from('users').select('id').eq('email', cleanEmail).limit(1);
+                if (byEmail && byEmail.length > 0) existingId = byEmail[0].id;
+            }
+
+            if (existingId) {
+                // Update existing record by ID so Postgres never violates unique phone/email constraints
+                const { data, error } = await client
+                    .from('users')
+                    .update(payload)
+                    .eq('id', existingId)
+                    .select();
+                if (!error && data && data.length > 0) {
+                    console.log('✅ User updated in Supabase:', cleanName, cleanPhone || cleanEmail);
+                    return data[0];
+                }
+            } else {
+                // Insert fresh record
+                if (!payload.id) payload.id = 'usr_' + (cleanPhone || Date.now());
+                const { data, error } = await client
+                    .from('users')
+                    .insert([payload])
+                    .select();
+                if (!error && data && data.length > 0) {
+                    console.log('✅ User saved in Supabase:', cleanName, cleanPhone || cleanEmail);
+                    return data[0];
+                }
+                if (error) {
+                    console.warn('Supabase user insert warning:', error);
+                }
             }
         } catch (e) {
-            console.warn('Supabase JS user upsert warning:', e);
+            console.warn('Supabase JS user save error:', e);
         }
     }
 
-    // Direct REST API with Pre-check & Merge Fallback for Supabase
+    // Direct REST API fallback
     try {
         let existingId = null;
-        const checkFilter = payload.email 
-            ? `email=eq.${encodeURIComponent(payload.email)}` 
-            : (payload.phone ? `phone=eq.${encodeURIComponent(payload.phone)}` : null);
-
-        if (checkFilter) {
-            const checkRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/users?${checkFilter}&select=id&limit=1`, {
+        if (cleanPhone) {
+            const checkRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/users?phone=eq.${cleanPhone}&select=id&limit=1`, {
                 headers: {
                     'apikey': SUPABASE_CONFIG.anonKey,
                     'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
@@ -7234,8 +8816,6 @@ async function saveUserToSupabase(userData) {
         }
 
         if (existingId) {
-            const patchPayload = { ...payload };
-            delete patchPayload.id;
             const patchRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/users?id=eq.${encodeURIComponent(existingId)}`, {
                 method: 'PATCH',
                 headers: {
@@ -7244,25 +8824,26 @@ async function saveUserToSupabase(userData) {
                     'Content-Type': 'application/json',
                     'Prefer': 'return=representation'
                 },
-                body: JSON.stringify(patchPayload)
+                body: JSON.stringify(payload)
             });
             if (patchRes.ok) {
-                console.log('✅ User updated in Supabase via REST (Primary Database):', cleanName, payload.email || payload.phone);
+                console.log('✅ User updated in Supabase via REST:', cleanName);
                 return { ...payload, id: existingId };
             }
         } else {
-            const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/users?on_conflict=${conflictCol}`, {
+            if (!payload.id) payload.id = 'usr_' + (cleanPhone || Date.now());
+            const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/users`, {
                 method: 'POST',
                 headers: {
                     'apikey': SUPABASE_CONFIG.anonKey,
                     'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`,
                     'Content-Type': 'application/json',
-                    'Prefer': 'resolution=merge-duplicates,return=representation'
+                    'Prefer': 'return=representation'
                 },
                 body: JSON.stringify(payload)
             });
             if (res.ok) {
-                console.log('✅ User saved in Supabase via REST (Primary Database):', cleanName, payload.email || payload.phone);
+                console.log('✅ User saved in Supabase via REST:', cleanName);
                 return payload;
             }
         }
@@ -7272,32 +8853,84 @@ async function saveUserToSupabase(userData) {
     return payload;
 }
 
-// Synchronize users database from Supabase (Primary Production Database)
+// Master function to validate if active session is still valid in Supabase
+function validateActiveSessionAgainstCloud(cloudUsers) {
+    if (!AppState || !AppState.currentUser) return;
+    const cur = AppState.currentUser;
+    const curPhone = String(cur.phone || '').replace(/\D/g, '').slice(-10);
+    const curEmail = String(cur.email || '').trim().toLowerCase();
+    const curId = cur.id;
+
+    const exists = Array.isArray(cloudUsers) && cloudUsers.some(u => {
+        const uPhone = String(u.phone || '').replace(/\D/g, '').slice(-10);
+        const uEmail = String(u.email || '').trim().toLowerCase();
+        return (curId && u.id === curId) || (curPhone && uPhone === curPhone) || (curEmail && uEmail === curEmail);
+    });
+
+    if (!exists) {
+        console.warn('⚠️ Active user session was deleted from Supabase. Clearing session and logging out.');
+        try {
+            localStorage.removeItem('chocoloom_user_session');
+            localStorage.removeItem('chocoloom_customer_profile');
+        } catch (e) {}
+        AppState.currentUser = null;
+        AppState.customerProfile = { name: '', phone: '', street: '', city: 'Bhimavaram', pincode: '534204', notes: '', paymentMethod: 'UPI / Online' };
+        if (typeof updateAuthUI === 'function') updateAuthUI();
+    }
+}
+
+// Synchronize users database from Supabase (Primary Production Database - Single Source of Truth)
 async function syncUsersFromSupabase() {
     try {
         const client = getSupabaseClient();
+        let cloudData = null;
         if (client) {
             const { data, error } = await client.from('users').select('*').order('created_at', { ascending: false });
-            if (!error && Array.isArray(data) && data.length > 0) {
-                mergeUsersIntoLocalDb(data);
-                console.log(`✅ Loaded ${data.length} users from Supabase (Primary Database)`);
-                return true;
+            if (!error && Array.isArray(data)) {
+                cloudData = data;
             }
         }
-        // Direct REST fallback for Supabase
-        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/users?select=*&order=created_at.desc`, {
-            headers: {
-                'apikey': SUPABASE_CONFIG.anonKey,
-                'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
+        if (!cloudData) {
+            // Direct REST fallback for Supabase
+            const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/users?select=*&order=created_at.desc`, {
+                headers: {
+                    'apikey': SUPABASE_CONFIG.anonKey,
+                    'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
+                }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    cloudData = data;
+                }
             }
-        });
-        if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) {
-                mergeUsersIntoLocalDb(data);
-                console.log(`✅ Loaded ${data.length} users from Supabase REST (Primary Database)`);
-                return true;
-            }
+        }
+
+        if (Array.isArray(cloudData)) {
+            const mapped = cloudData.map(u => ({
+                id: u.id,
+                name: u.name,
+                email: u.email,
+                phone: u.phone,
+                password: u.password,
+                role: u.role || 'Customer',
+                isStudent: Boolean(u.is_student),
+                college: u.college_id,
+                collegeName: u.college_name,
+                address: Array.isArray(u.addresses) && u.addresses.length > 0 ? (u.addresses[0].address || u.addresses[0]) : null,
+                addresses: Array.isArray(u.addresses) ? u.addresses : [],
+                createdAt: u.created_at
+            }));
+
+            // Supabase is the single source of truth: replace local cache with cloud state
+            try {
+                localStorage.setItem('chocoloom_users_db', JSON.stringify(mapped));
+            } catch (e) {}
+
+            // Validate active logged-in session: if user was deleted from database, log them out!
+            validateActiveSessionAgainstCloud(mapped);
+            console.log(`✅ Loaded ${mapped.length} users from Supabase (Primary Database)`);
+            return true;
         }
     } catch (e) {
         console.warn('Supabase users sync fallback:', e);
@@ -7311,116 +8944,95 @@ async function syncUsersFromNeon() {
         const sql = getNeonClient();
         if (!sql) return;
         const neonUsers = await sql`SELECT * FROM users ORDER BY created_at DESC`;
-        if (Array.isArray(neonUsers) && neonUsers.length > 0) {
-            mergeUsersIntoLocalDb(neonUsers);
-            console.log(`✅ Loaded ${neonUsers.length} users from Neon Postgres (Emergency Storage)`);
+        if (Array.isArray(neonUsers)) {
+            const mapped = neonUsers.map(u => ({
+                id: u.id,
+                name: u.name,
+                email: u.email,
+                phone: u.phone,
+                password: u.password,
+                role: u.role || 'Customer',
+                isStudent: Boolean(u.is_student),
+                college: u.college_id,
+                collegeName: u.college_name,
+                createdAt: u.created_at
+            }));
+            try {
+                localStorage.setItem('chocoloom_users_db', JSON.stringify(mapped));
+            } catch (e) {}
+            validateActiveSessionAgainstCloud(mapped);
+            console.log(`✅ Loaded ${mapped.length} users from Neon Postgres`);
         }
     } catch (err) {
         console.warn('Neon users sync warning:', err);
     }
 }
 
-// Merge cloud users into local cache without overwriting active session
-function mergeUsersIntoLocalDb(cloudUsers) {
-    if (!cloudUsers || !Array.isArray(cloudUsers)) return;
-    const local = getLocalUsersDb();
-    const map = new Map();
-    local.forEach(u => {
-        if (u.email) map.set(u.email.toLowerCase(), u);
-        if (u.phone) map.set(u.phone.replace(/\D/g, ''), u);
-    });
-    cloudUsers.forEach(u => {
-        const mapped = {
-            id: u.id,
-            name: u.name,
-            email: u.email,
-            phone: u.phone,
-            password: u.password,
-            role: u.role || 'Customer',
-            isStudent: Boolean(u.is_student),
-            college: u.college_id,
-            collegeName: u.college_name,
-            createdAt: u.created_at
-        };
-        const keyEmail = (u.email || '').toLowerCase();
-        const keyPhone = (u.phone || '').replace(/\D/g, '');
-        if (keyEmail && map.has(keyEmail)) {
-            Object.assign(map.get(keyEmail), mapped);
-        } else if (keyPhone && map.has(keyPhone)) {
-            Object.assign(map.get(keyPhone), mapped);
-        } else {
-            local.push(mapped);
-        }
-    });
-    try {
-        localStorage.setItem('chocoloom_users_db', JSON.stringify(local));
-    } catch (e) {}
-}
-
-// Local users database helper
+// Local users database helper (Returns only actual cached users, NO mock fake user seeding)
 function getLocalUsersDb() {
     let users = [];
     try {
         const raw = localStorage.getItem('chocoloom_users_db');
         if (raw) users = JSON.parse(raw);
     } catch (e) {}
-    if (!users || !Array.isArray(users) || users.length === 0) {
-        users = [
-            {
-                id: 'usr_demo_student',
-                name: 'Mohith Kumar',
-                email: 'student@srkr.edu.in',
-                phone: '9876543210',
-                password: 'password123',
-                isStudent: true,
-                college: 'col_srkr',
-                collegeName: 'S.R.K.R. Engineering College (SRKR)',
-                role: 'SRKR Student',
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: 'usr_demo_customer',
-                name: 'Priya Sharma',
-                email: 'priya@example.com',
-                phone: '9123456789',
-                password: 'password123',
-                isStudent: false,
-                college: null,
-                collegeName: null,
-                role: 'Foodie VIP',
-                createdAt: new Date().toISOString()
-            }
-        ];
+    return Array.isArray(users) ? users : [];
+}
+
+// Master helper to delete a user from Supabase and clear them everywhere
+window.deleteUserFromSystem = async function(phoneOrId) {
+    if (!phoneOrId) return { success: false, message: 'Phone or ID required' };
+    const cleanPhone = String(phoneOrId).replace(/\D/g, '').slice(-10);
+    const client = getSupabaseClient();
+    let deletedFromCloud = false;
+
+    if (client) {
         try {
-            localStorage.setItem('chocoloom_users_db', JSON.stringify(users));
+            const query = cleanPhone.length === 10 
+                ? client.from('users').delete().or(`phone.eq.${cleanPhone},phone.like.%${cleanPhone},id.eq.${phoneOrId}`)
+                : client.from('users').delete().eq('id', phoneOrId);
+            const { error } = await query;
+            if (!error) deletedFromCloud = true;
+        } catch (e) {
+            console.warn('Supabase delete user error:', e);
+        }
+    }
+
+    if (!deletedFromCloud) {
+        try {
+            const filter = cleanPhone.length === 10 ? `phone=eq.${cleanPhone}` : `id=eq.${phoneOrId}`;
+            await fetch(`${SUPABASE_CONFIG.url}/rest/v1/users?${filter}`, {
+                method: 'DELETE',
+                headers: {
+                    'apikey': SUPABASE_CONFIG.anonKey,
+                    'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
+                }
+            });
+            deletedFromCloud = true;
         } catch (e) {}
     }
-    return users;
-}
 
-// Automatically sync all local accounts to Supabase and Neon (Emergency Vault)
-async function flushLocalUsersToCloud() {
+    // Remove from local cache
+    const local = getLocalUsersDb().filter(u => {
+        const p = String(u.phone || '').replace(/\D/g, '').slice(-10);
+        return p !== cleanPhone && u.id !== phoneOrId;
+    });
     try {
-        const local = getLocalUsersDb();
-        if (!Array.isArray(local) || local.length === 0) return;
-        for (const u of local) {
-            if (!u.email && !u.phone) continue;
-            // Push to Supabase (Primary)
-            saveUserToSupabase(u).catch(() => {});
-            // Push to Neon (Emergency Vault & Leads)
-            collectUserDetailsToNeon(u).catch(() => {});
-        }
-        // Also sync active session if present
-        if (AppState && AppState.currentUser) {
-            saveUserToSupabase(AppState.currentUser).catch(() => {});
-            collectUserDetailsToNeon(AppState.currentUser).catch(() => {});
-        }
-    } catch (e) {
-        console.warn('flushLocalUsersToCloud warning:', e);
-    }
-}
+        localStorage.setItem('chocoloom_users_db', JSON.stringify(local));
+    } catch (e) {}
 
-// Initialize Auth System (Runs on Supabase primarily, Neon as emergency backup)
+    // If currently logged in user was this user, log out immediately!
+    if (AppState && AppState.currentUser) {
+        const curPhone = String(AppState.currentUser.phone || '').replace(/\D/g, '').slice(-10);
+        if (curPhone === cleanPhone || AppState.currentUser.id === phoneOrId) {
+            handleUserLogout();
+        }
+    }
+
+    console.log('🗑️ User completely deleted from database and local storage:', phoneOrId);
+    return { success: true, message: 'User deleted from database and local storage' };
+};
+
+// Initialize Auth System
 function initAuthSystem() {
     try {
         const rawUser = localStorage.getItem('chocoloom_user_session');
@@ -7431,18 +9043,10 @@ function initAuthSystem() {
         AppState.currentUser = null;
     }
 
-    // 1. Ensure local cache initialized
-    getLocalUsersDb();
-
-    // 2. Auto-Flush: Synchronize all locally saved accounts to Supabase & Neon
-    setTimeout(() => {
-        flushLocalUsersToCloud();
-    }, 1000);
-
-    // 3. Primary: Synchronize users from Supabase Cloud
+    // 1. Primary: Synchronize live users from Supabase Cloud (Validates active session)
     syncUsersFromSupabase().then(loaded => {
         if (!loaded) {
-            // 4. Fallback: Load from Neon Postgres if Supabase was offline
+            // 2. Fallback: Load from Neon Postgres if Supabase was offline
             syncUsersFromNeon();
         }
     });
@@ -7590,22 +9194,25 @@ function updateAuthUI() {
 
 // Auth Navigation / Modal controls
 window.openAuthModal = function(defaultTab = 'passcode') {
-    const isLoginPage = window.location.pathname.endsWith('login.html');
+    const modal = document.getElementById('authModalBackdrop');
+    if (modal) {
+        modal.classList.add('open');
+        switchAuthTab('passcode');
+        setTimeout(() => {
+            const inputToFocus = document.getElementById('passcodePhoneNumber') || document.getElementById('otpPhoneNumber');
+            if (inputToFocus) inputToFocus.focus();
+        }, 150);
+        return;
+    }
+
+    const isLoginPage = window.location.pathname.endsWith('login.html') || window.location.search.includes('page=login');
     if (!isLoginPage) {
         const currentPage = window.location.pathname.split('/').pop() || 'order.html';
         const currentSearch = window.location.search ? window.location.search.replace(/[\?&]auth=[^&]+/, '') : '';
         const redirectParam = encodeURIComponent(currentPage + currentSearch);
-        window.location.href = `login.html?redirect=${redirectParam}`;
+        window.location.href = window.getAppUrl(`login.html?redirect=${redirectParam}`);
         return;
     }
-
-    const modal = document.getElementById('authModalBackdrop');
-    if (modal) modal.classList.add('open');
-    switchAuthTab('passcode');
-    setTimeout(() => {
-        const inputToFocus = document.getElementById('passcodePhoneNumber') || document.getElementById('otpPhoneNumber');
-        if (inputToFocus) inputToFocus.focus();
-    }, 150);
 };
 
 window.closeAuthModal = function() {
@@ -7758,6 +9365,26 @@ window.setupPasscodeInputs = function() {
             }
         }, 150);
     }
+
+    // Enforce pure numeric keyboard & digits-only input on all onboarding/signup passcode fields
+    ['otpNewUserPassword', 'signUpPassword', 'passcodeInputField'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.setAttribute('inputmode', 'numeric');
+            el.setAttribute('pattern', '[0-9]*');
+            el.setAttribute('maxlength', '4');
+            el.oninput = function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+            };
+            el.onkeydown = function(e) {
+                if (['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+                if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) return;
+                if (!/^[0-9]$/.test(e.key)) {
+                    e.preventDefault();
+                }
+            };
+        }
+    });
 };
 
 // Toggle Passcode visibility (masked password dots vs numbers)
@@ -7887,9 +9514,6 @@ window.handlePasscodeLoginSubmit = async function(event) {
             localStorage.setItem('chocoloom_user_session', JSON.stringify(matchedUser));
         } catch (e) {}
 
-        saveUserToSupabase(matchedUser).catch(() => {});
-        collectUserDetailsToNeon({ ...matchedUser, source: 'passcode_login' }).catch(() => {});
-
         if (matchedUser.isStudent && matchedUser.college) {
             const col = (SWIGGY_DATA && SWIGGY_DATA.colleges ? SWIGGY_DATA.colleges : []).find(c => c.id === matchedUser.college);
             if (col) {
@@ -7912,7 +9536,7 @@ window.handlePasscodeLoginSubmit = async function(event) {
         if (window.location.pathname.endsWith('login.html')) {
             setTimeout(() => {
                 const target = (typeof getRedirectTarget === 'function') ? getRedirectTarget() : 'uni-chocoloom.html';
-                window.location.href = target;
+                window.location.href = window.getAppUrl(target);
             }, 600);
         } else {
             closeAuthModal();
@@ -7957,10 +9581,23 @@ window.openNewUserOnboardingScreen = function(phone = '', passcode = '') {
         phoneBadge.textContent = `+91 ${cleanDigits.slice(0, 5)} ${cleanDigits.slice(5)}`;
     }
 
-    // Passcode input must start completely empty for new user registration
+    // Passcode input must start completely empty for new user registration and strictly show numeric keyboard
     const passInput = document.getElementById('otpNewUserPassword');
     if (passInput) {
         passInput.value = passcode || '';
+        passInput.setAttribute('inputmode', 'numeric');
+        passInput.setAttribute('pattern', '[0-9]*');
+        passInput.setAttribute('maxlength', '4');
+        passInput.oninput = function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+        };
+        passInput.onkeydown = function(e) {
+            if (['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+            if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) return;
+            if (!/^[0-9]$/.test(e.key)) {
+                e.preventDefault();
+            }
+        };
     }
 
     // Reset auth state passcode so there is zero fallback to default PINs
@@ -8011,16 +9648,7 @@ async function findUserByPhone(phoneDigits) {
     const cleanPhone = String(phoneDigits).replace(/\D/g, '').slice(-10);
     if (cleanPhone.length !== 10) return null;
 
-    // 1. Check local users cache
-    const localUsers = getLocalUsersDb();
-    let matched = localUsers.find(u => {
-        if (!u.phone) return false;
-        const p = String(u.phone).replace(/\D/g, '').slice(-10);
-        return p === cleanPhone;
-    });
-    if (matched) return matched;
-
-    // 2. Query Supabase (Primary Production Database)
+    // 1. Primary: Query Supabase (Live Database is single source of truth)
     try {
         const client = getSupabaseClient();
         if (client) {
@@ -8029,31 +9657,37 @@ async function findUserByPhone(phoneDigits) {
                 .select('*')
                 .or(`phone.eq.${cleanPhone},phone.like.%${cleanPhone}`)
                 .limit(1);
-            if (!error && Array.isArray(data) && data.length > 0) {
-                const u = data[0];
-                const mapped = {
-                    id: u.id,
-                    name: u.name,
-                    email: u.email,
-                    phone: u.phone,
-                    password: u.password,
-                    role: u.role || 'Customer',
-                    isStudent: Boolean(u.is_student),
-                    college: u.college_id,
-                    collegeName: u.college_name,
-                    address: Array.isArray(u.addresses) && u.addresses.length > 0 ? (u.addresses[0].address || u.addresses[0]) : null,
-                    addresses: Array.isArray(u.addresses) ? u.addresses : [],
-                    createdAt: u.created_at
-                };
-                mergeUsersIntoLocalDb([mapped]);
-                return mapped;
+            if (!error && Array.isArray(data)) {
+                if (data.length > 0) {
+                    const u = data[0];
+                    return {
+                        id: u.id,
+                        name: u.name,
+                        email: u.email,
+                        phone: u.phone,
+                        password: u.password,
+                        role: u.role || 'Customer',
+                        isStudent: Boolean(u.is_student),
+                        college: u.college_id,
+                        collegeName: u.college_name,
+                        address: Array.isArray(u.addresses) && u.addresses.length > 0 ? (u.addresses[0].address || u.addresses[0]) : null,
+                        addresses: Array.isArray(u.addresses) ? u.addresses : [],
+                        createdAt: u.created_at
+                    };
+                } else {
+                    // Confirmed: User does not exist in Supabase (or was deleted by admin)
+                    // Purge from local storage so it never lingers
+                    const local = getLocalUsersDb().filter(u => String(u.phone || '').replace(/\D/g, '').slice(-10) !== cleanPhone);
+                    try { localStorage.setItem('chocoloom_users_db', JSON.stringify(local)); } catch (e) {}
+                    return null;
+                }
             }
         }
     } catch (e) {
         console.warn('Supabase findUserByPhone warning:', e);
     }
 
-    // 2b. Direct Supabase REST API fallback
+    // 2. Direct Supabase REST API fallback
     try {
         const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/users?phone=like.*${cleanPhone}&select=*&limit=1`, {
             headers: {
@@ -8063,62 +9697,40 @@ async function findUserByPhone(phoneDigits) {
         });
         if (res.ok) {
             const list = await res.json();
-            if (Array.isArray(list) && list.length > 0) {
-                const u = list[0];
-                const mapped = {
-                    id: u.id,
-                    name: u.name,
-                    email: u.email,
-                    phone: u.phone,
-                    password: u.password,
-                    role: u.role || 'Customer',
-                    isStudent: Boolean(u.is_student),
-                    college: u.college_id,
-                    collegeName: u.college_name,
-                    address: Array.isArray(u.addresses) && u.addresses.length > 0 ? (u.addresses[0].address || u.addresses[0]) : null,
-                    addresses: Array.isArray(u.addresses) ? u.addresses : [],
-                    createdAt: u.created_at
-                };
-                mergeUsersIntoLocalDb([mapped]);
-                return mapped;
+            if (Array.isArray(list)) {
+                if (list.length > 0) {
+                    const u = list[0];
+                    return {
+                        id: u.id,
+                        name: u.name,
+                        email: u.email,
+                        phone: u.phone,
+                        password: u.password,
+                        role: u.role || 'Customer',
+                        isStudent: Boolean(u.is_student),
+                        college: u.college_id,
+                        collegeName: u.college_name,
+                        address: Array.isArray(u.addresses) && u.addresses.length > 0 ? (u.addresses[0].address || u.addresses[0]) : null,
+                        addresses: Array.isArray(u.addresses) ? u.addresses : [],
+                        createdAt: u.created_at
+                    };
+                } else {
+                    const local = getLocalUsersDb().filter(u => String(u.phone || '').replace(/\D/g, '').slice(-10) !== cleanPhone);
+                    try { localStorage.setItem('chocoloom_users_db', JSON.stringify(local)); } catch (e) {}
+                    return null;
+                }
             }
         }
     } catch (e) {
         console.warn('Supabase REST findUserByPhone warning:', e);
     }
 
-    // 3. Query Neon Postgres (Emergency Vault fallback)
-    try {
-        const sql = await getNeonClient();
-        if (sql) {
-            const rows = await sql`
-                SELECT * FROM users 
-                WHERE phone = ${cleanPhone} OR phone LIKE ${'%' + cleanPhone} 
-                LIMIT 1
-            `;
-            if (Array.isArray(rows) && rows.length > 0) {
-                const u = rows[0];
-                const mapped = {
-                    id: u.id,
-                    name: u.name,
-                    email: u.email,
-                    phone: u.phone,
-                    password: u.password,
-                    role: u.role || 'Customer',
-                    isStudent: Boolean(u.is_student),
-                    college: u.college_id,
-                    collegeName: u.college_name,
-                    createdAt: u.created_at
-                };
-                mergeUsersIntoLocalDb([mapped]);
-                return mapped;
-            }
-        }
-    } catch (e) {
-        console.warn('Neon findUserByPhone warning:', e);
-    }
-
-    return null;
+    // 3. Fallback to local cache only if Supabase was completely unreachable (offline)
+    const localUsers = getLocalUsersDb();
+    return localUsers.find(u => {
+        if (!u.phone) return false;
+        return String(u.phone).replace(/\D/g, '').slice(-10) === cleanPhone;
+    }) || null;
 }
 
 window.findUserByPhone = findUserByPhone;
@@ -8336,7 +9948,7 @@ window.completePasscodeOnboarding = async function(event) {
     if (window.location && window.location.pathname && window.location.pathname.endsWith('login.html')) {
         setTimeout(() => {
             const target = (typeof getRedirectTarget === 'function') ? getRedirectTarget() : 'uni-chocoloom.html';
-            window.location.href = target;
+            window.location.href = window.getAppUrl(target);
         }, 700);
     } else {
         if (typeof closeAuthModal === 'function') closeAuthModal();
@@ -8529,12 +10141,11 @@ window.handleSignInSubmit = async function(event) {
                 localStorage.setItem('chocoloom_user_session', JSON.stringify(matchedUser));
             } catch (e) {}
 
-            // Primary & Emergency Cloud Sync: Keep user details updated in Supabase and Neon vault
-            saveUserToSupabase(matchedUser).catch(() => {});
+            // Emergency Cloud Sync: Capture user signin record
             collectUserDetailsToNeon({
                 ...matchedUser,
                 source: 'signin'
-            });
+            }).catch(() => {});
 
             // Sync student college
             if (matchedUser.isStudent && matchedUser.college) {
@@ -8588,8 +10199,8 @@ window.handleSignUpSubmit = async function(event) {
         showToast('Please enter a valid email address', 'fa-solid fa-triangle-exclamation', '#f59e0b');
         return;
     }
-    if (password.length < 6) {
-        showToast('Password must be at least 6 characters', 'fa-solid fa-triangle-exclamation', '#f59e0b');
+    if (password.length < 4) {
+        showToast('Please set a 4-digit passcode PIN', 'fa-solid fa-triangle-exclamation', '#f59e0b');
         return;
     }
 
@@ -8742,7 +10353,7 @@ window.openAccountDetailsModal = function() {
 
     const modal = document.getElementById('accountDetailsModalBackdrop');
     if (!modal) {
-        window.location.href = 'login.html?view=account';
+        window.location.href = window.getAppUrl('login.html?view=account');
         return;
     }
 
@@ -9018,7 +10629,7 @@ var CHOCOLOOM_REELS_DATA = window.CHOCOLOOM_REELS_DATA = [
         title: 'possibly feel like ITALY',
         sub: 'Authentic Italian Tiramisu Cake',
         caption: 'Handcrafted with imported mascarpone, cold espresso soak & dusted Dutch cocoa.',
-        image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=800&auto=format&fit=crop&q=80',
+        image: 'assets/categories/desserts.webp',
         video: 'https://assets.mixkit.co/videos/preview/mixkit-decorating-a-cake-with-chocolate-glaze-41315-large.mp4',
         productName: 'Tiramisu Dolce Dream Cake',
         price: '₹599',
@@ -9032,7 +10643,7 @@ var CHOCOLOOM_REELS_DATA = window.CHOCOLOOM_REELS_DATA = [
         title: 'a bento moment',
         sub: 'Korean Pastel Bento Cakes',
         caption: 'Pocket-sized happiness! Delicate vanilla chiffon iced with silky strawberry cream.',
-        image: 'https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=800&auto=format&fit=crop&q=80',
+        image: 'assets/categories/bento_cakes.webp',
         video: 'https://assets.mixkit.co/videos/preview/mixkit-cutting-a-piece-of-chocolate-cake-41314-large.mp4',
         productName: 'Pastel Dream Bento Cake',
         price: '₹349',
@@ -9046,7 +10657,7 @@ var CHOCOLOOM_REELS_DATA = window.CHOCOLOOM_REELS_DATA = [
         title: 'SOMEWHERE INSIDE...',
         sub: 'Belgian Molten Truffle Core',
         caption: 'Watch the warm molten truffle erupt when sliced. Every wish deserves pure chocolate.',
-        image: 'https://images.unsplash.com/photo-1535141192574-5d4897c13136?w=800&auto=format&fit=crop&q=80',
+        image: 'assets/categories/truffle_cakes.webp',
         video: 'https://assets.mixkit.co/videos/preview/mixkit-chocolate-cake-with-strawberries-on-top-41313-large.mp4',
         productName: 'Belgian Molten Truffle Cake',
         price: '₹699',
@@ -9060,7 +10671,7 @@ var CHOCOLOOM_REELS_DATA = window.CHOCOLOOM_REELS_DATA = [
         title: "DON'T SWIPE ✋",
         sub: 'Monster 1-Litre Choco Mudslide Shake',
         caption: 'Loaded with brownies, chocochips & fudge drizzle. Are you up for the challenge?',
-        image: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=800&auto=format&fit=crop&q=80',
+        image: 'assets/categories/shakes.webp',
         video: 'https://assets.mixkit.co/videos/preview/mixkit-pouring-chocolate-sauce-on-ice-cream-41312-large.mp4',
         productName: 'Monster Mudslide Shake',
         price: '₹289',
@@ -9074,7 +10685,7 @@ var CHOCOLOOM_REELS_DATA = window.CHOCOLOOM_REELS_DATA = [
         title: 'COFFEE DAY SPECIAL ☕',
         sub: 'Mocha Frappes & Cold Brew Cakes',
         caption: 'Brewed with 100% Arabica beans & folded into rich dark chocolate sponge.',
-        image: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=800&auto=format&fit=crop&q=80',
+        image: 'assets/categories/uni_chocoloom.webp',
         video: 'https://assets.mixkit.co/videos/preview/mixkit-serving-hot-coffee-in-a-cup-41311-large.mp4',
         productName: 'Belgian Choco-Mocha Frappe Cake',
         price: '₹449',
@@ -9088,7 +10699,7 @@ var CHOCOLOOM_REELS_DATA = window.CHOCOLOOM_REELS_DATA = [
         title: "SORRY I CAN'T MY HANDS ARE FULL 🎀",
         sub: 'Pink Satin Bow Heart Cake',
         caption: 'Double heart layered sponge with edible fondant bow. Too pretty not to devour!',
-        image: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=800&auto=format&fit=crop&q=80',
+        image: 'assets/categories/specialty_cakes.webp',
         video: 'https://assets.mixkit.co/videos/preview/mixkit-eating-a-piece-of-chocolate-cake-41316-large.mp4',
         productName: 'Pink Satin Bow Heart Cake',
         price: '₹749',
@@ -9102,7 +10713,7 @@ var CHOCOLOOM_REELS_DATA = window.CHOCOLOOM_REELS_DATA = [
         title: 'What makes our croissant special?',
         sub: '72-Layer French Butter Flakes',
         caption: 'Baked golden fresh every morning at 6:00 AM with artisanal laminated pastry dough.',
-        image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&auto=format&fit=crop&q=80',
+        image: 'assets/categories/snacks.webp',
         video: 'https://assets.mixkit.co/videos/preview/mixkit-baker-taking-fresh-croissants-from-the-oven-41317-large.mp4',
         productName: 'Classic French Butter Croissant Box (4 pcs)',
         price: '₹349',
@@ -9116,7 +10727,7 @@ var CHOCOLOOM_REELS_DATA = window.CHOCOLOOM_REELS_DATA = [
         title: 'KUNAFA dream cake 🌰',
         sub: 'Dubai Pistachio & Kadayif Magic',
         caption: 'Crispy golden kataifi crunch soaked in rose syrup over Belgian chocolate truffle.',
-        image: 'https://images.unsplash.com/photo-1579372786545-d24232daf58c?w=800&auto=format&fit=crop&q=80',
+        image: 'assets/categories/curated_gift_hamper.jpg',
         video: 'https://assets.mixkit.co/videos/preview/mixkit-chocolate-syrup-pouring-on-a-stack-of-pancakes-41318-large.mp4',
         productName: 'Dubai Pistachio Kunafa Truffle Tub',
         price: '₹649',
@@ -9130,7 +10741,7 @@ var CHOCOLOOM_REELS_DATA = window.CHOCOLOOM_REELS_DATA = [
         title: 'MONSOON Munching Guide 🌧️',
         sub: 'Warm Sizzling Brownies & Cocoa',
         caption: 'Rain pattering outside, fresh warm chocolate brownies sizzling right in front of you.',
-        image: 'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&auto=format&fit=crop&q=80',
+        image: 'assets/categories/chocolates.webp',
         video: 'https://assets.mixkit.co/videos/preview/mixkit-cup-of-hot-chocolate-with-marshmallows-41319-large.mp4',
         productName: 'Monsoon Sizzler Brownie Box',
         price: '₹399',
@@ -9144,7 +10755,7 @@ var CHOCOLOOM_REELS_DATA = window.CHOCOLOOM_REELS_DATA = [
         title: '100% eggless. 🌱',
         sub: 'Salted Caramel Drip Cheesecake',
         caption: 'Rich baked Philadelphia style cheesecake, totally eggless and 100% melt-in-mouth.',
-        image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=800&auto=format&fit=crop&q=80',
+        image: 'assets/categories/cooling_cakes.webp',
         video: 'https://assets.mixkit.co/videos/preview/mixkit-dripping-caramel-sauce-on-a-cheesecake-41320-large.mp4',
         productName: 'Salted Caramel Velvet Cheesecake (Eggless)',
         price: '₹799',
@@ -9158,7 +10769,7 @@ var CHOCOLOOM_REELS_DATA = window.CHOCOLOOM_REELS_DATA = [
         title: 'How chocolate speaks to me 🍫',
         sub: 'Triple Choco Lava Cookie Gateau',
         caption: 'Gooey Dutch chocolate cookie crust with molten dark ganache that flows with every bite.',
-        image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800&auto=format&fit=crop&q=80',
+        image: 'assets/categories/truffle_cakes.webp',
         video: 'https://assets.mixkit.co/videos/preview/mixkit-melting-chocolate-on-a-fondue-fountain-41321-large.mp4',
         productName: 'Triple Choco Chunk Lava Gateau',
         price: '₹629',
@@ -9172,7 +10783,7 @@ var CHOCOLOOM_REELS_DATA = window.CHOCOLOOM_REELS_DATA = [
         title: 'Decorate THE CAKE with your wishes 🎂',
         sub: 'Grand Custom 3-Tier Celebration',
         caption: 'Handcrafted buttercream rosettes, customizable golden script, and sugar pearl accents.',
-        image: 'https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?w=800&auto=format&fit=crop&q=80',
+        image: 'assets/categories/anniversary_cakes.webp',
         video: 'https://assets.mixkit.co/videos/preview/mixkit-piping-whipped-cream-on-a-strawberry-cake-41322-large.mp4',
         productName: 'Grand Custom 3-Tier Celebration Cake',
         price: '₹1,899',
@@ -9186,7 +10797,7 @@ var CHOCOLOOM_REELS_DATA = window.CHOCOLOOM_REELS_DATA = [
         title: "Your daily dose of 'I DESERVE THIS.' ✨",
         sub: 'Burnt Basque Vanilla Cheesecake',
         caption: 'Caramelized burnt crust on top with an ultra-creamy, velvety center.',
-        image: 'https://images.unsplash.com/photo-1524351199678-941a58a3df50?w=800&auto=format&fit=crop&q=80',
+        image: 'assets/categories/curated_bento_cake.jpg',
         video: 'https://assets.mixkit.co/videos/preview/mixkit-spoon-taking-a-bite-of-cheesecake-41323-large.mp4',
         productName: 'Burnt Basque Vanilla Cheesecake Slice',
         price: '₹249',
@@ -9202,7 +10813,7 @@ function renderReelCardHtml(reel) {
     return `
         <div class="reel-card" onclick="openChocoloomReelModal('${reel.id}')" title="Watch ${reel.title}">
             <div class="reel-card-img-box">
-                <img src="${reel.image}" alt="${reel.title}" class="reel-card-img" loading="lazy">
+                <img src="${reel.image}" alt="${reel.title}" class="reel-card-img" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='assets/categories/truffle_cakes.webp';">
                 <div class="reel-gradient-overlay"></div>
             </div>
             <div class="reel-icon-badge" title="Watch Reel">
@@ -9590,7 +11201,1260 @@ try {
             if (typeof renderBanners === 'function') renderBanners();
         }
     };
-} catch(e) {}
+} catch (e) {}
 
+// ==================== CHOCOLOOM GAME ZONE PLAY ARENA ====================
 
+const GAME_ZONE_DATA = [
+    {
+        id: 'game_tombola_live',
+        category: 'tombola',
+        categoryName: 'Tambola - Bingo',
+        title: 'Nightly Community Tambola',
+        subtitle: 'Live at 8:00 PM Tonight • Win 1kg Truffle Cake',
+        description: 'Join hundreds of players in nightly 8 PM Tambola. Mark called numbers live & win luxury 1kg Truffle Cakes!',
+        image: 'assets/tombola-banner.png',
+        badge: 'LIVE 8:00 PM',
+        badgeColor: 'linear-gradient(135deg, #7c5cfc, #6366f1)',
+        rating: 5.0,
+        players: '3.4k players',
+        status: 'Live Tonight',
+        cost: 'FREE TICKET',
+        btnText: 'PLAY TAMBOLA',
+        btnIcon: 'fa-ticket',
+        action: 'openTombolaGameModal'
+    },
+    {
+        id: 'game_spin_wheel',
+        category: 'spin',
+        categoryName: 'Spin & Win',
+        title: 'Sugar Rush Lucky Wheel',
+        subtitle: '1 Free Daily Spin • Up to 50% OFF',
+        description: 'Spin the candy wheel once every 24 hours to win instant coupon vouchers, free Belgian brownies & cake cash.',
+        image: 'assets/categories/candyland.webp',
+        badge: '1 FREE SPIN',
+        badgeColor: 'linear-gradient(135deg, #ec4899, #f43f5e)',
+        rating: 4.9,
+        players: '1.8k reviews',
+        status: 'Instant Win',
+        cost: '100% FREE',
+        btnText: 'SPIN WHEEL',
+        btnIcon: 'fa-dharmachakra',
+        action: 'openSpinWheelModal'
+    },
+    {
+        id: 'game_scratch_win',
+        category: 'scratch',
+        categoryName: 'Scratch Cards',
+        title: 'Sweet Mystery Scratch Card',
+        subtitle: 'Scratch & Reveal Hidden Treats',
+        description: 'Scratch off the golden sparkle foil to unveil surprise discounts, free cupcakes, or mystery bakery treats.',
+        image: 'assets/categories/wave_box.jpg',
+        badge: 'INSTANT REVEAL',
+        badgeColor: 'linear-gradient(135deg, #d97706, #f59e0b)',
+        rating: 4.8,
+        players: '950 players',
+        status: 'Mystery Prize',
+        cost: 'FREE DAILY',
+        btnText: 'SCRATCH NOW',
+        btnIcon: 'fa-gift',
+        action: 'openScratchCardModal'
+    },
+    {
+        id: 'game_sweet_trivia',
+        category: 'quiz',
+        categoryName: 'Sweet Trivia',
+        title: 'Pastry Connoisseur Quiz',
+        subtitle: '3 Fun Questions • Earn 50 Coins',
+        description: 'Think you know cakes & chocolates? Answer 3 fun confectionery trivia questions and earn Choco-Coins directly to wallet.',
+        image: 'assets/categories/curated_half_birthday.jpg',
+        badge: 'EARN 50 COINS',
+        badgeColor: 'linear-gradient(135deg, #059669, #10b981)',
+        rating: 4.9,
+        players: '1.2k players',
+        status: '+50 Coins',
+        cost: 'FREE TO PLAY',
+        btnText: 'START QUIZ',
+        btnIcon: 'fa-brain',
+        action: 'openTriviaModal'
+    },
+    {
+        id: 'game_memory_match',
+        category: 'memory',
+        categoryName: 'Memory Match',
+        title: 'Choco-Card Memory Match',
+        subtitle: 'Flip & Pair Dessert Cards',
+        description: 'Flip cards to find pairs of delicious cakes, truffles & treats. Match all pairs in minimum moves to unlock ₹100 discount.',
+        image: 'assets/categories/chocolates.webp',
+        badge: 'BRAIN BOOSTER',
+        badgeColor: 'linear-gradient(135deg, #0284c7, #38bdf8)',
+        rating: 4.8,
+        players: '1.5k players',
+        status: 'Instant Voucher',
+        cost: 'FREE TO PLAY',
+        btnText: 'FLIP & PAIR',
+        btnIcon: 'fa-clone',
+        action: 'openMemoryGameModal'
+    },
+    {
+        id: 'game_cake_stacker',
+        category: 'stacker',
+        categoryName: 'Cake Stacker',
+        title: 'Sweet Cake Tower Stacker',
+        subtitle: 'Stack Bakery Layers High',
+        description: 'Tap with precision to drop and balance tiered celebration cake layers. How high can your pastry tower go?',
+        image: 'assets/categories/wedding_cakes.webp',
+        badge: 'ARCADE HIT',
+        badgeColor: 'linear-gradient(135deg, #d946ef, #a855f7)',
+        rating: 4.9,
+        players: '2.1k players',
+        status: 'Endless Fun',
+        cost: 'PLAY NOW',
+        btnText: 'STACK TOWER',
+        btnIcon: 'fa-layer-group',
+        action: 'openStackerModal'
+    },
+    {
+        id: 'game_daily_checkin',
+        category: 'coins',
+        categoryName: 'Coin Drop',
+        title: 'Chocowallet Daily Drop',
+        subtitle: 'Daily Streak Bonus • Instant Credit',
+        description: 'Check in daily to claim 20 free Choco-Coins. Redeem your coins for free deliveries, VIP discounts, and sweet celebration vouchers.',
+        image: 'assets/physical_card_box.jpg',
+        badge: 'DAILY BONUS',
+        badgeColor: 'linear-gradient(135deg, #16a34a, #059669)',
+        rating: 4.9,
+        players: '2.6k claimed',
+        status: '+20 Coins',
+        cost: '1-TAP CLAIM',
+        btnText: 'CLAIM COINS',
+        btnIcon: 'fa-coins',
+        action: 'claimDailyCoinBonus'
+    }
+];
+
+let _activeGameZoneCategory = 'all';
+let _shuffledGameZoneData = [...GAME_ZONE_DATA];
+let _currentTambolaTicket = null;
+let _currentTambolaSerial = 'CL-89241';
+let _practiceCalledNumbers = [];
+let _tambolaCountdownInterval = null;
+
+window.switchToGameZone = function() {
+    if (typeof AppState !== 'undefined') {
+        AppState.activeService = 'gamezone';
+    }
+
+    // Hide food sections
+    const foodHero = document.querySelector('.hero-ad-section');
+    const foodMain = document.querySelector('main.container');
+    if (foodHero) foodHero.style.display = 'none';
+    if (foodMain) foodMain.style.display = 'none';
+
+    // Show gamezone section
+    const gameSection = document.getElementById('gameZoneMainSection');
+    if (gameSection) {
+        gameSection.style.display = 'block';
+    }
+
+    // Update bottom navigation
+    const mobFood = document.getElementById('mobileNavFood');
+    const mobInsta = document.getElementById('mobileNavInstamart');
+    if (mobFood) mobFood.classList.remove('active');
+    if (mobInsta) mobInsta.classList.add('active');
+
+    // Update desktop nav
+    const navGame = document.getElementById('navGameZoneTrigger');
+    if (navGame) navGame.classList.add('active');
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Automatically shuffle Game Zone cards for fresh variety
+    if (typeof shuffleGameCards === 'function') {
+        shuffleGameCards(false);
+    }
+
+    // Initialize Tambola Bingo ticket & countdown
+    initTambolaBingoArena();
+
+    // Render Game Zone cards
+    filterGameZoneCategory(_activeGameZoneCategory || 'all');
+};
+
+window.switchToFoodView = function() {
+    if (typeof AppState !== 'undefined') {
+        AppState.activeService = 'food';
+    }
+
+    // Show food sections
+    const foodHero = document.querySelector('.hero-ad-section');
+    const foodMain = document.querySelector('main.container');
+    if (foodHero) foodHero.style.display = '';
+    if (foodMain) foodMain.style.display = '';
+
+    // Hide gamezone section
+    const gameSection = document.getElementById('gameZoneMainSection');
+    if (gameSection) gameSection.style.display = 'none';
+
+    // Update bottom navigation
+    const mobFood = document.getElementById('mobileNavFood');
+    const mobInsta = document.getElementById('mobileNavInstamart');
+    if (mobFood) mobFood.classList.add('active');
+    if (mobInsta) mobInsta.classList.remove('active');
+
+    // Update desktop nav
+    const navGame = document.getElementById('navGameZoneTrigger');
+    if (navGame) navGame.classList.remove('active');
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.scrollGameZoneCategories = function(direction) {
+    const container = document.getElementById('gameZoneCategoryPills');
+    if (container) {
+        container.scrollBy({ left: direction * 240, behavior: 'smooth' });
+    }
+};
+
+window.filterGameZoneCategory = function(cat, btnEl) {
+    _activeGameZoneCategory = cat;
+
+    // Update active pill button UI
+    if (!btnEl) {
+        const pills = document.querySelectorAll('#gameZoneCategoryPills .game-filter-pill');
+        pills.forEach(b => {
+            if (b.getAttribute('onclick')?.includes(`'${cat}'`)) {
+                b.classList.add('active');
+            } else {
+                b.classList.remove('active');
+            }
+        });
+    } else {
+        document.querySelectorAll('#gameZoneCategoryPills .game-filter-pill').forEach(b => b.classList.remove('active'));
+        btnEl.classList.add('active');
+    }
+
+    const tambolaView = document.getElementById('tambolaCategoryView');
+    const cardsSection = document.getElementById('gameZoneCardsSection');
+
+    if (cat === 'tombola') {
+        if (tambolaView) tambolaView.style.display = 'block';
+        if (cardsSection) cardsSection.style.display = 'none';
+        scrollToTambolaTicket();
+        initTambolaBingoArena();
+    } else {
+        // When 'all', 'spin', 'scratch', 'quiz', 'arcade', 'memory', 'coins':
+        // Hide the tambola arena, show the cards grid so the games are front and center!
+        if (tambolaView) tambolaView.style.display = 'none';
+        if (cardsSection) cardsSection.style.display = 'block';
+        renderGameZoneContent(cat);
+    }
+};
+
+window.shuffleGameCards = function(showFeedback = true) {
+    for (let i = _shuffledGameZoneData.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [_shuffledGameZoneData[i], _shuffledGameZoneData[j]] = [_shuffledGameZoneData[j], _shuffledGameZoneData[i]];
+    }
+    const grid = document.getElementById('gameZoneCardsGrid');
+    if (grid) {
+        grid.classList.remove('shuffling');
+        void grid.offsetWidth;
+        grid.classList.add('shuffling');
+        setTimeout(() => grid.classList.remove('shuffling'), 500);
+    }
+    renderGameZoneContent(_activeGameZoneCategory);
+    if (showFeedback && typeof showToast === 'function') {
+        showToast('Game Arena shuffled! Try a new challenge ✨', 'fa-solid fa-shuffle', '#7c5cfc');
+    }
+};
+
+function renderGameZoneContent(cat = 'all') {
+    const grid = document.getElementById('gameZoneCardsGrid');
+    if (!grid) return;
+
+    let items = _shuffledGameZoneData;
+    if (cat && cat !== 'all') {
+        items = items.filter(g => g.category === cat);
+    }
+
+    const countSub = document.getElementById('gameZoneCountSubtitle');
+    if (countSub) {
+        countSub.textContent = `Showing ${items.length} of ${GAME_ZONE_DATA.length} playable games & challenges`;
+    }
+
+    grid.innerHTML = items.map(game => `
+        <div class="product-card" onclick="window['${game.action}'] ? window['${game.action}']() : null" style="cursor: pointer;">
+            <div class="product-img-box">
+                <img src="${game.image}" alt="${game.title}" loading="lazy" onerror="this.src='assets/categories/candyland.webp'">
+                <span class="product-badge-discount" style="background: ${game.badgeColor}; color: #fff; font-weight: 800;">
+                    ${game.badge}
+                </span>
+                <button class="card-heart-btn" onclick="event.stopPropagation(); showToast('Saved to your game favorites! 💖', 'fa-solid fa-heart', '#7c5cfc');" title="Favorite Game">
+                    <i class="fa-regular fa-heart"></i>
+                </button>
+            </div>
+            <div class="product-details">
+                <div class="product-meta-row">
+                    <span class="product-custom-hint" style="color: #7c5cfc; font-weight: 800; background: #f3f0ff; padding: 2px 8px; border-radius: 999px;">${game.categoryName}</span>
+                    <div class="product-rating-chip">
+                        <i class="fa-solid fa-star"></i>
+                        <span>${game.rating}</span>
+                    </div>
+                    <span class="product-custom-hint" style="color: #059669; font-weight: 700;">🟢 ${game.status}</span>
+                </div>
+                <h3 class="product-title" title="${game.title}">${game.title}</h3>
+                <p class="product-desc">${game.description}</p>
+                <div class="product-price-action-row" onclick="event.stopPropagation()">
+                    <div class="product-price-wrap">
+                        <span class="product-price" style="color: #7c5cfc; font-size: 14px;">${game.cost}</span>
+                        <span style="font-size: 11px; color: var(--text-muted); display: block;">${game.players}</span>
+                    </div>
+                    <button type="button" class="game-action-btn ${game.category}" onclick="window['${game.action}'] ? window['${game.action}']() : null">
+                        <i class="fa-solid ${game.btnIcon}"></i>
+                        <span>${game.btnText}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+window.scrollToTambolaTicket = function() {
+    const sec = document.getElementById('tambolaArenaSection');
+    if (sec) {
+        sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+};
+
+function initTambolaBingoArena() {
+    const grid = document.getElementById('mainTambolaTicketGrid');
+    if (grid && (!grid.children.length || grid.children.length === 0)) {
+        generateNewLuckyTambolaTicket(false);
+    }
+    startLiveTambolaCountdown();
+}
+
+/**
+ * Generates an authentic 3x9 Indian Tambola / Housie ticket:
+ * - 3 rows x 9 columns
+ * - Exactly 5 numbers per row (15 numbers total)
+ * - Exactly 4 blanks per row
+ * - Column 0: 1-9, Col 1: 10-19, ..., Col 8: 80-90
+ * - Numbers in each column are sorted ascending from top to bottom
+ */
+window.generateNewLuckyTambolaTicket = function(showFeedback = true) {
+    const grid = document.getElementById('mainTambolaTicketGrid');
+    if (!grid) return;
+
+    let validTicket = false;
+    let ticketMatrix = [];
+
+    while (!validTicket) {
+        ticketMatrix = [
+            new Array(9).fill(null),
+            new Array(9).fill(null),
+            new Array(9).fill(null)
+        ];
+
+        const rowCols = [];
+        for (let r = 0; r < 3; r++) {
+            const cols = [0, 1, 2, 3, 4, 5, 6, 7, 8].sort(() => Math.random() - 0.5).slice(0, 5);
+            rowCols.push(cols);
+        }
+
+        const colCounts = new Array(9).fill(0);
+        for (let r = 0; r < 3; r++) {
+            rowCols[r].forEach(c => colCounts[c]++);
+        }
+
+        if (colCounts.every(count => count >= 1 && count <= 3)) {
+            for (let c = 0; c < 9; c++) {
+                const count = colCounts[c];
+                const min = c === 0 ? 1 : c * 10;
+                const max = c === 8 ? 90 : c * 10 + 9;
+
+                const available = [];
+                for (let n = min; n <= max; n++) available.push(n);
+                available.sort(() => Math.random() - 0.5);
+                const picked = available.slice(0, count).sort((a, b) => a - b);
+
+                let pickIdx = 0;
+                for (let r = 0; r < 3; r++) {
+                    if (rowCols[r].includes(c)) {
+                        ticketMatrix[r][c] = picked[pickIdx++];
+                    }
+                }
+            }
+            validTicket = true;
+        }
+    }
+
+    _currentTambolaTicket = ticketMatrix;
+    _currentTambolaSerial = 'CL-' + Math.floor(10000 + Math.random() * 90000);
+
+    const serialDisplay = document.getElementById('ticketSerialDisplay');
+    if (serialDisplay) {
+        serialDisplay.textContent = `TICKET #${_currentTambolaSerial} • 8:00 PM LIVE DRAW`;
+    }
+
+    let html = '';
+    for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 9; c++) {
+            const num = ticketMatrix[r][c];
+            if (num !== null) {
+                html += `
+                    <div class="tambola-num-cell" data-row="${r}" data-col="${c}" data-num="${num}" onclick="toggleTambolaCell(this, ${num})" title="Click to dab ${num}">
+                        <span class="cell-val">${num}</span>
+                        <span class="cell-dab-mark">✓</span>
+                    </div>
+                `;
+            } else {
+                html += `<div class="tambola-num-cell empty"></div>`;
+            }
+        }
+    }
+
+    grid.innerHTML = html;
+
+    if (showFeedback && typeof showToast === 'function') {
+        showToast(`🎟️ New Lucky Tambola Ticket generated! (#${_currentTambolaSerial})`, 'fa-solid fa-dice', '#7c5cfc');
+    }
+};
+
+window.toggleTambolaCell = function(cellEl, num) {
+    if (!cellEl || cellEl.classList.contains('empty')) return;
+
+    cellEl.classList.toggle('marked');
+
+    const markedCells = document.querySelectorAll('#mainTambolaTicketGrid .tambola-num-cell.marked');
+    const count = markedCells.length;
+
+    if (cellEl.classList.contains('marked')) {
+        if (count === 5 && typeof showToast === 'function') {
+            showToast('⭐ 5 Numbers Marked! Eligible for Early 5 Bento Cake prize!', 'fa-solid fa-award', '#7c5cfc');
+        } else if (count === 15 && typeof showToast === 'function') {
+            showToast('🏆 FULL HOUSE! All 15 numbers marked! Grand 1kg Truffle Cake Winner Claim! 🎂', 'fa-solid fa-crown', '#f59e0b');
+        }
+    }
+};
+
+window.resetTicketMarks = function() {
+    const markedCells = document.querySelectorAll('#mainTambolaTicketGrid .tambola-num-cell.marked');
+    markedCells.forEach(c => c.classList.remove('marked'));
+
+    if (typeof showToast === 'function') {
+        showToast('Ticket marks cleared. Ready for live draw! 🧹', 'fa-solid fa-eraser', '#7c5cfc');
+    }
+};
+
+window.saveTambolaTicketReminder = function() {
+    try {
+        localStorage.setItem('chocoloom_tambola_reminder_set', 'true');
+        localStorage.setItem('chocoloom_tambola_ticket_id', _currentTambolaSerial);
+    } catch (e) {}
+
+    if (typeof showToast === 'function') {
+        showToast(`🔔 Reminder Activated! We will notify you at 7:55 PM for Ticket #${_currentTambolaSerial}.`, 'fa-solid fa-bell', '#7c5cfc');
+    }
+};
+
+window.drawPracticeNumber = function() {
+    if (_practiceCalledNumbers.length >= 90) {
+        _practiceCalledNumbers = [];
+        if (typeof showToast === 'function') {
+            showToast('All 90 numbers were called! Resetting caller pool 🔄', 'fa-solid fa-rotate-left', '#7c5cfc');
+        }
+    }
+
+    let num;
+    do {
+        num = Math.floor(Math.random() * 90) + 1;
+    } while (_practiceCalledNumbers.includes(num));
+
+    _practiceCalledNumbers.unshift(num);
+
+    const bubble = document.getElementById('lastCalledNumberBubble');
+    if (bubble) {
+        bubble.textContent = num;
+        bubble.classList.remove('bounce-in');
+        void bubble.offsetWidth;
+        bubble.classList.add('bounce-in');
+    }
+
+    const recentWrap = document.getElementById('recentNumbersWrap');
+    if (recentWrap) {
+        recentWrap.innerHTML = _practiceCalledNumbers.slice(0, 8).map((n, idx) => `
+            <span class="recent-num-chip ${idx === 0 ? 'active' : ''}">${n}</span>
+        `).join('');
+    }
+
+    const matchingCell = document.querySelector(`#mainTambolaTicketGrid .tambola-num-cell[data-num="${num}"]`);
+    if (matchingCell) {
+        matchingCell.style.animation = 'ticketPulse 1s ease 3';
+        if (typeof showToast === 'function') {
+            showToast(`🎯 Number ${num} drawn! MATCH FOUND on your ticket! Tap it to mark!`, 'fa-solid fa-bullhorn', '#10b981');
+        }
+    } else {
+        if (typeof showToast === 'function') {
+            showToast(`📢 Caller drew number: ${num}`, 'fa-solid fa-bullhorn', '#7c5cfc');
+        }
+    }
+};
+
+function startLiveTambolaCountdown() {
+    if (_tambolaCountdownInterval) {
+        clearInterval(_tambolaCountdownInterval);
+    }
+
+    const updateCountdown = () => {
+        const el = document.getElementById('tambolaLiveCountdown');
+        if (!el) return;
+
+        const now = new Date();
+        const target = new Date();
+        target.setHours(20, 0, 0, 0);
+
+        let diff = target.getTime() - now.getTime();
+        if (diff < -30 * 60 * 1000) {
+            target.setDate(target.getDate() + 1);
+            diff = target.getTime() - now.getTime();
+        }
+
+        if (diff <= 0 && diff >= -30 * 60 * 1000) {
+            el.innerHTML = '<span style="color: #ef4444; font-weight: 850;">🔴 LIVE NOW (8 PM DRAW)</span>';
+            return;
+        }
+
+        const hrs = Math.floor(diff / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+        el.textContent = `Starts in ${hrs}h ${mins}m ${secs}s`;
+    };
+
+    updateCountdown();
+    _tambolaCountdownInterval = setInterval(updateCountdown, 1000);
+}
+
+// -------------------- PLAYABLE GAME MODALS --------------------
+
+function closeGameModal(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+}
+window.closeGameModal = closeGameModal;
+
+// 1. SPIN THE LUCKY SUGAR WHEEL
+window.openSpinWheelModal = function() {
+    ensureGameModalsMounted();
+    const modal = document.getElementById('gameSpinWheelModal');
+    if (!modal) return;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    initSpinWheelCanvas();
+};
+
+const WHEEL_PRIZES = [
+    { label: '30% OFF', code: 'SWEET30', color: '#7c5cfc', desc: 'Flat 30% OFF on all gourmet cakes' },
+    { label: 'FREE BROWNIE', code: 'SWEETBROWNIE', color: '#6366f1', desc: 'Complimentary Belgian Truffle Brownie' },
+    { label: '₹100 CASH', code: 'CAKE100', color: '#f59e0b', desc: '₹100 Cake Cash off orders above ₹399' },
+    { label: '50% DESSERT', code: 'DESSERT50', color: '#10b981', desc: '50% OFF your favorite desserts' },
+    { label: 'FREE CUPCAKE', code: 'FREECUP', color: '#8b5cf6', desc: 'Free Handcrafted Red Velvet Cupcake' },
+    { label: '25% STUDENT', code: 'UNICHOCO', color: '#ec4899', desc: 'Flat 25% Student Discount across menu' }
+];
+
+let _isWheelSpinning = false;
+let _currentWheelRotation = 0;
+
+function initSpinWheelCanvas() {
+    const canvas = document.getElementById('spinWheelCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    const radius = width / 2;
+    const numSlices = WHEEL_PRIZES.length;
+    const sliceAngle = (2 * Math.PI) / numSlices;
+
+    ctx.clearRect(0, 0, width, height);
+    ctx.save();
+    ctx.translate(radius, radius);
+
+    WHEEL_PRIZES.forEach((p, i) => {
+        const start = i * sliceAngle;
+        const end = start + sliceAngle;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius - 4, start, end);
+        ctx.closePath();
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.rotate(start + sliceAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.shadowColor = 'rgba(0,0,0,0.4)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(p.label, radius - 24, 6);
+        ctx.restore();
+    });
+
+    ctx.restore();
+}
+
+window.spinLuckyWheel = function() {
+    if (_isWheelSpinning) return;
+    _isWheelSpinning = true;
+
+    const btn = document.getElementById('spinWheelActionBtn');
+    if (btn) btn.disabled = true;
+
+    const canvas = document.getElementById('spinWheelCanvas');
+    const resultBox = document.getElementById('spinWheelResultBox');
+    if (resultBox) resultBox.style.display = 'none';
+
+    const prizeIdx = Math.floor(Math.random() * WHEEL_PRIZES.length);
+    const prize = WHEEL_PRIZES[prizeIdx];
+
+    const sliceDeg = 360 / WHEEL_PRIZES.length;
+    const targetDeg = 360 - (prizeIdx * sliceDeg + sliceDeg / 2);
+    const extraSpins = (5 + Math.floor(Math.random() * 3)) * 360;
+    _currentWheelRotation += extraSpins + targetDeg;
+
+    if (canvas) {
+        canvas.style.transform = `rotate(${_currentWheelRotation}deg)`;
+    }
+
+    setTimeout(() => {
+        _isWheelSpinning = false;
+        if (btn) btn.disabled = false;
+
+        if (resultBox) {
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = `
+                <div style="background: linear-gradient(135deg, #faf8ff, #f3f0ff); border: 2px dashed #7c5cfc; border-radius: 18px; padding: 18px; margin-top: 18px;">
+                    <span style="font-size: 26px;">🎉</span>
+                    <h3 style="font-size: 19px; font-weight: 850; color: #6d28d9; margin: 4px 0;">YOU WON: ${prize.label}!</h3>
+                    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">${prize.desc}</p>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span style="background: #ffffff; border: 1.5px solid #7c5cfc; color: #6d28d9; padding: 8px 16px; border-radius: 999px; font-weight: 850; font-size: 15px; letter-spacing: 0.5px;">${prize.code}</span>
+                        <button type="button" onclick="navigator.clipboard.writeText('${prize.code}'); showToast('Coupon code copied! 📋', 'fa-solid fa-copy', '#7c5cfc');" style="background: #7c5cfc; color: #fff; border: none; padding: 8px 16px; border-radius: 999px; font-weight: 700; cursor: pointer;">
+                            <i class="fa-solid fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        if (typeof showToast === 'function') {
+            showToast(`🎉 Congratulations! You won ${prize.label}! Code: ${prize.code}`, 'fa-solid fa-award', '#7c5cfc');
+        }
+    }, 4500);
+};
+
+// 2. SCRATCH & WIN CARD
+window.openScratchCardModal = function() {
+    ensureGameModalsMounted();
+    const modal = document.getElementById('gameScratchCardModal');
+    if (!modal) return;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    const canvas = document.getElementById('scratchCardCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = 320;
+    canvas.height = 190;
+
+    const grad = ctx.createLinearGradient(0, 0, 320, 190);
+    grad.addColorStop(0, '#f59e0b');
+    grad.addColorStop(0.5, '#fbbf24');
+    grad.addColorStop(1, '#d97706');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 320, 190);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('✨ TAP OR SCRATCH TO REVEAL ✨', 160, 95);
+    ctx.font = '12px sans-serif';
+    ctx.fillText('Chocoloom Mystery Treat', 160, 120);
+
+    let isRevealed = false;
+    const reveal = () => {
+        if (isRevealed) return;
+        isRevealed = true;
+        canvas.style.transition = 'opacity 0.6s ease';
+        canvas.style.opacity = '0';
+        setTimeout(() => { canvas.style.display = 'none'; }, 600);
+        if (typeof showToast === 'function') {
+            showToast('🎁 Mystery Treat Unlocked! Use code SWEET150 at checkout', 'fa-solid fa-gift', '#f59e0b');
+        }
+    };
+
+    canvas.onmousedown = reveal;
+    canvas.ontouchstart = reveal;
+};
+
+// 3. SWEET TRIVIA QUIZ
+const TRIVIA_QUESTIONS = [
+    {
+        q: 'Which cocoa percentage is traditionally prized for intense Belgian dark chocolate?',
+        opts: ['30% Cocoa', '50% Cocoa', '70%+ Dark Cocoa', '15% Cocoa'],
+        ans: 2
+    },
+    {
+        q: 'What gives classic Red Velvet Cake its distinctive velvety crumb & crimson hue?',
+        opts: ['Apple Cider Vinegar', 'Buttermilk & Cocoa reaction', 'Orange Zest', 'Strawberry Jam'],
+        ans: 1
+    },
+    {
+        q: 'What is Chocoloom\'s flagship college campus store called?',
+        opts: ['Uni Chocoloom', 'Bhimavaram Bakers', 'Campus Treats 24', 'SRKR Sweet Hub'],
+        ans: 0
+    }
+];
+
+let _currentTriviaIndex = 0;
+let _triviaScore = 0;
+
+window.openTriviaModal = function() {
+    ensureGameModalsMounted();
+    const modal = document.getElementById('gameTriviaQuizModal');
+    if (!modal) return;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    _currentTriviaIndex = 0;
+    _triviaScore = 0;
+    renderCurrentTriviaQuestion();
+};
+
+function renderCurrentTriviaQuestion() {
+    const body = document.getElementById('triviaQuizBody');
+    if (!body) return;
+
+    if (_currentTriviaIndex >= TRIVIA_QUESTIONS.length) {
+        body.innerHTML = `
+            <div style="padding: 20px 0;">
+                <span style="font-size: 48px;">🏆</span>
+                <h3 style="font-size: 22px; font-weight: 850; color: #059669; margin: 10px 0;">Quiz Completed!</h3>
+                <p style="font-size: 15px; color: #334155; margin-bottom: 16px;">
+                    You scored <strong>${_triviaScore} out of ${TRIVIA_QUESTIONS.length}</strong> correct!
+                </p>
+                <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 16px; padding: 16px; margin-bottom: 20px;">
+                    <div style="font-size: 20px; font-weight: 850; color: #16a34a;">+50 Choco-Coins Earned! ⭐</div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Successfully deposited to your Chocowallet</div>
+                </div>
+                <button type="button" class="game-action-btn" onclick="closeGameModal('gameTriviaQuizModal'); switchToFoodView();" style="padding: 12px 28px; font-size: 14px;">
+                    <i class="fa-solid fa-cake-candles"></i> Use Coins on Cake Order
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    const item = TRIVIA_QUESTIONS[_currentTriviaIndex];
+    body.innerHTML = `
+        <span class="trivia-q-num">Question ${_currentTriviaIndex + 1} of ${TRIVIA_QUESTIONS.length}</span>
+        <h4 class="trivia-q-text">${item.q}</h4>
+        <div class="trivia-options-grid">
+            ${item.opts.map((opt, idx) => `
+                <button type="button" class="trivia-opt-btn" onclick="handleTriviaOptionSelect(${idx}, ${item.ans}, this)">
+                    ${opt}
+                </button>
+            `).join('')}
+        </div>
+    `;
+}
+
+window.handleTriviaOptionSelect = function(selectedIdx, correctIdx, btn) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.trivia-opt-btn').forEach(b => b.style.pointerEvents = 'none');
+
+    if (selectedIdx === correctIdx) {
+        btn.classList.add('correct');
+        _triviaScore++;
+    } else {
+        btn.classList.add('wrong');
+        parent.children[correctIdx]?.classList.add('correct');
+    }
+
+    setTimeout(() => {
+        _currentTriviaIndex++;
+        renderCurrentTriviaQuestion();
+    }, 1200);
+};
+
+// 4. COMMUNITY TAMBOLA ENTRY
+window.openTombolaGameModal = function() {
+    window.switchToGameZone();
+    filterGameZoneCategory('tombola');
+};
+
+// 5. CAKE SLICER MINI ARCADE MODAL
+window.openCakeSlicerModal = function() {
+    ensureGameModalsMounted();
+    const modal = document.getElementById('gameCakeSlicerModal');
+    if (!modal) return;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    let score = 0;
+    let timeLeft = 15;
+    const scoreEl = document.getElementById('slicerScoreVal');
+    const timerEl = document.getElementById('slicerTimerVal');
+    const playArea = document.getElementById('slicerPlayArea');
+
+    if (scoreEl) scoreEl.textContent = '0';
+    if (timerEl) timerEl.textContent = '15s';
+    if (!playArea) return;
+
+    playArea.innerHTML = '';
+    const cakes = ['🎂', '🍰', '🧁', '🍫', '🍩', '🍪'];
+
+    const spawnCake = () => {
+        if (timeLeft <= 0) return;
+        const cake = document.createElement('div');
+        cake.textContent = cakes[Math.floor(Math.random() * cakes.length)];
+        cake.style.cssText = `
+            position: absolute;
+            font-size: 38px;
+            cursor: pointer;
+            user-select: none;
+            left: ${Math.floor(Math.random() * 80)}%;
+            bottom: 0px;
+            transition: bottom 2.2s linear, transform 0.2s;
+        `;
+        playArea.appendChild(cake);
+        setTimeout(() => { cake.style.bottom = '85%'; }, 50);
+
+        cake.onclick = () => {
+            score++;
+            if (scoreEl) scoreEl.textContent = score;
+            cake.style.transform = 'scale(1.5) rotate(45deg)';
+            cake.style.opacity = '0';
+            setTimeout(() => cake.remove(), 200);
+        };
+
+        setTimeout(() => { if (cake.parentElement) cake.remove(); }, 2250);
+    };
+
+    const spawnInterval = setInterval(spawnCake, 450);
+    const timerInterval = setInterval(() => {
+        timeLeft--;
+        if (timerEl) timerEl.textContent = `${timeLeft}s`;
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            clearInterval(spawnInterval);
+            playArea.innerHTML = `
+                <div style="text-align: center; padding: 40px 10px;">
+                    <span style="font-size: 40px;">🎉</span>
+                    <h3 style="font-size: 20px; font-weight: 850; color: #7c5cfc; margin: 8px 0;">Time's Up!</h3>
+                    <p style="font-size: 14px; color: #334155;">You sliced <strong>${score} cakes</strong>! Rank: #4 Today ⚡</p>
+                    <button type="button" class="game-action-btn" onclick="openCakeSlicerModal()" style="margin-top: 12px;">Play Again</button>
+                </div>
+            `;
+        }
+    }, 1000);
+};
+
+// 6. DAILY COIN BONUS CLAIM
+window.claimDailyCoinBonus = function() {
+    let current = parseInt(localStorage.getItem('chocoloom_wallet_coins') || '250', 10);
+    current += 20;
+    localStorage.setItem('chocoloom_wallet_coins', current.toString());
+
+    const coinEl = document.getElementById('gameZoneWalletCoins');
+    if (coinEl) coinEl.textContent = `${current} ⭐`;
+
+    if (typeof showToast === 'function') {
+        showToast(`🎉 Claimed 20 Choco-Coins! New Balance: ${current} Coins ⭐`, 'fa-solid fa-coins', '#f59e0b');
+    }
+};
+
+// 7. CHOCO-CARD MEMORY MATCH GAME
+let _memoryCards = [];
+let _flippedIndices = [];
+let _matchedPairs = 0;
+let _memoryMoves = 0;
+
+window.openMemoryGameModal = function() {
+    ensureGameModalsMounted();
+    const modal = document.getElementById('gameMemoryMatchModal');
+    if (!modal) return;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    initMemoryGame();
+};
+
+function initMemoryGame() {
+    const items = ['🎂', '🍫', '🍩'];
+    _memoryCards = [...items, ...items].sort(() => Math.random() - 0.5);
+    _flippedIndices = [];
+    _matchedPairs = 0;
+    _memoryMoves = 0;
+
+    const movesEl = document.getElementById('memoryMovesCount');
+    if (movesEl) movesEl.textContent = '0 Moves';
+
+    const winBox = document.getElementById('memoryWinBox');
+    if (winBox) winBox.style.display = 'none';
+
+    const grid = document.getElementById('memoryCardsGrid');
+    if (!grid) return;
+    grid.style.display = 'grid';
+
+    grid.innerHTML = _memoryCards.map((emoji, idx) => `
+        <button type="button" class="memory-card-tile" id="memCard_${idx}" onclick="handleMemoryCardClick(${idx})" style="
+            height: 85px;
+            background: #ffffff;
+            border: 2px solid #ede9fe;
+            border-radius: 14px;
+            font-size: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(124,92,252,0.08);
+            transition: all 0.25s ease;
+        ">
+            <span class="card-cover" style="font-size: 20px; color: #7c5cfc;"><i class="fa-solid fa-gift"></i></span>
+        </button>
+    `).join('');
+}
+
+window.handleMemoryCardClick = function(idx) {
+    if (_flippedIndices.length >= 2 || _flippedIndices.includes(idx)) return;
+    const tile = document.getElementById(`memCard_${idx}`);
+    if (!tile || tile.classList.contains('matched')) return;
+
+    tile.innerHTML = `<span>${_memoryCards[idx]}</span>`;
+    tile.style.borderColor = '#7c5cfc';
+    tile.style.background = '#faf8ff';
+    _flippedIndices.push(idx);
+
+    if (_flippedIndices.length === 2) {
+        _memoryMoves++;
+        const movesEl = document.getElementById('memoryMovesCount');
+        if (movesEl) movesEl.textContent = `${_memoryMoves} Moves`;
+
+        const [idx1, idx2] = _flippedIndices;
+        if (_memoryCards[idx1] === _memoryCards[idx2]) {
+            // Match found!
+            _matchedPairs++;
+            document.getElementById(`memCard_${idx1}`)?.classList.add('matched');
+            document.getElementById(`memCard_${idx2}`)?.classList.add('matched');
+            _flippedIndices = [];
+
+            if (_matchedPairs === 3) {
+                setTimeout(() => {
+                    const grid = document.getElementById('memoryCardsGrid');
+                    const winBox = document.getElementById('memoryWinBox');
+                    if (grid) grid.style.display = 'none';
+                    if (winBox) {
+                        winBox.style.display = 'block';
+                        winBox.innerHTML = `
+                            <div style="background: linear-gradient(135deg, #faf8ff, #f3f0ff); border: 2px dashed #7c5cfc; border-radius: 18px; padding: 20px; margin-top: 10px;">
+                                <span style="font-size: 36px;">🎉</span>
+                                <h3 style="font-size: 20px; font-weight: 850; color: #6d28d9; margin: 6px 0;">Sweet Memory Master!</h3>
+                                <p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">All 3 dessert pairs matched in ${_memoryMoves} moves!</p>
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px;">
+                                    <span style="background: #ffffff; border: 1.5px solid #7c5cfc; color: #6d28d9; padding: 6px 16px; border-radius: 999px; font-weight: 850; font-size: 15px;">MEMORY100</span>
+                                    <button type="button" onclick="navigator.clipboard.writeText('MEMORY100'); showToast('Code MEMORY100 copied! 📋', 'fa-solid fa-copy', '#7c5cfc');" style="background: #7c5cfc; color: #fff; border: none; padding: 7px 14px; border-radius: 999px; font-weight: 700; cursor: pointer;">
+                                        <i class="fa-solid fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <button type="button" class="game-action-btn" onclick="initMemoryGame()">
+                                    <i class="fa-solid fa-rotate-right"></i> Play Again
+                                </button>
+                            </div>
+                        `;
+                    }
+                    if (typeof showToast === 'function') {
+                        showToast('🎉 Pair match complete! Code MEMORY100 unlocked', 'fa-solid fa-trophy', '#7c5cfc');
+                    }
+                }, 400);
+            }
+        } else {
+            // Mismatch
+            setTimeout(() => {
+                const t1 = document.getElementById(`memCard_${idx1}`);
+                const t2 = document.getElementById(`memCard_${idx2}`);
+                if (t1) {
+                    t1.innerHTML = `<span class="card-cover" style="font-size: 20px; color: #7c5cfc;"><i class="fa-solid fa-gift"></i></span>`;
+                    t1.style.borderColor = '#ede9fe';
+                    t1.style.background = '#ffffff';
+                }
+                if (t2) {
+                    t2.innerHTML = `<span class="card-cover" style="font-size: 20px; color: #7c5cfc;"><i class="fa-solid fa-gift"></i></span>`;
+                    t2.style.borderColor = '#ede9fe';
+                    t2.style.background = '#ffffff';
+                }
+                _flippedIndices = [];
+            }, 800);
+        }
+    }
+};
+
+// 8. SWEET CAKE TOWER STACKER
+let _stackerScore = 0;
+let _stackerAnimFrame = null;
+let _stackerPos = 20;
+let _stackerDirection = 2;
+let _stackerActive = false;
+
+window.openStackerModal = function() {
+    ensureGameModalsMounted();
+    const modal = document.getElementById('gameCakeStackerModal');
+    if (!modal) return;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    initCakeStacker();
+};
+
+function initCakeStacker() {
+    _stackerScore = 0;
+    _stackerPos = 20;
+    _stackerDirection = 2;
+    _stackerActive = true;
+
+    const scoreEl = document.getElementById('stackerScoreDisplay');
+    if (scoreEl) scoreEl.textContent = '0 Tiers';
+
+    const winBox = document.getElementById('stackerResultBox');
+    if (winBox) winBox.style.display = 'none';
+
+    const towerArea = document.getElementById('stackerTowerArea');
+    if (towerArea) {
+        towerArea.innerHTML = `
+            <div id="stackerBase" style="position: absolute; bottom: 0; left: 20%; width: 60%; height: 26px; background: #6d28d9; border-radius: 8px; border: 2px solid #581c87; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 11px; font-weight: 800;">
+                BASE TIER 🎂
+            </div>
+            <div id="stackerMovingLayer" style="position: absolute; top: 14px; left: 20%; width: 50%; height: 24px; background: linear-gradient(135deg, #f43f5e, #ec4899); border-radius: 6px; border: 2px solid #be123c;"></div>
+        `;
+    }
+
+    animateStackerLayer();
+}
+
+function animateStackerLayer() {
+    if (!_stackerActive) return;
+    const moving = document.getElementById('stackerMovingLayer');
+    if (!moving) return;
+
+    _stackerPos += _stackerDirection;
+    if (_stackerPos >= 48) {
+        _stackerDirection = -2;
+    } else if (_stackerPos <= 2) {
+        _stackerDirection = 2;
+    }
+    moving.style.left = `${_stackerPos}%`;
+
+    _stackerAnimFrame = requestAnimationFrame(animateStackerLayer);
+}
+
+window.dropStackerLayer = function() {
+    if (!_stackerActive) return;
+    _stackerScore++;
+
+    const scoreEl = document.getElementById('stackerScoreDisplay');
+    if (scoreEl) scoreEl.textContent = `${_stackerScore} Tiers`;
+
+    const towerArea = document.getElementById('stackerTowerArea');
+    if (!towerArea) return;
+
+    const colors = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'];
+    const color = colors[(_stackerScore - 1) % colors.length];
+    const newTier = document.createElement('div');
+    newTier.style.cssText = `
+        position: absolute;
+        bottom: ${26 + _stackerScore * 24}px;
+        left: ${_stackerPos}%;
+        width: ${Math.max(30, 50 - _stackerScore * 3)}%;
+        height: 22px;
+        background: ${color};
+        border-radius: 6px;
+        border: 1.5px solid rgba(0,0,0,0.15);
+        transition: transform 0.2s ease;
+    `;
+    towerArea.appendChild(newTier);
+
+    if (_stackerScore >= 5) {
+        _stackerActive = false;
+        if (_stackerAnimFrame) cancelAnimationFrame(_stackerAnimFrame);
+        const winBox = document.getElementById('stackerResultBox');
+        if (winBox) {
+            winBox.style.display = 'block';
+            winBox.innerHTML = `
+                <div style="background: linear-gradient(135deg, #faf8ff, #f3f0ff); border: 2px dashed #7c5cfc; border-radius: 16px; padding: 18px; margin-top: 12px; text-align: center;">
+                    <span style="font-size: 32px;">👑</span>
+                    <h3 style="font-size: 19px; font-weight: 850; color: #6d28d9; margin: 4px 0;">Royal 5-Tier Cake Built!</h3>
+                    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">You built a majestic pastry tower! Flat 20% discount code unlocked:</p>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;">
+                        <span style="background: #ffffff; border: 1.5px solid #7c5cfc; color: #6d28d9; padding: 6px 16px; border-radius: 999px; font-weight: 850; font-size: 15px;">TOWER20</span>
+                        <button type="button" onclick="navigator.clipboard.writeText('TOWER20'); showToast('Code TOWER20 copied! 📋', 'fa-solid fa-copy', '#7c5cfc');" style="background: #7c5cfc; color: #fff; border: none; padding: 7px 14px; border-radius: 999px; font-weight: 700; cursor: pointer;">
+                            <i class="fa-solid fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <button type="button" class="game-action-btn" onclick="initCakeStacker()">
+                        <i class="fa-solid fa-rotate-right"></i> Play Again
+                    </button>
+                </div>
+            `;
+        }
+        if (typeof showToast === 'function') {
+            showToast('👑 Royal 5-Tier Tower Completed! Code: TOWER20', 'fa-solid fa-crown', '#7c5cfc');
+        }
+    }
+};
+
+// Mount Game Modals to DOM if not already present
+function ensureGameModalsMounted() {
+    if (document.getElementById('gameSpinWheelModal')) return;
+
+    const html = `
+        <!-- 1. Spin Wheel Modal -->
+        <div class="game-modal-backdrop" id="gameSpinWheelModal" onclick="if(event.target===this)closeGameModal('gameSpinWheelModal')">
+            <div class="game-modal-card">
+                <div class="game-modal-header">
+                    <h3 class="game-modal-title"><i class="fa-solid fa-dharmachakra" style="color: #7c5cfc;"></i> Sugar Rush Spin Wheel</h3>
+                    <button type="button" class="game-modal-close-btn" onclick="closeGameModal('gameSpinWheelModal')"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="game-modal-body">
+                    <div class="wheel-wrapper">
+                        <div class="wheel-pointer"><i class="fa-solid fa-location-pin" style="font-size: 32px; color: #7c5cfc;"></i></div>
+                        <canvas id="spinWheelCanvas" class="wheel-canvas" width="300" height="300"></canvas>
+                        <div class="wheel-center-pin"><i class="fa-solid fa-star"></i></div>
+                    </div>
+                    <button type="button" class="spin-btn-main" id="spinWheelActionBtn" onclick="spinLuckyWheel()">
+                        <i class="fa-solid fa-rotate"></i> SPIN WHEEL
+                    </button>
+                    <div id="spinWheelResultBox" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Scratch Card Modal -->
+        <div class="game-modal-backdrop" id="gameScratchCardModal" onclick="if(event.target===this)closeGameModal('gameScratchCardModal')">
+            <div class="game-modal-card">
+                <div class="game-modal-header">
+                    <h3 class="game-modal-title"><i class="fa-solid fa-gift" style="color: #f59e0b;"></i> Sweet Tooth Mystery Scratch</h3>
+                    <button type="button" class="game-modal-close-btn" onclick="closeGameModal('gameScratchCardModal')"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="game-modal-body">
+                    <div class="scratch-card-box">
+                        <div class="scratch-card-prize">
+                            <span style="font-size: 26px;">🎉</span>
+                            <div style="font-size: 16px; font-weight: 850; color: #b45309; margin: 4px 0;">FLAT ₹150 OFF CAKES</div>
+                            <div style="font-size: 12px; color: #78350f; margin-bottom: 8px;">Orders above ₹499</div>
+                            <div style="background: #ffffff; border: 1.5px solid #f59e0b; padding: 4px 14px; border-radius: 999px; font-weight: 800; color: #b45309; font-size: 14px;">CODE: SWEET150</div>
+                        </div>
+                        <canvas id="scratchCardCanvas" class="scratch-card-canvas"></canvas>
+                    </div>
+                    <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">Tap or drag your finger across the golden foil to reveal your surprise!</p>
+                    <button type="button" class="game-action-btn coins" onclick="navigator.clipboard.writeText('SWEET150'); showToast('Code SWEET150 copied! 📋', 'fa-solid fa-copy', '#f59e0b');">
+                        <i class="fa-solid fa-copy"></i> Copy Code SWEET150
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Trivia Modal -->
+        <div class="game-modal-backdrop" id="gameTriviaQuizModal" onclick="if(event.target===this)closeGameModal('gameTriviaQuizModal')">
+            <div class="game-modal-card">
+                <div class="game-modal-header">
+                    <h3 class="game-modal-title"><i class="fa-solid fa-brain" style="color: #10b981;"></i> Pastry Chef Trivia</h3>
+                    <button type="button" class="game-modal-close-btn" onclick="closeGameModal('gameTriviaQuizModal')"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="game-modal-body" id="triviaQuizBody">
+                    <!-- Dynamic Question Content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Cake Slicer Arcade Modal -->
+        <div class="game-modal-backdrop" id="gameCakeSlicerModal" onclick="if(event.target===this)closeGameModal('gameCakeSlicerModal')">
+            <div class="game-modal-card">
+                <div class="game-modal-header">
+                    <h3 class="game-modal-title"><i class="fa-solid fa-bolt" style="color: #7c5cfc;"></i> Cake Slicer Blitz</h3>
+                    <button type="button" class="game-modal-close-btn" onclick="closeGameModal('gameCakeSlicerModal')"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="game-modal-body">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 800; font-size: 15px;">
+                        <span>Score: <span id="slicerScoreVal" style="color: #7c5cfc;">0</span></span>
+                        <span>Timer: <span id="slicerTimerVal" style="color: #6366f1;">15s</span></span>
+                    </div>
+                    <div id="slicerPlayArea" style="position: relative; width: 100%; height: 260px; background: #ffffff; border-radius: 18px; overflow: hidden; border: 2px solid #ede9fe;">
+                        <!-- Floating cakes -->
+                    </div>
+                    <p style="font-size: 12px; color: #64748b; margin-top: 10px;">Click or tap cakes as fast as you can before they disappear!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Choco Memory Match Modal -->
+        <div class="game-modal-backdrop" id="gameMemoryMatchModal" onclick="if(event.target===this)closeGameModal('gameMemoryMatchModal')">
+            <div class="game-modal-card" style="max-width: 380px;">
+                <div class="game-modal-header">
+                    <h3 class="game-modal-title"><i class="fa-solid fa-clone" style="color: #0284c7;"></i> Dessert Memory Match</h3>
+                    <button type="button" class="game-modal-close-btn" onclick="closeGameModal('gameMemoryMatchModal')"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="game-modal-body">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 13px; color: #64748b;">Find 3 pairs of sweet treats:</span>
+                        <span id="memoryMovesCount" style="font-size: 13px; font-weight: 800; color: #7c5cfc;">0 Moves</span>
+                    </div>
+                    <div id="memoryCardsGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px;">
+                        <!-- 6 cards -->
+                    </div>
+                    <div id="memoryWinBox" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Cake Tower Stacker Modal -->
+        <div class="game-modal-backdrop" id="gameCakeStackerModal" onclick="if(event.target===this)closeGameModal('gameCakeStackerModal')">
+            <div class="game-modal-card" style="max-width: 380px;">
+                <div class="game-modal-header">
+                    <h3 class="game-modal-title"><i class="fa-solid fa-layer-group" style="color: #d946ef;"></i> Cake Tower Stacker</h3>
+                    <button type="button" class="game-modal-close-btn" onclick="closeGameModal('gameCakeStackerModal')"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="game-modal-body">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; font-weight: 800;">
+                        <span>Target: 5 Tiers</span>
+                        <span id="stackerScoreDisplay" style="color: #d946ef;">0 Tiers</span>
+                    </div>
+                    <div id="stackerTowerArea" style="position: relative; width: 100%; height: 220px; background: #faf8ff; border: 2px solid #ede9fe; border-radius: 16px; overflow: hidden; margin-bottom: 12px;">
+                        <!-- Stacker area -->
+                    </div>
+                    <button type="button" class="game-action-btn" onclick="dropStackerLayer()" style="width: 100%; padding: 12px; font-size: 15px; background: linear-gradient(135deg, #d946ef, #a855f7);">
+                        <i class="fa-solid fa-arrow-down"></i> TAP TO DROP TIER
+                    </button>
+                    <div id="stackerResultBox" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+// Auto-switch to Game Zone if URL contains #gamezone or ?view=gamezone
+if (typeof window !== 'undefined') {
+    if (window.location.hash === '#gamezone' || window.location.search.includes('view=gamezone')) {
+        setTimeout(window.switchToGameZone, 200);
+    }
+}
 
