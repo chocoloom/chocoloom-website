@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-15T17:48:42.185Z",
+  "updated_at": "2026-10-16T10:58:35.213Z",
   "overrides": {
     "uni_choco_1": {
       "id": "uni_choco_1",
@@ -167,6 +167,12 @@
       "flavour": "",
       "isVeg": true,
       "isUniSpecial": false
+    },
+    "0239dbd4-e374-5f8f-9542-87d7af7ebed4": {
+      "name": "Burgundy Rose Love Story Cake",
+      "price": 999,
+      "discount_price": 999,
+      "is_available": true
     }
   },
   "customProducts": [],

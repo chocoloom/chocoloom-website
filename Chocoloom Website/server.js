@@ -128,6 +128,81 @@ async function syncCatalogOverridesToNeon(payload) {
     return syncedCount;
 }
 
+// Automatically sync all catalog price overrides into Supabase Cloud Database
+const SUPABASE_REST_URL = 'https://icedyeuagmkgitkoznxr.supabase.co/rest/v1/products';
+const SUPABASE_ANON_KEY = 'sb_publishable_NI0EpHVxbjk7gW5W8_1lXw_rhcmDwlY';
+
+async function syncCatalogOverridesToSupabase(payload) {
+    if (!payload || !payload.overrides) return 0;
+    const overrides = payload.overrides || {};
+    let synced = 0;
+
+    for (const [key, item] of Object.entries(overrides)) {
+        if (!item || (!item.price && item.is_available === undefined)) continue;
+        const name = (item.name || key).trim();
+        const price = Number(item.price || 0);
+        const discPrice = Number(item.discount_price || price);
+        const patchData = {
+            price: price,
+            discount_price: discPrice,
+            updated_at: new Date().toISOString()
+        };
+        if (item.price_half_kg !== undefined) patchData.price_half_kg = Number(item.price_half_kg);
+        if (item.price_1kg !== undefined) patchData.price_1kg = Number(item.price_1kg);
+        if (item.price_1_5kg !== undefined) patchData.price_1_5kg = Number(item.price_1_5kg);
+        if (item.price_2kg !== undefined) patchData.price_2kg = Number(item.price_2kg);
+        if (item.price_3kg !== undefined) patchData.price_3kg = Number(item.price_3kg);
+        if (item.is_available !== undefined) patchData.is_available = Boolean(item.is_available);
+
+        const id = item.sql_id || item.id || key;
+        const isUuid = typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        const targetUrl = isUuid 
+            ? `${SUPABASE_REST_URL}?id=eq.${id}`
+            : `${SUPABASE_REST_URL}?name=eq.${encodeURIComponent(name)}`;
+
+        try {
+            await new Promise((resolve) => {
+                const postStr = JSON.stringify(patchData);
+                const parsed = new URL(targetUrl);
+                const req = https.request({
+                    hostname: parsed.hostname,
+                    port: 443,
+                    path: parsed.pathname + parsed.search,
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Content-Length': Buffer.byteLength(postStr),
+                        'Prefer': 'return=representation'
+                    },
+                    timeout: 4000
+                }, (res) => {
+                    let d = '';
+                    res.on('data', c => d += c);
+                    res.on('end', () => {
+                        if (res.statusCode >= 200 && res.statusCode < 300) {
+                            try {
+                                const arr = JSON.parse(d);
+                                if (Array.isArray(arr) && arr.length > 0) {
+                                    synced++;
+                                    console.log(`⚡ [Supabase Cloud DB] Updated "${name}" -> ₹${price}`);
+                                }
+                            } catch(e) {}
+                        }
+                        resolve();
+                    });
+                });
+                req.on('error', () => resolve());
+                req.on('timeout', () => { req.destroy(); resolve(); });
+                req.write(postStr);
+                req.end();
+            });
+        } catch(e) {}
+    }
+    return synced;
+}
+
 // Cloud endpoints to sync live
 const CLOUD_ENDPOINTS = [
     'https://chocoloom.com/wp-json/chocoloom/v1/catalog',
@@ -227,12 +302,18 @@ const server = http.createServer((req, res) => {
 
                 console.log(`💾 Catalog overrides saved locally at ${payload.updated_at}!`);
 
-                // 2. Automatically sync directly to Neon Serverless Postgres
+                // 2. Automatically sync directly to Neon Serverless Postgres and Supabase Cloud Database
                 let neonCount = 0;
+                let supaCount = 0;
                 try {
                     neonCount = await syncCatalogOverridesToNeon(payload);
                 } catch (neonErr) {
                     console.warn('Neon sync warning:', neonErr.message);
+                }
+                try {
+                    supaCount = await syncCatalogOverridesToSupabase(payload);
+                } catch (supaErr) {
+                    console.warn('Supabase sync warning:', supaErr.message);
                 }
 
                 // 3. Asynchronously forward to live endpoints in real-time
@@ -241,7 +322,8 @@ const server = http.createServer((req, res) => {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ 
                     success: true, 
-                    message: `Catalog overrides saved locally & synced ${neonCount} items to Neon Postgres!`,
+                    message: `Catalog overrides saved locally & synced ${supaCount} items to Supabase & ${neonCount} items to Neon Postgres!`,
+                    supabaseSynced: supaCount,
                     neonSynced: neonCount,
                     data: payload
                 }));

@@ -1011,6 +1011,49 @@ function getSupabaseClient() {
     return supabaseClient;
 }
 
+// Synchronously hydrate cached cloud database prices into SWIGGY_DATA before initial UI render
+function applyCachedDbPricesToMenu() {
+    try {
+        const cacheRaw = localStorage.getItem('chocoloom_db_catalog_cache') || localStorage.getItem('chocoloom_price_overrides');
+        if (!cacheRaw) return;
+        const cache = JSON.parse(cacheRaw);
+        const menu = (typeof SWIGGY_DATA !== 'undefined' && SWIGGY_DATA?.restaurants?.[0]?.menu) ? SWIGGY_DATA.restaurants[0].menu : null;
+        if (!menu || !Array.isArray(menu) || Object.keys(cache).length === 0) return;
+
+        function normalizeKey(str) {
+            return String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+
+        menu.forEach(item => {
+            const key = item.sql_id || item.id;
+            const normName = normalizeKey(item.name);
+            const over = cache[key] || cache[item.id] || (normName ? cache[normName] : null) || (item.name ? cache[item.name.toLowerCase().trim()] : null);
+            if (over) {
+                if (over.price !== undefined) item.price = Number(over.price);
+                if (over.discount_price !== undefined) item.discount_price = Number(over.discount_price);
+                if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
+                if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
+                if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
+                if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
+                if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
+                if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
+                if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
+                if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
+                if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
+                if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
+                if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
+                if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
+                if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
+                if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
+                if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
+                if (over.flavour !== undefined) item.flavour = over.flavour;
+                if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
+            }
+        });
+    } catch(e) {}
+}
+applyCachedDbPricesToMenu();
+
 // Neon Native Serverless HTTP Engine (Zero-dependency direct HTTPS fetch to Neon /sql)
 function parseNeonConnectionString(raw) {
     if (!raw || typeof raw !== 'string') return null;
@@ -1296,16 +1339,15 @@ window.loadCatalogFromNeon = async function(showToast = false) {
     return false;
 };
 
-// Fetch all available products directly from Supabase
+// Fetch all products directly from Supabase (Available and Unavailable for complete price & stock synchronization)
 async function fetchLiveProductsFromSupabase() {
     const client = getSupabaseClient();
     if (client) {
         try {
             const { data, error } = await client
                 .from('products')
-                .select('*')
-                .eq('is_available', true);
-            if (!error && data) return data;
+                .select('*');
+            if (!error && Array.isArray(data) && data.length > 0) return data;
         } catch (e) {
             console.warn('Supabase JS query error, falling back to REST fetch:', e);
         }
@@ -1313,7 +1355,7 @@ async function fetchLiveProductsFromSupabase() {
 
     // Direct REST API fallback
     try {
-        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*&is_available=eq.true`, {
+        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*`, {
             headers: {
                 'apikey': SUPABASE_CONFIG.anonKey,
                 'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
@@ -1321,7 +1363,7 @@ async function fetchLiveProductsFromSupabase() {
         });
         if (res.ok) {
             const data = await res.json();
-            return data;
+            if (Array.isArray(data) && data.length > 0) return data;
         }
     } catch (e) {
         console.warn('Supabase REST fetch error:', e);
@@ -1332,8 +1374,12 @@ async function fetchLiveProductsFromSupabase() {
 // Sync live Supabase products into active menu, cart, and UI
 function syncSupabaseProducts(liveProducts, showToastNotification = false) {
     if (!liveProducts || !Array.isArray(liveProducts) || liveProducts.length === 0) return;
-    const menu = SWIGGY_DATA.restaurants[0]?.menu;
+    const menu = SWIGGY_DATA?.restaurants?.[0]?.menu;
     if (!menu) return;
+
+    function normalizeKey(str) {
+        return String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
 
     let anyPriceUpdated = false;
     let updatedCount = 0;
@@ -1341,13 +1387,19 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
     liveProducts.forEach(liveItem => {
         const effectivePrice = (liveItem.discount_price && Number(liveItem.discount_price) > 0 && Number(liveItem.discount_price) < Number(liveItem.price)) 
             ? Number(liveItem.discount_price) 
-            : Number(liveItem.price);
+            : Number(liveItem.price || 0);
         const effectiveOrigPrice = (liveItem.discount_price && Number(liveItem.discount_price) > 0 && Number(liveItem.discount_price) < Number(liveItem.price))
-            ? Number(liveItem.price)
-            : Number(liveItem.original_price || liveItem.price);
+            ? Number(liveItem.price || effectivePrice)
+            : Number(liveItem.original_price || liveItem.price || effectivePrice);
 
         const cleanName = (liveItem.name || '').toLowerCase().trim();
-        let match = menu.find(p => p.sql_id === liveItem.id || p.id === liveItem.id || (p.name && p.name.toLowerCase().trim() === cleanName));
+        const normLive = normalizeKey(liveItem.name);
+
+        let match = menu.find(p => 
+            (liveItem.id && (p.sql_id === liveItem.id || p.id === liveItem.id)) ||
+            (p.name && p.name.toLowerCase().trim() === cleanName) ||
+            (p.name && normalizeKey(p.name) === normLive)
+        );
 
         if (match) {
             // Apply fresh live price from database
@@ -1355,6 +1407,54 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 match.price = effectivePrice;
                 anyPriceUpdated = true;
                 updatedCount++;
+            }
+            if (effectiveOrigPrice && match.originalPrice !== effectiveOrigPrice) {
+                match.originalPrice = effectiveOrigPrice;
+                anyPriceUpdated = true;
+            }
+            if (liveItem.price_half_kg !== undefined && liveItem.price_half_kg !== null && match.price_half_kg !== Number(liveItem.price_half_kg)) {
+                match.price_half_kg = Number(liveItem.price_half_kg);
+                anyPriceUpdated = true;
+            }
+            if (liveItem.price_1kg !== undefined && liveItem.price_1kg !== null && match.price_1kg !== Number(liveItem.price_1kg)) {
+                match.price_1kg = Number(liveItem.price_1kg);
+                anyPriceUpdated = true;
+            }
+            if (liveItem.price_1_5kg !== undefined && liveItem.price_1_5kg !== null && match.price_1_5kg !== Number(liveItem.price_1_5kg)) {
+                match.price_1_5kg = Number(liveItem.price_1_5kg);
+                anyPriceUpdated = true;
+            }
+            if (liveItem.price_2kg !== undefined && liveItem.price_2kg !== null && match.price_2kg !== Number(liveItem.price_2kg)) {
+                match.price_2kg = Number(liveItem.price_2kg);
+                anyPriceUpdated = true;
+            }
+            if (liveItem.price_3kg !== undefined && liveItem.price_3kg !== null && match.price_3kg !== Number(liveItem.price_3kg)) {
+                match.price_3kg = Number(liveItem.price_3kg);
+                anyPriceUpdated = true;
+            }
+            if (liveItem.cooling_price_half_kg !== undefined && liveItem.cooling_price_half_kg !== null && match.cooling_price_half_kg !== Number(liveItem.cooling_price_half_kg)) {
+                match.cooling_price_half_kg = Number(liveItem.cooling_price_half_kg);
+                anyPriceUpdated = true;
+            }
+            if (liveItem.cooling_price_1kg !== undefined && liveItem.cooling_price_1kg !== null && match.cooling_price_1kg !== Number(liveItem.cooling_price_1kg)) {
+                match.cooling_price_1kg = Number(liveItem.cooling_price_1kg);
+                anyPriceUpdated = true;
+            }
+            if (liveItem.cooling_price_1_5kg !== undefined && liveItem.cooling_price_1_5kg !== null && match.cooling_price_1_5kg !== Number(liveItem.cooling_price_1_5kg)) {
+                match.cooling_price_1_5kg = Number(liveItem.cooling_price_1_5kg);
+                anyPriceUpdated = true;
+            }
+            if (liveItem.cooling_price_2kg !== undefined && liveItem.cooling_price_2kg !== null && match.cooling_price_2kg !== Number(liveItem.cooling_price_2kg)) {
+                match.cooling_price_2kg = Number(liveItem.cooling_price_2kg);
+                anyPriceUpdated = true;
+            }
+            if (liveItem.cooling_price_3kg !== undefined && liveItem.cooling_price_3kg !== null && match.cooling_price_3kg !== Number(liveItem.cooling_price_3kg)) {
+                match.cooling_price_3kg = Number(liveItem.cooling_price_3kg);
+                anyPriceUpdated = true;
+            }
+            if (liveItem.is_available !== undefined && match.is_available !== liveItem.is_available) {
+                match.is_available = liveItem.is_available;
+                anyPriceUpdated = true;
             }
             if (liveItem.name && match.name !== liveItem.name) {
                 match.name = liveItem.name;
@@ -1368,20 +1468,10 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 match.image = liveItem.image_url;
                 anyPriceUpdated = true;
             }
-            if (effectiveOrigPrice && match.originalPrice !== effectiveOrigPrice) {
-                match.originalPrice = effectiveOrigPrice;
+            if (liveItem.description && match.description !== liveItem.description) {
+                match.description = liveItem.description;
                 anyPriceUpdated = true;
             }
-            if (liveItem.price_half_kg !== undefined && liveItem.price_half_kg !== null && match.price_half_kg !== Number(liveItem.price_half_kg)) match.price_half_kg = Number(liveItem.price_half_kg);
-            if (liveItem.price_1kg !== undefined && liveItem.price_1kg !== null && match.price_1kg !== Number(liveItem.price_1kg)) match.price_1kg = Number(liveItem.price_1kg);
-            if (liveItem.price_1_5kg !== undefined && liveItem.price_1_5kg !== null && match.price_1_5kg !== Number(liveItem.price_1_5kg)) match.price_1_5kg = Number(liveItem.price_1_5kg);
-            if (liveItem.price_2kg !== undefined && liveItem.price_2kg !== null && match.price_2kg !== Number(liveItem.price_2kg)) match.price_2kg = Number(liveItem.price_2kg);
-            if (liveItem.price_3kg !== undefined && liveItem.price_3kg !== null && match.price_3kg !== Number(liveItem.price_3kg)) match.price_3kg = Number(liveItem.price_3kg);
-            if (liveItem.cooling_price_half_kg !== undefined && liveItem.cooling_price_half_kg !== null) match.cooling_price_half_kg = Number(liveItem.cooling_price_half_kg);
-            if (liveItem.cooling_price_1kg !== undefined && liveItem.cooling_price_1kg !== null) match.cooling_price_1kg = Number(liveItem.cooling_price_1kg);
-            if (liveItem.cooling_price_1_5kg !== undefined && liveItem.cooling_price_1_5kg !== null) match.cooling_price_1_5kg = Number(liveItem.cooling_price_1_5kg);
-            if (liveItem.cooling_price_2kg !== undefined && liveItem.cooling_price_2kg !== null) match.cooling_price_2kg = Number(liveItem.cooling_price_2kg);
-            if (liveItem.cooling_price_3kg !== undefined && liveItem.cooling_price_3kg !== null) match.cooling_price_3kg = Number(liveItem.cooling_price_3kg);
             if (liveItem.has_flavours !== undefined) match.has_flavours = Boolean(liveItem.has_flavours);
             if (liveItem.default_flavour || liveItem.flavour) match.flavour = liveItem.default_flavour || liveItem.flavour;
             if (liveItem.flavour_price_truffle !== undefined || liveItem.flavour_price_red_velvet !== undefined || liveItem.flavour_prices) {
@@ -1400,15 +1490,7 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                     hazelnut_ferrero: Number(liveItem.flavour_price_hazelnut ?? (fpObj.hazelnut_ferrero ?? 100))
                 };
             }
-            if (liveItem.description && match.description !== liveItem.description) {
-                match.description = liveItem.description;
-                anyPriceUpdated = true;
-            }
-            if (liveItem.is_available !== undefined && match.is_available !== liveItem.is_available) {
-                match.is_available = liveItem.is_available;
-                anyPriceUpdated = true;
-            }
-        } else if (liveItem.is_available) {
+        } else if (liveItem.is_available !== false) {
             menu.push({
                 id: `choco_sql_${menu.length + 1}`,
                 sql_id: liveItem.id,
@@ -1436,6 +1518,48 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
             anyPriceUpdated = true;
         }
     });
+
+    // Mark database as successfully loaded
+    window._cloudDatabaseLoaded = true;
+    window._supabaseLoaded = true;
+
+    // Persist verified database state locally to eliminate any flash of static data.js prices across future page loads & deploys
+    try {
+        const dbCache = JSON.parse(localStorage.getItem('chocoloom_db_catalog_cache') || '{}');
+        liveProducts.forEach(lp => {
+            const pObj = {
+                price: Number(lp.discount_price && Number(lp.discount_price) > 0 ? lp.discount_price : lp.price || 0),
+                discount_price: Number(lp.discount_price || lp.price || 0),
+                originalPrice: Number(lp.original_price || lp.price || 0),
+                price_half_kg: Number(lp.price_half_kg || lp.price || 0),
+                price_1kg: Number(lp.price_1kg || (Number(lp.price || 0) + 400)),
+                price_1_5kg: Number(lp.price_1_5kg || (Number(lp.price || 0) + 800)),
+                price_2kg: Number(lp.price_2kg || (Number(lp.price || 0) + 1200)),
+                price_3kg: Number(lp.price_3kg || (Number(lp.price || 0) + 2000)),
+                cooling_price_half_kg: Number(lp.cooling_price_half_kg || 50),
+                cooling_price_1kg: Number(lp.cooling_price_1kg || 150),
+                cooling_price_1_5kg: Number(lp.cooling_price_1_5kg || 199),
+                cooling_price_2kg: Number(lp.cooling_price_2kg || 200),
+                cooling_price_3kg: Number(lp.cooling_price_3kg || 299),
+                is_available: lp.is_available !== false,
+                category: lp.category || '',
+                description: lp.description || '',
+                image: lp.image_url || '',
+                image_url: lp.image_url || '',
+                has_flavours: Boolean(lp.has_flavours),
+                flavour: lp.flavour || '',
+                flavour_prices: lp.flavour_prices || {}
+            };
+            if (lp.id) dbCache[lp.id] = pObj;
+            if (lp.name) {
+                dbCache[lp.name.toLowerCase().trim()] = pObj;
+                dbCache[normalizeKey(lp.name)] = pObj;
+            }
+        });
+        localStorage.setItem('chocoloom_db_catalog_cache', JSON.stringify(dbCache));
+        const curO = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
+        localStorage.setItem('chocoloom_price_overrides', JSON.stringify({ ...curO, ...dbCache }));
+    } catch(e) {}
 
     // Sync any items currently in AppState.cart
     AppState.cart.forEach(cartItem => {
@@ -1493,11 +1617,12 @@ function subscribeToSupabaseRealtime() {
                         }
                     } else if (payload.eventType === 'DELETE') {
                         const oldId = payload.old?.id;
-                        const menu = SWIGGY_DATA.restaurants[0]?.menu;
+                        const menu = SWIGGY_DATA?.restaurants?.[0]?.menu;
                         if (menu && oldId) {
                             const idx = menu.findIndex(p => p.sql_id === oldId || p.id === oldId);
                             if (idx !== -1) {
                                 menu.splice(idx, 1);
+                                if (typeof window.invalidateProductsCache === 'function') window.invalidateProductsCache();
                                 renderProductsGrid();
                                 updateCartUI();
                             }
@@ -1613,15 +1738,16 @@ async function loadServerCatalogOverrides() {
         endpoints.push("catalog_overrides.json?v=" + Date.now());
         endpoints.push("save_catalog.php?v=" + Date.now(), "api/save_catalog.php?v=" + Date.now());
 
-        // 4. Local Mac Node Daemon (only on localhost)
+        // 4. Local Node Daemon (ports 3000 & 3001 on localhost)
         if (isLocalHost) {
-            endpoints.push("http://127.0.0.1:3001/save_catalog");
+            endpoints.push("http://127.0.0.1:3000/save_catalog", "http://localhost:3000/save_catalog");
+            endpoints.push("http://127.0.0.1:3001/save_catalog", "http://localhost:3001/save_catalog");
         }
 
         for (const ep of endpoints) {
             try {
                 const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-                const timeoutMs = ep.includes(':3001') ? 350 : 2500;
+                const timeoutMs = (ep.includes(':3000') || ep.includes(':3001')) ? 500 : 2500;
                 const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
                 let res;
                 try {

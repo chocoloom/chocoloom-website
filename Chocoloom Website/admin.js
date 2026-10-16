@@ -3788,9 +3788,10 @@ function sendCrossOriginSync(payload) {
 }
 
 function savePriceOverrideLocally(id, data) {
+    let enriched = { ...(data || {}) };
     try {
         let overrides = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
-        const enriched = { ...(overrides[id] || {}), ...data };
+        enriched = { ...(overrides[id] || {}), ...data };
         if (enriched.price !== undefined) {
             const p = Number(enriched.price);
             if (!enriched.price_half_kg) enriched.price_half_kg = p;
@@ -3808,6 +3809,24 @@ function savePriceOverrideLocally(id, data) {
         }
         localStorage.setItem("chocoloom_price_overrides", JSON.stringify(overrides));
     } catch(e) {}
+
+    // Find full product details from memory to guarantee complete attributes sync to database
+    let prodToSync = null;
+    if (typeof AdminState !== "undefined" && Array.isArray(AdminState.products)) {
+        prodToSync = AdminState.products.find(p => p.id === id || p.sql_id === id || (data && data.name && p.name && p.name.toLowerCase().trim() === data.name.toLowerCase().trim()));
+    }
+    const mergedProd = { ...(prodToSync || {}), id: id, ...enriched };
+
+    // Asynchronously guarantee persistence to Cloud Database (Supabase & Neon)
+    try {
+        if (typeof syncProductToSupabase === "function") {
+            syncProductToSupabase(mergedProd).catch(e => console.warn("Background Supabase sync error:", e));
+        }
+        if (typeof syncProductToNeon === "function") {
+            syncProductToNeon(mergedProd).catch(e => console.warn("Background Neon sync error:", e));
+        }
+    } catch(dbErr) {}
+
     syncCatalogToServer();
     sendCrossOriginSync({
         action: "PRICE",
@@ -3860,8 +3879,9 @@ async function syncCatalogToServer() {
             targets.push(`${origin}/wp-admin/admin-ajax.php?action=chocoloom_save_catalog`);
         }
 
-        // 4. Local Mac Node Daemon (only on localhost)
+        // 4. Local Node Daemon (ports 3000 & 3001 on localhost)
         if (isLocal) {
+            targets.push("http://127.0.0.1:3000/save_catalog", "http://localhost:3000/save_catalog");
             targets.push("http://127.0.0.1:3001/save_catalog", "http://localhost:3001/save_catalog");
         }
 
