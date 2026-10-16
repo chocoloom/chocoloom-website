@@ -52,13 +52,22 @@ if (!window.getAppUrl) {
 }
 
 // ==================== CONFIGURATION & STATE ====================
-const savedSupabaseUrl = localStorage.getItem('chocoloom_supabase_url');
-const savedSupabaseKey = localStorage.getItem('chocoloom_supabase_key');
+const OFFICIAL_SUPABASE_URL = 'https://icedyeuagmkgitkoznxr.supabase.co';
+const OFFICIAL_SUPABASE_KEY = 'sb_publishable_NI0EpHVxbjk7gW5W8_1lXw_rhcmDwlY';
+
+let savedSupabaseUrl = localStorage.getItem('chocoloom_supabase_url');
+if (!savedSupabaseUrl || !savedSupabaseUrl.startsWith('https://')) {
+    savedSupabaseUrl = OFFICIAL_SUPABASE_URL;
+}
+let savedSupabaseKey = localStorage.getItem('chocoloom_supabase_key');
+if (!savedSupabaseKey || savedSupabaseKey.length < 20) {
+    savedSupabaseKey = OFFICIAL_SUPABASE_KEY;
+}
 const savedNeonUrl = localStorage.getItem('chocoloom_neon_url');
 
 const SUPABASE_CONFIG = {
-    url: (savedSupabaseUrl || 'https://icedyeuagmkgitkoznxr.supabase.co').replace(/\/$/, ''),
-    anonKey: savedSupabaseKey || 'sb_publishable_NI0EpHVxbjk7gW5W8_1lXw_rhcmDwlY'
+    url: savedSupabaseUrl.trim().replace(/\/$/, ''),
+    anonKey: savedSupabaseKey.trim()
 };
 
 const DEFAULT_NEON_URL = 'postgresql://neondb_owner:npg_yrd3JMAzmWg2@ep-bold-math-b5bam8cm-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
@@ -3531,8 +3540,9 @@ window.handleProductFormSubmit = async function(e) {
     }
 
     // 1. Sync to Supabase Cloud Database (Primary)
+    let syncRes = null;
     try {
-        await syncProductToSupabase(updatedProduct);
+        syncRes = await syncProductToSupabase(updatedProduct);
     } catch(supaErr) {
         console.warn('Supabase sync warning:', supaErr);
     }
@@ -3555,7 +3565,11 @@ window.handleProductFormSubmit = async function(e) {
     closeAdminModal("productModal");
     renderProducts();
     renderProductsStats();
-    showToast(formId ? `✅ Product "${name}" updated & saved in Cloud Database!` : `🎂 Added "${name}" & saved in Cloud Database!`, "fa-solid fa-cloud-check", "#10b981");
+    if (syncRes && syncRes.success) {
+        showToast(formId ? `✅ Product "${name}" updated & saved in Cloud Database!` : `🎂 Added "${name}" & saved in Cloud Database!`, "fa-solid fa-cloud-check", "#10b981");
+    } else {
+        showToast(`⚠️ Cloud update warning: ${syncRes?.error || 'Check database connection'}`, "fa-solid fa-triangle-exclamation", "#f59e0b");
+    }
 };
 
 // Quick 1-Click Price Update Modal
@@ -3621,8 +3635,9 @@ window.handleQuickPriceSubmit = async function(e) {
         };
 
         savePriceOverrideLocally(prodId, updateData);
+        let syncRes = null;
         try {
-            await syncProductToSupabase(prod);
+            syncRes = await syncProductToSupabase(prod);
         } catch(err) {}
         try {
             await syncProductToNeon(prod);
@@ -3633,7 +3648,11 @@ window.handleQuickPriceSubmit = async function(e) {
         closeAdminModal("quickPriceModal");
         renderProducts();
         renderProductsStats();
-        showToast('✅ Updated price for "' + prod.name + '" to ₹' + newPrice + ' & synced to Cloud Database!', 'fa-solid fa-cloud-check', '#10b981');
+        if (syncRes && syncRes.success) {
+            showToast('✅ Updated price for "' + prod.name + '" to ₹' + newPrice + ' & synced to Cloud Database!', 'fa-solid fa-cloud-check', '#10b981');
+        } else {
+            showToast('⚠️ Price sync warning: ' + (syncRes?.error || 'Check database connection'), 'fa-solid fa-triangle-exclamation', '#f59e0b');
+        }
     }
 };
 
@@ -3974,19 +3993,19 @@ window.syncAllToMainSite = async function() {
 
 // Sync single product with Supabase table (Primary Cloud Database)
 async function syncProductToSupabase(prod) {
-    if (!prod) return { success: false };
+    if (!prod) return { success: false, error: 'No product provided' };
     try {
         const finalImage = prod.image_url || prod.image || "";
+        const finalPrice = Number(prod.price || 0);
         const payload = {
             name: String(prod.name || '').trim(),
-            price: Number(prod.price || 0),
-            discount_price: Number(prod.discount_price || prod.price || 0),
-            original_price: Number(prod.originalPrice || prod.original_price || Math.round((Number(prod.price) || 0) * 1.3)),
-            price_half_kg: Number(prod.price_half_kg || prod.price || 0),
-            price_1kg: Number(prod.price_1kg || ((Number(prod.price) || 0) + 400)),
-            price_1_5kg: Number(prod.price_1_5kg || ((Number(prod.price) || 0) + 800)),
-            price_2kg: Number(prod.price_2kg || ((Number(prod.price) || 0) + 1200)),
-            price_3kg: Number(prod.price_3kg || ((Number(prod.price) || 0) + 2000)),
+            price: finalPrice,
+            discount_price: finalPrice,
+            price_half_kg: Number(prod.price_half_kg || finalPrice),
+            price_1kg: Number(prod.price_1kg || (finalPrice + 400)),
+            price_1_5kg: Number(prod.price_1_5kg || (finalPrice + 800)),
+            price_2kg: Number(prod.price_2kg || (finalPrice + 1200)),
+            price_3kg: Number(prod.price_3kg || (finalPrice + 2000)),
             cooling_price_half_kg: Number(prod.cooling_price_half_kg || 50),
             category: String(prod.category || 'Specialty Cakes'),
             description: String(prod.description || ''),
@@ -4020,87 +4039,138 @@ async function syncProductToSupabase(prod) {
         }
 
         let updated = false;
+        let lastError = null;
 
-        // Method 1: Supabase JS Client
-        if (supabaseClient) {
-            try {
-                if (prod.sql_id && !String(prod.sql_id).startsWith('choco_') && !String(prod.sql_id).startsWith('uni_')) {
-                    const { data, error } = await supabaseClient.from("products").update(payload).eq("id", prod.sql_id).select("id");
-                    if (!error && data && data.length > 0) updated = true;
-                }
-                if (!updated) {
-                    const { data: existing } = await supabaseClient.from("products").select("id").ilike("name", prod.name.trim()).limit(1);
-                    if (existing && existing.length > 0) {
-                        prod.sql_id = existing[0].id;
-                        const { error } = await supabaseClient.from("products").update(payload).eq("id", prod.sql_id);
-                        if (!error) updated = true;
-                    } else {
-                        const { data, error } = await supabaseClient.from("products").insert([payload]).select();
-                        if (!error && data && data[0]) {
-                            prod.sql_id = data[0].id;
-                            updated = true;
-                        }
-                    }
-                }
-            } catch(clientErr) {
-                console.warn('Supabase JS client attempt note, using REST API:', clientErr);
-            }
+        const restHeaders = {
+            'apikey': SUPABASE_CONFIG.anonKey,
+            'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        };
+
+        // 1. Resolve Target Supabase UUID
+        let targetId = null;
+        if (prod.sql_id && !String(prod.sql_id).startsWith('choco_') && !String(prod.sql_id).startsWith('uni_')) {
+            targetId = prod.sql_id;
+        } else if (prod.id && !String(prod.id).startsWith('choco_') && !String(prod.id).startsWith('uni_')) {
+            targetId = prod.id;
         }
 
-        // Method 2: Direct REST API (Works unconditionally in all browsers)
-        if (!updated) {
+        // Search by exact name in Supabase if targetId not found
+        if (!targetId && prod.name) {
             try {
-                const restHeaders = {
-                    'apikey': SUPABASE_CONFIG.anonKey,
-                    'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=representation'
-                };
-
-                let targetId = (prod.sql_id && !String(prod.sql_id).startsWith('choco_') && !String(prod.sql_id).startsWith('uni_')) ? prod.sql_id : null;
-                if (!targetId) {
-                    const findRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=id&name=ilike.*${encodeURIComponent(prod.name.trim())}*&limit=1`, {
-                        headers: { 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}` }
-                    });
-                    if (findRes.ok) {
-                        const items = await findRes.json();
-                        if (Array.isArray(items) && items.length > 0) targetId = items[0].id;
-                    }
+                const findRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=id&name=eq.${encodeURIComponent(prod.name.trim())}&limit=1`, {
+                    headers: { 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}` }
+                });
+                if (findRes.ok) {
+                    const items = await findRes.json();
+                    if (Array.isArray(items) && items.length > 0) targetId = items[0].id;
                 }
+            } catch(e) {}
+        }
 
-                if (targetId) {
-                    const patchRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?id=eq.${targetId}`, {
-                        method: 'PATCH',
-                        headers: restHeaders,
-                        body: JSON.stringify(payload)
-                    });
-                    if (patchRes.ok) {
+        // Search by wildcard name if still not found
+        if (!targetId && prod.name) {
+            try {
+                const findRes2 = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=id&name=ilike.*${encodeURIComponent(prod.name.trim())}*&limit=1`, {
+                    headers: { 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}` }
+                });
+                if (findRes2.ok) {
+                    const items2 = await findRes2.json();
+                    if (Array.isArray(items2) && items2.length > 0) targetId = items2[0].id;
+                }
+            } catch(e) {}
+        }
+
+        // 2. Direct Supabase REST API (Primary - Works across all browser environments)
+        if (targetId) {
+            try {
+                const patchRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?id=eq.${targetId}`, {
+                    method: 'PATCH',
+                    headers: restHeaders,
+                    body: JSON.stringify(payload)
+                });
+                if (patchRes.ok) {
+                    const patchData = await patchRes.json();
+                    if (Array.isArray(patchData) && patchData.length > 0) {
                         prod.sql_id = targetId;
                         updated = true;
                         console.log(`✅ [Supabase REST] Updated "${prod.name}" (${targetId}) -> ₹${payload.price}`);
                     }
                 } else {
-                    const postRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products`, {
-                        method: 'POST',
-                        headers: restHeaders,
-                        body: JSON.stringify(payload)
-                    });
-                    if (postRes.ok) {
-                        const inserted = await postRes.json();
-                        if (inserted && inserted[0]) prod.sql_id = inserted[0].id;
-                        updated = true;
-                        console.log(`✅ [Supabase REST] Inserted new product "${prod.name}"`);
-                    }
+                    lastError = await patchRes.text();
+                    console.error(`❌ [Supabase REST PATCH Error] ${patchRes.status}:`, lastError);
                 }
-            } catch(restErr) {
-                console.warn('Supabase REST sync error:', restErr);
+            } catch(fetchErr) {
+                lastError = fetchErr.message;
+                console.warn('Supabase REST PATCH exception:', fetchErr);
             }
         }
 
-        // Keep in-memory representation updated
+        // 3. Fallback: Supabase JS Client (if active)
+        if (!updated && supabaseClient) {
+            try {
+                if (targetId) {
+                    const { data, error } = await supabaseClient.from("products").update(payload).eq("id", targetId).select();
+                    if (!error && data && data.length > 0) {
+                        prod.sql_id = targetId;
+                        updated = true;
+                    }
+                    if (error) lastError = error.message;
+                } else {
+                    const { data, error } = await supabaseClient.from("products").insert([payload]).select();
+                    if (!error && data && data[0]) {
+                        prod.sql_id = data[0].id;
+                        updated = true;
+                    }
+                    if (error) lastError = error.message;
+                }
+            } catch(clientErr) {
+                console.warn('Supabase JS Client attempt exception:', clientErr);
+            }
+        }
+
+        // 4. If new product and not yet inserted, insert via REST POST
+        if (!updated && !targetId) {
+            try {
+                const postRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products`, {
+                    method: 'POST',
+                    headers: restHeaders,
+                    body: JSON.stringify(payload)
+                });
+                if (postRes.ok) {
+                    const inserted = await postRes.json();
+                    if (inserted && inserted[0]) {
+                        prod.sql_id = inserted[0].id;
+                        updated = true;
+                        console.log(`✅ [Supabase REST] Inserted new product "${prod.name}" (${prod.sql_id})`);
+                    }
+                } else {
+                    lastError = await postRes.text();
+                }
+            } catch(postErr) {
+                lastError = postErr.message;
+            }
+        }
+
+        // Keep local object attributes synced
         prod.image = finalImage;
         prod.image_url = finalImage;
-        return { success: updated };
+        prod.price = payload.price;
+        prod.discount_price = payload.price;
+
+        // Broadcast to customer website via Supabase Realtime channel
+        if (supabaseClient) {
+            try {
+                supabaseClient.channel('live-products-sync').send({
+                    type: 'broadcast',
+                    event: 'PRODUCT_UPDATE',
+                    payload: { ...payload, id: targetId || prod.sql_id, image: finalImage }
+                });
+            } catch(bErr) {}
+        }
+
+        return { success: updated, error: lastError };
     } catch(e) {
         console.warn("Sync product to Supabase exception:", e);
         return { success: false, error: e.message };

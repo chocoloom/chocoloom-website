@@ -964,13 +964,22 @@ const DOM = {
 };
 
 // ==================== SUPABASE & NEON CLOUD DATABASE INTEGRATION ====================
-const savedSupabaseUrl = localStorage.getItem('chocoloom_supabase_url');
-const savedSupabaseKey = localStorage.getItem('chocoloom_supabase_key');
+const OFFICIAL_SUPABASE_URL = 'https://icedyeuagmkgitkoznxr.supabase.co';
+const OFFICIAL_SUPABASE_KEY = 'sb_publishable_NI0EpHVxbjk7gW5W8_1lXw_rhcmDwlY';
+
+let savedSupabaseUrl = localStorage.getItem('chocoloom_supabase_url');
+if (!savedSupabaseUrl || !savedSupabaseUrl.startsWith('https://')) {
+    savedSupabaseUrl = OFFICIAL_SUPABASE_URL;
+}
+let savedSupabaseKey = localStorage.getItem('chocoloom_supabase_key');
+if (!savedSupabaseKey || savedSupabaseKey.length < 20) {
+    savedSupabaseKey = OFFICIAL_SUPABASE_KEY;
+}
 const savedNeonUrl = localStorage.getItem('chocoloom_neon_url');
 
 const SUPABASE_CONFIG = {
-    url: (savedSupabaseUrl || 'https://icedyeuagmkgitkoznxr.supabase.co').replace(/\/$/, ''),
-    anonKey: savedSupabaseKey || 'sb_publishable_NI0EpHVxbjk7gW5W8_1lXw_rhcmDwlY'
+    url: savedSupabaseUrl.trim().replace(/\/$/, ''),
+    anonKey: savedSupabaseKey.trim()
 };
 
 const DEFAULT_NEON_URL = 'postgresql://neondb_owner:npg_yrd3JMAzmWg2@ep-bold-math-b5bam8cm-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
@@ -1484,6 +1493,16 @@ function subscribeToSupabaseRealtime() {
                                 updateCartUI();
                             }
                         }
+                    }
+                }
+            )
+            .on(
+                'broadcast',
+                { event: 'PRODUCT_UPDATE' },
+                ({ payload }) => {
+                    console.log('⚡ Supabase Realtime Broadcast PRODUCT_UPDATE:', payload);
+                    if (payload) {
+                        syncSupabaseProducts([payload], true);
                     }
                 }
             )
