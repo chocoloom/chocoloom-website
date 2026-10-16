@@ -3757,12 +3757,14 @@ async function syncCatalogToServer() {
         targets.push("https://chocoloom.com/wp-json/chocoloom/v1/catalog");
         targets.push("https://orders.chocoloom.com/wp-json/chocoloom/v1/catalog");
 
-        // 2. Direct save_catalog.php endpoints
+        // 2. Direct save_catalog endpoints (Vercel Serverless Function & PHP)
         if (wpConfig.saveCatalogUrl) targets.push(wpConfig.saveCatalogUrl);
         if (origin && origin !== 'null') {
+            targets.push(`${origin}/api/save_catalog`);
+            targets.push(`${origin}/save_catalog`);
             targets.push(`${origin}/save_catalog.php`);
         }
-        targets.push("save_catalog.php", "./save_catalog.php", "../save_catalog.php", "../api/save_catalog.php");
+        targets.push("/api/save_catalog", "/save_catalog", "save_catalog.php", "./save_catalog.php", "../save_catalog.php", "../api/save_catalog.php");
 
         // 3. WordPress AJAX Fallback
         if (wpConfig.ajaxUrl) {

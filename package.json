@@ -1,0 +1,10 @@
+{
+  "name": "chocoloom-storefront",
+  "version": "1.0.0",
+  "description": "Chocoloom Bakery & Confectionery Storefront",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {}
+}
