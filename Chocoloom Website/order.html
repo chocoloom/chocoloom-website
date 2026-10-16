@@ -102,7 +102,7 @@
                 </div>
 
                 <!-- User Sign In / Profile Navigation Trigger -->
-                <a href="login.html?redirect=order.html" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;">
+                <a href="login.html?redirect=order.html" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;" onclick="if(typeof openAuthModal === 'function'){ openAuthModal('passcode'); return false; }">
                     <i class="fa-regular fa-user"></i>
                     <span class="nav-text">Sign In</span>
                 </a>
@@ -960,7 +960,7 @@
     </div>
 
     <!-- User Login & Signup Modal -->
-    <div class="modal-backdrop" id="authModalBackdrop">
+    <div class="modal-backdrop" id="authModalBackdrop" onclick="if(event.target === this) closeAuthModal()">
         <div class="auth-modal-card">
             <!-- Header -->
             <div class="auth-header">
@@ -1019,7 +1019,7 @@
 
                         <div style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 10.5px; color: #64748b; margin-top: 10px;">
                             <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i>
-                            <span>Powered by MSG91 Enterprise Gateway</span>
+                            <span>Protected by Chocoloom Passcode Shield</span>
                         </div>
 
                         <!-- Quick Test Chips -->
@@ -1275,7 +1275,7 @@
     </div>
 
     <!-- User Orders & History Modal -->
-    <div class="modal-backdrop" id="userOrdersModalBackdrop">
+    <div class="modal-backdrop" id="userOrdersModalBackdrop" onclick="if(event.target === this) closeOrdersModal()">
         <div class="orders-modal-card">
             <div class="orders-modal-header">
                 <div class="orders-modal-title">
@@ -1294,7 +1294,7 @@
     </div>
 
     <!-- User Account Details & Profile Modal -->
-    <div class="modal-backdrop" id="accountDetailsModalBackdrop">
+    <div class="modal-backdrop" id="accountDetailsModalBackdrop" onclick="if(event.target === this) closeAccountDetailsModal()">
         <div class="orders-modal-card" style="max-width: 440px;">
             <div class="orders-modal-header">
                 <div class="orders-modal-title">
@@ -1463,10 +1463,9 @@
         </button>
     </nav>
 
-    <!-- Razorpay Checkout, Supabase SDK, MSG91 & React 18 Suite -->
+    <!-- Razorpay Checkout, Supabase SDK & React 18 Suite -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="text/javascript" src="https://control.msg91.com/app/assets/otp-provider/otp-provider.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="data.js?v=6.5"></script>

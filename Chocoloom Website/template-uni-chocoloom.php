@@ -109,7 +109,7 @@
                 </div>
 
                 <!-- User Sign In / Profile Navigation Trigger -->
-                <a href="<?php echo chocoloom_get_page_url('login'); ?>?redirect=uni-chocoloom.html" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;">
+                <a href="<?php echo chocoloom_get_page_url('login'); ?>?redirect=uni-chocoloom.html" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;" onclick="if(typeof openAuthModal === 'function'){ openAuthModal('passcode'); return false; }">
                     <i class="fa-regular fa-user"></i>
                     <span class="nav-text">Sign In</span>
                 </a>
@@ -628,7 +628,7 @@
 
                         <div style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 10.5px; color: #64748b; margin-top: 10px;">
                             <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i>
-                            <span>Powered by MSG91 Enterprise Gateway</span>
+                            <span>Protected by Chocoloom Passcode Shield</span>
                         </div>
 
                         <!-- Quick Test Chips -->
@@ -1071,7 +1071,7 @@
         </button>
     </nav>
 
-    <!-- Razorpay Checkout, Supabase SDK & MSG91 OTP Widget -->
+    <!-- Razorpay Checkout, Supabase SDK & React Suite -->
     <?php wp_footer(); ?>
 </body>
 </html>

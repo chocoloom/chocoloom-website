@@ -67,7 +67,6 @@ function chocoloom_enqueue_scripts() {
     // External SDKs & Providers
     wp_enqueue_script('razorpay-checkout', 'https://checkout.razorpay.com/v1/checkout.js', array(), null, true);
     wp_enqueue_script('supabase-js', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', array(), null, true);
-    wp_enqueue_script('msg91-otp-provider', 'https://control.msg91.com/app/assets/otp-provider/otp-provider.js', array(), null, true);
 
     // React 18 Runtime & Component Islands
     wp_enqueue_script('react', 'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js', array(), '18.2.0', true);

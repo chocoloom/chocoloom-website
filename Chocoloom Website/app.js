@@ -1368,12 +1368,15 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 match.image = liveItem.image_url;
                 anyPriceUpdated = true;
             }
-            match.originalPrice = effectiveOrigPrice;
-            if (liveItem.price_half_kg !== undefined && liveItem.price_half_kg !== null) match.price_half_kg = Number(liveItem.price_half_kg);
-            if (liveItem.price_1kg !== undefined && liveItem.price_1kg !== null) match.price_1kg = Number(liveItem.price_1kg);
-            if (liveItem.price_1_5kg !== undefined && liveItem.price_1_5kg !== null) match.price_1_5kg = Number(liveItem.price_1_5kg);
-            if (liveItem.price_2kg !== undefined && liveItem.price_2kg !== null) match.price_2kg = Number(liveItem.price_2kg);
-            if (liveItem.price_3kg !== undefined && liveItem.price_3kg !== null) match.price_3kg = Number(liveItem.price_3kg);
+            if (effectiveOrigPrice && match.originalPrice !== effectiveOrigPrice) {
+                match.originalPrice = effectiveOrigPrice;
+                anyPriceUpdated = true;
+            }
+            if (liveItem.price_half_kg !== undefined && liveItem.price_half_kg !== null && match.price_half_kg !== Number(liveItem.price_half_kg)) match.price_half_kg = Number(liveItem.price_half_kg);
+            if (liveItem.price_1kg !== undefined && liveItem.price_1kg !== null && match.price_1kg !== Number(liveItem.price_1kg)) match.price_1kg = Number(liveItem.price_1kg);
+            if (liveItem.price_1_5kg !== undefined && liveItem.price_1_5kg !== null && match.price_1_5kg !== Number(liveItem.price_1_5kg)) match.price_1_5kg = Number(liveItem.price_1_5kg);
+            if (liveItem.price_2kg !== undefined && liveItem.price_2kg !== null && match.price_2kg !== Number(liveItem.price_2kg)) match.price_2kg = Number(liveItem.price_2kg);
+            if (liveItem.price_3kg !== undefined && liveItem.price_3kg !== null && match.price_3kg !== Number(liveItem.price_3kg)) match.price_3kg = Number(liveItem.price_3kg);
             if (liveItem.cooling_price_half_kg !== undefined && liveItem.cooling_price_half_kg !== null) match.cooling_price_half_kg = Number(liveItem.cooling_price_half_kg);
             if (liveItem.cooling_price_1kg !== undefined && liveItem.cooling_price_1kg !== null) match.cooling_price_1kg = Number(liveItem.cooling_price_1kg);
             if (liveItem.cooling_price_1_5kg !== undefined && liveItem.cooling_price_1_5kg !== null) match.cooling_price_1_5kg = Number(liveItem.cooling_price_1_5kg);
@@ -1397,8 +1400,14 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                     hazelnut_ferrero: Number(liveItem.flavour_price_hazelnut ?? (fpObj.hazelnut_ferrero ?? 100))
                 };
             }
-            if (liveItem.description) { match.description = liveItem.description; anyPriceUpdated = true; }
-            if (liveItem.is_available !== undefined) { match.is_available = liveItem.is_available; anyPriceUpdated = true; }
+            if (liveItem.description && match.description !== liveItem.description) {
+                match.description = liveItem.description;
+                anyPriceUpdated = true;
+            }
+            if (liveItem.is_available !== undefined && match.is_available !== liveItem.is_available) {
+                match.is_available = liveItem.is_available;
+                anyPriceUpdated = true;
+            }
         } else if (liveItem.is_available) {
             menu.push({
                 id: `choco_sql_${menu.length + 1}`,
@@ -3230,10 +3239,15 @@ function initApp() {
     try { initAuthSystem(); } catch(e) {}
     try { updateCartUI(); } catch(e) {}
     try { bindEvents(); } catch(e) {}
-    try { hideSiteLoadingSplash(); } catch(e) {}
+    // Allow browser to complete initial paint of catalog smoothly before fading out splash
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            try { hideSiteLoadingSplash(); } catch(e) {}
+        }, 180);
+    });
 
     // Fallback timer to ensure preloader is dismissed cleanly
-    setTimeout(hideSiteLoadingSplash, 500);
+    setTimeout(hideSiteLoadingSplash, 750);
 
     // Automatically detect user location / college without blocking UI
     autoDetectLocation();

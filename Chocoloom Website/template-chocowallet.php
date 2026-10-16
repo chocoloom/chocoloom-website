@@ -231,7 +231,7 @@
                 </a>
 
                 <!-- User Sign In / Profile Navigation Trigger -->
-                <a href="login.html?redirect=chocowallet.html" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;">
+                <a href="login.html?redirect=chocowallet.html" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;" onclick="if(typeof openAuthModal === 'function'){ openAuthModal('passcode'); return false; }">
                     <i class="fa-regular fa-user"></i>
                     <span class="nav-text">Sign In</span>
                 </a>
