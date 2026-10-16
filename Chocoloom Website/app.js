@@ -1341,10 +1341,7 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
         let match = menu.find(p => p.sql_id === liveItem.id || p.id === liveItem.id || (p.name && p.name.toLowerCase().trim() === cleanName));
 
         if (match) {
-            const isStaleAugustRecord = liveItem.updated_at && String(liveItem.updated_at).startsWith('2026-08-15');
-            if (isStaleAugustRecord && match.price > 0) {
-                return; // Do not overwrite fresh Neon / Admin live price with stale August seed
-            }
+            // Apply fresh live price from database
             if (match.price !== effectivePrice) {
                 match.price = effectivePrice;
                 anyPriceUpdated = true;
@@ -7189,36 +7186,38 @@ function syncLiveCatalogState() {
             rest.menu = menu;
         }
 
-        // 2. Apply price & detail overrides
-        menu.forEach(item => {
-            const key = item.sql_id || item.id;
-            const over = priceOverrides[key] || priceOverrides[item.id] || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
-            if (over) {
-                if (over.price !== undefined) item.price = Number(over.price);
-                if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
-                if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
-                if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
-                if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
-                if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
-                if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
-                if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
-                if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
-                if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
-                if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
-                if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
-                if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
-                if (over.name) item.name = over.name;
-                if (over.category) item.category = over.category;
-                if (over.image) item.image = window.getThemeAssetUrl(over.image);
-                if (over.image_url) { item.image = window.getThemeAssetUrl(over.image_url); item.image_url = item.image; }
-                if (over.discount_price !== undefined) item.discount_price = Number(over.discount_price);
-                if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
-                if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
-                if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
-                if (over.flavour !== undefined) item.flavour = over.flavour;
-                if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
-            }
-        });
+        // 2. Apply price & detail overrides (Only as fallback when live Cloud Database is not loaded)
+        if (!window._neonDatabaseLoaded) {
+            menu.forEach(item => {
+                const key = item.sql_id || item.id;
+                const over = priceOverrides[key] || priceOverrides[item.id] || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
+                if (over) {
+                    if (over.price !== undefined) item.price = Number(over.price);
+                    if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
+                    if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
+                    if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
+                    if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
+                    if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
+                    if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
+                    if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
+                    if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
+                    if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
+                    if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
+                    if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
+                    if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
+                    if (over.name) item.name = over.name;
+                    if (over.category) item.category = over.category;
+                    if (over.image) item.image = window.getThemeAssetUrl(over.image);
+                    if (over.image_url) { item.image = window.getThemeAssetUrl(over.image_url); item.image_url = item.image; }
+                    if (over.discount_price !== undefined) item.discount_price = Number(over.discount_price);
+                    if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
+                    if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
+                    if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
+                    if (over.flavour !== undefined) item.flavour = over.flavour;
+                    if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
+                }
+            });
+        }
 
         // 3. Prepend custom added products
         if (Array.isArray(customProducts) && customProducts.length > 0) {

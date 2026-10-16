@@ -1254,11 +1254,8 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
         let match = menu.find(p => p.sql_id === liveItem.id || p.id === liveItem.id || (p.name && p.name.toLowerCase().trim() === cleanName));
 
         if (match) {
-            const isStaleAugustRecord = liveItem.updated_at && String(liveItem.updated_at).startsWith('2026-08-15');
-            if (isStaleAugustRecord && match.price > 0) {
-                return; // Do not overwrite fresh Neon / Admin live price with stale August seed
-            }
-            if (match.price !== effectivePrice) {
+            // Apply fresh live price from database
+            if (effectivePrice > 0 && match.price !== effectivePrice) {
                 match.price = effectivePrice;
                 anyPriceUpdated = true;
                 updatedCount++;

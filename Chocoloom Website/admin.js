@@ -3915,7 +3915,8 @@ async function syncProductToSupabase(prod) {
             category: prod.category,
             description: prod.description || "",
             image_url: prod.image || "",
-            is_available: prod.is_available !== false
+            is_available: prod.is_available !== false,
+            updated_at: new Date().toISOString()
         };
 
         // Add customization columns if available
