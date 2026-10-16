@@ -1497,48 +1497,47 @@ function subscribeToSupabaseRealtime() {
     }
 }
 
-// Initialize Cloud Database Sync: Neon Postgres is Primary Live Catalog (Directly synced with Admin Panel)
+// Initialize Cloud Database Sync: Supabase Cloud Database is Primary Live Catalog
 async function initSupabaseSync() {
     try {
-        // 1. PRIMARY SOURCE: Neon Serverless Postgres (Directly updated by Admin Panel)
-        let neonLoaded = false;
+        // 1. PRIMARY SOURCE: Supabase Cloud Database (Directly updated by Admin Panel)
+        let supaLoaded = false;
         try {
-            neonLoaded = await window.loadCatalogFromNeon(false);
-            if (neonLoaded) {
-                console.log('⚡ Primary live database active: Catalog synced directly from Neon Postgres!');
+            supaLoaded = await window.loadCatalogFromSupabase(false);
+            if (supaLoaded) {
+                console.log('⚡ Primary live database active: Catalog synced directly from Supabase!');
             }
-        } catch(neonErr) {
-            console.warn('Neon catalog load error:', neonErr);
+        } catch(supaErr) {
+            console.warn('Supabase catalog load error:', supaErr);
         }
 
-        // 2. FALLBACK: Load from Supabase only if Neon is unreachable
-        if (!neonLoaded) {
-            console.warn('⚠️ Neon catalog unavailable. Loading fallback from Supabase...');
-            await window.loadCatalogFromSupabase(false);
+        // 2. FALLBACK: Load from Neon only if Supabase is unreachable
+        if (!supaLoaded) {
+            console.warn('⚠️ Supabase catalog unavailable. Loading fallback from Neon...');
+            try {
+                await window.loadCatalogFromNeon(false);
+            } catch(neonErr) {}
         }
 
-        // 3. Supabase Realtime Listener (Primary live connection for instant orders)
+        // 3. Supabase Realtime Listener (Instant live push updates without refresh)
         subscribeToSupabaseRealtime();
     } catch (e) {
-        console.warn("initSupabaseSync error, checking emergency store:", e);
-        try {
-            await window.loadCatalogFromSupabase(false);
-        } catch(supaErr) {}
+        console.warn("initSupabaseSync error:", e);
     }
 }
 
-// Background Live Polling: Check Neon Postgres & local server sync with 8s interval
+// Background Live Polling: Check Supabase Cloud database with 5s interval
 if (typeof window !== 'undefined') {
     setInterval(async () => {
         try {
             if (typeof loadServerCatalogOverrides === 'function') {
                 await loadServerCatalogOverrides();
             }
-            if (typeof window.loadCatalogFromNeon === 'function') {
-                await window.loadCatalogFromNeon(false);
+            if (typeof window.loadCatalogFromSupabase === 'function') {
+                await window.loadCatalogFromSupabase(false);
             }
         } catch (e) {}
-    }, 8000);
+    }, 5000);
 
     // Auto-refresh live catalog immediately when user switches back to this tab (debounced 2s)
     let lastVisibilitySync = 0;
@@ -1548,7 +1547,7 @@ if (typeof window !== 'undefined') {
             if (now - lastVisibilitySync > 2000) {
                 lastVisibilitySync = now;
                 if (typeof loadServerCatalogOverrides === 'function') loadServerCatalogOverrides();
-                if (typeof window.loadCatalogFromNeon === 'function') window.loadCatalogFromNeon(false);
+                if (typeof window.loadCatalogFromSupabase === 'function') window.loadCatalogFromSupabase(false);
             }
         }
     });

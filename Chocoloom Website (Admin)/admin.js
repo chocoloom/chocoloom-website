@@ -2367,9 +2367,77 @@ window.switchAdminTab = function(tabName) {
 
 // ==================== MENU, PRODUCTS & PRICING ENGINE ====================
 
-// Load all products directly from Neon Postgres (with fallback to Local / Supabase)
+// Load all products directly from Supabase Cloud (with fallback to Neon / Local)
 window.loadAllProducts = async function() {
-    // 1. Primary: Receive all live products directly from Neon Serverless Postgres!
+    // 1. PRIMARY: Receive all live products directly from Supabase Cloud Database!
+    try {
+        let supaProds = null;
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from("products").select("*").order("category", { ascending: true }).order("name", { ascending: true });
+                if (!error && Array.isArray(data) && data.length > 0) supaProds = data;
+            } catch(e) {}
+        }
+        if (!supaProds) {
+            // Direct REST API fetch to Supabase
+            try {
+                const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*&order=category.asc,name.asc`, {
+                    headers: {
+                        'apikey': SUPABASE_CONFIG.anonKey,
+                        'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
+                    }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) supaProds = data;
+                }
+            } catch(e) {}
+        }
+
+        if (supaProds && supaProds.length > 0) {
+            AdminState.products = supaProds.map(r => ({
+                id: r.id,
+                sql_id: r.id,
+                name: r.name,
+                description: r.description || '',
+                price: Number((r.discount_price && Number(r.discount_price) > 0) ? r.discount_price : r.price || 0),
+                originalPrice: Number(r.original_price || r.price || 0),
+                price_half_kg: Number(r.price_half_kg || r.price || 0),
+                price_1kg: Number(r.price_1kg || (Number(r.price) + 400)),
+                price_1_5kg: Number(r.price_1_5kg || (Number(r.price) + 800)),
+                price_2kg: Number(r.price_2kg || (Number(r.price) + 1200)),
+                price_3kg: Number(r.price_3kg || (Number(r.price) + 2000)),
+                cooling_price_half_kg: Number(r.cooling_price_half_kg || 50),
+                cooling_price_1kg: Number(r.cooling_price_1kg || 150),
+                cooling_price_1_5kg: Number(r.cooling_price_1_5kg || 199),
+                cooling_price_2kg: Number(r.cooling_price_2kg || 200),
+                cooling_price_3kg: Number(r.cooling_price_3kg || 299),
+                category: r.category || 'Specialty Cakes',
+                image: r.image_url || 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600',
+                image_url: r.image_url || 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600',
+                isVeg: true,
+                is_available: r.is_available !== false,
+                stock: Number(r.stock || 100),
+                has_weight: r.has_weight !== undefined ? (r.has_weight === true || r.has_weight === 'true') : true,
+                has_cooling: r.has_cooling !== undefined ? (r.has_cooling === true || r.has_cooling === 'true') : true,
+                has_flavours: r.has_flavours !== undefined ? (r.has_flavours === true || r.has_flavours === 'true') : true,
+                flavour: r.flavour || "",
+                flavour_prices: (typeof r.flavour_prices === 'object' && r.flavour_prices !== null) ? r.flavour_prices : {}
+            }));
+            AdminState.supabaseConnected = true;
+            updateCloudStatusBadges();
+            console.log(`✅ Admin Panel received ${AdminState.products.length} live products directly from Supabase!`);
+            const badge = document.getElementById("sidebarProductsBadge");
+            if (badge) badge.textContent = AdminState.products.length + "+";
+            renderProductsStats();
+            renderProducts();
+            return;
+        }
+    } catch(supaErr) {
+        console.warn('Supabase catalog fetch exception, checking Neon fallback:', supaErr);
+    }
+
+    // 2. Secondary Fallback: Neon Serverless Postgres
     try {
         const sql = getNeonClient();
         if (sql) {
@@ -2394,6 +2462,7 @@ window.loadAllProducts = async function() {
                     cooling_price_3kg: Number(r.cooling_price_3kg || 299),
                     category: r.category || 'Specialty Cakes',
                     image: r.image_url || 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600',
+                    image_url: r.image_url || 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600',
                     isVeg: true,
                     is_available: r.is_available !== false,
                     stock: Number(r.stock || 100),
@@ -2405,17 +2474,12 @@ window.loadAllProducts = async function() {
                 }));
                 AdminState.neonConnected = true;
                 updateCloudStatusBadges();
-                console.log(`✅ Admin Panel received ${AdminState.products.length} live products directly from Neon Postgres!`);
-                const badge = document.getElementById("sidebarProductsBadge");
-                if (badge) badge.textContent = AdminState.products.length + "+";
                 renderProductsStats();
                 renderProducts();
                 return;
             }
         }
-    } catch(neonErr) {
-        console.warn('Neon primary catalog fetch exception, falling back to local/Supabase:', neonErr);
-    }
+    } catch(neonErr) {}
 
     let baseList = [];
     const seen = new Set();
@@ -3466,15 +3530,15 @@ window.handleProductFormSubmit = async function(e) {
         saveCustomProductLocally(updatedProduct);
     }
 
-    // 1. Sync to Cloud Database (Neon Serverless Postgres & Supabase)
-    try {
-        await syncProductToNeon(updatedProduct);
-    } catch(syncErr) {
-        console.warn('Neon sync warning:', syncErr);
-    }
+    // 1. Sync to Supabase Cloud Database (Primary)
     try {
         await syncProductToSupabase(updatedProduct);
-    } catch(supaErr) {}
+    } catch(supaErr) {
+        console.warn('Supabase sync warning:', supaErr);
+    }
+    try {
+        await syncProductToNeon(updatedProduct);
+    } catch(syncErr) {}
 
     // 2. Save to disk if sync_server.js or save_catalog.php is available
     syncCatalogToServer();
@@ -3558,10 +3622,10 @@ window.handleQuickPriceSubmit = async function(e) {
 
         savePriceOverrideLocally(prodId, updateData);
         try {
-            await syncProductToNeon(prod);
+            await syncProductToSupabase(prod);
         } catch(err) {}
         try {
-            await syncProductToSupabase(prod);
+            await syncProductToNeon(prod);
         } catch(err) {}
         syncCatalogToServer();
         broadcastProductUpdate("PRICE", prod);
@@ -3581,10 +3645,10 @@ window.toggleProductStock = async function(productId, isAvailable) {
     prod.is_available = isAvailable;
     savePriceOverrideLocally(productId, { is_available: isAvailable });
     try {
-        await syncProductToNeon(prod);
+        await syncProductToSupabase(prod);
     } catch(err) {}
     try {
-        await syncProductToSupabase(prod);
+        await syncProductToNeon(prod);
     } catch(err) {}
     syncCatalogToServer();
     broadcastProductUpdate("STOCK", prod);
@@ -3620,8 +3684,12 @@ window.deleteProductItem = async function(productId) {
     } catch(e) {}
 
     // Delete from Supabase & Neon
-    if (prod.sql_id && supabaseClient) {
-        supabaseClient.from("products").delete().eq("id", prod.sql_id).catch(() => {});
+    if (prod.sql_id) {
+        if (supabaseClient) supabaseClient.from("products").delete().eq("id", prod.sql_id).catch(() => {});
+        fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?id=eq.${prod.sql_id}`, {
+            method: 'DELETE',
+            headers: { 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}` }
+        }).catch(() => {});
     }
     await deleteProductFromNeon(prod.sql_id || productId, prod.name);
 
@@ -3904,24 +3972,25 @@ window.syncAllToMainSite = async function() {
     }, 400);
 };
 
-// Sync single product with Supabase table
+// Sync single product with Supabase table (Primary Cloud Database)
 async function syncProductToSupabase(prod) {
-    if (!supabaseClient || !prod) return;
+    if (!prod) return { success: false };
     try {
+        const finalImage = prod.image_url || prod.image || "";
         const payload = {
-            name: prod.name,
-            price: prod.price,
-            discount_price: prod.price,
-            original_price: prod.originalPrice || Math.round(prod.price * 1.3),
-            price_half_kg: prod.price_half_kg || prod.price,
-            price_1kg: prod.price_1kg || (prod.price + 400),
-            price_1_5kg: prod.price_1_5kg || (prod.price + 800),
-            price_2kg: prod.price_2kg || (prod.price + 1200),
-            price_3kg: prod.price_3kg || (prod.price + 2000),
-            cooling_price_half_kg: prod.cooling_price_half_kg || 50,
-            category: prod.category,
-            description: prod.description || "",
-            image_url: prod.image || "",
+            name: String(prod.name || '').trim(),
+            price: Number(prod.price || 0),
+            discount_price: Number(prod.discount_price || prod.price || 0),
+            original_price: Number(prod.originalPrice || prod.original_price || Math.round((Number(prod.price) || 0) * 1.3)),
+            price_half_kg: Number(prod.price_half_kg || prod.price || 0),
+            price_1kg: Number(prod.price_1kg || ((Number(prod.price) || 0) + 400)),
+            price_1_5kg: Number(prod.price_1_5kg || ((Number(prod.price) || 0) + 800)),
+            price_2kg: Number(prod.price_2kg || ((Number(prod.price) || 0) + 1200)),
+            price_3kg: Number(prod.price_3kg || ((Number(prod.price) || 0) + 2000)),
+            cooling_price_half_kg: Number(prod.cooling_price_half_kg || 50),
+            category: String(prod.category || 'Specialty Cakes'),
+            description: String(prod.description || ''),
+            image_url: finalImage,
             is_available: prod.is_available !== false,
             updated_at: new Date().toISOString()
         };
@@ -3950,60 +4019,91 @@ async function syncProductToSupabase(prod) {
             payload.flavour_price_hazelnut = Number(fp.hazelnut_ferrero ?? 100);
         }
 
-        let syncErr = null;
         let updated = false;
-        if (prod.sql_id && !String(prod.sql_id).startsWith('choco_') && !String(prod.sql_id).startsWith('uni_')) {
-            const { data, error } = await supabaseClient.from("products").update(payload).eq("id", prod.sql_id).select("id");
-            syncErr = error;
-            if (data && data.length > 0) updated = true;
-        }
-        if (!updated) {
-            // Check if product already exists by name before inserting
-            const { data: existing } = await supabaseClient.from("products").select("id").ilike("name", prod.name.trim()).limit(1);
-            if (existing && existing.length > 0) {
-                prod.sql_id = existing[0].id;
-                const { error } = await supabaseClient.from("products").update(payload).eq("id", prod.sql_id);
-                syncErr = error;
-            } else {
-                const { data, error } = await supabaseClient.from("products").insert([payload]).select();
-                syncErr = error;
-                if (data && data[0]) {
-                    prod.sql_id = data[0].id;
-                }
-            }
-        }
 
-        // If Supabase rejected due to columns not created yet in products table, fallback to core fields
-        if (syncErr && syncErr.message && syncErr.message.includes("column")) {
-            const extraKeys = [
-                'has_weight', 'has_cooling', 'has_flavours', 'flavour', 'default_flavour', 'flavour_prices',
-                'flavour_price_truffle', 'flavour_price_black_forest', 'flavour_price_red_velvet',
-                'flavour_price_butterscotch', 'flavour_price_pineapple', 'flavour_price_vanilla',
-                'flavour_price_black_currant', 'flavour_price_mango', 'flavour_price_strawberry',
-                'flavour_price_rasmalai', 'flavour_price_hazelnut'
-            ];
-            extraKeys.forEach(k => delete payload[k]);
-            if (prod.sql_id) {
-                await supabaseClient.from("products").update(payload).eq("id", prod.sql_id);
-            }
-        }
-
-        // Also sync flavour prices into dedicated flavour_prices table if present
-        if (prod.flavour_prices && typeof prod.flavour_prices === 'object') {
+        // Method 1: Supabase JS Client
+        if (supabaseClient) {
             try {
-                const rows = Object.entries(prod.flavour_prices).map(([fid, p]) => ({
-                    id: fid,
-                    name: (ADMIN_FLAVOUR_KEYS.find(f => f.id === fid)?.name) || fid,
-                    price: Number(p) || 0,
-                    updated_at: new Date().toISOString()
-                }));
-                if (rows.length > 0) {
-                    await supabaseClient.from("flavour_prices").upsert(rows);
+                if (prod.sql_id && !String(prod.sql_id).startsWith('choco_') && !String(prod.sql_id).startsWith('uni_')) {
+                    const { data, error } = await supabaseClient.from("products").update(payload).eq("id", prod.sql_id).select("id");
+                    if (!error && data && data.length > 0) updated = true;
                 }
-            } catch(fpErr) {}
+                if (!updated) {
+                    const { data: existing } = await supabaseClient.from("products").select("id").ilike("name", prod.name.trim()).limit(1);
+                    if (existing && existing.length > 0) {
+                        prod.sql_id = existing[0].id;
+                        const { error } = await supabaseClient.from("products").update(payload).eq("id", prod.sql_id);
+                        if (!error) updated = true;
+                    } else {
+                        const { data, error } = await supabaseClient.from("products").insert([payload]).select();
+                        if (!error && data && data[0]) {
+                            prod.sql_id = data[0].id;
+                            updated = true;
+                        }
+                    }
+                }
+            } catch(clientErr) {
+                console.warn('Supabase JS client attempt note, using REST API:', clientErr);
+            }
         }
+
+        // Method 2: Direct REST API (Works unconditionally in all browsers)
+        if (!updated) {
+            try {
+                const restHeaders = {
+                    'apikey': SUPABASE_CONFIG.anonKey,
+                    'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
+                };
+
+                let targetId = (prod.sql_id && !String(prod.sql_id).startsWith('choco_') && !String(prod.sql_id).startsWith('uni_')) ? prod.sql_id : null;
+                if (!targetId) {
+                    const findRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=id&name=ilike.*${encodeURIComponent(prod.name.trim())}*&limit=1`, {
+                        headers: { 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}` }
+                    });
+                    if (findRes.ok) {
+                        const items = await findRes.json();
+                        if (Array.isArray(items) && items.length > 0) targetId = items[0].id;
+                    }
+                }
+
+                if (targetId) {
+                    const patchRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?id=eq.${targetId}`, {
+                        method: 'PATCH',
+                        headers: restHeaders,
+                        body: JSON.stringify(payload)
+                    });
+                    if (patchRes.ok) {
+                        prod.sql_id = targetId;
+                        updated = true;
+                        console.log(`✅ [Supabase REST] Updated "${prod.name}" (${targetId}) -> ₹${payload.price}`);
+                    }
+                } else {
+                    const postRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products`, {
+                        method: 'POST',
+                        headers: restHeaders,
+                        body: JSON.stringify(payload)
+                    });
+                    if (postRes.ok) {
+                        const inserted = await postRes.json();
+                        if (inserted && inserted[0]) prod.sql_id = inserted[0].id;
+                        updated = true;
+                        console.log(`✅ [Supabase REST] Inserted new product "${prod.name}"`);
+                    }
+                }
+            } catch(restErr) {
+                console.warn('Supabase REST sync error:', restErr);
+            }
+        }
+
+        // Keep in-memory representation updated
+        prod.image = finalImage;
+        prod.image_url = finalImage;
+        return { success: updated };
     } catch(e) {
         console.warn("Sync product to Supabase exception:", e);
+        return { success: false, error: e.message };
     }
 }
 
