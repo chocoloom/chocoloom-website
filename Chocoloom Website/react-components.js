@@ -363,54 +363,11 @@
     }
 
     // ==========================================
-    // 2. REACT LIVE FLOATING CART STATUS ISLAND
+    // 2. REACT LIVE FLOATING CART STATUS ISLAND (Disabled to prevent duplicate View Cart button)
     // ==========================================
     function ReactCartIsland() {
-        const [cartCount, setCartCount] = useState(0);
-        const [cartTotal, setCartTotal] = useState(0);
-        const [pulse, setPulse] = useState(false);
-
-        useEffect(() => {
-            const syncCart = () => {
-                const count = (typeof window.getCartItemCount === 'function') ? window.getCartItemCount() : (window.AppState?.cart?.length || 0);
-                const total = (typeof window.calculateCartTotal === 'function') ? window.calculateCartTotal() : 0;
-                setCartCount(count);
-                setCartTotal(total);
-                setPulse(true);
-                setTimeout(() => setPulse(false), 300);
-            };
-
-            syncCart();
-            window.addEventListener('chocoloom_cart_updated', syncCart);
-            return () => window.removeEventListener('chocoloom_cart_updated', syncCart);
-        }, []);
-
-        if (cartCount <= 0) return null;
-
-        return e('div', {
-            onClick: () => { if (typeof window.openCart === 'function') window.openCart(); },
-            style: {
-                position: 'fixed',
-                bottom: '80px',
-                right: '20px',
-                zIndex: 100001,
-                background: 'linear-gradient(135deg, #7c5cfc, #4f46e5)',
-                color: '#fff',
-                padding: '10px 18px',
-                borderRadius: '999px',
-                boxShadow: '0 8px 24px rgba(124, 92, 252, 0.45)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                cursor: 'pointer',
-                transform: pulse ? 'scale(1.08)' : 'scale(1)',
-                transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-            }
-        },
-            e('span', { style: { background: '#ffffff', color: '#7c5cfc', fontWeight: '900', fontSize: '12px', padding: '2px 8px', borderRadius: '999px' } }, cartCount),
-            e('span', { style: { fontWeight: '800', fontSize: '13px' } }, `₹${cartTotal}`),
-            e('span', { style: { fontSize: '12px', fontWeight: '700', opacity: 0.9 } }, 'View Cart →')
-        );
+        // Chocoloom's primary #floatingCartBar handles the unified Swiggy/Zomato bottom cart preview bar.
+        return null;
     }
 
     // ==========================================
@@ -429,25 +386,8 @@
         },
 
         mountCartIsland: function(containerId = 'reactCartIslandRoot') {
-            let container = document.getElementById(containerId);
-            if (!container) {
-                container = document.createElement('div');
-                container.id = containerId;
-                document.body.appendChild(container);
-            }
-            const root = createRoot(container);
-            root.render(e(ReactCartIsland));
-            return root;
+            return null;
         }
     };
-
-    // Auto-mount React Cart Island on page ready
-    document.addEventListener('DOMContentLoaded', () => {
-        try {
-            window.ChocoloomReact.mountCartIsland();
-        } catch (e) {
-            console.error('Error mounting Chocoloom React Cart Island:', e);
-        }
-    });
 
 })(window);
