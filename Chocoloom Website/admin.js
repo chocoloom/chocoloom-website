@@ -1649,6 +1649,11 @@ function createOrderCardHTML(order) {
                 <div class="order-ref-group">
                     <span class="order-number">#${orderNum}</span>
                     <span class="order-time"><i class="fa-regular fa-clock"></i> ${timeAgo}</span>
+                    ${(order.is_prebooking || order.is_preorder || order.prebook_slot || (order.order_type && order.order_type.toLowerCase().includes('pre'))) ? `
+                        <span class="prebooking-pill" style="background: linear-gradient(135deg, #7c3aed, #db2777); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-left: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-calendar-check"></i> PRE-BOOKING (${escapeHtml(order.prebook_slot || 'Morning 9 AM')})
+                        </span>
+                    ` : ''}
                 </div>
                 <span class="status-badge ${statusClass}">
                     ${getStatusIcon(order.status)} ${statusLabel}
@@ -1754,10 +1759,14 @@ function createOrderTableRow(order) {
     const timeAgo = getTimeAgo(order.created_at);
     const statusClass = getStatusClass(order.status);
     const itemsCount = (Array.isArray(order.items) ? order.items.length : 1);
+    const isPrebook = Boolean(order.is_prebooking || order.is_preorder || order.prebook_slot || (order.order_type && order.order_type.toLowerCase().includes('pre')));
 
     return `
         <tr>
-            <td><strong>#${orderNum}</strong></td>
+            <td>
+                <strong>#${orderNum}</strong>
+                ${isPrebook ? `<br><span style="font-size: 9.5px; background: #fdf4ff; color: #9333ea; font-weight: 800; padding: 1px 5px; border-radius: 4px; border: 1px solid #f0abfc;">📅 PRE-BOOK</span>` : ''}
+            </td>
             <td>${escapeHtml(order.customer_name)}<br><small style="color: #64748b;">${order.customer_phone}</small></td>
             <td>${itemsCount} item(s)</td>
             <td><strong>₹${order.final_total}</strong></td>
