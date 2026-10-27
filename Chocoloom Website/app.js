@@ -1195,9 +1195,14 @@ function applyCachedDbPricesToMenu() {
                 if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
                 if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
                 if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
-                if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
-                if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
-                if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
+                if (over.has_weight !== undefined) item.has_weight = (over.has_weight === true || over.has_weight === 'true' || over.has_weight === 1 || over.has_weight === '1');
+                if (over.has_cooling !== undefined) item.has_cooling = (over.has_cooling === true || over.has_cooling === 'true' || over.has_cooling === 1 || over.has_cooling === '1');
+                if (over.has_flavours !== undefined) item.has_flavours = (over.has_flavours === true || over.has_flavours === 'true' || over.has_flavours === 1 || over.has_flavours === '1');
+                if (item.has_weight === false && item.has_cooling === false && item.has_flavours === false) {
+                    item.isDirectAdd = true;
+                } else if (over.isDirectAdd !== undefined) {
+                    item.isDirectAdd = Boolean(over.isDirectAdd);
+                }
                 if (over.flavour !== undefined) item.flavour = over.flavour;
                 if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
             }
@@ -1630,7 +1635,32 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 match.description = liveItem.description;
                 anyPriceUpdated = true;
             }
-            if (liveItem.has_flavours !== undefined) match.has_flavours = Boolean(liveItem.has_flavours);
+            if (liveItem.has_weight !== undefined) {
+                const wVal = (liveItem.has_weight === true || liveItem.has_weight === 'true' || liveItem.has_weight === 1 || liveItem.has_weight === '1');
+                if (match.has_weight !== wVal) {
+                    match.has_weight = wVal;
+                    anyPriceUpdated = true;
+                }
+            }
+            if (liveItem.has_cooling !== undefined) {
+                const cVal = (liveItem.has_cooling === true || liveItem.has_cooling === 'true' || liveItem.has_cooling === 1 || liveItem.has_cooling === '1');
+                if (match.has_cooling !== cVal) {
+                    match.has_cooling = cVal;
+                    anyPriceUpdated = true;
+                }
+            }
+            if (liveItem.has_flavours !== undefined) {
+                const fVal = (liveItem.has_flavours === true || liveItem.has_flavours === 'true' || liveItem.has_flavours === 1 || liveItem.has_flavours === '1');
+                if (match.has_flavours !== fVal) {
+                    match.has_flavours = fVal;
+                    anyPriceUpdated = true;
+                }
+            }
+            if (match.has_weight === false && match.has_cooling === false && match.has_flavours === false) {
+                match.isDirectAdd = true;
+            } else if (liveItem.is_direct_add !== undefined) {
+                match.isDirectAdd = Boolean(liveItem.is_direct_add);
+            }
             if (liveItem.default_flavour || liveItem.flavour) match.flavour = liveItem.default_flavour || liveItem.flavour;
             if (liveItem.flavour_price_truffle !== undefined || liveItem.flavour_price_red_velvet !== undefined || liveItem.flavour_prices) {
                 const fpObj = (typeof liveItem.flavour_prices === 'object' && liveItem.flavour_prices) ? liveItem.flavour_prices : {};
@@ -1650,6 +1680,15 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 };
             }
         } else if (liveItem.is_available !== false) {
+            const hasWeight = liveItem.has_weight !== undefined 
+                ? (liveItem.has_weight === true || liveItem.has_weight === 'true' || liveItem.has_weight === 1 || liveItem.has_weight === '1') 
+                : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(liveItem.category || '');
+            const hasCooling = liveItem.has_cooling !== undefined 
+                ? (liveItem.has_cooling === true || liveItem.has_cooling === 'true' || liveItem.has_cooling === 1 || liveItem.has_cooling === '1') 
+                : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(liveItem.category || '');
+            const hasFlavours = liveItem.has_flavours !== undefined 
+                ? (liveItem.has_flavours === true || liveItem.has_flavours === 'true' || liveItem.has_flavours === 1 || liveItem.has_flavours === '1') 
+                : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(liveItem.category || '');
             menu.push({
                 id: `choco_sql_${menu.length + 1}`,
                 sql_id: liveItem.id,
@@ -1666,6 +1705,10 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 cooling_price_1_5kg: Number(liveItem.cooling_price_1_5kg || 150),
                 cooling_price_2kg: Number(liveItem.cooling_price_2kg || 200),
                 cooling_price_3kg: Number(liveItem.cooling_price_3kg || 300),
+                has_weight: hasWeight,
+                has_cooling: hasCooling,
+                has_flavours: hasFlavours,
+                isDirectAdd: (!hasWeight && !hasCooling && !hasFlavours) || Boolean(liveItem.is_direct_add),
                 category: liveItem.category || 'Specialty Cakes',
                 isVeg: true,
                 isBestseller: false,
@@ -1686,6 +1729,9 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
     try {
         const dbCache = JSON.parse(localStorage.getItem('chocoloom_db_catalog_cache') || '{}');
         liveProducts.forEach(lp => {
+            const hasW = lp.has_weight !== undefined ? (lp.has_weight === true || lp.has_weight === 'true' || lp.has_weight === 1 || lp.has_weight === '1') : true;
+            const hasC = lp.has_cooling !== undefined ? (lp.has_cooling === true || lp.has_cooling === 'true' || lp.has_cooling === 1 || lp.has_cooling === '1') : true;
+            const hasF = lp.has_flavours !== undefined ? (lp.has_flavours === true || lp.has_flavours === 'true' || lp.has_flavours === 1 || lp.has_flavours === '1') : true;
             const pObj = {
                 price: Number(lp.discount_price && Number(lp.discount_price) > 0 ? lp.discount_price : lp.price || 0),
                 discount_price: Number(lp.discount_price || lp.price || 0),
@@ -1701,11 +1747,14 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 cooling_price_2kg: Number(lp.cooling_price_2kg || 200),
                 cooling_price_3kg: Number(lp.cooling_price_3kg || 299),
                 is_available: lp.is_available !== false,
+                has_weight: hasW,
+                has_cooling: hasC,
+                has_flavours: hasF,
+                isDirectAdd: (!hasW && !hasC && !hasF) || Boolean(lp.is_direct_add),
                 category: lp.category || '',
                 description: lp.description || '',
                 image: lp.image_url || '',
                 image_url: lp.image_url || '',
-                has_flavours: Boolean(lp.has_flavours),
                 flavour: lp.flavour || '',
                 flavour_prices: lp.flavour_prices || {}
             };
@@ -5323,13 +5372,15 @@ function getAllProducts() {
                     if (d && !seen.has(d.id || d.name)) {
                         seen.add(d.id || d.name);
                         const isNonCake = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'extras', 'dark', 'milk', 'ruby'].includes((d.category || '').toLowerCase());
-                        const itemHasWeight = d.has_weight !== undefined ? Boolean(d.has_weight) : !isNonCake;
-                        const itemHasCooling = d.has_cooling !== undefined ? Boolean(d.has_cooling) : !isNonCake;
+                        const itemHasWeight = d.has_weight !== undefined ? (d.has_weight === true || d.has_weight === 'true' || d.has_weight === 1 || d.has_weight === '1') : !isNonCake;
+                        const itemHasCooling = d.has_cooling !== undefined ? (d.has_cooling === true || d.has_cooling === 'true' || d.has_cooling === 1 || d.has_cooling === '1') : !isNonCake;
+                        const itemHasFlavours = d.has_flavours !== undefined ? (d.has_flavours === true || d.has_flavours === 'true' || d.has_flavours === 1 || d.has_flavours === '1') : !isNonCake;
                         list.push({ 
                             ...d, 
                             has_weight: itemHasWeight,
                             has_cooling: itemHasCooling,
-                            isDirectAdd: (!itemHasWeight && !itemHasCooling) || Boolean(d.isDirectAdd) || isNonCake,
+                            has_flavours: itemHasFlavours,
+                            isDirectAdd: (!itemHasWeight && !itemHasCooling && !itemHasFlavours) || Boolean(d.isDirectAdd) || isNonCake,
                             restaurantId: r.id, 
                             restaurantName: r.name 
                         });
@@ -5378,12 +5429,16 @@ function getAllProducts() {
             if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
             if (over.isVeg !== undefined) item.isVeg = Boolean(over.isVeg);
             if (over.isUniSpecial !== undefined) item.isUniSpecial = Boolean(over.isUniSpecial);
-            if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
-            if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
-            if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
+            if (over.has_weight !== undefined) item.has_weight = (over.has_weight === true || over.has_weight === 'true' || over.has_weight === 1 || over.has_weight === '1');
+            if (over.has_cooling !== undefined) item.has_cooling = (over.has_cooling === true || over.has_cooling === 'true' || over.has_cooling === 1 || over.has_cooling === '1');
+            if (over.has_flavours !== undefined) item.has_flavours = (over.has_flavours === true || over.has_flavours === 'true' || over.has_flavours === 1 || over.has_flavours === '1');
             if (over.flavour !== undefined) item.flavour = over.flavour;
             if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
-            if (over.isDirectAdd !== undefined) item.isDirectAdd = Boolean(over.isDirectAdd);
+            if (item.has_weight === false && item.has_cooling === false && item.has_flavours === false) {
+                item.isDirectAdd = true;
+            } else if (over.isDirectAdd !== undefined) {
+                item.isDirectAdd = Boolean(over.isDirectAdd);
+            }
         }
     });
 
@@ -6230,7 +6285,7 @@ function getDishFlavourPrice(dish, flavourName, currentWeightKey) {
         '2kg': 4,
         '3kg': 6
     };
-    const mult = weightMultMap[currentWeightKey || 'half_kg'] || 1;
+    const mult = (dish && dish.has_weight === false) ? 1 : (weightMultMap[currentWeightKey || 'half_kg'] || 1);
 
     // 1. First priority: Check if an explicit weight price is saved for this particular flavour
     if (dish && dish.flavour_prices && typeof dish.flavour_prices === 'object') {
@@ -6385,6 +6440,9 @@ const WEIGHT_CONFIG = [
 ];
 
 function getWeightPrice(dish, weightKey) {
+    if (dish && dish.has_weight === false) {
+        return Number(dish.price || 0);
+    }
     const config = WEIGHT_CONFIG.find(w => w.key === weightKey) || WEIGHT_CONFIG[0];
     if (dish && dish[config.priceCol] !== undefined && dish[config.priceCol] !== null && Number(dish[config.priceCol]) > 0) {
         return Number(dish[config.priceCol]);
@@ -6399,6 +6457,9 @@ function getWeightPrice(dish, weightKey) {
 }
 
 function getCoolingCharge(dish, weightKey) {
+    if (dish && dish.has_cooling === false) {
+        return 0;
+    }
     const config = WEIGHT_CONFIG.find(w => w.key === weightKey) || WEIGHT_CONFIG[0];
     if (dish && dish[config.coolingCol] !== undefined && dish[config.coolingCol] !== null && Number(dish[config.coolingCol]) > 0) {
         return Number(dish[config.coolingCol]);
@@ -6476,7 +6537,7 @@ window.openCustomizationModal = function(dishId, restaurantId) {
     currentCustomization = {
         dish: dish,
         restaurant: restaurant,
-        selectedWeightKey: 'half_kg',
+        selectedWeightKey: (dish.has_weight !== false) ? 'half_kg' : 'standard',
         selectedFlavour: defaultFlavour, // Automatically pre-select default flavour
         isEggless: false,
         isCooling: initialCooling,
@@ -6525,15 +6586,16 @@ function renderCustomizationModalContent() {
     if (modalFooter) modalFooter.style.display = 'flex';
 
     const dish = currentCustomization.dish;
-    const currentWeightKey = currentCustomization.selectedWeightKey || 'half_kg';
-    const isCooling = Boolean(currentCustomization.isCooling);
+    const hasWeight = dish.has_weight !== false;
+    const hasCooling = dish.has_cooling !== false;
+    const currentWeightKey = hasWeight ? (currentCustomization.selectedWeightKey || 'half_kg') : 'standard';
+    const isCooling = hasCooling ? Boolean(currentCustomization.isCooling) : false;
     const isEggless = Boolean(currentCustomization.isEggless);
     const hasFlavours = dish.has_flavours !== false;
     const currentFlavour = currentCustomization.selectedFlavour || (hasFlavours ? detectDefaultFlavour(dish, !isCooling) : null);
     currentCustomization.selectedFlavour = currentFlavour;
-
-    const hasWeight = dish.has_weight !== false;
-    const hasCooling = dish.has_cooling !== false;
+    currentCustomization.selectedWeightKey = currentWeightKey;
+    currentCustomization.isCooling = isCooling;
     const isFlavourChosen = !hasFlavours || Boolean(currentFlavour);
 
     const baseWeightPrice = hasWeight ? getWeightPrice(dish, currentWeightKey) : Number(dish.price || 0);
@@ -6853,13 +6915,12 @@ window.confirmAddCustomizedItem = function() {
     }
 
     const restaurant = currentCustomization.restaurant;
-    const weightKey = currentCustomization.selectedWeightKey || 'half_kg';
-    const isCooling = Boolean(currentCustomization.isCooling);
-    const isEggless = Boolean(currentCustomization.isEggless);
-    const customMsg = (currentCustomization.customMessage || '').trim();
-
     const hasWeight = dish.has_weight !== false;
     const hasCooling = dish.has_cooling !== false;
+    const weightKey = hasWeight ? (currentCustomization.selectedWeightKey || 'half_kg') : 'standard';
+    const isCooling = hasCooling ? Boolean(currentCustomization.isCooling) : false;
+    const isEggless = Boolean(currentCustomization.isEggless);
+    const customMsg = (currentCustomization.customMessage || '').trim();
 
     const weightOpt = WEIGHT_CONFIG.find(w => w.key === weightKey) || WEIGHT_CONFIG[0];
     const weightPrice = hasWeight ? getWeightPrice(dish, weightKey) : Number(dish.price || 0);
@@ -9194,9 +9255,14 @@ function syncLiveCatalogState() {
                 if (over.image) item.image = window.getThemeAssetUrl(over.image);
                 if (over.image_url) { item.image = window.getThemeAssetUrl(over.image_url); item.image_url = item.image; }
                 if (over.discount_price !== undefined) item.discount_price = Number(over.discount_price);
-                if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
-                if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
-                if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
+                if (over.has_weight !== undefined) item.has_weight = (over.has_weight === true || over.has_weight === 'true' || over.has_weight === 1 || over.has_weight === '1');
+                if (over.has_cooling !== undefined) item.has_cooling = (over.has_cooling === true || over.has_cooling === 'true' || over.has_cooling === 1 || over.has_cooling === '1');
+                if (over.has_flavours !== undefined) item.has_flavours = (over.has_flavours === true || over.has_flavours === 'true' || over.has_flavours === 1 || over.has_flavours === '1');
+                if (item.has_weight === false && item.has_cooling === false && item.has_flavours === false) {
+                    item.isDirectAdd = true;
+                } else if (over.isDirectAdd !== undefined) {
+                    item.isDirectAdd = Boolean(over.isDirectAdd);
+                }
                 if (over.flavour !== undefined) item.flavour = over.flavour;
                 if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
             }
@@ -9333,6 +9399,14 @@ function applyLiveAdminUpdates(data) {
                                 (normTarget && item.name && item.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normTarget)) {
                                 item.is_available = isAvail;
                                 if (prod.price !== undefined) item.price = Number(prod.price);
+                                if (prod.has_weight !== undefined) item.has_weight = (prod.has_weight === true || prod.has_weight === 'true' || prod.has_weight === 1 || prod.has_weight === '1');
+                                if (prod.has_cooling !== undefined) item.has_cooling = (prod.has_cooling === true || prod.has_cooling === 'true' || prod.has_cooling === 1 || prod.has_cooling === '1');
+                                if (prod.has_flavours !== undefined) item.has_flavours = (prod.has_flavours === true || prod.has_flavours === 'true' || prod.has_flavours === 1 || prod.has_flavours === '1');
+                                if (item.has_weight === false && item.has_cooling === false && item.has_flavours === false) {
+                                    item.isDirectAdd = true;
+                                } else if (prod.isDirectAdd !== undefined) {
+                                    item.isDirectAdd = Boolean(prod.isDirectAdd);
+                                }
                             }
                         });
                     }

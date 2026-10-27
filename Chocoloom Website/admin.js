@@ -5013,6 +5013,10 @@ function broadcastProductUpdate(action, prod) {
                         name: prod?.name,
                         is_available: prod ? (prod.is_available !== false) : true,
                         price: prod?.price,
+                        has_weight: prod ? (prod.has_weight !== false) : true,
+                        has_cooling: prod ? (prod.has_cooling !== false) : true,
+                        has_flavours: prod ? (prod.has_flavours !== false) : true,
+                        isDirectAdd: Boolean(prod?.isDirectAdd || (prod && prod.has_weight === false && prod.has_cooling === false && prod.has_flavours === false)),
                         action: action
                     }
                 }).catch(() => {});
