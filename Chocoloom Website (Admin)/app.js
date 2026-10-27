@@ -1162,11 +1162,15 @@ function getSupabaseClient() {
 // Synchronously hydrate cached cloud database prices into SWIGGY_DATA before initial UI render
 function applyCachedDbPricesToMenu() {
     try {
-        const cacheRaw = localStorage.getItem('chocoloom_db_catalog_cache') || localStorage.getItem('chocoloom_price_overrides');
-        if (!cacheRaw) return;
-        const cache = JSON.parse(cacheRaw);
+        let cache = {};
+        try {
+            const dbCache = JSON.parse(localStorage.getItem('chocoloom_db_catalog_cache') || '{}');
+            const overrides = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
+            cache = { ...dbCache, ...overrides };
+        } catch (e) {}
+        if (!cache || Object.keys(cache).length === 0) return;
         const menu = (typeof SWIGGY_DATA !== 'undefined' && SWIGGY_DATA?.restaurants?.[0]?.menu) ? SWIGGY_DATA.restaurants[0].menu : null;
-        if (!menu || !Array.isArray(menu) || Object.keys(cache).length === 0) return;
+        if (!menu || !Array.isArray(menu)) return;
 
         function normalizeKey(str) {
             return String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -1501,12 +1505,15 @@ async function fetchLiveProductsFromSupabase() {
         }
     }
 
-    // Direct REST API fallback
+    // Direct REST API fallback with cache-busting
     try {
-        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*`, {
+        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*&_t=${Date.now()}`, {
+            cache: 'no-store',
             headers: {
                 'apikey': SUPABASE_CONFIG.anonKey,
-                'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
+                'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`,
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
             }
         });
         if (res.ok) {
@@ -1600,9 +1607,12 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 match.cooling_price_3kg = Number(liveItem.cooling_price_3kg);
                 anyPriceUpdated = true;
             }
-            if (liveItem.is_available !== undefined && match.is_available !== liveItem.is_available) {
-                match.is_available = liveItem.is_available;
-                anyPriceUpdated = true;
+            if (liveItem.is_available !== undefined) {
+                const itemIsAvail = (liveItem.is_available !== false && liveItem.is_available !== 'false' && liveItem.is_available !== 0 && liveItem.is_available !== '0');
+                if (match.is_available !== itemIsAvail) {
+                    match.is_available = itemIsAvail;
+                    anyPriceUpdated = true;
+                }
             }
             if (liveItem.name && match.name !== liveItem.name) {
                 match.name = liveItem.name;
@@ -1720,7 +1730,7 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
         }
     });
 
-    if (anyPriceUpdated) {
+    if (anyPriceUpdated || showToastNotification) {
         if (typeof window.invalidateProductsCache === 'function') {
             window.invalidateProductsCache();
         }
@@ -1762,7 +1772,14 @@ function subscribeToSupabaseRealtime() {
                     console.log('⚡ Supabase Realtime Change Event:', payload);
                     if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
                         if (payload.new) {
-                            syncSupabaseProducts([payload.new], true);
+                            if (typeof applyLiveAdminUpdates === 'function') {
+                                applyLiveAdminUpdates({
+                                    type: 'PRODUCTS_UPDATED',
+                                    action: 'STOCK',
+                                    product: payload.new
+                                });
+                            }
+                            syncSupabaseProducts([payload.new], false);
                         }
                     } else if (payload.eventType === 'DELETE') {
                         const oldId = payload.old?.id;
@@ -1785,13 +1802,20 @@ function subscribeToSupabaseRealtime() {
                 ({ payload }) => {
                     console.log('⚡ Supabase Realtime Broadcast PRODUCT_UPDATE:', payload);
                     if (payload) {
-                        syncSupabaseProducts([payload], true);
+                        if (typeof applyLiveAdminUpdates === 'function') {
+                            applyLiveAdminUpdates({
+                                type: 'PRODUCTS_UPDATED',
+                                action: payload.action || 'STOCK',
+                                product: payload
+                            });
+                        }
+                        syncSupabaseProducts([payload], false);
                     }
                 }
             )
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
-                    console.log('✅ Supabase Realtime Connected to "products" table');
+                    console.log('✅ Supabase Realtime Connected to "live-products-sync"');
                 }
             });
     } catch (err) {
@@ -1828,30 +1852,28 @@ async function initSupabaseSync() {
     }
 }
 
-// Background Live Polling: Check Cloud database fallback interval (60s)
+// Background Live Polling: Check Cloud database (Fast 5s polling for instant stock sync)
 if (typeof window !== 'undefined') {
     setInterval(async () => {
         try {
-            if (typeof loadServerCatalogOverrides === 'function') {
-                await loadServerCatalogOverrides();
-            }
-            if (typeof window.loadCatalogFromSupabase === 'function') {
-                await window.loadCatalogFromSupabase(false);
+            if (document.visibilityState === 'visible') {
+                if (typeof window.loadCatalogFromSupabase === 'function') {
+                    await window.loadCatalogFromSupabase(false);
+                }
             }
         } catch (e) {}
-    }, 60000);
+    }, 5000);
 
-    // Auto-refresh live catalog when user switches back to this tab after being away
-    let lastVisibilitySync = Date.now();
+    // Auto-refresh live catalog immediately when user switches back to this tab
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
-            const now = Date.now();
-            if (now - lastVisibilitySync > 30000) {
-                lastVisibilitySync = now;
-                if (typeof loadServerCatalogOverrides === 'function') loadServerCatalogOverrides();
-                if (typeof window.loadCatalogFromSupabase === 'function') window.loadCatalogFromSupabase(false);
-            }
+            if (typeof window.loadCatalogFromSupabase === 'function') window.loadCatalogFromSupabase(false);
+            if (typeof loadServerCatalogOverrides === 'function') loadServerCatalogOverrides();
         }
+    });
+
+    window.addEventListener('focus', () => {
+        if (typeof window.loadCatalogFromSupabase === 'function') window.loadCatalogFromSupabase(false);
     });
 }
 
@@ -5330,41 +5352,40 @@ function getAllProducts() {
     // Filter out deleted items
     list = list.filter(p => !deletedIds.includes(p.id) && (!p.sql_id || !deletedIds.includes(p.sql_id)));
 
-    // Apply price & detail overrides (Only as fallback when live Cloud Database is not loaded)
-    if (!window._neonDatabaseLoaded) {
-        list.forEach(item => {
-            const key = item.sql_id || item.id;
-            const over = priceOverrides[key] || priceOverrides[item.id] || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
-            if (over) {
-                if (over.price !== undefined) item.price = Number(over.price);
-                if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
-                if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
-                if (over.name) item.name = over.name;
-                if (over.category) item.category = over.category;
-                if (over.description) item.description = over.description;
-                if (over.image) item.image = window.getThemeAssetUrl(over.image);
-                if (over.image_url) { item.image = window.getThemeAssetUrl(over.image_url); item.image_url = item.image; }
-                if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
-                if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
-                if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
-                if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
-                if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
-                if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
-                if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
-                if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
-                if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
-                if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
-                if (over.isVeg !== undefined) item.isVeg = Boolean(over.isVeg);
-                if (over.isUniSpecial !== undefined) item.isUniSpecial = Boolean(over.isUniSpecial);
-                if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
-                if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
-                if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
-                if (over.flavour !== undefined) item.flavour = over.flavour;
-                if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
-                if (over.isDirectAdd !== undefined) item.isDirectAdd = Boolean(over.isDirectAdd);
-            }
-        });
-    }
+    // Apply price & detail overrides (Admin overrides always take precedence for availability & live prices)
+    list.forEach(item => {
+        const key = item.sql_id || item.id;
+        const normName = item.name ? item.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        const over = priceOverrides[key] || priceOverrides[item.id] || (normName ? priceOverrides[normName] : null) || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
+        if (over) {
+            if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
+            if (over.price !== undefined) item.price = Number(over.price);
+            if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
+            if (over.name) item.name = over.name;
+            if (over.category) item.category = over.category;
+            if (over.description) item.description = over.description;
+            if (over.image) item.image = window.getThemeAssetUrl(over.image);
+            if (over.image_url) { item.image = window.getThemeAssetUrl(over.image_url); item.image_url = item.image; }
+            if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
+            if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
+            if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
+            if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
+            if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
+            if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
+            if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
+            if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
+            if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
+            if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
+            if (over.isVeg !== undefined) item.isVeg = Boolean(over.isVeg);
+            if (over.isUniSpecial !== undefined) item.isUniSpecial = Boolean(over.isUniSpecial);
+            if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
+            if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
+            if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
+            if (over.flavour !== undefined) item.flavour = over.flavour;
+            if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
+            if (over.isDirectAdd !== undefined) item.isDirectAdd = Boolean(over.isDirectAdd);
+        }
+    });
 
     // Prepend custom added products from admin if not already in list
     customProducts.forEach(newProd => {
@@ -5378,9 +5399,7 @@ function getAllProducts() {
                 restaurantName: rest ? rest.name : 'Chocoloom Flagship Bakery & Confectionery'
             };
             if (existingIdx !== -1) {
-                if (!window._neonDatabaseLoaded) {
-                    list[existingIdx] = { ...list[existingIdx], ...itemData };
-                }
+                list[existingIdx] = { ...list[existingIdx], ...itemData };
             } else {
                 list.unshift(itemData);
             }
@@ -7136,207 +7155,35 @@ function updateCartUI() {
     if (!cartBody) return;
 
     if (AppState.cart.length === 0) {
-        // When cart is empty, do not show distracting login or member banner
+        // When cart is empty, keep drawer clean & clutter-free
         if (cartPrompt) cartPrompt.style.display = 'none';
         if (cartLogged) cartLogged.style.display = 'none';
 
         cartBody.innerHTML = `
             <div class="cart-empty-wrapper">
-                <!-- Visual Hero with Animated Dessert SVG & Floating Badges -->
-                <div class="empty-cart-hero">
-                    <div class="empty-cart-orb-wrapper">
-                        <div class="empty-cart-pulse-ring"></div>
-                        <div class="empty-cart-visual-art">
-                            <svg class="empty-cart-svg" viewBox="0 0 140 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <defs>
-                                    <linearGradient id="standGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stop-color="#ede9fe"/>
-                                        <stop offset="100%" stop-color="#ddd6fe"/>
-                                    </linearGradient>
-                                    <linearGradient id="cakeChoco" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stop-color="#581c87"/>
-                                        <stop offset="50%" stop-color="#7c3aed"/>
-                                        <stop offset="100%" stop-color="#a855f7"/>
-                                    </linearGradient>
-                                    <linearGradient id="frostPink" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stop-color="#ec4899"/>
-                                        <stop offset="100%" stop-color="#f43f5e"/>
-                                    </linearGradient>
-                                    <radialGradient id="haloGlow" cx="50%" cy="50%" r="50%">
-                                        <stop offset="0%" stop-color="#c4b5fd" stop-opacity="0.6"/>
-                                        <stop offset="100%" stop-color="#c4b5fd" stop-opacity="0"/>
-                                    </radialGradient>
-                                </defs>
-                                <!-- Ambient Glow Halo -->
-                                <circle cx="70" cy="62" r="48" fill="url(#haloGlow)"/>
-                                
-                                <!-- Stand Pedestal -->
-                                <ellipse cx="70" cy="100" rx="42" ry="7" fill="url(#standGrad)" opacity="0.9"/>
-                                <path d="M64 88H76L74 99H66L64 88Z" fill="#c4b5fd"/>
-                                <ellipse cx="70" cy="88" rx="48" ry="8" fill="#ffffff" stroke="#ddd6fe" stroke-width="2"/>
-                                <ellipse cx="70" cy="87.5" rx="44" ry="6" fill="url(#standGrad)"/>
-
-                                <!-- Cake Body -->
-                                <g class="empty-cart-cake-anim">
-                                    <path d="M42 66C42 66 52 74 70 74C88 74 98 66 98 66V80C98 80 88 88 70 88C52 88 42 80 42 80V66Z" fill="url(#cakeChoco)"/>
-                                    <path d="M42 71C42 71 52 78 70 78C88 78 98 71 98 71V74C98 74 88 81 70 81C52 81 42 74 42 74V71Z" fill="#fdf2f8"/>
-                                    <ellipse cx="70" cy="66" rx="28" ry="8" fill="url(#frostPink)"/>
-                                    <path d="M42 66C44 71 46 75 48 71C50 67 52 73 54 75C56 77 58 72 61 70C64 68 66 74 69 75C72 76 75 70 78 72C81 74 84 76 87 72C90 68 93 74 95 72C97 70 98 66 98 66C98 66 88 74 70 74C52 74 42 66 42 66Z" fill="url(#frostPink)"/>
-
-                                    <rect x="68" y="44" width="4" height="16" rx="2" fill="#fef08a"/>
-                                    <ellipse class="empty-candle-flame" cx="70" cy="40" rx="3.5" ry="5.5" fill="#f59e0b"/>
-                                    <ellipse class="empty-candle-core" cx="70" cy="41" rx="1.8" ry="3" fill="#ffffff"/>
-
-                                    <circle cx="58" cy="64" r="2.5" fill="#f59e0b"/>
-                                    <circle cx="80" cy="65" r="2" fill="#38bdf8"/>
-                                    <circle cx="70" cy="68" r="2" fill="#ffffff"/>
-                                </g>
-
-                                <!-- Sparkles -->
-                                <g class="empty-sparkle-1">
-                                    <path d="M30 40L31.5 44.5L36 46L31.5 47.5L30 52L28.5 47.5L24 46L28.5 44.5L30 40Z" fill="#fbbf24"/>
-                                </g>
-                                <g class="empty-sparkle-2">
-                                    <path d="M108 36L109.5 39.5L113 41L109.5 42.5L108 46L106.5 42.5L103 41L106.5 39.5L108 36Z" fill="#ec4899"/>
-                                </g>
-                                <g class="empty-sparkle-3">
-                                    <path d="M112 78L113 80.5L115.5 81.5L113 82.5L112 85L111 82.5L108.5 81.5L111 80.5L112 78Z" fill="#818cf8"/>
-                                </g>
-                            </svg>
-                        </div>
-                        <span class="empty-cart-floating-badge badge-left">🎂 Freshly Baked</span>
-                        <span class="empty-cart-floating-badge badge-right">✨ 100% Veg</span>
-                    </div>
-
-                    <h3 class="empty-cart-title">Your cart is feeling sweet & light!</h3>
-                    <p class="empty-cart-subtitle">
-                        "Life lo sweet moments kavala? Chocoloom undiga!" Explore freshly baked artisanal cakes, Belgian truffles & gourmet tubs.
-                    </p>
-
-                    <!-- First Order Welcome Perk Pill -->
-                    <div class="empty-cart-welcome-perk">
-                        <span class="welcome-perk-badge">🎁 FIRST ORDER</span>
-                        <span class="welcome-perk-text">Flat <strong>20% OFF</strong> applied at checkout!</span>
-                    </div>
-
-                    <button type="button" class="empty-cart-browse-btn" onclick="closeCart(); if(typeof scrollToOrderingCatalog==='function'){scrollToOrderingCatalog();}else{window.scrollTo({top: 450, behavior: 'smooth'});}">
-                        <i class="fa-solid fa-sparkles"></i>
-                        <span>EXPLORE FRESH CAKES</span>
-                        <i class="fa-solid fa-arrow-right" style="font-size: 11px;"></i>
-                    </button>
-                </div>
-
-                <!-- Category Quick Jump Chips -->
-                <div class="empty-cart-cat-chips-section">
-                    <span class="empty-cart-chips-title">Quick Cravings:</span>
-                    <div class="empty-cart-category-chips">
-                        <button type="button" class="empty-cat-chip" onclick="closeCart(); if(typeof selectCategoryFilter==='function'){selectCategoryFilter('Anniversary Cakes');} if(typeof scrollToOrderingCatalog==='function'){scrollToOrderingCatalog();}">
-                            <span>🎂</span> Cakes
-                        </button>
-                        <button type="button" class="empty-cat-chip" onclick="closeCart(); if(typeof selectCategoryFilter==='function'){selectCategoryFilter('Chocolates');} if(typeof scrollToOrderingCatalog==='function'){scrollToOrderingCatalog();}">
-                            <span>🍫</span> Truffles
-                        </button>
-                        <button type="button" class="empty-cat-chip" onclick="closeCart(); if(typeof selectCategoryFilter==='function'){selectCategoryFilter('Bento Cakes');} if(typeof scrollToOrderingCatalog==='function'){scrollToOrderingCatalog();}">
-                            <span>🍱</span> Bento
-                        </button>
-                        <button type="button" class="empty-cat-chip game-chip" onclick="closeCart(); if(typeof switchToGameZone==='function'){switchToGameZone();}">
-                            <span>🎮</span> Game Zone
-                        </button>
+                <div class="empty-cart-boutique-visual">
+                    <div class="empty-cart-boutique-glow"></div>
+                    <div class="empty-cart-boutique-img-frame">
+                        <img src="assets/empty_cart_cake.webp" alt="Chocoloom Gourmet Cakes" class="empty-cart-boutique-img" onerror="this.src='assets/categories/truffle_cakes.webp'">
                     </div>
                 </div>
 
-                <!-- Quick Add Popular Cravings -->
-                <div class="empty-cart-recommendations">
-                    <div class="empty-cart-rec-header">
-                        <span class="empty-cart-rec-title">
-                            <span class="rec-fire-icon"><i class="fa-solid fa-fire"></i></span>
-                            Popular Right Now
-                        </span>
-                        <span class="empty-cart-rec-hint">1-Tap Quick Add</span>
-                    </div>
-                    <div class="empty-cart-rec-list">
-                        <div class="empty-cart-rec-item" onclick="window.handleQuoteCardAdd(event, 'quick_assorted_truffies')">
-                            <div class="rec-img-wrapper">
-                                <img src="assets/categories/truffle_cakes.webp" alt="Assorted Truffies" class="empty-cart-rec-img" loading="lazy" onerror="this.src='assets/categories/candyland.webp'">
-                                <span class="rec-veg-icon" title="100% Pure Veg"></span>
-                            </div>
-                            <div class="empty-cart-rec-info">
-                                <div class="rec-top-row">
-                                    <h4 class="empty-cart-rec-name">Assorted Truffies Box</h4>
-                                    <span class="rec-rating"><i class="fa-solid fa-star"></i> 4.9</span>
-                                </div>
-                                <p class="rec-desc">Pure couverture cocoa & fresh cream</p>
-                                <div class="empty-cart-rec-meta">
-                                    <span class="empty-cart-rec-price">₹199</span>
-                                    <span class="empty-cart-rec-orig">₹249</span>
-                                    <span class="rec-save-pill">20% OFF</span>
-                                </div>
-                            </div>
-                            <button type="button" class="empty-cart-add-btn" onclick="window.handleQuoteCardAdd(event, 'quick_assorted_truffies')">
-                                <i class="fa-solid fa-plus"></i> ADD
-                            </button>
-                        </div>
+                <h3 class="empty-cart-boutique-title">Your cart is empty</h3>
+                <p class="empty-cart-boutique-subtitle">
+                    Good food is always cooking! Explore our handcrafted celebration cakes & gourmet desserts to fill your cart.
+                </p>
 
-                        <div class="empty-cart-rec-item" onclick="window.handleQuoteCardAdd(event, 'quick_dutch_truffle_bento')">
-                            <div class="rec-img-wrapper">
-                                <img src="assets/categories/bento_cakes.webp" alt="Dutch Truffle Bento" class="empty-cart-rec-img" loading="lazy" onerror="this.src='assets/categories/candyland.webp'">
-                                <span class="rec-veg-icon" title="100% Pure Veg"></span>
-                            </div>
-                            <div class="empty-cart-rec-info">
-                                <div class="rec-top-row">
-                                    <h4 class="empty-cart-rec-name">Dutch Truffle Bento</h4>
-                                    <span class="rec-rating"><i class="fa-solid fa-star"></i> 4.9</span>
-                                </div>
-                                <p class="rec-desc">Silky dark chocolate ganache bento</p>
-                                <div class="empty-cart-rec-meta">
-                                    <span class="empty-cart-rec-price">₹199</span>
-                                    <span class="empty-cart-rec-orig">₹250</span>
-                                    <span class="rec-save-pill">20% OFF</span>
-                                </div>
-                            </div>
-                            <button type="button" class="empty-cart-add-btn" onclick="window.handleQuoteCardAdd(event, 'quick_dutch_truffle_bento')">
-                                <i class="fa-solid fa-plus"></i> ADD
-                            </button>
-                        </div>
+                <button type="button" class="empty-cart-boutique-btn" onclick="closeCart(); if(typeof scrollToOrderingCatalog==='function'){scrollToOrderingCatalog();}else{window.scrollTo({top: 450, behavior: 'smooth'});}">
+                    <span>EXPLORE FRESH CAKES</span>
+                    <i class="fa-solid fa-arrow-right" style="font-size: 11px;"></i>
+                </button>
 
-                        <div class="empty-cart-rec-item" onclick="window.handleQuoteCardAdd(event, 'quick_choco_fudge_tub')">
-                            <div class="rec-img-wrapper">
-                                <img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=300&auto=format&fit=crop&q=80" alt="Choco Fudge Tub" class="empty-cart-rec-img" loading="lazy">
-                                <span class="rec-veg-icon" title="100% Pure Veg"></span>
-                            </div>
-                            <div class="empty-cart-rec-info">
-                                <div class="rec-top-row">
-                                    <h4 class="empty-cart-rec-name">Choco Fudge Lava Tub</h4>
-                                    <span class="rec-rating"><i class="fa-solid fa-star"></i> 4.8</span>
-                                </div>
-                                <p class="rec-desc">Molten Belgian chocolate & crunchy crisps</p>
-                                <div class="empty-cart-rec-meta">
-                                    <span class="empty-cart-rec-price">₹199</span>
-                                    <span class="empty-cart-rec-orig">₹229</span>
-                                    <span class="rec-save-pill">13% OFF</span>
-                                </div>
-                            </div>
-                            <button type="button" class="empty-cart-add-btn" onclick="window.handleQuoteCardAdd(event, 'quick_choco_fudge_tub')">
-                                <i class="fa-solid fa-plus"></i> ADD
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Trust / Perks Bar -->
-                <div class="empty-cart-trust-bar">
-                    <div class="empty-trust-item">
-                        <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i>
-                        <span>30m Express Drop</span>
-                    </div>
-                    <div class="empty-trust-item">
-                        <i class="fa-solid fa-leaf" style="color: #10b981;"></i>
-                        <span>100% Eggless Pure Veg</span>
-                    </div>
-                    <div class="empty-trust-item">
-                        <i class="fa-solid fa-heart" style="color: #ec4899;"></i>
-                        <span>Freshly Baked Today</span>
-                    </div>
+                <div class="empty-cart-boutique-trust">
+                    <span>⚡ 30m Drop</span>
+                    <span class="trust-dot">•</span>
+                    <span>🌿 100% Eggless</span>
+                    <span class="trust-dot">•</span>
+                    <span>🎂 Baked Fresh</span>
                 </div>
             </div>
         `;
@@ -9323,38 +9170,37 @@ function syncLiveCatalogState() {
             rest.menu = menu;
         }
 
-        // 2. Apply price & detail overrides (Only as fallback when live Cloud Database is not loaded)
-        if (!window._neonDatabaseLoaded) {
-            menu.forEach(item => {
-                const key = item.sql_id || item.id;
-                const over = priceOverrides[key] || priceOverrides[item.id] || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
-                if (over) {
-                    if (over.price !== undefined) item.price = Number(over.price);
-                    if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
-                    if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
-                    if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
-                    if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
-                    if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
-                    if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
-                    if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
-                    if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
-                    if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
-                    if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
-                    if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
-                    if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
-                    if (over.name) item.name = over.name;
-                    if (over.category) item.category = over.category;
-                    if (over.image) item.image = window.getThemeAssetUrl(over.image);
-                    if (over.image_url) { item.image = window.getThemeAssetUrl(over.image_url); item.image_url = item.image; }
-                    if (over.discount_price !== undefined) item.discount_price = Number(over.discount_price);
-                    if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
-                    if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
-                    if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
-                    if (over.flavour !== undefined) item.flavour = over.flavour;
-                    if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
-                }
-            });
-        }
+        // 2. Apply price & detail overrides (Admin overrides always take precedence for availability & live prices)
+        menu.forEach(item => {
+            const key = item.sql_id || item.id;
+            const normName = item.name ? item.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+            const over = priceOverrides[key] || priceOverrides[item.id] || (normName ? priceOverrides[normName] : null) || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
+            if (over) {
+                if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
+                if (over.price !== undefined) item.price = Number(over.price);
+                if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
+                if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
+                if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
+                if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
+                if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
+                if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
+                if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
+                if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
+                if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
+                if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
+                if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
+                if (over.name) item.name = over.name;
+                if (over.category) item.category = over.category;
+                if (over.image) item.image = window.getThemeAssetUrl(over.image);
+                if (over.image_url) { item.image = window.getThemeAssetUrl(over.image_url); item.image_url = item.image; }
+                if (over.discount_price !== undefined) item.discount_price = Number(over.discount_price);
+                if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
+                if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
+                if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
+                if (over.flavour !== undefined) item.flavour = over.flavour;
+                if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
+            }
+        });
 
         // 3. Prepend custom added products
         if (Array.isArray(customProducts) && customProducts.length > 0) {
@@ -9453,12 +9299,43 @@ function applyLiveAdminUpdates(data) {
                     let curD = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
                     if (delId && !curD.includes(delId)) curD.push(delId);
                     localStorage.setItem("chocoloom_deleted_products", JSON.stringify(curD));
-                } else if (prod.id) {
+                } else if (prod.id || prod.sql_id || prod.name) {
                     let curO = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
-                    curO[prod.id] = { ...(curO[prod.id] || {}), ...prod };
+                    if (prod.id) curO[prod.id] = { ...(curO[prod.id] || {}), ...prod };
                     if (prod.sql_id) curO[prod.sql_id] = { ...(curO[prod.sql_id] || {}), ...prod };
-                    if (prod.name) curO[prod.name.toLowerCase().trim()] = { ...(curO[prod.name.toLowerCase().trim()] || {}), ...prod };
+                    if (prod.name) {
+                        curO[prod.name.toLowerCase().trim()] = { ...(curO[prod.name.toLowerCase().trim()] || {}), ...prod };
+                        curO[prod.name.toLowerCase().replace(/[^a-z0-9]/g, '')] = { ...(curO[prod.name.toLowerCase().replace(/[^a-z0-9]/g, '')] || {}), ...prod };
+                    }
                     localStorage.setItem("chocoloom_price_overrides", JSON.stringify(curO));
+
+                    try {
+                        let dbC = JSON.parse(localStorage.getItem("chocoloom_db_catalog_cache") || "{}");
+                        if (prod.id) dbC[prod.id] = { ...(dbC[prod.id] || {}), ...prod };
+                        if (prod.sql_id) dbC[prod.sql_id] = { ...(dbC[prod.sql_id] || {}), ...prod };
+                        if (prod.name) {
+                            dbC[prod.name.toLowerCase().trim()] = { ...(dbC[prod.name.toLowerCase().trim()] || {}), ...prod };
+                            dbC[prod.name.toLowerCase().replace(/[^a-z0-9]/g, '')] = { ...(dbC[prod.name.toLowerCase().replace(/[^a-z0-9]/g, '')] || {}), ...prod };
+                        }
+                        localStorage.setItem("chocoloom_db_catalog_cache", JSON.stringify(dbC));
+                    } catch(e) {}
+
+                    // Mutate matching product directly in memory for 0ms visual update
+                    const isAvail = (prod.is_available !== false && prod.is_available !== 'false' && prod.is_available !== 0 && prod.is_available !== '0');
+                    const targetId = prod.id || prod.sql_id;
+                    const targetName = prod.name ? prod.name.toLowerCase().trim() : '';
+                    const normTarget = prod.name ? prod.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+                    const rest = SWIGGY_DATA?.restaurants?.[0];
+                    if (rest && Array.isArray(rest.menu)) {
+                        rest.menu.forEach(item => {
+                            if ((targetId && (item.id === targetId || item.sql_id === targetId)) ||
+                                (targetName && item.name && item.name.toLowerCase().trim() === targetName) ||
+                                (normTarget && item.name && item.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normTarget)) {
+                                item.is_available = isAvail;
+                                if (prod.price !== undefined) item.price = Number(prod.price);
+                            }
+                        });
+                    }
 
                     if (String(prod.id).startsWith("choco_custom_") || prod.isCustom) {
                         let curC = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");

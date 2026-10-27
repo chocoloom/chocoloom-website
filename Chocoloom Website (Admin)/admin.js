@@ -3895,37 +3895,32 @@ window.handleProductFormSubmit = async function(e) {
         saveCustomProductLocally(updatedProduct);
     }
 
-    // 1. Sync to Supabase Cloud Database (Primary)
-    let syncRes = null;
-    try {
-        syncRes = await syncProductToSupabase(updatedProduct);
-    } catch(supaErr) {
-        console.warn('Supabase sync warning:', supaErr);
-    }
-    try {
-        await syncProductToNeon(updatedProduct);
-    } catch(syncErr) {}
-
-    // 2. Save to disk if sync_server.js or save_catalog.php is available
-    syncCatalogToServer();
-
-    // 3. Broadcast via BroadcastChannel and cross-origin sync so customer site updates in real time
-    broadcastProductUpdate("SAVE", updatedProduct);
+    // 1. Instantly close modal, update UI, and notify user (0ms latency)
+    closeAdminModal("productModal");
+    renderProducts();
+    renderProductsStats();
+    showToast(formId ? `✅ Product "${name}" saved!` : `🎂 Added "${name}"!`, "fa-solid fa-circle-check", "#10b981");
 
     if (saveBtn) {
         saveBtn.disabled = false;
         saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Product';
     }
 
-    // 4. Close modal and re-render immediately without requiring browser reload
-    closeAdminModal("productModal");
-    renderProducts();
-    renderProductsStats();
-    if (syncRes && syncRes.success) {
-        showToast(formId ? `✅ Product "${name}" updated & saved in Cloud Database!` : `🎂 Added "${name}" & saved in Cloud Database!`, "fa-solid fa-cloud-check", "#10b981");
-    } else {
-        showToast(`⚠️ Cloud update warning: ${syncRes?.error || 'Check database connection'}`, "fa-solid fa-triangle-exclamation", "#f59e0b");
-    }
+    // 2. Broadcast via BroadcastChannel and cross-origin sync so customer site updates in real time
+    broadcastProductUpdate("SAVE", updatedProduct);
+
+    // 3. Asynchronously persist to Cloud Database (Supabase & Neon) and server in background without blocking
+    (async () => {
+        try {
+            await Promise.allSettled([
+                syncProductToSupabase(updatedProduct),
+                syncProductToNeon(updatedProduct),
+                syncCatalogToServer()
+            ]);
+        } catch(syncErr) {
+            console.warn('Background sync error:', syncErr);
+        }
+    })();
 };
 
 // Quick 1-Click Price Update Modal
@@ -4006,45 +4001,50 @@ window.handleQuickPriceSubmit = async function(e) {
         };
 
         savePriceOverrideLocally(prodId, updateData);
-        let syncRes = null;
-        try {
-            syncRes = await syncProductToSupabase(prod);
-        } catch(err) {}
-        try {
-            await syncProductToNeon(prod);
-        } catch(err) {}
-        syncCatalogToServer();
         broadcastProductUpdate("PRICE", prod);
 
+        // Immediate UI update & modal close (0ms latency)
         closeAdminModal("quickPriceModal");
         renderProducts();
         renderProductsStats();
-        if (syncRes && syncRes.success) {
-            showToast('✅ Updated price for "' + prod.name + '" to ₹' + newPrice + ' & synced to Cloud Database!', 'fa-solid fa-cloud-check', '#10b981');
-        } else {
-            showToast('⚠️ Price sync warning: ' + (syncRes?.error || 'Check database connection'), 'fa-solid fa-triangle-exclamation', '#f59e0b');
-        }
+        showToast('✅ Updated price for "' + prod.name + '" to ₹' + newPrice + '!', 'fa-solid fa-circle-check', '#10b981');
+
+        // Background non-blocking sync to cloud databases and server
+        (async () => {
+            try {
+                await Promise.allSettled([
+                    syncProductToSupabase(prod),
+                    syncProductToNeon(prod),
+                    syncCatalogToServer()
+                ]);
+            } catch(err) {
+                console.warn('Background quick price sync error:', err);
+            }
+        })();
     }
 };
 
 // Toggle in-stock availability switch
-window.toggleProductStock = async function(productId, isAvailable) {
+window.toggleProductStock = function(productId, isAvailable) {
     const prod = AdminState.products.find(p => p.id === productId || p.sql_id === productId);
     if (!prod) return;
 
     prod.is_available = isAvailable;
     savePriceOverrideLocally(productId, { is_available: isAvailable });
-    try {
-        await syncProductToSupabase(prod);
-    } catch(err) {}
-    try {
-        await syncProductToNeon(prod);
-    } catch(err) {}
-    syncCatalogToServer();
     broadcastProductUpdate("STOCK", prod);
-
     renderProductsStats();
-    showToast('"' + prod.name + '" is now ' + (isAvailable ? "In Stock (Cloud Synced)" : "Marked Out of Stock (Cloud Synced)"));
+    showToast('"' + prod.name + '" is now ' + (isAvailable ? "In Stock" : "Marked Out of Stock"), 'fa-solid fa-circle-check', '#10b981');
+
+    // Background non-blocking sync
+    (async () => {
+        try {
+            await Promise.allSettled([
+                syncProductToSupabase(prod),
+                syncProductToNeon(prod),
+                syncCatalogToServer()
+            ]);
+        } catch(err) {}
+    })();
 };
 
 // Delete Product
@@ -4070,25 +4070,30 @@ window.deleteProductItem = async function(productId) {
         let customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
         customs = customs.filter(c => c.id !== productId);
         localStorage.setItem("chocoloom_custom_products", JSON.stringify(customs));
-        syncCatalogToServer();
     } catch(e) {}
 
-    // Delete from Supabase & Neon
-    if (prod.sql_id) {
-        if (supabaseClient) supabaseClient.from("products").delete().eq("id", prod.sql_id).catch(() => {});
-        fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?id=eq.${prod.sql_id}`, {
-            method: 'DELETE',
-            headers: { 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}` }
-        }).catch(() => {});
-    }
-    await deleteProductFromNeon(prod.sql_id || productId, prod.name);
+    // Instant UI update
+    renderProducts();
+    renderProductsStats();
+    showToast('"' + prod.name + '" has been removed from menu', 'fa-solid fa-trash-can', '#ef4444');
 
     // Broadcast delete
     broadcastProductUpdate("DELETE", { id: productId, sql_id: prod.sql_id, name: prod.name });
 
-    renderProducts();
-    renderProductsStats();
-    showToast('"' + prod.name + '" has been removed from menu');
+    // Background non-blocking delete
+    (async () => {
+        try {
+            if (prod.sql_id) {
+                if (supabaseClient) supabaseClient.from("products").delete().eq("id", prod.sql_id).catch(() => {});
+                fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?id=eq.${prod.sql_id}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}` }
+                }).catch(() => {});
+            }
+            await deleteProductFromNeon(prod.sql_id || productId, prod.name);
+            await syncCatalogToServer();
+        } catch(e) {}
+    })();
 };
 
 // Helper to save custom product locally
@@ -4256,12 +4261,12 @@ async function syncCatalogToServer() {
             targets.push("http://127.0.0.1:3001/save_catalog", "http://localhost:3001/save_catalog");
         }
 
-        // Execute sync to targets (keep both production endpoints updated)
+        // Execute sync to targets in parallel (keep both production endpoints updated)
         const uniqueTargets = [...new Set(targets)];
-        for (const target of uniqueTargets) {
+        await Promise.allSettled(uniqueTargets.map(async target => {
             try {
                 const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-                const timeoutMs = target.includes(':3001') ? 400 : 4000;
+                const timeoutMs = target.includes(':3001') ? 400 : 1500;
                 const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
                 let res;
                 try {
@@ -4281,7 +4286,7 @@ async function syncCatalogToServer() {
                     console.log("✅ Catalog successfully synced to server target:", target);
                 }
             } catch(e) {}
-        }
+        }));
     } catch(e) {}
 }
 
@@ -4572,6 +4577,7 @@ async function syncProductToSupabase(prod) {
 let _neonTablesEnsured = false;
 async function ensureNeonTablesExist() {
     if (_neonTablesEnsured) return true;
+    _neonTablesEnsured = true;
     const sql = await getNeonClient();
     if (!sql) return false;
     try {
@@ -4729,7 +4735,9 @@ async function syncProductToNeon(prod) {
     if (!sql) return { success: false, error: 'No Neon connection' };
 
     try {
-        await ensureNeonTablesExist();
+        if (!_neonTablesEnsured) {
+            ensureNeonTablesExist().catch(() => {});
+        }
 
         const id = String(prod.sql_id || prod.id || ('choco_' + Date.now())).trim();
         const name = String(prod.name || 'Unnamed Cake').trim();
@@ -6490,18 +6498,18 @@ window.handleBannerFormSubmit = async function(e) {
         localStorage.setItem('chocoloom_banners', JSON.stringify(AdminState.banners));
     } catch(err) {}
 
-    // Save to server
-    await syncBannersToServer(false);
-
+    // Instant UI update & modal close (0ms latency)
     closeAdminModal('bannerModal');
     updateBannersKPIs();
     renderBannersGrid();
-
     showToast(`🎉 Advertisement "${title}" saved and live on website!`, 'fa-solid fa-circle-check', '#10b981');
+
+    // Save to server asynchronously in background
+    syncBannersToServer(false).catch(() => {});
 };
 
 // Toggle Banner Active / Inactive
-window.toggleBannerActive = async function(bannerId) {
+window.toggleBannerActive = function(bannerId) {
     const ban = (AdminState.banners || []).find(b => b.id === bannerId);
     if (!ban) return;
 
@@ -6511,7 +6519,6 @@ window.toggleBannerActive = async function(bannerId) {
         localStorage.setItem('chocoloom_banners', JSON.stringify(AdminState.banners));
     } catch(e) {}
 
-    await syncBannersToServer(false);
     updateBannersKPIs();
     renderBannersGrid();
 
@@ -6520,10 +6527,12 @@ window.toggleBannerActive = async function(bannerId) {
         ban.isActive ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash',
         ban.isActive ? '#10b981' : '#64748b'
     );
+
+    syncBannersToServer(false).catch(() => {});
 };
 
 // Delete Banner
-window.deleteBanner = async function(bannerId) {
+window.deleteBanner = function(bannerId) {
     const ban = (AdminState.banners || []).find(b => b.id === bannerId);
     if (!ban) return;
 
@@ -6537,15 +6546,16 @@ window.deleteBanner = async function(bannerId) {
         localStorage.setItem('chocoloom_banners', JSON.stringify(AdminState.banners));
     } catch(e) {}
 
-    await syncBannersToServer(false);
     updateBannersKPIs();
     renderBannersGrid();
 
     showToast(`🗑️ Advertisement "${ban.title}" deleted.`, 'fa-solid fa-trash-can', '#ef4444');
+
+    syncBannersToServer(false).catch(() => {});
 };
 
 // Reorder Banner
-window.moveBanner = async function(bannerId, direction) {
+window.moveBanner = function(bannerId, direction) {
     const idx = AdminState.banners.findIndex(b => b.id === bannerId);
     if (idx < 0) return;
 
@@ -6560,10 +6570,10 @@ window.moveBanner = async function(bannerId, direction) {
         localStorage.setItem('chocoloom_banners', JSON.stringify(AdminState.banners));
     } catch(e) {}
 
-    await syncBannersToServer(false);
     renderBannersGrid();
-
     showToast('🔄 Carousel banner order updated!', 'fa-solid fa-arrows-up-down', '#7c5cfc');
+
+    syncBannersToServer(false).catch(() => {});
 };
 
 // Sync Banners to Server (save_catalog.php / catalog_overrides.json) & Broadcast
@@ -6574,6 +6584,8 @@ window.syncBannersToServer = async function(notify = false) {
         };
 
         const endpoints = [
+            'http://127.0.0.1:3000/save_catalog',
+            'http://localhost:3000/save_catalog',
             'http://127.0.0.1:3001/save_catalog',
             'http://localhost:3001/save_catalog',
             'save_catalog.php',
@@ -6581,21 +6593,22 @@ window.syncBannersToServer = async function(notify = false) {
             './save_catalog.php',
             '../api/save_catalog.php'
         ];
-        let success = false;
-        for (const ep of endpoints) {
+        await Promise.allSettled(endpoints.map(async ep => {
             try {
-                const res = await fetch(ep, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (res.ok) {
-                    success = true;
-                    console.log('✅ Banners synced to endpoint:', ep);
-                    break;
+                const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+                const timer = controller ? setTimeout(() => controller.abort(), 1500) : null;
+                try {
+                    await fetch(ep, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                        signal: controller ? controller.signal : undefined
+                    });
+                } finally {
+                    if (timer) clearTimeout(timer);
                 }
             } catch(err) {}
-        }
+        }));
 
         // Cross-origin and cross-port iframe relay bridge
         if (typeof sendCrossOriginSync === 'function') {

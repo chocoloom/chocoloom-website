@@ -1162,11 +1162,15 @@ function getSupabaseClient() {
 // Synchronously hydrate cached cloud database prices into SWIGGY_DATA before initial UI render
 function applyCachedDbPricesToMenu() {
     try {
-        const cacheRaw = localStorage.getItem('chocoloom_db_catalog_cache') || localStorage.getItem('chocoloom_price_overrides');
-        if (!cacheRaw) return;
-        const cache = JSON.parse(cacheRaw);
+        let cache = {};
+        try {
+            const dbCache = JSON.parse(localStorage.getItem('chocoloom_db_catalog_cache') || '{}');
+            const overrides = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
+            cache = { ...dbCache, ...overrides };
+        } catch (e) {}
+        if (!cache || Object.keys(cache).length === 0) return;
         const menu = (typeof SWIGGY_DATA !== 'undefined' && SWIGGY_DATA?.restaurants?.[0]?.menu) ? SWIGGY_DATA.restaurants[0].menu : null;
-        if (!menu || !Array.isArray(menu) || Object.keys(cache).length === 0) return;
+        if (!menu || !Array.isArray(menu)) return;
 
         function normalizeKey(str) {
             return String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -1501,12 +1505,15 @@ async function fetchLiveProductsFromSupabase() {
         }
     }
 
-    // Direct REST API fallback
+    // Direct REST API fallback with cache-busting
     try {
-        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*`, {
+        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*&_t=${Date.now()}`, {
+            cache: 'no-store',
             headers: {
                 'apikey': SUPABASE_CONFIG.anonKey,
-                'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
+                'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`,
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
             }
         });
         if (res.ok) {
@@ -1600,9 +1607,12 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 match.cooling_price_3kg = Number(liveItem.cooling_price_3kg);
                 anyPriceUpdated = true;
             }
-            if (liveItem.is_available !== undefined && match.is_available !== liveItem.is_available) {
-                match.is_available = liveItem.is_available;
-                anyPriceUpdated = true;
+            if (liveItem.is_available !== undefined) {
+                const itemIsAvail = (liveItem.is_available !== false && liveItem.is_available !== 'false' && liveItem.is_available !== 0 && liveItem.is_available !== '0');
+                if (match.is_available !== itemIsAvail) {
+                    match.is_available = itemIsAvail;
+                    anyPriceUpdated = true;
+                }
             }
             if (liveItem.name && match.name !== liveItem.name) {
                 match.name = liveItem.name;
@@ -1720,7 +1730,7 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
         }
     });
 
-    if (anyPriceUpdated) {
+    if (anyPriceUpdated || showToastNotification) {
         if (typeof window.invalidateProductsCache === 'function') {
             window.invalidateProductsCache();
         }
@@ -1762,7 +1772,14 @@ function subscribeToSupabaseRealtime() {
                     console.log('⚡ Supabase Realtime Change Event:', payload);
                     if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
                         if (payload.new) {
-                            syncSupabaseProducts([payload.new], true);
+                            if (typeof applyLiveAdminUpdates === 'function') {
+                                applyLiveAdminUpdates({
+                                    type: 'PRODUCTS_UPDATED',
+                                    action: 'STOCK',
+                                    product: payload.new
+                                });
+                            }
+                            syncSupabaseProducts([payload.new], false);
                         }
                     } else if (payload.eventType === 'DELETE') {
                         const oldId = payload.old?.id;
@@ -1785,13 +1802,20 @@ function subscribeToSupabaseRealtime() {
                 ({ payload }) => {
                     console.log('⚡ Supabase Realtime Broadcast PRODUCT_UPDATE:', payload);
                     if (payload) {
-                        syncSupabaseProducts([payload], true);
+                        if (typeof applyLiveAdminUpdates === 'function') {
+                            applyLiveAdminUpdates({
+                                type: 'PRODUCTS_UPDATED',
+                                action: payload.action || 'STOCK',
+                                product: payload
+                            });
+                        }
+                        syncSupabaseProducts([payload], false);
                     }
                 }
             )
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
-                    console.log('✅ Supabase Realtime Connected to "products" table');
+                    console.log('✅ Supabase Realtime Connected to "live-products-sync"');
                 }
             });
     } catch (err) {
@@ -1828,30 +1852,28 @@ async function initSupabaseSync() {
     }
 }
 
-// Background Live Polling: Check Cloud database fallback interval (60s)
+// Background Live Polling: Check Cloud database (Fast 5s polling for instant stock sync)
 if (typeof window !== 'undefined') {
     setInterval(async () => {
         try {
-            if (typeof loadServerCatalogOverrides === 'function') {
-                await loadServerCatalogOverrides();
-            }
-            if (typeof window.loadCatalogFromSupabase === 'function') {
-                await window.loadCatalogFromSupabase(false);
+            if (document.visibilityState === 'visible') {
+                if (typeof window.loadCatalogFromSupabase === 'function') {
+                    await window.loadCatalogFromSupabase(false);
+                }
             }
         } catch (e) {}
-    }, 60000);
+    }, 5000);
 
-    // Auto-refresh live catalog when user switches back to this tab after being away
-    let lastVisibilitySync = Date.now();
+    // Auto-refresh live catalog immediately when user switches back to this tab
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
-            const now = Date.now();
-            if (now - lastVisibilitySync > 30000) {
-                lastVisibilitySync = now;
-                if (typeof loadServerCatalogOverrides === 'function') loadServerCatalogOverrides();
-                if (typeof window.loadCatalogFromSupabase === 'function') window.loadCatalogFromSupabase(false);
-            }
+            if (typeof window.loadCatalogFromSupabase === 'function') window.loadCatalogFromSupabase(false);
+            if (typeof loadServerCatalogOverrides === 'function') loadServerCatalogOverrides();
         }
+    });
+
+    window.addEventListener('focus', () => {
+        if (typeof window.loadCatalogFromSupabase === 'function') window.loadCatalogFromSupabase(false);
     });
 }
 
@@ -5330,41 +5352,40 @@ function getAllProducts() {
     // Filter out deleted items
     list = list.filter(p => !deletedIds.includes(p.id) && (!p.sql_id || !deletedIds.includes(p.sql_id)));
 
-    // Apply price & detail overrides (Only as fallback when live Cloud Database is not loaded)
-    if (!window._neonDatabaseLoaded) {
-        list.forEach(item => {
-            const key = item.sql_id || item.id;
-            const over = priceOverrides[key] || priceOverrides[item.id] || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
-            if (over) {
-                if (over.price !== undefined) item.price = Number(over.price);
-                if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
-                if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
-                if (over.name) item.name = over.name;
-                if (over.category) item.category = over.category;
-                if (over.description) item.description = over.description;
-                if (over.image) item.image = window.getThemeAssetUrl(over.image);
-                if (over.image_url) { item.image = window.getThemeAssetUrl(over.image_url); item.image_url = item.image; }
-                if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
-                if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
-                if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
-                if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
-                if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
-                if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
-                if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
-                if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
-                if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
-                if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
-                if (over.isVeg !== undefined) item.isVeg = Boolean(over.isVeg);
-                if (over.isUniSpecial !== undefined) item.isUniSpecial = Boolean(over.isUniSpecial);
-                if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
-                if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
-                if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
-                if (over.flavour !== undefined) item.flavour = over.flavour;
-                if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
-                if (over.isDirectAdd !== undefined) item.isDirectAdd = Boolean(over.isDirectAdd);
-            }
-        });
-    }
+    // Apply price & detail overrides (Admin overrides always take precedence for availability & live prices)
+    list.forEach(item => {
+        const key = item.sql_id || item.id;
+        const normName = item.name ? item.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        const over = priceOverrides[key] || priceOverrides[item.id] || (normName ? priceOverrides[normName] : null) || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
+        if (over) {
+            if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
+            if (over.price !== undefined) item.price = Number(over.price);
+            if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
+            if (over.name) item.name = over.name;
+            if (over.category) item.category = over.category;
+            if (over.description) item.description = over.description;
+            if (over.image) item.image = window.getThemeAssetUrl(over.image);
+            if (over.image_url) { item.image = window.getThemeAssetUrl(over.image_url); item.image_url = item.image; }
+            if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
+            if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
+            if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
+            if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
+            if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
+            if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
+            if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
+            if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
+            if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
+            if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
+            if (over.isVeg !== undefined) item.isVeg = Boolean(over.isVeg);
+            if (over.isUniSpecial !== undefined) item.isUniSpecial = Boolean(over.isUniSpecial);
+            if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
+            if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
+            if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
+            if (over.flavour !== undefined) item.flavour = over.flavour;
+            if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
+            if (over.isDirectAdd !== undefined) item.isDirectAdd = Boolean(over.isDirectAdd);
+        }
+    });
 
     // Prepend custom added products from admin if not already in list
     customProducts.forEach(newProd => {
@@ -5378,9 +5399,7 @@ function getAllProducts() {
                 restaurantName: rest ? rest.name : 'Chocoloom Flagship Bakery & Confectionery'
             };
             if (existingIdx !== -1) {
-                if (!window._neonDatabaseLoaded) {
-                    list[existingIdx] = { ...list[existingIdx], ...itemData };
-                }
+                list[existingIdx] = { ...list[existingIdx], ...itemData };
             } else {
                 list.unshift(itemData);
             }
@@ -9151,38 +9170,37 @@ function syncLiveCatalogState() {
             rest.menu = menu;
         }
 
-        // 2. Apply price & detail overrides (Only as fallback when live Cloud Database is not loaded)
-        if (!window._neonDatabaseLoaded) {
-            menu.forEach(item => {
-                const key = item.sql_id || item.id;
-                const over = priceOverrides[key] || priceOverrides[item.id] || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
-                if (over) {
-                    if (over.price !== undefined) item.price = Number(over.price);
-                    if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
-                    if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
-                    if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
-                    if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
-                    if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
-                    if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
-                    if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
-                    if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
-                    if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
-                    if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
-                    if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
-                    if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
-                    if (over.name) item.name = over.name;
-                    if (over.category) item.category = over.category;
-                    if (over.image) item.image = window.getThemeAssetUrl(over.image);
-                    if (over.image_url) { item.image = window.getThemeAssetUrl(over.image_url); item.image_url = item.image; }
-                    if (over.discount_price !== undefined) item.discount_price = Number(over.discount_price);
-                    if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
-                    if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
-                    if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
-                    if (over.flavour !== undefined) item.flavour = over.flavour;
-                    if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
-                }
-            });
-        }
+        // 2. Apply price & detail overrides (Admin overrides always take precedence for availability & live prices)
+        menu.forEach(item => {
+            const key = item.sql_id || item.id;
+            const normName = item.name ? item.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+            const over = priceOverrides[key] || priceOverrides[item.id] || (normName ? priceOverrides[normName] : null) || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
+            if (over) {
+                if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
+                if (over.price !== undefined) item.price = Number(over.price);
+                if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
+                if (over.price_half_kg !== undefined) item.price_half_kg = Number(over.price_half_kg);
+                if (over.price_1kg !== undefined) item.price_1kg = Number(over.price_1kg);
+                if (over.price_1_5kg !== undefined) item.price_1_5kg = Number(over.price_1_5kg);
+                if (over.price_2kg !== undefined) item.price_2kg = Number(over.price_2kg);
+                if (over.price_3kg !== undefined) item.price_3kg = Number(over.price_3kg);
+                if (over.cooling_price_half_kg !== undefined) item.cooling_price_half_kg = Number(over.cooling_price_half_kg);
+                if (over.cooling_price_1kg !== undefined) item.cooling_price_1kg = Number(over.cooling_price_1kg);
+                if (over.cooling_price_1_5kg !== undefined) item.cooling_price_1_5kg = Number(over.cooling_price_1_5kg);
+                if (over.cooling_price_2kg !== undefined) item.cooling_price_2kg = Number(over.cooling_price_2kg);
+                if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
+                if (over.name) item.name = over.name;
+                if (over.category) item.category = over.category;
+                if (over.image) item.image = window.getThemeAssetUrl(over.image);
+                if (over.image_url) { item.image = window.getThemeAssetUrl(over.image_url); item.image_url = item.image; }
+                if (over.discount_price !== undefined) item.discount_price = Number(over.discount_price);
+                if (over.has_weight !== undefined) item.has_weight = Boolean(over.has_weight);
+                if (over.has_cooling !== undefined) item.has_cooling = Boolean(over.has_cooling);
+                if (over.has_flavours !== undefined) item.has_flavours = Boolean(over.has_flavours);
+                if (over.flavour !== undefined) item.flavour = over.flavour;
+                if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
+            }
+        });
 
         // 3. Prepend custom added products
         if (Array.isArray(customProducts) && customProducts.length > 0) {
@@ -9281,12 +9299,43 @@ function applyLiveAdminUpdates(data) {
                     let curD = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
                     if (delId && !curD.includes(delId)) curD.push(delId);
                     localStorage.setItem("chocoloom_deleted_products", JSON.stringify(curD));
-                } else if (prod.id) {
+                } else if (prod.id || prod.sql_id || prod.name) {
                     let curO = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
-                    curO[prod.id] = { ...(curO[prod.id] || {}), ...prod };
+                    if (prod.id) curO[prod.id] = { ...(curO[prod.id] || {}), ...prod };
                     if (prod.sql_id) curO[prod.sql_id] = { ...(curO[prod.sql_id] || {}), ...prod };
-                    if (prod.name) curO[prod.name.toLowerCase().trim()] = { ...(curO[prod.name.toLowerCase().trim()] || {}), ...prod };
+                    if (prod.name) {
+                        curO[prod.name.toLowerCase().trim()] = { ...(curO[prod.name.toLowerCase().trim()] || {}), ...prod };
+                        curO[prod.name.toLowerCase().replace(/[^a-z0-9]/g, '')] = { ...(curO[prod.name.toLowerCase().replace(/[^a-z0-9]/g, '')] || {}), ...prod };
+                    }
                     localStorage.setItem("chocoloom_price_overrides", JSON.stringify(curO));
+
+                    try {
+                        let dbC = JSON.parse(localStorage.getItem("chocoloom_db_catalog_cache") || "{}");
+                        if (prod.id) dbC[prod.id] = { ...(dbC[prod.id] || {}), ...prod };
+                        if (prod.sql_id) dbC[prod.sql_id] = { ...(dbC[prod.sql_id] || {}), ...prod };
+                        if (prod.name) {
+                            dbC[prod.name.toLowerCase().trim()] = { ...(dbC[prod.name.toLowerCase().trim()] || {}), ...prod };
+                            dbC[prod.name.toLowerCase().replace(/[^a-z0-9]/g, '')] = { ...(dbC[prod.name.toLowerCase().replace(/[^a-z0-9]/g, '')] || {}), ...prod };
+                        }
+                        localStorage.setItem("chocoloom_db_catalog_cache", JSON.stringify(dbC));
+                    } catch(e) {}
+
+                    // Mutate matching product directly in memory for 0ms visual update
+                    const isAvail = (prod.is_available !== false && prod.is_available !== 'false' && prod.is_available !== 0 && prod.is_available !== '0');
+                    const targetId = prod.id || prod.sql_id;
+                    const targetName = prod.name ? prod.name.toLowerCase().trim() : '';
+                    const normTarget = prod.name ? prod.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+                    const rest = SWIGGY_DATA?.restaurants?.[0];
+                    if (rest && Array.isArray(rest.menu)) {
+                        rest.menu.forEach(item => {
+                            if ((targetId && (item.id === targetId || item.sql_id === targetId)) ||
+                                (targetName && item.name && item.name.toLowerCase().trim() === targetName) ||
+                                (normTarget && item.name && item.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normTarget)) {
+                                item.is_available = isAvail;
+                                if (prod.price !== undefined) item.price = Number(prod.price);
+                            }
+                        });
+                    }
 
                     if (String(prod.id).startsWith("choco_custom_") || prod.isCustom) {
                         let curC = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");

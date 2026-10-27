@@ -302,31 +302,26 @@ const server = http.createServer((req, res) => {
 
                 console.log(`💾 Catalog overrides saved locally at ${payload.updated_at}!`);
 
-                // 2. Automatically sync directly to Neon Serverless Postgres and Supabase Cloud Database
-                let neonCount = 0;
-                let supaCount = 0;
-                try {
-                    neonCount = await syncCatalogOverridesToNeon(payload);
-                } catch (neonErr) {
-                    console.warn('Neon sync warning:', neonErr.message);
-                }
-                try {
-                    supaCount = await syncCatalogOverridesToSupabase(payload);
-                } catch (supaErr) {
-                    console.warn('Supabase sync warning:', supaErr.message);
-                }
-
-                // 3. Asynchronously forward to live endpoints in real-time
-                forwardCatalogToLiveCloud(payload);
-
+                // Respond immediately (<2ms) so admin panel never lags or waits
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ 
                     success: true, 
-                    message: `Catalog overrides saved locally & synced ${supaCount} items to Supabase & ${neonCount} items to Neon Postgres!`,
-                    supabaseSynced: supaCount,
-                    neonSynced: neonCount,
+                    message: 'Catalog overrides saved instantly!',
                     data: payload
                 }));
+
+                // Run database and live forward sync asynchronously in background
+                (async () => {
+                    try {
+                        await Promise.allSettled([
+                            syncCatalogOverridesToNeon(payload),
+                            syncCatalogOverridesToSupabase(payload)
+                        ]);
+                    } catch (dbErr) {
+                        console.warn('Background database sync error:', dbErr.message);
+                    }
+                    forwardCatalogToLiveCloud(payload);
+                })();
             } catch(e) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: 'Invalid JSON payload', details: e.message }));
