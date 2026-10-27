@@ -30,7 +30,8 @@
         const [weightKey, setWeightKey] = useState(props.initialWeightKey || 'half_kg');
         const [isCooling, setIsCooling] = useState(Boolean(props.initialCooling));
         const [isEggless, setIsEggless] = useState(Boolean(props.initialEggless));
-        const [flavour, setFlavour] = useState(props.initialFlavour || 'Dutch Truffle Classic');
+        const autoInitialFlavour = props.initialFlavour || ((typeof window.detectDefaultFlavour === 'function') ? window.detectDefaultFlavour(dish, !props.initialCooling) : 'Chocolate');
+        const [flavour, setFlavour] = useState(autoInitialFlavour);
         const [message, setMessage] = useState('');
         const [addedAnim, setAddedAnim] = useState(false);
 
@@ -42,29 +43,29 @@
         ];
 
         const normalFlavoursList = [
-            { id: 'vanilla', name: 'Vanilla', icon: '🍦', tag: 'Classic' },
-            { id: 'butterscotch', name: 'Butterscotch', icon: '🧈', tag: 'Crunch' },
-            { id: 'strawberry', name: 'Strawberry', icon: '🍓', tag: 'Fresh' },
-            { id: 'pineapple', name: 'Pineapple', icon: '🍍', tag: 'Tropical' },
-            { id: 'chocolate', name: 'Chocolate', icon: '🍫', tag: 'Signature' }
+            { id: 'vanilla', name: 'Vanilla', icon: '🍦', tag: 'Classic', extraPrice: 0, tier: 'Classic' },
+            { id: 'butterscotch', name: 'Butterscotch', icon: '🧈', tag: 'Crunch', extraPrice: 0, tier: 'Classic' },
+            { id: 'strawberry', name: 'Strawberry', icon: '🍓', tag: 'Fresh', extraPrice: 50, tier: 'Deluxe' },
+            { id: 'pineapple', name: 'Pineapple', icon: '🍍', tag: 'Tropical', extraPrice: 0, tier: 'Classic' },
+            { id: 'chocolate', name: 'Chocolate', icon: '🍫', tag: 'Signature', extraPrice: 0, tier: 'Classic' }
         ];
 
         const coolingFlavoursList = [
-            { id: 'vanilla', name: 'Vanilla', icon: '🍦', tag: 'Classic' },
-            { id: 'butterscotch', name: 'Butterscotch', icon: '🧈', tag: 'Crunch' },
-            { id: 'strawberry', name: 'Strawberry', icon: '🍓', tag: 'Fresh' },
-            { id: 'pineapple', name: 'Pineapple', icon: '🍍', tag: 'Tropical' },
-            { id: 'blueberry', name: 'Blueberry', icon: '🫐', tag: 'Berry' },
-            { id: 'black_currant', name: 'Black Currant', icon: '🍇', tag: 'Berry' },
-            { id: 'chocolate', name: 'Chocolate', icon: '🍫', tag: 'Signature' },
-            { id: 'black_forest', name: 'Black Forest', icon: '🍒', tag: 'Classic' },
-            { id: 'milk_badam', name: 'Milk Badam', icon: '🥛', tag: 'Royal' },
-            { id: 'honey_almond', name: 'Honey Almond', icon: '🍯', tag: 'Gourmet' },
-            { id: 'red_velvet', name: 'Red Velvet', icon: '❤️', tag: 'Luxe' },
-            { id: 'white_forest', name: 'White Forest', icon: '🍰', tag: 'Delight' },
-            { id: 'caramel', name: 'Caramel', icon: '🍮', tag: 'Sweet' },
-            { id: 'milky_butterscotch', name: 'Milky Butterscotch', icon: '🍨', tag: 'Creamy' },
-            { id: 'nutty_bubble', name: 'Nutty Bubble', icon: '🫧', tag: 'Special' }
+            { id: 'vanilla', name: 'Vanilla', icon: '🍦', tag: 'Classic', extraPrice: 0, tier: 'Classic' },
+            { id: 'butterscotch', name: 'Butterscotch', icon: '🧈', tag: 'Crunch', extraPrice: 0, tier: 'Classic' },
+            { id: 'strawberry', name: 'Strawberry', icon: '🍓', tag: 'Fresh', extraPrice: 50, tier: 'Deluxe' },
+            { id: 'pineapple', name: 'Pineapple', icon: '🍍', tag: 'Tropical', extraPrice: 0, tier: 'Classic' },
+            { id: 'blueberry', name: 'Blueberry', icon: '🫐', tag: 'Berry', extraPrice: 50, tier: 'Deluxe' },
+            { id: 'black_currant', name: 'Black Currant', icon: '🍇', tag: 'Berry', extraPrice: 50, tier: 'Deluxe' },
+            { id: 'chocolate', name: 'Chocolate', icon: '🍫', tag: 'Signature', extraPrice: 0, tier: 'Classic' },
+            { id: 'black_forest', name: 'Black Forest', icon: '🍒', tag: 'Classic', extraPrice: 0, tier: 'Classic' },
+            { id: 'milk_badam', name: 'Milk Badam', icon: '🥛', tag: 'Royal', extraPrice: 100, tier: 'Royal' },
+            { id: 'honey_almond', name: 'Honey Almond', icon: '🍯', tag: 'Gourmet', extraPrice: 100, tier: 'Royal' },
+            { id: 'red_velvet', name: 'Red Velvet', icon: '❤️', tag: 'Luxe', extraPrice: 50, tier: 'Deluxe' },
+            { id: 'white_forest', name: 'White Forest', icon: '🍰', tag: 'Delight', extraPrice: 0, tier: 'Classic' },
+            { id: 'caramel', name: 'Caramel', icon: '🍮', tag: 'Sweet', extraPrice: 50, tier: 'Deluxe' },
+            { id: 'milky_butterscotch', name: 'Milky Butterscotch', icon: '🍨', tag: 'Creamy', extraPrice: 50, tier: 'Deluxe' },
+            { id: 'nutty_bubble', name: 'Nutty Bubble', icon: '🫧', tag: 'Special', extraPrice: 100, tier: 'Royal' }
         ];
 
         const activeFlavoursList = isCooling ? coolingFlavoursList : normalFlavoursList;
@@ -72,8 +73,9 @@
         const handleToggleCooling = (newCooling) => {
             setIsCooling(newCooling);
             const targetList = newCooling ? coolingFlavoursList : normalFlavoursList;
-            if (!targetList.some(f => f.name.toLowerCase() === flavour.toLowerCase())) {
-                setFlavour('Chocolate');
+            if (flavour && !targetList.some(f => f.name.toLowerCase() === flavour.toLowerCase())) {
+                const newDefault = (typeof window.detectDefaultFlavour === 'function') ? window.detectDefaultFlavour(dish, !newCooling) : 'Chocolate';
+                setFlavour(newDefault);
             }
         };
 
@@ -98,19 +100,36 @@
         }, [isCooling, dish, weightKey]);
 
         const flavourPrice = useMemo(() => {
+            if (!flavour) return 0;
+            if (typeof window.getFlavourExtraPrice === 'function') {
+                return window.getFlavourExtraPrice(dish, flavour);
+            }
             if (dish && dish.flavour_prices && typeof dish.flavour_prices === 'object') {
                 if (dish.flavour_prices[flavour] !== undefined) return Number(dish.flavour_prices[flavour]) || 0;
                 const fKey = flavour.toLowerCase().replace(/\s+/g, '_');
                 if (dish.flavour_prices[fKey] !== undefined) return Number(dish.flavour_prices[fKey]) || 0;
             }
-            return 0;
-        }, [flavour, dish]);
+            const activeItem = activeFlavoursList.find(f => f.name.toLowerCase() === flavour.toLowerCase());
+            return (activeItem && activeItem.extraPrice) ? Number(activeItem.extraPrice) : 0;
+        }, [flavour, dish, activeFlavoursList]);
 
         const egglessPrice = isEggless ? (weightKey === 'half_kg' ? 30 : 50) : 0;
 
         const totalPrice = Math.round(basePrice + coolingPrice + flavourPrice + egglessPrice);
 
+        const hasFlavours = dish.has_flavours !== false;
+        const isFlavourChosen = !hasFlavours || Boolean(flavour);
+
         const handleAddToCart = () => {
+            if (!isFlavourChosen) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Please select a cake flavour before adding to cart!', 'fa-solid fa-wand-magic-sparkles', '#ef4444');
+                }
+                const sec = document.getElementById('reactFlavoursSection');
+                if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
             setAddedAnim(true);
             setTimeout(() => setAddedAnim(false), 1000);
 
@@ -244,7 +263,7 @@
             ),
 
             // Section 3: Flavour Selector
-            dish.has_flavours !== false && e('div', { style: { marginBottom: '18px' } },
+            dish.has_flavours !== false && e('div', { id: 'reactFlavoursSection', style: { marginBottom: '18px' } },
                 e('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' } },
                     e('span', { style: { fontSize: '13px', fontWeight: '800', color: '#1e293b' } }, '🍫 Choose Cake Flavour'),
                     e('span', {
@@ -253,14 +272,37 @@
                             fontWeight: '700',
                             padding: '2px 8px',
                             borderRadius: '6px',
-                            background: isCooling ? '#e0f2fe' : '#fdf2f8',
-                            color: isCooling ? '#0284c7' : '#db2777'
+                            background: !flavour ? '#fef2f2' : (isCooling ? '#e0f2fe' : '#fdf2f8'),
+                            color: !flavour ? '#dc2626' : (isCooling ? '#0284c7' : '#db2777'),
+                            border: !flavour ? '1px solid #fecaca' : 'none'
                         }
-                    }, isCooling ? '❄️ 15 Cooling Flavours' : '🎂 5 Normal Flavours')
+                    }, !flavour ? '⚠️ Required: Choose 1 Flavour' : (isCooling ? '❄️ 15 Cooling Flavours' : '🎂 5 Normal Flavours'))
                 ),
-                e('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' } },
+                !flavour && e('div', {
+                    style: {
+                        background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
+                        border: '1.5px dashed #f59e0b',
+                        borderRadius: '10px',
+                        padding: '9px 12px',
+                        marginBottom: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '12px',
+                        fontWeight: '800',
+                        color: '#92400e'
+                    }
+                },
+                    e('span', { style: { fontSize: '16px' } }, '👉'),
+                    e('span', null, 'Please tap your favourite flavour below to enable Add to Cart!')
+                ),
+                e('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' } },
                     activeFlavoursList.map(f => {
-                        const isSelected = flavour.toLowerCase() === f.name.toLowerCase();
+                        const isSelected = flavour && (flavour.toLowerCase() === f.name.toLowerCase());
+                        const fExtra = (typeof window.getFlavourExtraPrice === 'function') 
+                            ? window.getFlavourExtraPrice(dish, f.name) 
+                            : (f.extraPrice || 0);
+                        const fTotal = Math.round(basePrice + coolingPrice + fExtra + egglessPrice);
                         return e('div', {
                             key: f.name,
                             onClick: () => setFlavour(f.name),
@@ -270,21 +312,27 @@
                                 gap: '8px',
                                 padding: '8px 10px',
                                 borderRadius: '10px',
-                                border: isSelected ? '1.5px solid #7c5cfc' : '1px solid #f1f5f9',
-                                background: isSelected ? '#faf5ff' : '#f8fafc',
+                                border: isSelected ? '1.5px solid #7c5cfc' : '1px solid #e2e8f0',
+                                background: isSelected ? '#faf5ff' : '#ffffff',
                                 cursor: 'pointer',
                                 transition: 'all 0.15s ease'
                             }
                         },
-                            e('span', { style: { fontSize: '16px' } }, f.icon || '🎂'),
+                            e('span', { style: { fontSize: '18px' } }, f.icon || '🎂'),
                             e('div', { style: { flex: 1, minWidth: 0 } },
-                                e('div', { style: { fontSize: '12px', fontWeight: isSelected ? '800' : '600', color: isSelected ? '#6b21a8' : '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, f.name),
-                                e('div', { style: { fontSize: '10px', color: isSelected ? '#7c5cfc' : '#94a3b8' } }, f.tag)
+                                e('div', { style: { display: 'flex', alignItems: 'center', gap: '4px' } },
+                                    e('span', { style: { fontSize: '12px', fontWeight: isSelected ? '800' : '700', color: isSelected ? '#6b21a8' : '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, f.name),
+                                    e('span', { style: { fontSize: '9px', fontWeight: '800', padding: '1px 4px', borderRadius: '4px', background: isSelected ? '#f3e8ff' : '#f1f5f9', color: isSelected ? '#7c3aed' : '#64748b' } }, f.tier || f.tag)
+                                ),
+                                e('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' } },
+                                    e('span', { style: { fontSize: '10px', fontWeight: '800', color: fExtra > 0 ? '#db2777' : '#16a34a', background: fExtra > 0 ? '#fdf2f8' : '#dcfce7', padding: '1px 5px', borderRadius: '4px' } }, fExtra > 0 ? `+₹${fExtra}` : 'FREE (+₹0)'),
+                                    e('span', { style: { fontSize: '10.5px', fontWeight: '800', color: '#0f172a' } }, `₹${fTotal}`)
+                                )
                             ),
                             e('input', {
                                 type: 'radio',
                                 name: 'reactFlavourPicker',
-                                checked: isSelected,
+                                checked: Boolean(isSelected),
                                 readOnly: true,
                                 style: { accentColor: '#7c5cfc' }
                             })
@@ -294,7 +342,7 @@
             ),
 
             // Section 4: Live Message Preview on Cake Icing
-            e('div', { style: { marginBottom: '20px' } },
+            e('div', { style: { marginBottom: '16px' } },
                 e('label', { style: { display: 'block', fontSize: '12px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' } },
                     '✍️ Message on Cake Icing (Complimentary)'
                 ),
@@ -329,45 +377,87 @@
                 }, `✨ Preview on Cake: "${message.trim()}"`)
             ),
 
+            // Section 5: Live Price Breakdown with Flavour Included
+            e('div', {
+                style: {
+                    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '12px',
+                    padding: '10px 14px',
+                    marginBottom: '16px'
+                }
+            },
+                e('div', { style: { fontSize: '11.5px', color: '#64748b', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' } },
+                    e('span', null, `🎂 Base Cake (${weightKey.replace('_', '.').toUpperCase()}): `, e('strong', { style: { color: '#0f172a' } }, `₹${basePrice}`)),
+                    e('span', null, '•'),
+                    e('span', null, `✨ Flavour (${flavour || 'None'}): `, e('strong', { style: { color: !flavour ? '#dc2626' : (flavourPrice > 0 ? '#db2777' : '#16a34a') } }, !flavour ? 'Not Selected (Required)' : (flavourPrice > 0 ? `+₹${flavourPrice}` : 'FREE (+₹0)'))),
+                    coolingPrice > 0 && e('span', null, '•'),
+                    coolingPrice > 0 && e('span', null, '❄️ Cooling: ', e('strong', { style: { color: '#0284c7' } }, `+₹${coolingPrice}`)),
+                    egglessPrice > 0 && e('span', null, '•'),
+                    egglessPrice > 0 && e('span', null, '🌱 Eggless: ', e('strong', { style: { color: '#16a34a' } }, `+₹${egglessPrice}`))
+                ),
+                e('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed #cbd5e1', paddingTop: '6px', marginTop: '4px', fontSize: '12.5px', fontWeight: '800', color: '#1e293b' } },
+                    e('span', null, !flavour ? 'Total Price (Select flavour below):' : `Total Price (with ${flavour} flavour):`),
+                    e('span', { style: { fontSize: '16px', fontWeight: '900', color: '#7c5cfc' } }, !flavour ? `₹${totalPrice} + Flavour` : `₹${totalPrice}`)
+                )
+            ),
+
             // Footer with Live React Price and Add to Cart
             e('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '14px', borderTop: '1px solid #f1f5f9' } },
                 e('div', null,
                     e('div', { style: { fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' } }, 'Customized Total'),
-                    e('div', { style: { fontSize: '22px', fontWeight: '900', color: '#0f172a' } }, `₹${totalPrice}`)
+                    e('div', { style: { fontSize: '22px', fontWeight: '900', color: '#0f172a' } }, !flavour ? `₹${totalPrice}` : `₹${totalPrice}`)
                 ),
                 e('button', {
                     type: 'button',
+                    disabled: !isFlavourChosen,
                     onClick: handleAddToCart,
                     style: {
-                        background: addedAnim ? '#16a34a' : 'linear-gradient(135deg, #7c5cfc, #6366f1)',
+                        background: !isFlavourChosen ? '#94a3b8' : (addedAnim ? '#16a34a' : 'linear-gradient(135deg, #7c5cfc, #6366f1)'),
                         color: '#ffffff',
                         border: 'none',
                         padding: '12px 24px',
                         borderRadius: '12px',
                         fontSize: '14px',
                         fontWeight: '800',
-                        cursor: 'pointer',
+                        cursor: !isFlavourChosen ? 'not-allowed' : 'pointer',
+                        opacity: !isFlavourChosen ? '0.7' : '1',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        boxShadow: '0 4px 16px rgba(124, 92, 252, 0.3)',
+                        boxShadow: !isFlavourChosen ? 'none' : '0 4px 16px rgba(124, 92, 252, 0.3)',
                         transition: 'all 0.2s ease',
                         transform: addedAnim ? 'scale(0.97)' : 'scale(1)'
                     }
                 },
-                    e('i', { className: addedAnim ? 'fa-solid fa-check' : 'fa-solid fa-cart-plus' }),
-                    e('span', null, addedAnim ? 'ADDED TO CART!' : 'ADD CUSTOM CAKE')
+                    e('i', { className: !isFlavourChosen ? 'fa-solid fa-wand-magic-sparkles' : (addedAnim ? 'fa-solid fa-check' : 'fa-solid fa-cart-plus') }),
+                    e('span', null, !isFlavourChosen ? 'CHOOSE A FLAVOUR' : (addedAnim ? 'ADDED TO CART!' : `ADD CUSTOM CAKE • ₹${totalPrice}`))
                 )
             )
         );
     }
 
     // ==========================================
-    // 2. REACT LIVE FLOATING CART STATUS ISLAND (Disabled to prevent duplicate View Cart button)
+    // 2. REACT LIVE FLOATING CART STATUS ISLAND (Permanently disabled to eliminate duplicate small View Cart pill)
     // ==========================================
     function ReactCartIsland() {
-        // Chocoloom's primary #floatingCartBar handles the unified Swiggy/Zomato bottom cart preview bar.
         return null;
+    }
+
+    function purgeSmallCartIsland() {
+        if (typeof document === 'undefined') return;
+        const root = document.getElementById('reactCartIslandRoot');
+        if (root) root.remove();
+        document.querySelectorAll('[data-react-cart-island]').forEach(el => el.remove());
+    }
+
+    // Active immediate and deferred purge
+    purgeSmallCartIsland();
+    if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', purgeSmallCartIsland);
+        }
+        window.addEventListener('load', purgeSmallCartIsland);
     }
 
     // ==========================================
@@ -386,6 +476,7 @@
         },
 
         mountCartIsland: function(containerId = 'reactCartIslandRoot') {
+            purgeSmallCartIsland();
             return null;
         }
     };

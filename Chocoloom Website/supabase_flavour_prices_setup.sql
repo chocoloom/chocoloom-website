@@ -1,70 +1,88 @@
 -- =========================================================================
--- CHOCOLOOM SUPABASE DATABASE SETUP: FLAVOUR PRICES COLUMNS & TABLE
--- Project: icedyeuagmkgitkoznxr
--- Paste and run this in Supabase Dashboard -> SQL Editor:
--- https://supabase.com/dashboard/project/icedyeuagmkgitkoznxr/sql/new
+-- CHOCOLOOM LIVE SQL MIGRATION: FLAVOUR WEIGHTS & PRODUCT CUSTOMIZATION
+-- Works seamlessly in Supabase SQL Editor and Neon PostgreSQL Console
+-- Project URL: https://icedyeuagmkgitkoznxr.supabase.co
+-- Supabase SQL Editor: https://supabase.com/dashboard/project/icedyeuagmkgitkoznxr/sql/new
 -- =========================================================================
 
--- 1. Add individual flavour price columns to the 'products' table
--- (Just like cooling_price_1kg, cooling_price_2kg, you can edit each flavour price directly in the Supabase Table Editor!)
+-- 1. Ensure 'products' table has the 'flavour_prices' JSONB column for per-flavour weight variations
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS flavour_prices JSONB DEFAULT '{}'::jsonb;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS has_flavours BOOLEAN DEFAULT TRUE;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS has_weight BOOLEAN DEFAULT TRUE;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS has_cooling BOOLEAN DEFAULT TRUE;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS default_flavour TEXT DEFAULT 'Auto-Detect from Cake Name';
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS flavour_price_truffle NUMERIC DEFAULT 0;
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS flavour_price_black_forest NUMERIC DEFAULT 0;
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS flavour_price_red_velvet NUMERIC DEFAULT 50;
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS flavour_price_butterscotch NUMERIC DEFAULT 0;
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS flavour_price_pineapple NUMERIC DEFAULT 0;
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS flavour_price_vanilla NUMERIC DEFAULT 0;
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS flavour_price_black_currant NUMERIC DEFAULT 50;
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS flavour_price_mango NUMERIC DEFAULT 50;
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS flavour_price_strawberry NUMERIC DEFAULT 50;
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS flavour_price_rasmalai NUMERIC DEFAULT 100;
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS flavour_price_hazelnut NUMERIC DEFAULT 100;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS flavour TEXT;
 
--- Set default values for all existing rows
-UPDATE public.products SET
-    has_flavours = COALESCE(has_flavours, TRUE),
-    flavour_price_truffle = COALESCE(flavour_price_truffle, 0),
-    flavour_price_black_forest = COALESCE(flavour_price_black_forest, 0),
-    flavour_price_red_velvet = COALESCE(flavour_price_red_velvet, 50),
-    flavour_price_butterscotch = COALESCE(flavour_price_butterscotch, 0),
-    flavour_price_pineapple = COALESCE(flavour_price_pineapple, 0),
-    flavour_price_vanilla = COALESCE(flavour_price_vanilla, 0),
-    flavour_price_black_currant = COALESCE(flavour_price_black_currant, 50),
-    flavour_price_mango = COALESCE(flavour_price_mango, 50),
-    flavour_price_strawberry = COALESCE(flavour_price_strawberry, 50),
-    flavour_price_rasmalai = COALESCE(flavour_price_rasmalai, 100),
-    flavour_price_hazelnut = COALESCE(flavour_price_hazelnut, 100);
-
--- 2. Optional: Dedicated flavour_prices table (for managing global flavour surcharges)
-CREATE TABLE IF NOT EXISTS public.flavour_prices (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    price NUMERIC NOT NULL DEFAULT 0,
-    category TEXT DEFAULT 'Cake Flavours',
+-- 2. Create the dedicated 'flavour_weights' table for global flavour KG weight management
+CREATE TABLE IF NOT EXISTS public.flavour_weights (
+    id TEXT PRIMARY KEY,                       -- e.g. 'vanilla', 'chocolate', 'red_velvet'
+    name TEXT NOT NULL,                        -- e.g. 'Vanilla', 'Chocolate', 'Royal Red Velvet'
+    icon TEXT DEFAULT '🎂',                    -- e.g. '🍦', '🍫', '❤️'
+    category TEXT DEFAULT 'normal',            -- 'normal' or 'cooling'
+    price_half_kg NUMERIC NOT NULL DEFAULT 0,  -- 0.5 KG Price (₹)
+    price_1kg NUMERIC NOT NULL DEFAULT 0,      -- 1.0 KG Price (₹)
+    price_1_5kg NUMERIC NOT NULL DEFAULT 0,    -- 1.5 KG Price (₹)
+    price_2kg NUMERIC NOT NULL DEFAULT 0,      -- 2.0 KG Price (₹)
     is_available BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE public.flavour_prices ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Allow public read flavour_prices" ON public.flavour_prices;
-CREATE POLICY "Allow public read flavour_prices" ON public.flavour_prices FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Allow public insert flavour_prices" ON public.flavour_prices;
-CREATE POLICY "Allow public insert flavour_prices" ON public.flavour_prices FOR INSERT WITH CHECK (true);
-DROP POLICY IF EXISTS "Allow public update flavour_prices" ON public.flavour_prices;
-CREATE POLICY "Allow public update flavour_prices" ON public.flavour_prices FOR UPDATE USING (true);
+-- 3. Configure Row Level Security (RLS) policies for full live access
+ALTER TABLE public.flavour_weights ENABLE ROW LEVEL SECURITY;
 
-INSERT INTO public.flavour_prices (id, name, price, category, is_available) VALUES
-    ('chocolate_truffle', 'Dutch Chocolate Truffle', 0, 'Cake Flavours', true),
-    ('black_forest', 'Classic Black Forest', 0, 'Cake Flavours', true),
-    ('red_velvet', 'Royal Red Velvet', 50, 'Cake Flavours', true),
-    ('butterscotch', 'Butterscotch Crunch', 0, 'Cake Flavours', true),
-    ('pineapple', 'Fresh Pineapple', 0, 'Cake Flavours', true),
-    ('vanilla', 'Classic Vanilla Bean', 0, 'Cake Flavours', true),
-    ('black_currant', 'Black Currant Delight', 50, 'Cake Flavours', true),
-    ('mango', 'Alphonso Mango', 50, 'Cake Flavours', true),
-    ('strawberry', 'Fresh Strawberry', 50, 'Cake Flavours', true),
-    ('rasmalai', 'Royal Rasmalai Fusion', 100, 'Cake Flavours', true),
-    ('hazelnut_ferrero', 'Ferrero Nutty Hazelnut', 100, 'Cake Flavours', true)
-ON CONFLICT (id) DO UPDATE SET price = EXCLUDED.price, updated_at = NOW();
+DROP POLICY IF EXISTS "Allow public read flavour_weights" ON public.flavour_weights;
+CREATE POLICY "Allow public read flavour_weights" ON public.flavour_weights FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert flavour_weights" ON public.flavour_weights;
+CREATE POLICY "Allow public insert flavour_weights" ON public.flavour_weights FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update flavour_weights" ON public.flavour_weights;
+CREATE POLICY "Allow public update flavour_weights" ON public.flavour_weights FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Allow public delete flavour_weights" ON public.flavour_weights;
+CREATE POLICY "Allow public delete flavour_weights" ON public.flavour_weights FOR DELETE USING (true);
+
+-- 4. Seed all 15 Flavours with standard weights
+INSERT INTO public.flavour_weights (id, name, icon, category, price_half_kg, price_1kg, price_1_5kg, price_2kg, is_available) VALUES
+    ('vanilla', 'Vanilla', '🍦', 'normal', 0, 0, 0, 0, true),
+    ('butterscotch', 'Butterscotch', '🧈', 'normal', 0, 0, 0, 0, true),
+    ('strawberry', 'Strawberry', '🍓', 'normal', 50, 100, 150, 200, true),
+    ('pineapple', 'Pineapple', '🍍', 'normal', 0, 0, 0, 0, true),
+    ('chocolate', 'Chocolate', '🍫', 'normal', 0, 0, 0, 0, true),
+    ('blueberry', 'Blueberry', '🫐', 'cooling', 50, 100, 150, 200, true),
+    ('black_currant', 'Black Currant', '🍇', 'cooling', 50, 100, 150, 200, true),
+    ('black_forest', 'Black Forest', '🍒', 'cooling', 0, 0, 0, 0, true),
+    ('milk_badam', 'Milk Badam', '🥛', 'cooling', 100, 200, 300, 400, true),
+    ('honey_almond', 'Honey Almond', '🍯', 'cooling', 100, 200, 300, 400, true),
+    ('red_velvet', 'Red Velvet', '❤️', 'cooling', 50, 100, 150, 200, true),
+    ('white_forest', 'White Forest', '🍰', 'cooling', 0, 0, 0, 0, true),
+    ('caramel', 'Caramel', '🍮', 'cooling', 50, 100, 150, 200, true),
+    ('milky_butterscotch', 'Milky Butterscotch', '🍨', 'cooling', 50, 100, 150, 200, true),
+    ('nutty_bubble', 'Nutty Bubble', '🫧', 'cooling', 100, 200, 300, 400, true)
+ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    icon = EXCLUDED.icon,
+    category = EXCLUDED.category,
+    price_half_kg = EXCLUDED.price_half_kg,
+    price_1kg = EXCLUDED.price_1kg,
+    price_1_5kg = EXCLUDED.price_1_5kg,
+    price_2kg = EXCLUDED.price_2kg,
+    updated_at = NOW();
+
+-- 5. Enable Supabase Realtime for live updates without refreshing
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.flavour_weights;
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+    WHEN undefined_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.products;
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+    WHEN undefined_object THEN NULL;
+END $$;

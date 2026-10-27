@@ -1880,7 +1880,7 @@ window.openOrderDetailsModal = function(orderNumber) {
                         <div>
                             <div style="font-weight: 700;">${it.quantity || 1}x ${escapeHtml(it.name)}</div>
                             <div style="font-size: 11px; color: var(--text-muted);">
-                                ${it.selected_flavour || it.flavour ? '✨ ' + (it.selected_flavour || it.flavour) + ' • ' : ''}⚖️ ${it.selected_weight || '0.5 KG'} • ${it.is_cooling ? '❄️ Cooling Cake (+₹' + (it.cooling_price || 0) + ')' : '🎂 Normal Cake'}
+                                ${it.selected_flavour || it.flavour ? '✨ ' + (it.selected_flavour || it.flavour) + (Number(it.flavour_price || it.flavourPrice) > 0 ? ' (+₹' + (it.flavour_price || it.flavourPrice) + ')' : '') + ' • ' : ''}⚖️ ${it.selected_weight || '0.5 KG'} • ${it.is_cooling ? '❄️ Cooling Cake (+₹' + (it.cooling_price || 0) + ')' : '🎂 Normal Cake'}
                                 ${it.custom_message ? ` • ✍️ "${escapeHtml(it.custom_message)}"` : ''}
                             </div>
                         </div>
@@ -2436,8 +2436,30 @@ window.loadAllProducts = async function() {
             AdminState.supabaseConnected = true;
             updateCloudStatusBadges();
             console.log(`✅ Admin Panel received ${AdminState.products.length} live products directly from Supabase!`);
-            const badge = document.getElementById("sidebarProductsBadge");
-            if (badge) badge.textContent = AdminState.products.length + "+";
+            // Also fetch live flavour weights if table exists
+            try {
+                const fwRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/flavour_weights?select=*`, {
+                    headers: { 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}` }
+                });
+                if (fwRes.ok) {
+                    const fwList = await fwRes.json();
+                    if (Array.isArray(fwList) && fwList.length > 0) {
+                        AdminState.flavourWeights = fwList;
+                        fwList.forEach(fw => {
+                            const matched = ADMIN_FLAVOUR_KEYS.find(f => f.id === fw.id);
+                            if (matched) {
+                                matched.defaultPrice = Number(fw.price_half_kg || 0);
+                                matched.price_half_kg = Number(fw.price_half_kg || 0);
+                                matched.price_1kg = Number(fw.price_1kg || 0);
+                                matched.price_1_5kg = Number(fw.price_1_5kg || 0);
+                                matched.price_2kg = Number(fw.price_2kg || 0);
+                            }
+                        });
+                        console.log('✅ Admin loaded live flavour weights from Supabase:', fwList.length);
+                    }
+                }
+            } catch(e) {}
+
             renderProductsStats();
             renderProducts();
             return;
@@ -2758,12 +2780,83 @@ function renderProducts() {
     }
 }
 
+// Helpers for flavour detection and pricing in Admin
+function getAdminDefaultFlavour(prod) {
+    if (prod && prod.flavour && prod.flavour.trim()) return prod.flavour.trim();
+    if (prod && prod.flavour_prices && typeof prod.flavour_prices === 'object') {
+        for (const [k, v] of Object.entries(prod.flavour_prices)) {
+            if (Number(v) > 0) {
+                const matched = (typeof ADMIN_FLAVOUR_KEYS !== 'undefined' ? ADMIN_FLAVOUR_KEYS : []).find(f => f.id.toLowerCase() === k.toLowerCase() || f.name.toLowerCase() === k.toLowerCase());
+                if (matched) return matched.name;
+            }
+        }
+    }
+    const text = `${(prod && prod.name) || ''} ${(prod && prod.category) || ''}`.toLowerCase();
+    if (text.includes('red velvet')) return 'Red Velvet';
+    if (text.includes('blueberry')) return 'Blueberry';
+    if (text.includes('black forest')) return 'Black Forest';
+    if (text.includes('white forest')) return 'White Forest';
+    if (text.includes('black currant') || text.includes('currant')) return 'Black Currant';
+    if (text.includes('milk badam') || text.includes('badam')) return 'Milk Badam';
+    if (text.includes('honey almond') || text.includes('almond')) return 'Honey Almond';
+    if (text.includes('caramel')) return 'Caramel';
+    if (text.includes('milky butterscotch')) return 'Milky Butterscotch';
+    if (text.includes('nutty bubble')) return 'Nutty Bubble';
+    if (text.includes('butterscotch')) return 'Butterscotch';
+    if (text.includes('strawberry')) return 'Strawberry';
+    if (text.includes('pineapple')) return 'Pineapple';
+    if (text.includes('vanilla')) return 'Vanilla';
+    if (text.includes('choco') || text.includes('truffle') || text.includes('fudge') || text.includes('dark')) return 'Chocolate';
+    return 'Chocolate';
+}
+
+function getAdminFlavourPrice(prod, flavourName) {
+    const basePrice = Number(prod && (prod.price_half_kg || prod.price) || 0);
+    if (!flavourName || (prod && prod.has_flavours === false)) return basePrice;
+
+    const fKey = flavourName.toLowerCase().replace(/\s+/g, '_');
+    const fNameLower = flavourName.toLowerCase();
+
+    if (prod && prod.flavour_prices && typeof prod.flavour_prices === 'object') {
+        let entered = null;
+        if (prod.flavour_prices[flavourName] !== undefined && prod.flavour_prices[flavourName] !== "") {
+            entered = Number(prod.flavour_prices[flavourName]);
+        } else if (prod.flavour_prices[fKey] !== undefined && prod.flavour_prices[fKey] !== "") {
+            entered = Number(prod.flavour_prices[fKey]);
+        } else {
+            for (const [k, v] of Object.entries(prod.flavour_prices)) {
+                if (k.toLowerCase().trim() === fNameLower || k.toLowerCase().trim() === fKey) {
+                    entered = Number(v);
+                    break;
+                }
+            }
+        }
+        if (entered !== null && !isNaN(entered) && entered > 0) {
+            // Show only what was entered in flavour rate! Don't add extra price!
+            if (entered >= 150) {
+                return entered;
+            } else {
+                return basePrice + entered;
+            }
+        }
+    }
+    // If no flavour rate entered or entered 0, show base price only without adding extra price!
+    return basePrice;
+}
+
 // Single Product Card HTML
 function createProductCardHTML(prod) {
     const isAvail = prod.is_available !== false;
-        const hasWeight = prod.has_weight !== false;
-        const hasCooling = prod.has_cooling !== false;
-    const origPrice = Number(prod.originalPrice || Math.round(prod.price * 1.3));
+    const hasWeight = prod.has_weight !== false;
+    const hasCooling = prod.has_cooling !== false;
+    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
+    const isCatNonCake = nonCakeCategories.some(nc => (prod.category || '').toLowerCase().includes(nc));
+    const hasFlavours = prod.has_flavours !== false && !isCatNonCake;
+    const defaultFlavour = (prod.flavour && prod.flavour.trim()) ? prod.flavour.trim() : (hasFlavours ? getAdminDefaultFlavour(prod) : null);
+
+    const basePrice = Number(prod.price || 0);
+    const finalCardPrice = getAdminFlavourPrice(prod, defaultFlavour);
+    const origPrice = Number(prod.originalPrice || Math.round(basePrice * 1.3)) + (finalCardPrice > basePrice ? (finalCardPrice - basePrice) : 0);
     const fallbackImg = "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80";
     const imgSrc = prod.image || fallbackImg;
 
@@ -2780,23 +2873,28 @@ function createProductCardHTML(prod) {
             <div class="prod-card-body">
                 <div class="prod-card-header-row">
                     <h4 class="prod-card-title">${escapeHtml(prod.name)}</h4>
-                    ${prod.isVeg !== false ? '<div class="prod-veg-dot" title="Pure Veg"><span></span></div>' : ""}
+                    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                        ${hasFlavours && defaultFlavour ? `
+                            <span class="admin-flavour-chip" style="font-size: 10px; font-weight: 700; color: #7c5cfc; background: #f5f3ff; border: 1px solid #ede9fe; padding: 1.5px 6.5px; border-radius: 4px; white-space: nowrap;" title="Flavour: ${defaultFlavour}">${defaultFlavour}</span>
+                        ` : ''}
+                        ${prod.isVeg !== false ? '<div class="prod-veg-dot" title="Pure Veg"><span></span></div>' : ""}
+                    </div>
                 </div>
 
                 <p class="prod-card-desc">${escapeHtml(prod.description || "Handcrafted fresh cake baked with premium Belgian ingredients.")}</p>
 
-                <!-- Price Row & Quick 1-Click Update -->
+                <!-- Price Row & Quick 1-Click Update with Flavour Display -->
                 <div class="prod-card-price-row">
                     <div class="price-box-admin">
-                        <span class="price-main-val">₹${prod.price}</span>
-                        ${origPrice > prod.price ? `<span class="price-orig-val">₹${origPrice}</span>` : ""}
+                        <span class="price-main-val">₹${finalCardPrice}</span>
+                        ${origPrice > finalCardPrice ? `<span class="price-orig-val">₹${origPrice}</span>` : ""}
                     </div>
                     <button class="quick-edit-price-btn" onclick="openQuickPriceModal('${prod.id}')" title="Quick Update Price">
                         <i class="fa-solid fa-pen-to-square"></i> Edit Price
                     </button>
                 </div>
 
-                <!-- Weight Pricing Preview -->
+                <!-- Weight Pricing Preview (Includes Flavour Rate) -->
                 ${prod.has_weight === false ? `
                 <div class="weights-preview-pills">
                     <span class="weight-preview-tag" style="background: #eef2ff; color: #4338ca; border-color: #c7d2fe; font-weight: 700;">
@@ -2806,9 +2904,9 @@ function createProductCardHTML(prod) {
                 </div>
                 ` : `
                 <div class="weights-preview-pills">
-                    <span class="weight-preview-tag">0.5KG: ₹${prod.price_half_kg || prod.price}</span>
-                    <span class="weight-preview-tag">1KG: ₹${prod.price_1kg || (prod.price + 400)}</span>
-                    <span class="weight-preview-tag">2KG: ₹${prod.price_2kg || (prod.price + 1200)}</span>
+                    <span class="weight-preview-tag">0.5KG: ₹${finalCardPrice}</span>
+                    <span class="weight-preview-tag">1KG: ₹${(Number(prod.price_1kg) || (basePrice + 400)) + (finalCardPrice > basePrice ? (finalCardPrice - basePrice) : 0)}</span>
+                    <span class="weight-preview-tag">2KG: ₹${(Number(prod.price_2kg) || (basePrice + 1200)) + (finalCardPrice > basePrice ? (finalCardPrice - basePrice) : 0)}</span>
                 </div>
                 `}
 
@@ -2838,6 +2936,12 @@ function createProductCardHTML(prod) {
 // Single Product Table Row HTML
 function createProductTableRowHTML(prod) {
     const isAvail = prod.is_available !== false;
+    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
+    const isCatNonCake = nonCakeCategories.some(nc => (prod.category || '').toLowerCase().includes(nc));
+    const hasFlavours = prod.has_flavours !== false && !isCatNonCake;
+    const defaultFlavour = hasFlavours ? getAdminDefaultFlavour(prod) : null;
+    const basePrice = Number(prod.price || 0);
+    const finalCardPrice = getAdminFlavourPrice(prod, defaultFlavour);
     const fallbackImg = "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=100";
 
     return `
@@ -2851,10 +2955,15 @@ function createProductTableRowHTML(prod) {
             </td>
             <td><span class="custom-pill weight">${escapeHtml(prod.category)}</span></td>
             <td>
-                <strong style="color: var(--primary); font-size: 15px;">₹${prod.price}</strong>
+                <strong style="color: var(--primary); font-size: 15px;">₹${finalCardPrice}</strong>
+                ${hasFlavours && defaultFlavour ? `
+                    <span style="font-size: 10.5px; font-weight: 700; color: #7c5cfc; background: rgba(124, 92, 252, 0.08); padding: 2px 6px; border-radius: 4px; margin-left: 6px; display: inline-block;">
+                        ${defaultFlavour}: ₹${finalCardPrice}
+                    </span>
+                ` : ''}
                 <button class="quick-edit-price-btn" style="margin-left: 8px;" onclick="openQuickPriceModal('${prod.id}')">Edit</button>
             </td>
-            <td><span style="color: var(--text-muted); text-decoration: line-through;">₹${prod.originalPrice || ""}</span></td>
+            <td><span style="color: var(--text-muted); text-decoration: line-through;">₹${prod.originalPrice ? (Number(prod.originalPrice) + (finalCardPrice > basePrice ? (finalCardPrice - basePrice) : 0)) : ""}</span></td>
             <td>
                 <label class="switch-control">
                     <input type="checkbox" ${isAvail ? "checked" : ""} onchange="toggleProductStock('${prod.id}', this.checked)">
@@ -3103,36 +3212,124 @@ const ADMIN_FLAVOUR_KEYS = [
     // 5 Normal & Cooling Shared Flavours
     { id: 'vanilla', name: 'Vanilla', defaultPrice: 0, category: 'normal', icon: '🍦' },
     { id: 'butterscotch', name: 'Butterscotch', defaultPrice: 0, category: 'normal', icon: '🧈' },
-    { id: 'strawberry', name: 'Strawberry', defaultPrice: 0, category: 'normal', icon: '🍓' },
+    { id: 'strawberry', name: 'Strawberry', defaultPrice: 50, category: 'normal', icon: '🍓' },
     { id: 'pineapple', name: 'Pineapple', defaultPrice: 0, category: 'normal', icon: '🍍' },
     { id: 'chocolate', name: 'Chocolate', defaultPrice: 0, category: 'normal', icon: '🍫', altId: 'chocolate_truffle' },
     // 10 Cooling-Exclusive Flavours
-    { id: 'blueberry', name: 'Blueberry', defaultPrice: 0, category: 'cooling', icon: '🫐' },
-    { id: 'black_currant', name: 'Black Currant', defaultPrice: 0, category: 'cooling', icon: '🍇' },
+    { id: 'blueberry', name: 'Blueberry', defaultPrice: 50, category: 'cooling', icon: '🫐' },
+    { id: 'black_currant', name: 'Black Currant', defaultPrice: 50, category: 'cooling', icon: '🍇' },
     { id: 'black_forest', name: 'Black Forest', defaultPrice: 0, category: 'cooling', icon: '🍒' },
-    { id: 'milk_badam', name: 'Milk Badam', defaultPrice: 0, category: 'cooling', icon: '🥛' },
-    { id: 'honey_almond', name: 'Honey Almond', defaultPrice: 0, category: 'cooling', icon: '🍯' },
-    { id: 'red_velvet', name: 'Red Velvet', defaultPrice: 0, category: 'cooling', icon: '❤️' },
+    { id: 'milk_badam', name: 'Milk Badam', defaultPrice: 100, category: 'cooling', icon: '🥛' },
+    { id: 'honey_almond', name: 'Honey Almond', defaultPrice: 100, category: 'cooling', icon: '🍯' },
+    { id: 'red_velvet', name: 'Red Velvet', defaultPrice: 50, category: 'cooling', icon: '❤️' },
     { id: 'white_forest', name: 'White Forest', defaultPrice: 0, category: 'cooling', icon: '🍰' },
-    { id: 'caramel', name: 'Caramel', defaultPrice: 0, category: 'cooling', icon: '🍮' },
-    { id: 'milky_butterscotch', name: 'Milky Butterscotch', defaultPrice: 0, category: 'cooling', icon: '🍨' },
-    { id: 'nutty_bubble', name: 'Nutty Bubble', defaultPrice: 0, category: 'cooling', icon: '🫧' }
+    { id: 'caramel', name: 'Caramel', defaultPrice: 50, category: 'cooling', icon: '🍮' },
+    { id: 'milky_butterscotch', name: 'Milky Butterscotch', defaultPrice: 50, category: 'cooling', icon: '🍨' },
+    { id: 'nutty_bubble', name: 'Nutty Bubble', defaultPrice: 100, category: 'cooling', icon: '🫧' }
 ];
 
 window.ADMIN_FLAVOUR_KEYS = ADMIN_FLAVOUR_KEYS;
 
+window.onFlavour05Input = function(flavourId, val) {
+    const p = Number(val) || 0;
+    const inp10 = document.getElementById('flavourPrice_' + flavourId + '_10');
+    const inp15 = document.getElementById('flavourPrice_' + flavourId + '_15');
+    const inp20 = document.getElementById('flavourPrice_' + flavourId + '_20');
+
+    if (p > 0) {
+        if (inp10 && (!inp10.value || inp10.dataset.autoCalc !== 'false')) inp10.value = p + 400;
+        if (inp15 && (!inp15.value || inp15.dataset.autoCalc !== 'false')) inp15.value = p + 800;
+        if (inp20 && (!inp20.value || inp20.dataset.autoCalc !== 'false')) inp20.value = p + 1200;
+    }
+
+    // If this flavour is the one currently selected in "Flavour for Selling Price", sync top inputs
+    const selFlavour = document.getElementById("prodInputPriceFlavour") ? document.getElementById("prodInputPriceFlavour").value.trim() : "";
+    const fKey = flavourId.toLowerCase().replace(/\s+/g, '_');
+    if (selFlavour && (selFlavour.toLowerCase() === flavourId.toLowerCase() || selFlavour.toLowerCase().replace(/\s+/g, '_') === fKey)) {
+        const mainP = document.getElementById("prodInputPrice");
+        if (mainP && p > 0) {
+            mainP.value = p;
+            if (typeof autoComputeWeightPrices === 'function') autoComputeWeightPrices(p, true);
+        }
+    }
+};
+
+window.autoCalcSingleFlavourWeights = function(flavourId) {
+    const inp05 = document.getElementById('flavourPrice_' + flavourId);
+    const p = inp05 ? (Number(inp05.value) || 0) : 0;
+    if (p <= 0) {
+        if (typeof showToast === 'function') showToast('Please enter a 0.5 KG price first!', 'fa-solid fa-circle-exclamation', '#f59e0b');
+        return;
+    }
+    const inp10 = document.getElementById('flavourPrice_' + flavourId + '_10');
+    const inp15 = document.getElementById('flavourPrice_' + flavourId + '_15');
+    const inp20 = document.getElementById('flavourPrice_' + flavourId + '_20');
+
+    if (inp10) inp10.value = p + 400;
+    if (inp15) inp15.value = p + 800;
+    if (inp20) inp20.value = p + 1200;
+
+    if (typeof showToast === 'function') {
+        showToast(`✨ Auto-filled weights for ${flavourId}: 0.5KG (₹${p}) • 1KG (₹${p+400}) • 1.5KG (₹${p+800}) • 2KG (₹${p+1200})`, 'fa-solid fa-wand-magic-sparkles', '#db2777');
+    }
+};
+
+window.autoFillAllFlavourWeights = function() {
+    let count = 0;
+    const baseFallback = Number(document.getElementById("prodInputPrice") ? document.getElementById("prodInputPrice").value : 749) || 749;
+    ADMIN_FLAVOUR_KEYS.forEach(f => {
+        const inp05 = document.getElementById('flavourPrice_' + f.id);
+        const inp10 = document.getElementById('flavourPrice_' + f.id + '_10');
+        const inp15 = document.getElementById('flavourPrice_' + f.id + '_15');
+        const inp20 = document.getElementById('flavourPrice_' + f.id + '_20');
+
+        let p = inp05 ? (Number(inp05.value) || 0) : 0;
+        if (p <= 0) {
+            p = baseFallback + f.defaultPrice;
+            if (inp05) inp05.value = p;
+        }
+        if (inp10) inp10.value = p + 400;
+        if (inp15) inp15.value = p + 800;
+        if (inp20) inp20.value = p + 1200;
+        count++;
+    });
+    if (typeof showToast === 'function') {
+        showToast(`⚡ All ${count} flavours weight variations auto-filled! (+₹400 / +₹800 / +₹1200)`, 'fa-solid fa-scale-balanced', '#7c5cfc');
+    }
+};
+
 window.setAllFlavourPrices = function(val) {
     ADMIN_FLAVOUR_KEYS.forEach(f => {
-        const inp = document.getElementById('flavourPrice_' + f.id) || (f.altId ? document.getElementById('flavourPrice_' + f.altId) : null);
-        if (inp) inp.value = val;
+        const inp05 = document.getElementById('flavourPrice_' + f.id);
+        const inp10 = document.getElementById('flavourPrice_' + f.id + '_10');
+        const inp15 = document.getElementById('flavourPrice_' + f.id + '_15');
+        const inp20 = document.getElementById('flavourPrice_' + f.id + '_20');
+
+        if (inp05) inp05.value = val;
+        if (inp10) inp10.value = val === 0 ? 0 : (val + 400);
+        if (inp15) inp15.value = val === 0 ? 0 : (val + 800);
+        if (inp20) inp20.value = val === 0 ? 0 : (val + 1200);
     });
+    if (typeof showToast === 'function') {
+        showToast(val === 0 ? 'All flavours set to ₹0 (Free)' : `All flavours set to ₹${val}`, 'fa-solid fa-tags', '#db2777');
+    }
 };
 
 window.resetDefaultFlavourPrices = function() {
     ADMIN_FLAVOUR_KEYS.forEach(f => {
-        const inp = document.getElementById('flavourPrice_' + f.id) || (f.altId ? document.getElementById('flavourPrice_' + f.altId) : null);
-        if (inp) inp.value = f.defaultPrice;
+        const inp05 = document.getElementById('flavourPrice_' + f.id);
+        const inp10 = document.getElementById('flavourPrice_' + f.id + '_10');
+        const inp15 = document.getElementById('flavourPrice_' + f.id + '_15');
+        const inp20 = document.getElementById('flavourPrice_' + f.id + '_20');
+
+        if (inp05) inp05.value = f.defaultPrice;
+        if (inp10) inp10.value = f.defaultPrice > 0 ? (f.defaultPrice + 400) : 0;
+        if (inp15) inp15.value = f.defaultPrice > 0 ? (f.defaultPrice + 800) : 0;
+        if (inp20) inp20.value = f.defaultPrice > 0 ? (f.defaultPrice + 1200) : 0;
     });
+    if (typeof showToast === 'function') {
+        showToast('Reset to standard flavour prices', 'fa-solid fa-rotate-left', '#db2777');
+    }
 };
 
 window.toggleAdminWeightSection = function(enabled) {
@@ -3216,6 +3413,86 @@ window.handleAdminCategoryChange = function(category) {
     }
 };
 
+window.syncAdminPriceFlavour = function(val) {
+    if (document.getElementById("prodInputFlavour")) {
+        document.getElementById("prodInputFlavour").value = val;
+    }
+    
+    // Find the product being edited
+    const formId = document.getElementById("prodFormId") ? document.getElementById("prodFormId").value.trim() : "";
+    const prod = formId ? AdminState.products.find(p => p.id === formId || p.sql_id === formId || String(p.id) === String(formId) || String(p.sql_id) === String(formId)) : null;
+
+    const baseHalfKgPrice = prod ? Number(prod.price_half_kg || prod.price || 0) : (Number(document.getElementById("prodInputPrice").value) || 749);
+    const fKey = (val || "").toLowerCase().replace(/\s+/g, '_');
+    const matchedF = (typeof ADMIN_FLAVOUR_KEYS !== 'undefined' ? ADMIN_FLAVOUR_KEYS : []).find(f => f.id.toLowerCase() === fKey || f.name.toLowerCase() === (val || "").toLowerCase() || (f.altId && f.altId.toLowerCase() === fKey));
+
+    let foundPrice = null;
+
+    // 1. Check existing flavourPrice_<id> input in the DOM
+    if (matchedF) {
+        const inp = document.getElementById('flavourPrice_' + matchedF.id) || (matchedF.altId ? document.getElementById('flavourPrice_' + matchedF.altId) : null);
+        if (inp && inp.value !== "" && !isNaN(inp.value) && Number(inp.value) > 0) {
+            const entered = Number(inp.value);
+            foundPrice = entered >= 150 ? entered : (baseHalfKgPrice + entered);
+        }
+    }
+
+    // 2. Check prod.flavour_prices object
+    if (foundPrice === null && prod && prod.flavour_prices && typeof prod.flavour_prices === 'object') {
+        const fp = prod.flavour_prices;
+        let entered = null;
+        if (fp[val] !== undefined && fp[val] !== "") {
+            entered = Number(fp[val]);
+        } else if (fp[fKey] !== undefined && fp[fKey] !== "") {
+            entered = Number(fp[fKey]);
+        } else {
+            for (const [k, v] of Object.entries(fp)) {
+                if (k.toLowerCase().trim() === (val || "").toLowerCase() || k.toLowerCase().trim() === fKey) {
+                    entered = Number(v);
+                    break;
+                }
+            }
+        }
+        if (entered !== null && !isNaN(entered) && entered > 0) {
+            foundPrice = entered >= 150 ? entered : (baseHalfKgPrice + entered);
+        }
+    }
+
+    // 3. Fallback to getAdminFlavourPrice helper
+    if (foundPrice === null && prod) {
+        const p = getAdminFlavourPrice(prod, val);
+        if (p > 0) foundPrice = p;
+    }
+
+    // 4. Fallback to matched flavour default price
+    if (foundPrice === null && matchedF && matchedF.defaultPrice > 0) {
+        foundPrice = baseHalfKgPrice + matchedF.defaultPrice;
+    }
+
+    // 5. If still no specific price, use base price
+    if (foundPrice === null && baseHalfKgPrice > 0) {
+        foundPrice = baseHalfKgPrice;
+    }
+
+    // Update Selling Price, Strike Price, and Weight variants
+    if (foundPrice && foundPrice > 0) {
+        const priceInput = document.getElementById("prodInputPrice");
+        if (priceInput) {
+            priceInput.value = foundPrice;
+        }
+        const origInput = document.getElementById("prodInputOrigPrice");
+        if (origInput) {
+            origInput.value = Math.round(foundPrice * 1.3);
+        }
+        if (typeof autoComputeWeightPrices === 'function') {
+            autoComputeWeightPrices(foundPrice, true);
+        }
+        if (typeof showToast === 'function') {
+            showToast(`Selected ${val}: Price updated to ₹${foundPrice}`, 'fa-solid fa-wand-magic-sparkles', '#7c5cfc');
+        }
+    }
+};
+
 window.openAddProductModal = function() {
     const modal = document.getElementById("productModal");
     const title = document.getElementById("productModalTitle");
@@ -3225,6 +3502,7 @@ window.openAddProductModal = function() {
     form.reset();
     document.getElementById("prodFormId").value = "";
     if (document.getElementById("prodInputFlavour")) document.getElementById("prodInputFlavour").value = "";
+    if (document.getElementById("prodInputPriceFlavour")) document.getElementById("prodInputPriceFlavour").value = "Chocolate";
     if (window.resetDefaultFlavourPrices) window.resetDefaultFlavourPrices();
     if (title) title.textContent = "Add New Cake / Product";
 
@@ -3259,18 +3537,44 @@ window.openEditProductModal = function(productId) {
     // Basic product details
     document.getElementById("prodInputName").value = prod.name || "";
     document.getElementById("prodInputCategory").value = prod.category || "Specialty Cakes";
-    if (document.getElementById("prodInputFlavour")) document.getElementById("prodInputFlavour").value = prod.flavour || prod.selected_flavour || "";
-    document.getElementById("prodInputPrice").value = prod.price || "";
-    document.getElementById("prodInputOrigPrice").value = prod.originalPrice || prod.original_price || Math.round((Number(prod.price) || 0) * 1.3);
+    const activeFlavour = (prod.flavour && prod.flavour.trim()) ? prod.flavour.trim() : (prod.selected_flavour || getAdminDefaultFlavour(prod) || "Chocolate");
+    if (document.getElementById("prodInputFlavour")) document.getElementById("prodInputFlavour").value = activeFlavour;
+    if (document.getElementById("prodInputPriceFlavour")) {
+        const sel = document.getElementById("prodInputPriceFlavour");
+        let matched = false;
+        for (let i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value.toLowerCase() === activeFlavour.toLowerCase() || activeFlavour.toLowerCase().includes(sel.options[i].value.toLowerCase())) {
+                sel.selectedIndex = i;
+                matched = true;
+                break;
+            }
+        }
+        if (!matched) sel.value = activeFlavour;
+    }
+    const flavourPrice = getAdminFlavourPrice(prod, activeFlavour);
+    const displayP = (flavourPrice && flavourPrice > 0) ? flavourPrice : (Number(prod.price) || 0);
+    document.getElementById("prodInputPrice").value = displayP || "";
+    document.getElementById("prodInputOrigPrice").value = prod.originalPrice || prod.original_price || Math.round((Number(displayP) || 0) * 1.3);
     document.getElementById("prodInputImage").value = prod.image || prod.image_url || "";
     document.getElementById("prodInputDesc").value = prod.description || "";
 
-    // Weight variants with fallbacks
-    const baseP = Number(prod.price) || 0;
-    document.getElementById("prodInputPrice05").value = (prod.price_half_kg !== undefined && prod.price_half_kg !== null && prod.price_half_kg !== "") ? prod.price_half_kg : baseP;
-    document.getElementById("prodInputPrice10").value = (prod.price_1kg !== undefined && prod.price_1kg !== null && prod.price_1kg !== "") ? prod.price_1kg : (baseP + 400);
-    document.getElementById("prodInputPrice15").value = (prod.price_1_5kg !== undefined && prod.price_1_5kg !== null && prod.price_1_5kg !== "") ? prod.price_1_5kg : (baseP + 800);
-    document.getElementById("prodInputPrice20").value = (prod.price_2kg !== undefined && prod.price_2kg !== null && prod.price_2kg !== "") ? prod.price_2kg : (baseP + 1200);
+    // Weight variants with fallbacks - dynamically calculate based on displayP (the flavour's price!)
+    const activeBaseP = displayP || Number(prod.price) || 0;
+    const diff = (displayP > Number(prod.price || 0)) ? (displayP - Number(prod.price || 0)) : 0;
+    const p05Val = (prod.price_half_kg !== undefined && prod.price_half_kg !== null && prod.price_half_kg !== "") ? (Number(prod.price_half_kg) + diff) : activeBaseP;
+    const p10Val = (prod.price_1kg !== undefined && prod.price_1kg !== null && prod.price_1kg !== "") ? (Number(prod.price_1kg) + (diff * 2)) : (activeBaseP + 400);
+    const p15Val = (prod.price_1_5kg !== undefined && prod.price_1_5kg !== null && prod.price_1_5kg !== "") ? (Number(prod.price_1_5kg) + (diff * 3)) : (activeBaseP + 800);
+    const p20Val = (prod.price_2kg !== undefined && prod.price_2kg !== null && prod.price_2kg !== "") ? (Number(prod.price_2kg) + (diff * 4)) : (activeBaseP + 1200);
+
+    document.getElementById("prodInputPrice05").value = p05Val;
+    document.getElementById("prodInputPrice10").value = p10Val;
+    document.getElementById("prodInputPrice15").value = p15Val;
+    document.getElementById("prodInputPrice20").value = p20Val;
+
+    const noteEl = document.getElementById("adminWeightFlavourSyncNote");
+    if (noteEl) {
+        noteEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>KG weights scaled for <strong>${activeFlavour}</strong>: 0.5KG (₹${p05Val}) • 1KG (₹${p10Val}) • 1.5KG (₹${p15Val}) • 2KG (₹${p20Val})</span>`;
+    }
     document.getElementById("prodInputCoolingPrice").value = (prod.cooling_price_half_kg !== undefined && prod.cooling_price_half_kg !== null && prod.cooling_price_half_kg !== "") ? prod.cooling_price_half_kg : 50;
 
     // Toggles
@@ -3319,18 +3623,31 @@ window.openEditProductModal = function(productId) {
     }
     const savedFlavourPrices = prod.flavour_prices || {};
     ADMIN_FLAVOUR_KEYS.forEach(f => {
-        const inp = document.getElementById('flavourPrice_' + f.id);
-        if (inp) {
-            if (savedFlavourPrices[f.id] !== undefined) {
-                inp.value = savedFlavourPrices[f.id];
-            } else if (savedFlavourPrices[f.name] !== undefined) {
-                inp.value = savedFlavourPrices[f.name];
-            } else if (f.altId && savedFlavourPrices[f.altId] !== undefined) {
-                inp.value = savedFlavourPrices[f.altId];
-            } else {
-                inp.value = f.defaultPrice;
-            }
-        }
+        const inp05 = document.getElementById('flavourPrice_' + f.id);
+        const inp10 = document.getElementById('flavourPrice_' + f.id + '_10');
+        const inp15 = document.getElementById('flavourPrice_' + f.id + '_15');
+        const inp20 = document.getElementById('flavourPrice_' + f.id + '_20');
+
+        let val05 = f.defaultPrice;
+        if (savedFlavourPrices[f.id] !== undefined) val05 = savedFlavourPrices[f.id];
+        else if (savedFlavourPrices[f.name] !== undefined) val05 = savedFlavourPrices[f.name];
+        else if (f.altId && savedFlavourPrices[f.altId] !== undefined) val05 = savedFlavourPrices[f.altId];
+        else if (savedFlavourPrices[f.id + '_05'] !== undefined) val05 = savedFlavourPrices[f.id + '_05'];
+
+        if (inp05) inp05.value = (val05 !== null && val05 !== undefined) ? val05 : "";
+
+        const num05 = Number(val05) || 0;
+        let val10 = savedFlavourPrices[f.id + '_10'] || savedFlavourPrices[f.name + '_10'];
+        let val15 = savedFlavourPrices[f.id + '_15'] || savedFlavourPrices[f.name + '_15'];
+        let val20 = savedFlavourPrices[f.id + '_20'] || savedFlavourPrices[f.name + '_20'];
+
+        if (val10 === undefined && num05 > 0) val10 = num05 + 400;
+        if (val15 === undefined && num05 > 0) val15 = num05 + 800;
+        if (val20 === undefined && num05 > 0) val20 = num05 + 1200;
+
+        if (inp10) inp10.value = (val10 !== null && val10 !== undefined) ? val10 : "";
+        if (inp15) inp15.value = (val15 !== null && val15 !== undefined) ? val15 : "";
+        if (inp20) inp20.value = (val20 !== null && val20 !== undefined) ? val20 : "";
     });
     if (document.getElementById("prodInputFlavourPricingMode")) {
         document.getElementById("prodInputFlavourPricingMode").value = prod.flavour_pricing_mode || "tiered";
@@ -3339,7 +3656,7 @@ window.openEditProductModal = function(productId) {
     modal.classList.add("open");
 };
 
-window.autoComputeWeightPrices = function(baseVal) {
+window.autoComputeWeightPrices = function(baseVal, force = false) {
     const p = Number(baseVal) || 0;
     if (p <= 0) return;
     const p05 = document.getElementById("prodInputPrice05");
@@ -3347,11 +3664,27 @@ window.autoComputeWeightPrices = function(baseVal) {
     const p15 = document.getElementById("prodInputPrice15");
     const p20 = document.getElementById("prodInputPrice20");
 
-    // Automatically pre-calculate empty weight variant inputs
-    if (p05 && (!p05.value || p05.value.trim() === '' || Number(p05.value) <= 0)) p05.value = p;
-    if (p10 && (!p10.value || p10.value.trim() === '' || Number(p10.value) <= 0)) p10.value = p + 400;
-    if (p15 && (!p15.value || p15.value.trim() === '' || Number(p15.value) <= 0)) p15.value = p + 800;
-    if (p20 && (!p20.value || p20.value.trim() === '' || Number(p20.value) <= 0)) p20.value = p + 1200;
+    // Automatically pre-calculate weight variant inputs scaled to the selected flavour price
+    if (p05) p05.value = p;
+    if (p10 && (force || !p10.value || p10.value.trim() === '' || Number(p10.value) <= 0)) p10.value = p + 400;
+    if (p15 && (force || !p15.value || p15.value.trim() === '' || Number(p15.value) <= 0)) p15.value = p + 800;
+    if (p20 && (force || !p20.value || p20.value.trim() === '' || Number(p20.value) <= 0)) p20.value = p + 1200;
+
+    // Keep the active flavour in the flavour table in sync with the entered Selling Price
+    const selFlavour = document.getElementById("prodInputPriceFlavour") ? document.getElementById("prodInputPriceFlavour").value.trim() : "";
+    if (selFlavour) {
+        const fKey = selFlavour.toLowerCase().replace(/\s+/g, '_');
+        const matchedF = (typeof ADMIN_FLAVOUR_KEYS !== 'undefined' ? ADMIN_FLAVOUR_KEYS : []).find(f => f.id.toLowerCase() === fKey || f.name.toLowerCase() === selFlavour.toLowerCase() || (f.altId && f.altId.toLowerCase() === fKey));
+        if (matchedF) {
+            const inp = document.getElementById('flavourPrice_' + matchedF.id) || (matchedF.altId ? document.getElementById('flavourPrice_' + matchedF.altId) : null);
+            if (inp) inp.value = p;
+        }
+
+        const noteEl = document.getElementById("adminWeightFlavourSyncNote");
+        if (noteEl) {
+            noteEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>KG weights scaled for <strong>${selFlavour}</strong>: 0.5KG (₹${p}) • 1KG (₹${p+400}) • 1.5KG (₹${p+800}) • 2KG (₹${p+1200})</span>`;
+        }
+    }
 };
 
 window.setPresetImage = function(url) {
@@ -3388,16 +3721,38 @@ window.handleProductFormSubmit = async function(e) {
     const hasWeight = document.getElementById("prodInputHasWeight") ? document.getElementById("prodInputHasWeight").checked : true;
     const hasCooling = document.getElementById("prodInputHasCooling") ? document.getElementById("prodInputHasCooling").checked : true;
     const hasFlavours = document.getElementById("prodInputHasFlavours") ? document.getElementById("prodInputHasFlavours").checked : true;
-    const isDirectAdd = (!hasWeight && !hasCooling && !hasFlavours);
-    const flavour = document.getElementById("prodInputFlavour") ? document.getElementById("prodInputFlavour").value.trim() : "";
+    const priceFlavourEl = document.getElementById("prodInputPriceFlavour");
+    const flavour = priceFlavourEl ? priceFlavourEl.value.trim() : (document.getElementById("prodInputFlavour") ? document.getElementById("prodInputFlavour").value.trim() : "");
     const flavourPrices = {};
     ADMIN_FLAVOUR_KEYS.forEach(f => {
-        const inp = document.getElementById('flavourPrice_' + f.id);
-        const val = inp ? (Number(inp.value) || 0) : f.defaultPrice;
-        flavourPrices[f.id] = val;
-        flavourPrices[f.name] = val;
-        if (f.altId) flavourPrices[f.altId] = val;
+        const inp05 = document.getElementById('flavourPrice_' + f.id);
+        const inp10 = document.getElementById('flavourPrice_' + f.id + '_10');
+        const inp15 = document.getElementById('flavourPrice_' + f.id + '_15');
+        const inp20 = document.getElementById('flavourPrice_' + f.id + '_20');
+
+        const val05 = inp05 ? (Number(inp05.value) || 0) : f.defaultPrice;
+        const val10 = inp10 && inp10.value !== "" ? (Number(inp10.value) || 0) : (val05 > 0 ? (val05 + 400) : 0);
+        const val15 = inp15 && inp15.value !== "" ? (Number(inp15.value) || 0) : (val05 > 0 ? (val05 + 800) : 0);
+        const val20 = inp20 && inp20.value !== "" ? (Number(inp20.value) || 0) : (val05 > 0 ? (val05 + 1200) : 0);
+
+        flavourPrices[f.id] = val05;
+        flavourPrices[f.name] = val05;
+        if (f.altId) flavourPrices[f.altId] = val05;
+
+        flavourPrices[f.id + '_05'] = val05;
+        flavourPrices[f.id + '_10'] = val10;
+        flavourPrices[f.id + '_15'] = val15;
+        flavourPrices[f.id + '_20'] = val20;
+
+        flavourPrices[f.name + '_05'] = val05;
+        flavourPrices[f.name + '_10'] = val10;
+        flavourPrices[f.name + '_15'] = val15;
+        flavourPrices[f.name + '_20'] = val20;
     });
+    if (flavour) {
+        flavourPrices[flavour] = price;
+        flavourPrices[flavour.toLowerCase().replace(/\s+/g, '_')] = price;
+    }
     const flavourPricingMode = document.getElementById("prodInputFlavourPricingMode") ? document.getElementById("prodInputFlavourPricingMode").value : "tiered";
 
     // If weight options are disabled, unify all weight variants to base price
@@ -3494,6 +3849,7 @@ window.handleProductFormSubmit = async function(e) {
             has_flavours: hasFlavours,
             isDirectAdd: isDirectAdd,
             flavour: hasFlavours ? flavour : "",
+            flavour_prices: hasFlavours ? flavourPrices : {},
             isVeg,
             isUniSpecial: isUni
         });
@@ -5565,18 +5921,18 @@ window.loadAllBanners = async function(silent = false) {
         bannersList = JSON.parse(JSON.stringify(SWIGGY_DATA.banners));
     }
 
-    // Ensure all items have proper properties and fallback images
-    bannersList = bannersList.map(b => {
-        const isTombola = b.id === 'b_tombola' || (b.id && b.id.includes('tombola')) || b.ctaAction === 'tombola_game';
+    // Ensure all items have proper properties and fallback images, omitting removed tombola banner
+    bannersList = bannersList.filter(b => b && b.id !== 'b_tombola' && !(b.id && b.id.includes('tombola')) && b.ctaAction !== 'tombola_game').map(b => {
         return {
             ...b,
-            image: b.image || (isTombola ? 'assets/tombola-banner.png?v=3' : ''),
-            fallbackImage: b.fallbackImage || (isTombola ? 'assets/tombola-banner.png?v=3' : ''),
-            discountText: b.discountText || (isTombola ? 'EVERY PRIZE A WINNER! • £1 A STRIP' : ''),
-            cta: b.cta || (isTombola ? 'Play Tombola Now' : 'Claim Offer'),
-            code: b.code || (isTombola ? 'TOMBOLA50' : ''),
-            ctaAction: b.ctaAction || (isTombola ? 'tombola_game' : 'copy_coupon'),
-            bgColor: b.bgColor || (b.isGraphicBanner ? '#ffd735' : '#110722'),
+            image: b.image || '',
+            fallbackImage: b.fallbackImage || '',
+            discountText: b.discountText || '',
+            cta: b.cta || 'Claim Offer',
+            code: b.code || '',
+            ctaAction: b.ctaAction || 'copy_coupon',
+            bgColor: b.bgColor || '#110722',
+            isGraphicBanner: Boolean(b.isGraphicBanner),
             isActive: b.isActive !== false
         };
     });
@@ -5724,11 +6080,6 @@ window.renderBannersGrid = function() {
                 <div class="banner-preview-viewport ${isMobileMode ? 'mode-mobile' : 'mode-desktop'}" style="background-color: ${bgColor};">
                     <img src="${displayImage}" alt="${ban.title}" onerror="this.onerror=null;this.src='${ban.fallbackImage || ban.image}';">
                     
-                    ${ban.isComingSoon ? `
-                        <div style="position: absolute; top: 8px; left: 8px; z-index: 5; background: rgba(17, 7, 34, 0.92); border: 1.5px solid #fbbf24; color: #fbbf24; font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 999px; display: flex; align-items: center; gap: 4px;">
-                            <i class="fa-solid fa-clock-rotate-left"></i> COMING SOON
-                        </div>
-                    ` : ''}
 
                     <!-- Overlaid Ribbons Preview -->
                     ${ban.discountText ? `
@@ -6002,11 +6353,6 @@ window.updateModalLivePreview = function() {
             ${isGraphic ? `
                 <img src="${displayImg}" alt="${title}" onerror="this.onerror=null;this.src='assets/tombola-banner.png?v=3';">
                 
-                ${isComingSoon ? `
-                    <div style="position: absolute; top: 10px; left: 10px; background: rgba(17,7,34,0.92); border: 1.5px solid #fbbf24; color: #fbbf24; font-size: ${isMobile ? '8.5px' : '10.5px'}; font-weight: 900; padding: 3px 9px; border-radius: 999px; display: flex; align-items: center; gap: 5px; z-index: 6; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
-                        <i class="fa-solid fa-clock-rotate-left"></i> COMING SOON
-                    </div>
-                ` : ''}
 
                 ${discount ? `
                     <div style="position: absolute; top: 10px; right: 10px; background: linear-gradient(135deg, #e11d48, #b91c1c); color: #fff; font-size: ${isMobile ? '9px' : '11px'}; font-weight: 800; padding: 4px 10px; border-radius: 999px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 5px; z-index: 5;">

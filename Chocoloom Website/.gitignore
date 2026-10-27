@@ -13,3 +13,4 @@ npm-debug.log*
 # Temporary & backup files
 *.bak
 scratch/
+*categories_backup/

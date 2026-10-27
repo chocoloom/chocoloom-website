@@ -14,39 +14,184 @@ window.SWIGGY_DATA = {
     },
     "locations": [
         {
-            "id": "loc_1",
-            "name": "Indiranagar",
-            "city": "Bengaluru",
-            "state": "Karnataka",
-            "landmark": "100ft Road, Near Metro Station"
+            "id": "loc_bvrm_1",
+            "name": "S.R.K.R. Engineering College / Chinna Amiram",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "SRKR Campus Main Gate, Sriramapuram Road",
+            "pincode": "534204",
+            "lat": 16.5428,
+            "lng": 81.4975
         },
         {
-            "id": "loc_2",
-            "name": "Koramangala",
-            "city": "Bengaluru",
-            "state": "Karnataka",
-            "landmark": "5th Block, Jyoti Nivas College Rd"
+            "id": "loc_bvrm_2",
+            "name": "Vishnupur Campus & Kovvada (VITB / SVECW)",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "Vishnu Educational Campus Gate, Kovvada",
+            "pincode": "534202",
+            "lat": 16.567,
+            "lng": 81.524
         },
         {
-            "id": "loc_3",
-            "name": "HSR Layout",
-            "city": "Bengaluru",
-            "state": "Karnataka",
-            "landmark": "Sector 2, 27th Main"
+            "id": "loc_bvrm_3",
+            "name": "Balusumudi / DNR College Road",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "DNR College Main Gate, Balusumudi",
+            "pincode": "534202",
+            "lat": 16.5365,
+            "lng": 81.5245
         },
         {
-            "id": "loc_4",
-            "name": "Whitefield",
-            "city": "Bengaluru",
-            "state": "Karnataka",
-            "landmark": "ITPL Main Road"
+            "id": "loc_bvrm_4",
+            "name": "Town Railway Station & Somavaram",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "Near Bhimavaram Town Railway Station, Somavaram",
+            "pincode": "534202",
+            "lat": 16.541,
+            "lng": 81.528
         },
         {
-            "id": "loc_5",
-            "name": "Bandra West",
-            "city": "Mumbai",
-            "state": "Maharashtra",
-            "landmark": "Hill Road, Near Bandstand"
+            "id": "loc_bvrm_5",
+            "name": "Mavullamma Temple & J.P. Road",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "Mavullamma Temple Circle, J.P. Road",
+            "pincode": "534201",
+            "lat": 16.543,
+            "lng": 81.521
+        },
+        {
+            "id": "loc_bvrm_6",
+            "name": "Bhimavaram Junction (BVRT) & Old Bus Stand",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "Railway Junction Station Road, Old Bus Stand",
+            "pincode": "534201",
+            "lat": 16.5395,
+            "lng": 81.5265
+        },
+        {
+            "id": "loc_bvrm_7",
+            "name": "Housing Board Colony & Bypass",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "Housing Board Colony, Dirusumarru Road",
+            "pincode": "534202",
+            "lat": 16.538,
+            "lng": 81.512
+        },
+        {
+            "id": "loc_bvrm_8",
+            "name": "Rayalam & Palakollu Road",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "Rayalam Center, Palakollu Bypass Junction",
+            "pincode": "534208",
+            "lat": 16.529,
+            "lng": 81.536
+        },
+        {
+            "id": "loc_bvrm_9",
+            "name": "Undi Road & Losarigutlapadu",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "Undi Road Railway Gate, Losarigutlapadu",
+            "pincode": "534199",
+            "lat": 16.551,
+            "lng": 81.503
+        },
+        {
+            "id": "loc_bvrm_10",
+            "name": "Vissakoderu & Veeravasaram Road",
+            "city": "Bhimavaram Surroundings",
+            "state": "Andhra Pradesh",
+            "landmark": "Vissakoderu Center, Veeravasaram Highway",
+            "pincode": "534244",
+            "lat": 16.521,
+            "lng": 81.562
+        },
+        {
+            "id": "loc_bvrm_11",
+            "name": "Gollalakoderu & Kumudavalli",
+            "city": "Bhimavaram Surroundings",
+            "state": "Andhra Pradesh",
+            "landmark": "Gollalakoderu Road, Kumudavalli",
+            "pincode": "534202",
+            "lat": 16.558,
+            "lng": 81.481
+        },
+        {
+            "id": "loc_bvrm_12",
+            "name": "Pennada & Palakollu Highway",
+            "city": "Bhimavaram Surroundings",
+            "state": "Andhra Pradesh",
+            "landmark": "Pennada Center, BIET Campus Road",
+            "pincode": "534243",
+            "lat": 16.518,
+            "lng": 81.583
+        },
+        {
+            "id": "loc_bvrm_13",
+            "name": "Mentey Vari Thota & Anandapuram",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "Mentey Vari Thota, Anandapuram Center",
+            "pincode": "534201",
+            "lat": 16.5385,
+            "lng": 81.531
+        },
+        {
+            "id": "loc_bvrm_14",
+            "name": "Yenamadurru & Kameswari Temple",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "Saketeswara Temple, Yenamadurru Road",
+            "pincode": "534201",
+            "lat": 16.527,
+            "lng": 81.519
+        },
+        {
+            "id": "loc_bvrm_15",
+            "name": "Grandhi Venkata Reddy Nagar & Bypass",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "GVR Nagar, Chinna Amiram Bypass",
+            "pincode": "534204",
+            "lat": 16.548,
+            "lng": 81.492
+        },
+        {
+            "id": "loc_bvrm_16",
+            "name": "Subbarao Peta & Sunday Market",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "Subbarao Peta Main Road, Daily Market",
+            "pincode": "534201",
+            "lat": 16.5415,
+            "lng": 81.523
+        },
+        {
+            "id": "loc_bvrm_17",
+            "name": "Pedda Amiram & Tadepalligudem Road",
+            "city": "Bhimavaram Surroundings",
+            "state": "Andhra Pradesh",
+            "landmark": "Pedda Amiram Center, TPG Highway",
+            "pincode": "534204",
+            "lat": 16.554,
+            "lng": 81.488
+        },
+        {
+            "id": "loc_bvrm_18",
+            "name": "Dirusumarru & Mogalthur Road",
+            "city": "Bhimavaram Surroundings",
+            "state": "Andhra Pradesh",
+            "landmark": "Dirusumarru Center, Mogalthur Road",
+            "pincode": "534207",
+            "lat": 16.515,
+            "lng": 81.505
         }
     ],
     "colleges": [
@@ -312,62 +457,61 @@ window.SWIGGY_DATA = {
             ]
         },
         {
-            "id": "col_christ",
-            "name": "Christ University (Central Campus)",
-            "shortName": "Christ University",
-            "category": "Deemed University",
-            "area": "Hosur Road",
-            "city": "Bengaluru",
-            "district": "Bengaluru Urban",
-            "state": "Karnataka",
-            "pincode": "560029",
-            "landmark": "Dairy Circle, Hosur Main Road",
-            "lat": 12.9345,
-            "lng": 77.606,
+            "id": "col_bvraju",
+            "name": "B.V. Raju College (Degree & PG Campus)",
+            "shortName": "B.V. Raju College",
+            "category": "Degree, MCA & MBA Campus",
+            "area": "Vishnupur",
+            "city": "Bhimavaram",
+            "district": "West Godavari",
+            "state": "Andhra Pradesh",
+            "pincode": "534202",
+            "landmark": "Vishnupur Academic Block Gate",
+            "lat": 16.5685,
+            "lng": 81.5255,
             "matchKeywords": [
-                "christ",
-                "hosur road",
-                "bengaluru",
-                "bangalore"
+                "bv raju",
+                "b.v. raju",
+                "vishnupur degree",
+                "bvr college"
             ]
         },
         {
-            "id": "col_pes",
-            "name": "PES University (Ring Road Campus)",
-            "shortName": "PES University",
-            "category": "State Private University",
-            "area": "Outer Ring Road, Banashankari 3rd Stage",
-            "city": "Bengaluru",
-            "district": "Bengaluru Urban",
-            "state": "Karnataka",
-            "pincode": "560085",
-            "landmark": "100ft Ring Road, BSK 3rd Stage",
-            "lat": 12.935,
-            "lng": 77.536,
+            "id": "col_gvr",
+            "name": "Grandhi Venkata Reddy Junior & Degree College",
+            "shortName": "GVR Degree College",
+            "category": "Degree & Intermediate Campus",
+            "area": "Chinna Amiram Bypass",
+            "city": "Bhimavaram",
+            "district": "West Godavari",
+            "state": "Andhra Pradesh",
+            "pincode": "534204",
+            "landmark": "GVR Campus Arch, Bypass Road",
+            "lat": 16.549,
+            "lng": 81.493,
             "matchKeywords": [
-                "pes",
-                "pesit",
-                "banashankari",
-                "bengaluru"
+                "gvr",
+                "grandhi venkata reddy",
+                "chinna amiram college"
             ]
         },
         {
-            "id": "col_jnc",
-            "name": "Jyoti Nivas College (Autonomous)",
-            "shortName": "Jyoti Nivas College",
-            "category": "Autonomous Women's College",
-            "area": "Koramangala 5th Block",
-            "city": "Bengaluru",
-            "district": "Bengaluru Urban",
-            "state": "Karnataka",
-            "pincode": "560095",
-            "landmark": "Hosur Road, 5th Block Koramangala",
-            "lat": 12.934,
-            "lng": 77.618,
+            "id": "col_mentey",
+            "name": "Mentey Padmanabham College of Engineering & Technology",
+            "shortName": "Mentey College",
+            "category": "Engineering Campus",
+            "area": "Palakollu Road",
+            "city": "Bhimavaram",
+            "district": "West Godavari",
+            "state": "Andhra Pradesh",
+            "pincode": "534208",
+            "landmark": "Mentey Campus, Palakollu Highway",
+            "lat": 16.525,
+            "lng": 81.542,
             "matchKeywords": [
-                "jyoti nivas",
-                "koramangala",
-                "bengaluru"
+                "mentey",
+                "padmanabham",
+                "palakollu road engineering"
             ]
         }
     ],
@@ -429,154 +573,150 @@ window.SWIGGY_DATA = {
     ],
     "categories": [
         {
-            "id": "cat_unichocoloom",
-            "name": "Uni Chocoloom",
-            "image": "https://images.unsplash.com/photo-1541167760496-1628856ab772?w=600&auto=format&fit=crop&q=80",
-            "query": "Uni Chocoloom",
-            "badge": "🎓 25% OFF"
+            "id": "cat_diwali",
+            "name": "Diwali Hampers",
+            "image": "assets/categories/diwali_hampers.webp",
+            "query": "Diwali Hampers",
+            "badge": "🪔 40% OFF"
         },
         {
             "id": "cat_chocolates",
             "name": "Chocolates",
-            "image": "https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/chocolates_box.webp",
             "query": "Chocolates"
         },
         {
             "id": "cat_snacks",
             "name": "Snacks & Munchies",
-            "image": "https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/snacks.webp",
             "query": "Snacks"
         },
         {
             "id": "cat_anniversary",
             "name": "Anniversary Cakes",
-            "image": "Anniversary%20Cakes/Screenshot%202026-08-15%20at%2012.11.50%E2%80%AFPM.png",
+            "image": "assets/categories/anniversary_cakes.webp",
             "query": "Anniversary Cakes"
         },
         {
             "id": "cat_bachelor",
             "name": "Bachelorette Cakes",
-            "image": "Bachelor%20Cakes/Screenshot%202026-08-15%20at%202.18.46%E2%80%AFPM.png",
+            "image": "assets/categories/bachelorette_cakes.webp",
             "query": "Bachelorette Cakes"
         },
         {
             "id": "cat_bento",
             "name": "Bento Cakes",
-            "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/bento_cakes.webp",
             "query": "Bento Cakes"
         },
         {
             "id": "cat_cartoons",
             "name": "Cartoons",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/cartoons.webp",
             "query": "Cartoons"
         },
         {
             "id": "cat_cooling",
             "name": "Cooling Cakes",
-            "image": "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/cooling_cake.webp",
             "query": "Cooling Cakes"
         },
         {
             "id": "cat_desserts",
             "name": "Desserts",
-            "image": "desserts/WhatsApp%20Image%202026-08-08%20at%2018.04.03.jpeg",
+            "image": "assets/categories/desserts.webp",
             "query": "Desserts"
         },
         {
             "id": "cat_specialty",
             "name": "Specialty Cakes",
-            "image": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/specialty_cakes.webp",
             "query": "Specialty Cakes"
         },
         {
             "id": "cat_wedding",
             "name": "Wedding Cakes",
-            "image": "Wedding%20Cakes/Screenshot%202026-08-15%20at%202.18.27%E2%80%AFPM.png",
+            "image": "assets/categories/wedding_cakes.webp",
             "query": "Wedding Cakes"
         },
         {
             "id": "cat_half_birthday",
             "name": "Half Birthday Cakes",
-            "image": "Half%20Birthday%20Cakes/Screenshot%202026-08-15%20at%201.58.59%E2%80%AFPM.png",
+            "image": "assets/categories/half_birthday_cakes.webp",
             "query": "Half Birthday Cakes"
         },
         {
             "id": "cat_kids",
             "name": "Kids",
-            "image": "https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/kids_cake.webp",
             "query": "Kids"
         },
         {
             "id": "cat_mango",
             "name": "Mango Cakes",
-            "image": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/mango_cakes.webp",
             "query": "Mango Cakes"
         },
         {
             "id": "cat_black_currant",
             "name": "Black Currant Cakes",
-            "image": "https://images.unsplash.com/photo-1542826438-bd32f43d626f?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/black_currant_cake.webp",
             "query": "Black Currant Cakes"
         },
         {
             "id": "cat_muffins",
             "name": "Muffin Cakes",
-            "image": "https://images.unsplash.com/photo-1607958996333-41aef7caefaa?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/muffin_cakes.webp",
             "query": "Muffin Cakes"
         },
         {
             "id": "cat_square",
             "name": "Square Cakes",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/square_cakes.webp",
             "query": "Square Cakes"
         },
         {
             "id": "cat_truffle",
             "name": "Truffle Cakes",
-            "image": "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/truffle_cakes.webp",
             "query": "Truffle Cakes"
         },
         {
             "id": "cat_gelatin",
             "name": "Gelatin Cakes",
-            "image": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/gelatin_cakes.webp",
             "query": "Gelatin Cakes"
         },
         {
             "id": "cat_shakes",
             "name": "Shakes",
-            "image": "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/shakes.webp",
             "query": "Shakes"
         },
         {
             "id": "cat_extras",
             "name": "Extras",
-            "image": "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/extras.webp",
             "query": "Extras"
         }
     ],
     "banners": [
         {
-            "id": "b_tombola",
-            "tag": "",
-            "tagIcon": "",
-            "title": "TOMBOLA: Try Your Luck!",
-            "subtitle": "Try your luck with Tombola strips for £1 / ₹50! Every prize a winner — win free desserts, artisan chocolates & up to 50% discount coupons.",
-            "discountText": "COMING SOON • EVERY PRIZE A WINNER!",
-            "code": "TOMBOLA50",
-            "image": "assets/tombola-banner.png?v=3",
-            "fallbackImage": "assets/tombola-banner.png?v=3",
-            "overlayGradient": "linear-gradient(90deg, rgba(20, 10, 0, 0.75) 0%, rgba(20, 10, 0, 0.45) 45%, rgba(0, 0, 0, 0.05) 85%, rgba(0, 0, 0, 0) 100%)",
-            "badge": "COMING SOON",
-            "rating": "5.0",
-            "ratingLabel": "Community Favorite",
-            "cta": "Play Tombola (Coming Soon)",
-            "category": "Tombola",
-            "isGraphicBanner": true,
-            "bgColor": "#ffd735",
-            "redirectUrl": "",
-            "isComingSoon": true
+            "id": "b_diwali",
+            "tag": "DIWALI DHAMAKA",
+            "tagIcon": "fa-solid fa-sparkles",
+            "title": "Happy Diwali: Luxury Hampers & Sweets 🪔✨",
+            "subtitle": "Celebrate the Festival of Lights with handcrafted Belgian pralines, golden dry-fruit cakes & festive gift hampers. Flat 40% OFF with code DIWALI40!",
+            "discountText": "FLAT 40% OFF",
+            "code": "DIWALI40",
+            "image": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=1600&auto=format&fit=crop&q=80",
+            "fallbackImage": "chocoloom%20desert/WhatsApp%20Image%202026-08-13%20at%2019.27.18.jpeg",
+            "overlayGradient": "linear-gradient(90deg, rgba(36, 11, 54, 0.95) 0%, rgba(74, 21, 75, 0.8) 45%, rgba(124, 45, 18, 0.25) 85%, rgba(20, 5, 25, 0.1) 100%)",
+            "badge": "DIWALI SPECIAL 🪔",
+            "rating": "4.99",
+            "ratingLabel": "Festive Choice",
+            "cta": "Claim 40% OFF",
+            "category": "Diwali Hampers"
         },
         {
             "id": "b_uni",
@@ -719,7 +859,7 @@ window.SWIGGY_DATA = {
                 "Wedding Cakes",
                 "Desserts"
             ],
-            "location": "Indiranagar 100ft Road",
+            "location": "SRKR Campus Road, Chinna Amiram, Bhimavaram",
             "offerText": "50% OFF up to ₹150",
             "isPureVeg": true,
             "isFastDelivery": true,
@@ -13165,10 +13305,10 @@ window.SWIGGY_DATA = {
             "customer_name": "Mohith Kumar",
             "customer_phone": "+91 98765 43210",
             "embossed_name": "MOHITH KUMAR",
-            "shipping_address": "Flat No. 402, Highline Avenue, Indiranagar, Bengaluru - 560038",
-            "street": "Flat No. 402, Highline Avenue, Indiranagar",
-            "city": "Bengaluru",
-            "pincode": "560038",
+            "shipping_address": "Flat No. 402, GVR Towers, SRKR Campus Road, Chinna Amiram, Bhimavaram - 534204",
+            "street": "Flat No. 402, GVR Towers, SRKR Campus Road, Chinna Amiram",
+            "city": "Bhimavaram",
+            "pincode": "534204",
             "card_edition": "Matte Black Titanium VIP",
             "card_number": "8842 5819 4021 8842",
             "tracking_number": "BD88429108IN",
@@ -13178,7 +13318,7 @@ window.SWIGGY_DATA = {
             "payment_status": "completed",
             "payment_method": "UPI / Online Payment",
             "status": "In Transit",
-            "created_at": "2026-10-15T15:57:09.105Z"
+            "created_at": "2026-10-15T15:57:09.121Z"
         },
         {
             "id": "card_ord_2",
@@ -13186,10 +13326,10 @@ window.SWIGGY_DATA = {
             "customer_name": "Priya Sharma",
             "customer_phone": "+91 91234 56789",
             "embossed_name": "PRIYA SHARMA",
-            "shipping_address": "Villa 14, Palm Meadows, Whitefield, Bengaluru - 560066",
-            "street": "Villa 14, Palm Meadows, Whitefield",
-            "city": "Bengaluru",
-            "pincode": "560066",
+            "shipping_address": "Villa 14, Vishnu Enclave, Vishnupur Campus Road, Bhimavaram - 534202",
+            "street": "Villa 14, Vishnu Enclave, Vishnupur Campus Road",
+            "city": "Bhimavaram",
+            "pincode": "534202",
             "card_edition": "Royal Cocoa Gold VIP",
             "card_number": "8842 7712 9014 4291",
             "tracking_number": "BD99214732IN",
@@ -13199,7 +13339,7 @@ window.SWIGGY_DATA = {
             "payment_status": "completed",
             "payment_method": "UPI / Online Payment",
             "status": "Pending Embossing",
-            "created_at": "2026-10-15T12:57:09.109Z"
+            "created_at": "2026-10-15T12:57:09.121Z"
         },
         {
             "id": "card_ord_3",
@@ -13220,7 +13360,7 @@ window.SWIGGY_DATA = {
             "payment_status": "completed",
             "payment_method": "UPI / Online Payment",
             "status": "Delivered",
-            "created_at": "2026-10-13T17:57:09.109Z"
+            "created_at": "2026-10-13T17:57:09.121Z"
         }
     ]
 };

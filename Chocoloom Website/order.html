@@ -2,7 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Clean URL: Strip .html extensions from address bar immediately
+        (function() {
+            try {
+                if (window.history && window.history.replaceState && window.location) {
+                    var p = window.location.pathname;
+                    var changed = false;
+                    if (p.endsWith('/order.html') || p === '/order.html' || p.endsWith('/index.html') || p === '/index.html') {
+                        p = p.replace(/\/(order|index)\.html$/, '/') || '/';
+                        changed = true;
+                    } else if (p.endsWith('.html')) {
+                        p = p.replace(/\.html$/, '');
+                        changed = true;
+                    }
+                    var s = window.location.search;
+                    if (s.indexOf('.html') !== -1) {
+                        s = s.replace(/\.html/g, '');
+                        changed = true;
+                    }
+                    if (changed) {
+                        window.history.replaceState(null, '', p + s + window.location.hash);
+                    }
+                }
+            } catch(e) {}
+        })();
+    </script>
     <title>Chocoloom - Order Food & Groceries Online</title>
     <meta name="description" content="Order food and groceries online from top-rated restaurants, sweet shops and supermarkets near you with instant delivery.">
     <link rel="icon" type="image/png" href="assets/logo.png">
@@ -10,7 +37,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=7.4">
+    <link rel="stylesheet" href="styles.css?v=9.7">
     <!-- Instant Centered Plain Logo Splash Preloader CSS (Zero-delay, Plain logo, no box) -->
     <style>
         #siteLoadingSplash {
@@ -62,10 +89,12 @@
     <div id="siteLoadingSplash" class="site-loading-splash">
         <img src="assets/logo.png" alt="Chocoloom" class="splash-plain-logo">
     </div>
+
+
     <header class="navbar" id="catalogNavbar">
         <div class="container nav-inner">
             <div class="nav-left">
-                <a href="index.html" class="brand-logo" id="brandLogoBtn" title="Back to Chocoloom Home">
+                <a href="./" class="brand-logo" id="brandLogoBtn" title="Back to Chocoloom Home">
                     <img src="assets/logo.png" alt="Chocoloom Logo" class="brand-logo-img">
                 </a>
 
@@ -84,11 +113,12 @@
             </div>
 
             <div class="nav-right">
-                <div class="nav-item" id="navSearchTrigger">
+                <div class="nav-item" id="navSearchTrigger" title="Search cakes, chocolates, desserts (⌘K)">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <span class="nav-text">Search</span>
+                    <kbd class="search-kbd-hint">⌘K</kbd>
                 </div>
-                <a href="uni-chocoloom.html" class="nav-item nav-item-uni" id="navOffersTrigger" title="Uni Chocoloom - Campus Store for College Students" style="text-decoration: none; color: inherit;">
+                <a href="uni-chocoloom" class="nav-item nav-item-uni" id="navOffersTrigger" title="Uni Chocoloom - Campus Store for College Students" style="text-decoration: none; color: inherit;">
                     <div class="uni-nav-glow-wrap">
                         <i class="fa-solid fa-graduation-cap uni-nav-icon"></i>
                     </div>
@@ -102,7 +132,7 @@
                 </div>
 
                 <!-- User Sign In / Profile Navigation Trigger -->
-                <a href="login.html?redirect=order.html" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;" onclick="if(typeof openAuthModal === 'function'){ openAuthModal('passcode'); return false; }">
+                <a href="login" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;">
                     <i class="fa-regular fa-user"></i>
                     <span class="nav-text">Sign In</span>
                 </a>
@@ -112,7 +142,7 @@
                     <div class="nav-user-pill" id="navUserPill" onclick="toggleUserProfileDropdown(event)">
                         <div class="user-avatar-circle" id="userAvatarCircle">M</div>
                         <div class="user-pill-text">
-                            <span class="user-pill-greeting">Hi, <strong id="userPillName">User</strong></span>
+                            <span class="user-pill-greeting"><strong id="userPillName">User</strong></span>
                         </div>
                         <i class="fa-solid fa-chevron-down user-pill-chevron"></i>
                     </div>
@@ -128,7 +158,7 @@
                         </div>
                         <div class="user-dropdown-divider"></div>
                         <div class="user-dropdown-menu">
-                            <a href="chocowallet.html" class="user-menu-item" style="text-decoration: none; color: inherit; background: linear-gradient(135deg, #fdf4ff, #fae8ff); border: 1px solid #f0abfc; margin-bottom: 6px; border-radius: 10px;">
+                            <a href="chocowallet" class="user-menu-item" style="text-decoration: none; color: inherit; background: linear-gradient(135deg, #fdf4ff, #fae8ff); border: 1px solid #f0abfc; margin-bottom: 6px; border-radius: 10px;">
                                 <i class="fa-solid fa-credit-card" style="color: #9333ea;"></i>
                                 <span style="font-weight: 800; color: #581c87;">Chocowallet VIP Card</span>
                                 <span class="menu-badge" id="dropdownWalletBadge" style="background: #f59e0b; color: #ffffff; font-weight: 800;">Coming Soon</span>
@@ -187,11 +217,136 @@
             <div class="category-scroll-container" id="categoryScrollContainer">
                 <!-- Dynamic categories loaded from data.js -->
             </div>
+            <!-- Swipe for more indicator -->
+            <div class="category-swipe-wrapper" id="categorySwipeWrapper" title="Swipe to explore all categories">
+                <div class="category-swipe-indicator">
+                    <span class="category-swipe-track">
+                        <span class="category-swipe-thumb" id="categorySwipeThumb"></span>
+                    </span>
+                    <span class="category-swipe-text">
+                        <span>Swipe for more</span>
+                        <i class="fa-solid fa-arrow-right-long category-swipe-arrow"></i>
+                    </span>
+                </div>
+            </div>
+            <!-- Left-aligned bold quote caption (2 lines) -->
+            <div class="mind-quote-wrapper">
+                <p class="mind-quote-caption">
+                    <span class="mind-quote-line">"Special person ki special cake —</span>
+                    <span class="mind-quote-line">idi kada real love!"</span>
+                </p>
+            </div>
+
+            <!-- Quick Add Mini Item Cards Strip (Under Quote) -->
+            <div class="quote-quick-cards-wrapper" id="quoteQuickCardsWrapper">
+                <div class="quote-quick-cards-track" id="quoteQuickCardsTrack">
+                    <div class="quote-mini-card" onclick="window.handleQuoteCardAdd(event, 'quick_assorted_truffies')" title="Add Assorted Truffies to cart">
+                        <div class="quote-mini-card-img-wrap">
+                            <img src="assets/categories/truffle_cakes.webp" alt="Assorted Truffies" class="quote-mini-card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1548741487-18d363dc4469?w=300&auto=format&fit=crop&q=80'">
+                        </div>
+                        <div class="quote-mini-card-content">
+                            <h4 class="quote-mini-card-title">Assorted Truffies</h4>
+                            <div class="quote-mini-card-bottom">
+                                <span class="quote-mini-card-price">₹199</span>
+                                <button type="button" class="quote-mini-card-btn" onclick="window.handleQuoteCardAdd(event, 'quick_assorted_truffies')">ADD +</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quote-mini-card" onclick="window.handleQuoteCardAdd(event, 'quick_midnight_cake')" title="Add Midnight Cake to cart">
+                        <div class="quote-mini-card-img-wrap">
+                            <img src="assets/categories/curated_bento_cake.jpg" alt="Midnight Cake" class="quote-mini-card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=300&auto=format&fit=crop&q=80'">
+                        </div>
+                        <div class="quote-mini-card-content">
+                            <h4 class="quote-mini-card-title">Midnight Cake</h4>
+                            <div class="quote-mini-card-bottom">
+                                <span class="quote-mini-card-price">₹199</span>
+                                <button type="button" class="quote-mini-card-btn" onclick="window.handleQuoteCardAdd(event, 'quick_midnight_cake')">ADD +</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quote-mini-card" onclick="window.handleQuoteCardAdd(event, 'uni_choco_1')" title="Add Belgian Dark Silk to cart">
+                        <div class="quote-mini-card-img-wrap">
+                            <img src="assets/categories/chocolates.webp" alt="Belgian Dark Silk" class="quote-mini-card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=300&auto=format&fit=crop&q=80'">
+                        </div>
+                        <div class="quote-mini-card-content">
+                            <h4 class="quote-mini-card-title">Belgian Dark Silk</h4>
+                            <div class="quote-mini-card-bottom">
+                                <span class="quote-mini-card-price">₹179</span>
+                                <button type="button" class="quote-mini-card-btn" onclick="window.handleQuoteCardAdd(event, 'uni_choco_1')">ADD +</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quote-mini-card" onclick="window.handleQuoteCardAdd(event, 'uni_choco_3')" title="Add Truffle Gift Box to cart">
+                        <div class="quote-mini-card-img-wrap">
+                            <img src="https://images.unsplash.com/photo-1548741487-18d363dc4469?w=300&auto=format&fit=crop&q=80" alt="Truffle Gift Box" class="quote-mini-card-img" loading="lazy">
+                        </div>
+                        <div class="quote-mini-card-content">
+                            <h4 class="quote-mini-card-title">Truffle Gift Box</h4>
+                            <div class="quote-mini-card-bottom">
+                                <span class="quote-mini-card-price">₹199</span>
+                                <button type="button" class="quote-mini-card-btn" onclick="window.handleQuoteCardAdd(event, 'uni_choco_3')">ADD +</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quote-mini-card" onclick="window.handleQuoteCardAdd(event, 'quick_choco_fudge_tub')" title="Add Choco Fudge Tub to cart">
+                        <div class="quote-mini-card-img-wrap">
+                            <img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=300&auto=format&fit=crop&q=80" alt="Choco Fudge Tub" class="quote-mini-card-img" loading="lazy">
+                        </div>
+                        <div class="quote-mini-card-content">
+                            <h4 class="quote-mini-card-title">Choco Fudge Tub</h4>
+                            <div class="quote-mini-card-bottom">
+                                <span class="quote-mini-card-price">₹199</span>
+                                <button type="button" class="quote-mini-card-btn" onclick="window.handleQuoteCardAdd(event, 'quick_choco_fudge_tub')">ADD +</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quote-mini-card" onclick="window.handleQuoteCardAdd(event, 'quick_dutch_truffle_bento')" title="Add Dutch Truffle Bento to cart">
+                        <div class="quote-mini-card-img-wrap">
+                            <img src="assets/categories/bento_cakes.webp" alt="Dutch Truffle Bento" class="quote-mini-card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1535141192574-5d4897c13136?w=300&auto=format&fit=crop&q=80'">
+                        </div>
+                        <div class="quote-mini-card-content">
+                            <h4 class="quote-mini-card-title">Dutch Truffle Bento</h4>
+                            <div class="quote-mini-card-bottom">
+                                <span class="quote-mini-card-price">₹199</span>
+                                <button type="button" class="quote-mini-card-btn" onclick="window.handleQuoteCardAdd(event, 'quick_dutch_truffle_bento')">ADD +</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quote-mini-card" onclick="window.handleQuoteCardAdd(event, 'quick_black_forest_mini')" title="Add Black Forest Mini to cart">
+                        <div class="quote-mini-card-img-wrap">
+                            <img src="assets/categories/cooling_cake.webp" alt="Black Forest Mini" class="quote-mini-card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=300&auto=format&fit=crop&q=80'">
+                        </div>
+                        <div class="quote-mini-card-content">
+                            <h4 class="quote-mini-card-title">Black Forest Mini</h4>
+                            <div class="quote-mini-card-bottom">
+                                <span class="quote-mini-card-price">₹199</span>
+                                <button type="button" class="quote-mini-card-btn" onclick="window.handleQuoteCardAdd(event, 'quick_black_forest_mini')">ADD +</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quote-mini-card" onclick="window.handleQuoteCardAdd(event, 'quick_hazelnut_praline')" title="Add Hazelnut Praline to cart">
+                        <div class="quote-mini-card-img-wrap">
+                            <img src="assets/categories/chocolates_box.webp" alt="Hazelnut Praline" class="quote-mini-card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=300&auto=format&fit=crop&q=80'">
+                        </div>
+                        <div class="quote-mini-card-content">
+                            <h4 class="quote-mini-card-title">Hazelnut Praline</h4>
+                            <div class="quote-mini-card-bottom">
+                                <span class="quote-mini-card-price">₹169</span>
+                                <button type="button" class="quote-mini-card-btn" onclick="window.handleQuoteCardAdd(event, 'quick_hazelnut_praline')">ADD +</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- ==================== BESPOKE STUDIO & CUSTOM CREATIONS ==================== -->
         <section class="bespoke-custom-section" id="bespokeCustomSection">
             <div class="bespoke-section-header">
+                <div class="bespoke-pill-badge">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Bespoke Studio & Custom Creations</span>
+                </div>
                 <h2 class="bespoke-section-title">Design Your Custom Celebrations 🎂</h2>
                 <p class="bespoke-section-subtitle">
                     Turn your vision into reality: upload reference photos from Pinterest or Instagram, build multi-step tiered cakes, or curate a luxury Chocoloom Wave Box.
@@ -213,6 +368,10 @@
                         <div class="bespoke-sparkle-tag">
                             <i class="fa-solid fa-bolt"></i> Recreate Any Design • 12+ Flavors
                         </div>
+                        <div class="bespoke-card-cta photo-cta">
+                            <span>Upload Reference</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </div>
                     </div>
                     <div class="bespoke-card-arrow photo-arrow">
                         <i class="fa-solid fa-arrow-right"></i>
@@ -233,6 +392,10 @@
                         <div class="bespoke-sparkle-tag">
                             <i class="fa-solid fa-crown"></i> 2 & 3 Step Tiered • Mix Flavors
                         </div>
+                        <div class="bespoke-card-cta step-cta">
+                            <span>Build Tier Cake</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </div>
                     </div>
                     <div class="bespoke-card-arrow step-arrow">
                         <i class="fa-solid fa-arrow-right"></i>
@@ -252,6 +415,10 @@
                         <h3 class="bespoke-card-title">Chocoloom Wave Box</h3>
                         <div class="bespoke-sparkle-tag">
                             <i class="fa-solid fa-star"></i> Curate Your Box • 12 Treats
+                        </div>
+                        <div class="bespoke-card-cta wave-cta">
+                            <span>Curate Wave Box</span>
+                            <i class="fa-solid fa-arrow-right"></i>
                         </div>
                     </div>
                     <div class="bespoke-card-arrow wave-arrow">
@@ -274,7 +441,8 @@
                 </div>
             </div>
 
-
+            <!-- Colorful Kids & Cartoon Category Hero Section -->
+            <div id="kidsCategoryHeroContainer" class="kids-category-hero-container" style="display: none;"></div>
 
             <!-- Direct Home Page Products Grid -->
             <div class="direct-products-grid" id="productsGrid">
@@ -328,28 +496,16 @@
                     <button type="button" class="cat-nav-btn prev" onclick="scrollGameZoneCategories(-1)" title="Scroll Left"><i class="fa-solid fa-chevron-left"></i></button>
                     <div class="game-category-pills" id="gameZoneCategoryPills">
                         <button type="button" class="game-filter-pill active" onclick="filterGameZoneCategory('all', this)">
-                            <i class="fa-solid fa-border-all"></i> All Games (7)
+                            <i class="fa-solid fa-border-all"></i> All Games (3)
                         </button>
                         <button type="button" class="game-filter-pill highlight-pill" onclick="filterGameZoneCategory('tombola', this)">
                             <i class="fa-solid fa-ticket"></i> Tambola - Bingo 🎟️
                         </button>
-                        <button type="button" class="game-filter-pill" onclick="filterGameZoneCategory('spin', this)">
-                            <i class="fa-solid fa-dharmachakra"></i> Spin &amp; Win 🎡
+                        <button type="button" class="game-filter-pill" onclick="filterGameZoneCategory('lucky_number', this)">
+                            <i class="fa-solid fa-clover"></i> Lucky Number Draw 🍀
                         </button>
-                        <button type="button" class="game-filter-pill" onclick="filterGameZoneCategory('scratch', this)">
-                            <i class="fa-solid fa-gift"></i> Mystery Scratch 🎁
-                        </button>
-                        <button type="button" class="game-filter-pill" onclick="filterGameZoneCategory('quiz', this)">
-                            <i class="fa-solid fa-brain"></i> Pastry Chef Trivia 🧠
-                        </button>
-                        <button type="button" class="game-filter-pill" onclick="filterGameZoneCategory('stacker', this)">
-                            <i class="fa-solid fa-layer-group"></i> Cake Tower Stacker 🎂
-                        </button>
-                        <button type="button" class="game-filter-pill" onclick="filterGameZoneCategory('memory', this)">
-                            <i class="fa-solid fa-clone"></i> Memory Match 🃏
-                        </button>
-                        <button type="button" class="game-filter-pill" onclick="filterGameZoneCategory('coins', this)">
-                            <i class="fa-solid fa-coins"></i> Daily Coin Drop 🪙
+                        <button type="button" class="game-filter-pill" onclick="filterGameZoneCategory('diwali_draw', this)">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Diwali Draw Game 🪔
                         </button>
                     </div>
                     <button type="button" class="cat-nav-btn next" onclick="scrollGameZoneCategories(1)" title="Scroll Right"><i class="fa-solid fa-chevron-right"></i></button>
@@ -748,10 +904,10 @@
 
                     <!-- Campus Delivery & Promo Pill Bar -->
                     <div class="uni-perks-bar">
-                        <div class="uni-perk-item" onclick="copyStudentCode(this)" title="Click to copy coupon code">
-                            <span class="uni-perk-label">CODE:</span>
-                            <span class="uni-perk-code">UNICHOCO</span>
-                            <span class="uni-copy-hint"><i class="fa-regular fa-copy"></i> Auto-Applied</span>
+                        <div class="uni-perk-item" title="SRKR Student Discount">
+                            <i class="fa-solid fa-graduation-cap" style="color: #4ade80;"></i>
+                            <span class="uni-perk-code" style="color: #ffffff; font-weight: 800;">Flat 25% Student Discount</span>
+                            <span class="uni-copy-hint" style="color: #4ade80;"><i class="fa-solid fa-check"></i> Auto-Applied</span>
                         </div>
                         <div class="uni-perk-pill">
                             <i class="fa-solid fa-bolt" style="color: #fbbf24;"></i>
@@ -861,16 +1017,19 @@
     <div class="cart-drawer" id="cartDrawer">
         <div class="cart-header">
             <div class="cart-title">
-                <i class="fa-solid fa-bag-shopping" style="color: var(--primary);"></i>
+                <div class="cart-title-icon-wrap">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                </div>
                 <span>Your Food Cart</span>
+                <span class="cart-header-badge" id="cartHeaderBadge">0 items</span>
             </div>
-            <button class="modal-close-btn" id="closeCartBtn" onclick="closeCart()">
+            <button class="modal-close-btn" id="closeCartBtn" onclick="closeCart()" aria-label="Close Cart">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
         <!-- Cart User Auth Status Banner -->
-        <div class="cart-auth-prompt" id="cartAuthPrompt" onclick="openAuthModal('otp')">
+        <div class="cart-auth-prompt" id="cartAuthPrompt" onclick="redirectToLoginPage('cart')">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-user-lock" style="color: var(--primary); font-size: 14px;"></i>
                 <div style="display: flex; flex-direction: column; text-align: left;">
@@ -878,7 +1037,7 @@
                     <span style="font-size: 10.5px; color: #64748b;">Sign in is required to checkout & place orders</span>
                 </div>
             </div>
-            <button class="auth-prompt-btn" type="button">Sign In</button>
+            <button class="auth-prompt-btn" type="button" onclick="redirectToLoginPage('cart')">Sign In</button>
         </div>
         <div class="cart-auth-logged" id="cartAuthLogged" style="display: none;">
             <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 13px;"></i>
@@ -974,170 +1133,198 @@
                 <p class="auth-header-sub" id="authModalSub">Login or create an account for express checkout & exclusive student deals</p>
             </div>
 
-            <!-- Tab Switcher (Hidden: Single OTP Authentication Mode) -->
-            <div class="auth-tabs-bar" style="display: none !important;">
-                <button class="auth-tab-btn active" id="authTabOtpBtn" onclick="switchAuthTab('otp')"><i class="fa-solid fa-mobile-screen-button"></i> Mobile OTP</button>
-            </div>
-
             <!-- Body -->
             <div class="auth-body">
-                <!-- 1. Fast Mobile OTP Flow -->
-                <form class="auth-form active" id="otpForm" onsubmit="handleSendOtpSubmit(event)">
-                    <!-- Step 1: Mobile Number & Channel -->
-                    <div id="otpStepPhone">
-                        <div class="auth-field-group">
-                            <label class="auth-field-label" for="otpPhoneNumber">
-                                <span>Enter Mobile Number</span>
-                                <span style="font-size: 10.5px; color: #16a34a; font-weight: 700;"><i class="fa-solid fa-bolt"></i> Instant 2-sec Delivery</span>
+                <!-- SCREEN 0: ACTIVE ACCOUNT DETAILS (WHEN LOGGED IN) -->
+                <div id="loggedInProfileScreen" class="uber-screen-section" style="display: none;">
+                    <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 18px; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #7c5cfc, #ec4899); color: #fff; font-size: 19px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(124, 92, 252, 0.3);" id="modalLoggedInAvatar">U</div>
+                            <div>
+                                <h3 style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 4px;" id="modalLoggedInName">User</h3>
+                                <span id="modalLoggedInRoleBadge" style="display: inline-flex; align-items: center; gap: 5px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px;">
+                                    <i class="fa-solid fa-graduation-cap"></i> SRKR Student • 25% OFF
+                                </span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12.5px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #64748b; font-weight: 600;">Mobile</span>
+                                <span style="font-weight: 700; color: #0f172a;" id="modalLoggedInPhone">+91 ...</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #64748b; font-weight: 600;">Email</span>
+                                <span style="font-weight: 700; color: #0f172a;" id="modalLoggedInEmail">...</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #64748b; font-weight: 600;">Campus</span>
+                                <span style="font-weight: 700; color: #0f172a;" id="modalLoggedInCampus">S.R.K.R. Engineering College</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Continue to Store -->
+                    <button type="button" class="uber-primary-btn" onclick="closeAuthModal()" style="margin-top: 0; margin-bottom: 10px;">
+                        <span>Continue Shopping</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+
+                    <!-- Sign Out & Switch Account -->
+                    <button type="button" class="uber-alt-btn" onclick="handleUserLogout(); backToPhoneStep();" style="color: #dc2626; border-color: #fca5a5; background: #fef2f2;">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span>Sign Out & Switch Account</span>
+                    </button>
+                </div>
+
+                <!-- SCREEN 1: PASSCODE LOGIN -->
+                <div id="passcodeStepLogin" class="uber-screen-section">
+                    <form onsubmit="handlePasscodeLoginSubmit(event)" id="passcodeLoginForm">
+                        <!-- Mobile Number Label Row -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label style="font-size: 12px; font-weight: 700; color: #1e293b; margin: 0;">Enter Mobile Number</label>
+                            <span style="font-size: 11px; color: #16a34a; font-weight: 800;"><i class="fa-solid fa-bolt"></i> Instant 2-sec Delivery</span>
+                        </div>
+
+                        <!-- Mobile Number Box -->
+                        <div class="uber-phone-box" style="margin-bottom: 14px; border: 2px solid #8b5cf6; border-radius: 14px;">
+                            <div class="uber-country-code">
+                                <span class="uber-flag-icon">🇮🇳</span>
+                                <span>+91</span>
+                                <i class="fa-solid fa-chevron-down" style="font-size: 10px; color: #9ca3af; margin-left: 2px;"></i>
+                            </div>
+                            <input type="tel" id="passcodePhoneNumber" class="uber-phone-input" placeholder="10-digit mobile number" maxlength="10" required autocomplete="tel" autofocus>
+                        </div>
+
+                        <!-- 4-Digit Passcode Header & Helper -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; margin-bottom: 6px;">
+                            <label style="font-size: 12.5px; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-shield-halved" style="color: #7c5cfc;"></i>
+                                <span>4-Digit Passcode *</span>
                             </label>
-                            <div class="auth-input-wrapper">
-                                <div class="otp-country-code">+91</div>
-                                <input type="tel" id="otpPhoneNumber" class="auth-input otp-phone-input" placeholder="10-digit mobile number" maxlength="10" required autocomplete="tel">
-                            </div>
+                            <a href="https://wa.link/gejgjd" target="_blank" rel="noopener noreferrer" style="font-size: 11.5px; font-weight: 700; color: #7c5cfc; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                                <i class="fa-brands fa-whatsapp" style="color: #25d366; font-size: 13px;"></i>
+                                <span>Forgot Passcode?</span>
+                            </a>
                         </div>
 
-                        <!-- Channel Preference (WhatsApp / SMS) -->
-                        <div style="margin: 10px 0 6px;">
-                            <label style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 6px; display: block;">Send OTP via:</label>
-                            <div class="otp-channel-picker">
-                                <div class="otp-channel-pill active whatsapp" id="channelWhatsappPill" onclick="selectOtpChannel('whatsapp')">
-                                    <i class="fa-brands fa-whatsapp" style="font-size: 15px;"></i>
-                                    <span>WhatsApp OTP</span>
-                                    <span style="font-size: 9px; background: #16a34a; color: #fff; padding: 1px 5px; border-radius: 4px; font-weight: 800;">FASTEST</span>
-                                </div>
-                                <div class="otp-channel-pill sms" id="channelSmsPill" onclick="selectOtpChannel('sms')">
-                                    <i class="fa-solid fa-comment-sms" style="font-size: 14px;"></i>
-                                    <span>SMS OTP</span>
-                                </div>
-                            </div>
+                        <!-- 4 Tactile Passcode Digits Box -->
+                        <div class="uber-otp-row" style="margin: 6px 0 10px;">
+                            <input type="password" maxlength="1" class="uber-otp-box passcode-box" id="passD1" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+                            <input type="password" maxlength="1" class="uber-otp-box passcode-box" id="passD2" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+                            <input type="password" maxlength="1" class="uber-otp-box passcode-box" id="passD3" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+                            <input type="password" maxlength="1" class="uber-otp-box passcode-box" id="passD4" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
                         </div>
 
-                        <button type="submit" class="auth-submit-btn" id="sendOtpSubmitBtn">
-                            <i class="fa-solid fa-paper-plane"></i>
-                            <span>GET VERIFICATION CODE</span>
+                        <!-- Mask Toggle & Security Note -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 12px;">
+                            <span style="color: #64748b; font-size: 11.5px;">Enter your 4-digit security PIN</span>
+                            <button type="button" onclick="togglePasscodeMask()" style="background: none; border: none; font-size: 12px; color: #4b5563; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 0;" id="passcodeMaskToggleBtn">
+                                <i class="fa-regular fa-eye"></i> <span>Show Passcode</span>
+                            </button>
+                        </div>
+
+                        <!-- Primary Continue Button -->
+                        <button type="submit" class="uber-primary-btn" id="passcodeLoginSubmitBtn">
+                            <span>Log In with Passcode</span>
+                            <i class="fa-solid fa-arrow-right"></i>
                         </button>
 
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 10.5px; color: #64748b; margin-top: 10px;">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; color: #64748b; margin-top: 12px;">
                             <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i>
                             <span>Protected by Chocoloom Passcode Shield</span>
                         </div>
+                    </form>
 
-                        <!-- Quick Test Chips -->
-                        <div class="auth-demo-section">
-                            <span class="auth-demo-label">⚡ Fast 1-Click Demo Numbers</span>
-                            <div class="auth-demo-chips">
-                                <button type="button" class="auth-demo-chip student-demo" onclick="fillOtpDemo('9494768069')">
-                                    <i class="fa-solid fa-graduation-cap"></i> Mohith (94947 68069)
-                                </button>
-                                <button type="button" class="auth-demo-chip student-demo" onclick="fillOtpDemo('9876543210')">
-                                    <i class="fa-solid fa-graduation-cap"></i> Student (98765 43210)
-                                </button>
-                                <button type="button" class="auth-demo-chip" onclick="fillOtpDemo('9988776655')">
-                                    <i class="fa-solid fa-user-plus"></i> New Number Test
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 2: Enter OTP PIN -->
-                    <div id="otpStepVerify" style="display: none;">
-                        <div style="text-align: center; margin-bottom: 14px;">
-                            <div style="width: 44px; height: 44px; border-radius: 50%; background: #ecfdf5; color: #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 20px;">
-                                <i class="fa-solid fa-shield-cat"></i>
-                            </div>
-                            <h4 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0 0 4px;">Enter 4-Digit OTP</h4>
-                            <p style="font-size: 12px; color: #64748b; margin: 0;">Sent via <strong id="otpSentChannelText">WhatsApp</strong> to <strong id="otpDisplayPhone">+91 ...</strong> <button type="button" onclick="backToPhoneStep()" style="background: none; border: none; color: var(--primary); font-size: 11px; font-weight: 700; cursor: pointer; text-decoration: underline;">Change</button></p>
-                        </div>
-
-                        <div class="otp-digits-row">
-                            <input type="text" maxlength="1" class="otp-digit-box" id="otpD1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
-                            <input type="text" maxlength="1" class="otp-digit-box" id="otpD2" inputmode="numeric" pattern="[0-9]*">
-                            <input type="text" maxlength="1" class="otp-digit-box" id="otpD3" inputmode="numeric" pattern="[0-9]*">
-                            <input type="text" maxlength="1" class="otp-digit-box" id="otpD4" inputmode="numeric" pattern="[0-9]*">
-                        </div>
-
-
-                        <div class="otp-timer-row">
-                            <span id="otpCountdownText">Resend code in <strong id="otpTimerSeconds">30s</strong></span>
-                            <div style="display: flex; gap: 8px;">
-                                <a href="javascript:void(0)" class="otp-resend-link disabled" id="resendOtpWhatsappBtn" onclick="resendOtp('whatsapp')"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
-                                <a href="javascript:void(0)" class="otp-resend-link disabled" id="resendOtpSmsBtn" onclick="resendOtp('sms')"><i class="fa-solid fa-comment-sms"></i> SMS</a>
-                            </div>
-                        </div>
-
-                        <button type="button" class="auth-submit-btn" id="verifyOtpBtn" onclick="handleVerifyOtpClick()" style="margin-top: 14px;">
-                            <i class="fa-solid fa-circle-check"></i>
-                            <span>VERIFY & CONTINUE</span>
+                    <!-- Create Account Link -->
+                    <div style="text-align: center; margin-top: 14px;">
+                        <button type="button" onclick="openNewUserOnboardingScreen()" style="background: none; border: none; color: #7c5cfc; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: underline;">
+                            New to Chocoloom? Create Account & Set Passcode
                         </button>
                     </div>
 
-                    <!-- Step 3: Complete Profile for First-time Unregistered Numbers -->
-                    <div id="otpStepNewUserName" style="display: none;">
-                        <div style="text-align: center; margin-bottom: 12px;">
-                            <h4 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0 0 4px;">Complete Your Profile 🎉</h4>
-                            <p style="font-size: 12px; color: #64748b; margin: 0;">Please enter your details to create your Chocoloom account.</p>
-                        </div>
+                    <!-- Terms Footer -->
+                    <p class="uber-terms" style="margin-top: 14px; margin-bottom: 4px;">
+                        By continuing, you agree to Chocoloom's Terms & Privacy.<br>
+                        SRKR Engineering College students automatically receive a flat 25% campus discount!
+                    </p>
+                </div>
 
-                        <!-- Locked Verified Phone -->
-                        <div style="display: flex; align-items: center; justify-content: space-between; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 7px 12px; margin-bottom: 10px;">
-                            <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #166534;">
-                                <i class="fa-solid fa-mobile-screen"></i>
-                                <span id="onboardingVerifiedPhone">+91 ...</span>
+                <!-- SCREEN 2: FIRST-TIME USER ONBOARDING -->
+                <div id="passcodeStepOnboarding" class="uber-screen-section" style="display: none;">
+                    <div style="display: flex; align-items: gap: 10px; margin-bottom: 12px;">
+                        <button type="button" class="uber-card-back-btn" onclick="backToPhoneStep()" title="Back" style="margin-bottom: 0;">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <h4 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0;">Create Account</h4>
+                            <p style="font-size: 11.5px; color: #64748b; margin: 0;">Set your 4-digit passcode & delivery details</p>
+                        </div>
+                    </div>
+
+                    <form onsubmit="completePasscodeOnboarding(event)" id="passcodeOnboardingForm">
+                        <!-- Mobile Number -->
+                        <div style="margin-bottom: 10px;">
+                            <label style="font-size: 11.5px; font-weight: 700; color: #374151; display: block; margin-bottom: 4px;">Mobile Number *</label>
+                            <div class="uber-phone-box" style="height: 46px; padding: 0 12px; margin-bottom: 0;">
+                                <div class="uber-country-code" style="margin-right: 8px; border-right: 1.5px solid #e2e8f0; padding-right: 8px;">
+                                    <span class="uber-flag-icon">🇮🇳</span>
+                                    <span>+91</span>
+                                </div>
+                                <input type="tel" id="onboardingPhoneNumber" class="uber-phone-input" style="padding-left: 0; font-size: 14px;" placeholder="98765 43210" maxlength="10" required autocomplete="tel" oninput="checkOnboardingPhoneRegistered(this)">
                             </div>
-                            <span style="font-size: 10px; font-weight: 800; color: #16a34a; background: #dcfce7; padding: 2px 6px; border-radius: 999px;">
-                                <i class="fa-solid fa-check"></i> Verified
-                            </span>
+                            <div id="onboardingPhoneNotice" style="display: none; font-size: 11.5px; margin-top: 5px; font-weight: 700;"></div>
                         </div>
 
-                        <div class="auth-field-group" style="margin-bottom: 8px;">
-                            <label class="auth-field-label" for="otpNewUserName">Full Name *</label>
-                            <div class="auth-input-wrapper">
-                                <i class="fa-regular fa-user auth-input-icon"></i>
-                                <input type="text" id="otpNewUserName" class="auth-input" placeholder="e.g. Mohith Kumar" required>
-                            </div>
-                        </div>
-
-                        <div class="auth-field-group" style="margin-bottom: 8px;">
-                            <label class="auth-field-label" for="otpNewUserEmail">Email Address *</label>
-                            <div class="auth-input-wrapper">
-                                <i class="fa-regular fa-envelope auth-input-icon"></i>
-                                <input type="email" id="otpNewUserEmail" class="auth-input" placeholder="e.g. name@example.com" required>
-                            </div>
-                        </div>
-
-                        <div class="auth-field-group" style="margin-bottom: 8px;">
-                            <label class="auth-field-label" for="otpNewUserPassword">4-Digit Passcode *</label>
-                            <div class="auth-input-wrapper">
-                                <i class="fa-solid fa-lock auth-input-icon"></i>
-                                <input type="password" id="otpNewUserPassword" class="auth-input" placeholder="Create 4-digit PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password" oninput="this.value = this.value.replace(/\D/g, '').slice(0, 4)">
-                                <button type="button" class="auth-pw-toggle" onclick="togglePasswordVisibility('otpNewUserPassword', this)">
+                        <!-- Set 4-Digit Passcode -->
+                        <div style="margin-bottom: 10px;">
+                            <label style="font-size: 11.5px; font-weight: 700; color: #374151; display: block; margin-bottom: 4px;">Set 4-Digit Passcode *</label>
+                            <div class="uber-phone-box" style="height: 46px; padding: 0 12px; margin-bottom: 0; position: relative;">
+                                <input type="password" id="otpNewUserPassword" class="uber-phone-input" style="padding-left: 0; font-size: 14px; padding-right: 32px; letter-spacing: 2px;" placeholder="Create 4-digit PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*" required autocomplete="new-password" oninput="this.value = this.value.replace(/\D/g, '').slice(0, 4)">
+                                <button type="button" class="auth-pw-toggle" onclick="togglePasswordVisibility('otpNewUserPassword', this)" style="position: absolute; right: 12px; background: none; border: none; color: #9ca3af; cursor: pointer;">
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <div class="auth-field-group" style="margin-bottom: 8px;">
-                            <label class="auth-field-label" for="otpNewUserAddress">Delivery Address / Room (Optional)</label>
-                            <div class="auth-input-wrapper">
-                                <i class="fa-solid fa-location-dot auth-input-icon"></i>
-                                <input type="text" id="otpNewUserAddress" class="auth-input" placeholder="e.g. SRKR Hostel Room 204 or Home address">
+                        <!-- Full Name -->
+                        <div style="margin-bottom: 10px;">
+                            <label style="font-size: 11.5px; font-weight: 700; color: #374151; display: block; margin-bottom: 4px;">Full Name *</label>
+                            <div class="uber-phone-box" style="height: 46px; padding: 0 12px; margin-bottom: 0;">
+                                <input type="text" id="otpNewUserName" class="uber-phone-input" style="padding-left: 0; font-size: 14px;" placeholder="e.g. Mohith Kumar" required autocomplete="name">
                             </div>
                         </div>
 
-                        <div class="auth-student-card" style="margin-top: 6px; margin-bottom: 10px;">
-                            <div class="auth-student-toggle-row">
-                                <div class="auth-student-toggle-label">
-                                    <i class="fa-solid fa-graduation-cap"></i>
-                                    <span>I am a College Student (25% OFF)</span>
-                                </div>
-                                <label class="auth-student-switch">
-                                    <input type="checkbox" id="otpNewUserIsStudent" checked onchange="document.getElementById('orderOtpCollegeSelectWrap').style.display = this.checked ? 'block' : 'none'">
-                                    <span class="auth-student-slider"></span>
-                                </label>
+                        <!-- Email Address -->
+                        <div style="margin-bottom: 10px;">
+                            <label style="font-size: 11.5px; font-weight: 700; color: #374151; display: block; margin-bottom: 4px;">Email Address *</label>
+                            <div class="uber-phone-box" style="height: 46px; padding: 0 12px; margin-bottom: 0;">
+                                <input type="email" id="otpNewUserEmail" class="uber-phone-input" style="padding-left: 0; font-size: 14px;" placeholder="name@example.com" required autocomplete="email">
                             </div>
-                            <div id="orderOtpCollegeSelectWrap" style="margin-top: 8px;">
-                                <select id="otpNewUserCollegeSelect" style="width: 100%; border-radius: 6px; border: 1px solid #cbd5e1; padding: 6px 8px; font-size: 11px; outline: none;">
-                                    <option value="col_srkr" selected>S.R.K.R. Engineering College (SRKR) - 25% OFF</option>
+                        </div>
+
+                        <!-- Delivery Address (Compulsory) -->
+                        <div style="margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <label style="font-size: 11.5px; font-weight: 700; color: #374151;">Delivery Address * <span style="color: #dc2626; font-size: 10.5px; font-weight: 800;">(Compulsory)</span></label>
+                                <span style="font-size: 10px; color: #7c5cfc; font-weight: 700; background: #f3e8ff; padding: 2px 6px; border-radius: 999px;">Bhimavaram only</span>
+                            </div>
+                            <div class="uber-phone-box" style="height: 46px; padding: 0 12px; margin-bottom: 0;">
+                                <input type="text" id="otpNewUserAddress" class="uber-phone-input" style="padding-left: 0; font-size: 13.5px;" placeholder="Hostel room or Home address (Bhimavaram)" required>
+                            </div>
+                        </div>
+
+                        <!-- SRKR College Student Perk -->
+                        <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 10px 12px; margin-bottom: 14px;">
+                            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 4px;">
+                                <div style="font-size: 12.5px; font-weight: 800; color: #14532d;">
+                                    <i class="fa-solid fa-graduation-cap"></i> I am a College Student
+                                </div>
+                                <input type="checkbox" id="otpNewUserIsStudent" checked onchange="document.getElementById('modalCollegeSelectWrapper').style.display = this.checked ? 'block' : 'none'" style="width: 17px; height: 17px; accent-color: #16a34a; cursor: pointer;">
+                            </label>
+                            <div id="modalCollegeSelectWrapper">
+                                <select id="otpNewUserCollegeSelect" style="width: 100%; border-radius: 8px; border: 1px solid #86efac; padding: 6px 8px; font-size: 11.5px; background: #fff; outline: none; cursor: pointer;">
+                                    <option value="col_srkr" selected>S.R.K.R. Engineering College (SRKR) - Active (25% OFF)</option>
                                     <option value="col_vishnu">Vishnu Engineering College (Bhimavaram)</option>
                                     <option value="col_gitam">GITAM University</option>
                                     <option value="col_andhra">Andhra University</option>
@@ -1146,130 +1333,12 @@
                             </div>
                         </div>
 
-                        <button type="button" class="auth-submit-btn" id="onboardingSubmitBtn" onclick="completeOtpOnboarding(event)" style="margin-top: 10px;">
+                        <button type="submit" class="uber-primary-btn" id="onboardingSubmitBtn" style="margin-top: 0;">
+                            <span>Save Profile & Start Ordering</span>
                             <i class="fa-solid fa-arrow-right"></i>
-                            <span>SAVE PROFILE & CONTINUE</span>
                         </button>
-                    </div>
-                </form>
-
-                <!-- 2. Sign In Form (Password) -->
-                <form class="auth-form" id="signInForm" onsubmit="handleSignInSubmit(event)">
-                    <div class="auth-field-group">
-                        <label class="auth-field-label" for="signInIdentifier">Email or Mobile Number</label>
-                        <div class="auth-input-wrapper">
-                            <i class="fa-regular fa-envelope auth-input-icon"></i>
-                            <input type="text" id="signInIdentifier" class="auth-input" placeholder="e.g. mohith@srkr.edu.in or 9876543210" required autocomplete="username">
-                        </div>
-                    </div>
-
-                    <div class="auth-field-group">
-                        <label class="auth-field-label" for="signInPassword">
-                            <span>Password</span>
-                            <a href="javascript:void(0)" onclick="handleForgotPassword()" style="color: var(--primary); text-decoration: none; font-size: 11px; font-weight: 700;">Forgot?</a>
-                        </label>
-                        <div class="auth-input-wrapper">
-                            <i class="fa-solid fa-lock auth-input-icon"></i>
-                            <input type="password" id="signInPassword" class="auth-input" placeholder="Enter your password" required autocomplete="current-password">
-                            <button type="button" class="auth-pw-toggle" onclick="togglePasswordVisibility('signInPassword', this)">
-                                <i class="fa-regular fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: #64748b; margin: 2px 0;">
-                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                            <input type="checkbox" id="rememberMeCheckbox" checked style="accent-color: var(--primary);">
-                            <span>Remember me</span>
-                        </label>
-                        <span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-shield-halved"></i> 100% Secure</span>
-                    </div>
-
-                    <button type="submit" class="auth-submit-btn" id="signInSubmitBtn">
-                        <i class="fa-solid fa-arrow-right-to-bracket"></i>
-                        <span>SIGN IN</span>
-                    </button>
-
-                    <!-- Quick Demo Credentials for Fast Testing -->
-                    <div class="auth-demo-section">
-                        <span class="auth-demo-label">⚡ Fast 1-Click Demo Login</span>
-                        <div class="auth-demo-chips">
-                            <button type="button" class="auth-demo-chip student-demo" onclick="fillDemoCredentials('student')">
-                                <i class="fa-solid fa-graduation-cap"></i> SRKR Student Demo
-                            </button>
-                            <button type="button" class="auth-demo-chip" onclick="fillDemoCredentials('customer')">
-                                <i class="fa-solid fa-user"></i> Regular Customer
-                            </button>
-                        </div>
-                    </div>
-                </form>
-
-                <!-- Sign Up Form -->
-                <form class="auth-form" id="signUpForm" onsubmit="handleSignUpSubmit(event)">
-                    <div class="auth-field-group">
-                        <label class="auth-field-label" for="signUpName">Full Name</label>
-                        <div class="auth-input-wrapper">
-                            <i class="fa-regular fa-user auth-input-icon"></i>
-                            <input type="text" id="signUpName" class="auth-input" placeholder="e.g. Mohith Kumar" required autocomplete="name">
-                        </div>
-                    </div>
-
-                    <div class="auth-field-group">
-                        <label class="auth-field-label" for="signUpPhone">Mobile Phone (+91)</label>
-                        <div class="auth-input-wrapper">
-                            <i class="fa-solid fa-phone auth-input-icon"></i>
-                            <input type="tel" id="signUpPhone" class="auth-input" placeholder="10-digit mobile number" maxlength="10" required autocomplete="tel">
-                        </div>
-                    </div>
-
-                    <div class="auth-field-group">
-                        <label class="auth-field-label" for="signUpEmail">Email Address</label>
-                        <div class="auth-input-wrapper">
-                            <i class="fa-regular fa-envelope auth-input-icon"></i>
-                            <input type="email" id="signUpEmail" class="auth-input" placeholder="name@domain.com" required autocomplete="email">
-                        </div>
-                    </div>
-
-                    <div class="auth-field-group">
-                        <label class="auth-field-label" for="signUpPassword">Create 4-Digit Passcode *</label>
-                        <div class="auth-input-wrapper">
-                            <i class="fa-solid fa-lock auth-input-icon"></i>
-                            <input type="password" id="signUpPassword" class="auth-input" placeholder="Create 4-digit PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*" required autocomplete="new-password" oninput="this.value = this.value.replace(/\D/g, '').slice(0, 4)">
-                            <button type="button" class="auth-pw-toggle" onclick="togglePasswordVisibility('signUpPassword', this)">
-                                <i class="fa-regular fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- College Student Perk Toggle -->
-                    <div class="auth-student-card">
-                        <div class="auth-student-toggle-row">
-                            <div class="auth-student-toggle-label">
-                                <i class="fa-solid fa-graduation-cap"></i>
-                                <span>I am a College Student</span>
-                            </div>
-                            <label class="auth-student-switch">
-                                <input type="checkbox" id="signUpIsStudent" checked onchange="toggleStudentFields(this.checked)">
-                                <span class="auth-student-slider"></span>
-                            </label>
-                        </div>
-                        <div id="signUpStudentFields" style="display: flex; flex-direction: column; gap: 6px;">
-                            <label style="font-size: 11px; font-weight: 700; color: #166534;">Select Campus (Currently Active at SRKR):</label>
-                            <select id="signUpCollegeSelect" class="auth-college-select">
-                                <option value="col_srkr" selected>S.R.K.R. Engineering College (SRKR) - Active (25% OFF)</option>
-                                <option value="col_vishnu">Vishnu Engineering College (Bhimavaram)</option>
-                                <option value="col_gitam">GITAM University</option>
-                                <option value="col_andhra">Andhra University</option>
-                                <option value="col_other">Other College / University</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="auth-submit-btn" id="signUpSubmitBtn">
-                        <i class="fa-solid fa-user-plus"></i>
-                        <span>CREATE ACCOUNT & UNLOCK DEALS</span>
-                    </button>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -1361,7 +1430,7 @@
                                 <span style="font-size: 15px; font-weight: 900; color: #4ade80;" id="accModalWalletBal">VIP Status</span>
                             </div>
                         </div>
-                        <a href="chocowallet.html" style="background: #ffffff; color: #581c87; text-decoration: none; font-size: 11.5px; font-weight: 800; padding: 6px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+                        <a href="chocowallet" style="background: #ffffff; color: #581c87; text-decoration: none; font-size: 11.5px; font-weight: 800; padding: 6px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
                             View Card <i class="fa-solid fa-arrow-right" style="font-size: 10px;"></i>
                         </a>
                     </div>
@@ -1396,8 +1465,8 @@
                 <div>
                     <h4 class="footer-heading">Company</h4>
                     <ul class="footer-links">
-                        <li><a href="index.html">About Us</a></li>
-                        <li><a href="index.html">Chocoloom Corporate</a></li>
+                        <li><a href="./">About Us</a></li>
+                        <li><a href="./">Chocoloom Corporate</a></li>
                         <li><a href="#">Careers</a></li>
                         <li><a href="#">Team & Culture</a></li>
                         <li><a href="#">Chocoloom One VIP</a></li>
@@ -1450,7 +1519,7 @@
             <i class="fa-solid fa-magnifying-glass"></i>
             <span>Search</span>
         </button>
-        <a href="uni-chocoloom.html" class="mobile-nav-item" id="mobileNavOffers" title="Uni Chocoloom Campus Store" style="text-decoration: none; color: inherit;">
+        <a href="uni-chocoloom" class="mobile-nav-item" id="mobileNavOffers" title="Uni Chocoloom Campus Store" style="text-decoration: none; color: inherit;">
             <i class="fa-solid fa-graduation-cap"></i>
             <span>Uni Chocoloom</span>
         </a>
@@ -1468,8 +1537,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="data.js?v=6.5"></script>
-    <script src="react-components.js?v=1.0"></script>
-    <script src="app.js?v=8.1"></script>
+    <script src="data.js?v=6.6"></script>
+    <script src="react-components.js?v=2.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
+    <script src="app.js?v=9.9"></script>
 </body>
 </html>

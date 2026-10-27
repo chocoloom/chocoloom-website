@@ -23,7 +23,7 @@
         <div class="container landing-top-nav">
             <div class="landing-top-left">
                 <a href="#landingShowcaseSection" class="landing-nav-link"><i class="fa-solid fa-mobile-screen-button"></i> Get the App</a>
-                <div class="landing-location-badge" id="landingLocationChip" onclick="window.location.href='order.html'" title="Delivery Location (Click to view menu)">
+                <div class="landing-location-badge" id="landingLocationChip" onclick="window.location.href='<?php echo home_url('/'); ?>'" title="Delivery Location (Click to view menu)">
                     <i class="fa-solid fa-location-dot"></i>
                     <span id="landingLocText">Detecting location...</span>
                 </div>
@@ -38,7 +38,7 @@
                     <span>Chocowallet Card</span>
                 </a>
                 <a href="#landingShowcaseSection" class="landing-nav-link">About Us</a>
-                <a href="login.html?redirect=index.html" class="landing-nav-link" style="background: rgba(255, 255, 255, 0.15); border-radius: 999px; padding: 5px 14px; font-weight: 700; color: #fff; display: inline-flex; align-items: center; gap: 6px;">
+                <a href="<?php echo chocoloom_get_page_url('login'); ?>" class="landing-nav-link" style="background: rgba(255, 255, 255, 0.15); border-radius: 999px; padding: 5px 14px; font-weight: 700; color: #fff; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fa-regular fa-user"></i>
                     <span>Sign In</span>
                 </a>

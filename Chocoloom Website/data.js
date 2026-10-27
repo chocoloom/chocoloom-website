@@ -573,154 +573,150 @@ window.SWIGGY_DATA = {
     ],
     "categories": [
         {
-            "id": "cat_unichocoloom",
-            "name": "Uni Chocoloom",
-            "image": "https://images.unsplash.com/photo-1541167760496-1628856ab772?w=600&auto=format&fit=crop&q=80",
-            "query": "Uni Chocoloom",
-            "badge": "🎓 25% OFF"
+            "id": "cat_diwali",
+            "name": "Diwali Hampers",
+            "image": "assets/categories/diwali_hampers.webp",
+            "query": "Diwali Hampers",
+            "badge": "🪔 40% OFF"
         },
         {
             "id": "cat_chocolates",
             "name": "Chocolates",
-            "image": "https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/chocolates_box.webp",
             "query": "Chocolates"
         },
         {
             "id": "cat_snacks",
             "name": "Snacks & Munchies",
-            "image": "https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/snacks.webp",
             "query": "Snacks"
         },
         {
             "id": "cat_anniversary",
             "name": "Anniversary Cakes",
-            "image": "Anniversary%20Cakes/Screenshot%202026-08-15%20at%2012.11.50%E2%80%AFPM.png",
+            "image": "assets/categories/anniversary_cakes.webp",
             "query": "Anniversary Cakes"
         },
         {
             "id": "cat_bachelor",
             "name": "Bachelorette Cakes",
-            "image": "Bachelor%20Cakes/Screenshot%202026-08-15%20at%202.18.46%E2%80%AFPM.png",
+            "image": "assets/categories/bachelorette_cakes.webp",
             "query": "Bachelorette Cakes"
         },
         {
             "id": "cat_bento",
             "name": "Bento Cakes",
-            "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/bento_cakes.webp",
             "query": "Bento Cakes"
         },
         {
             "id": "cat_cartoons",
             "name": "Cartoons",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/cartoons.webp",
             "query": "Cartoons"
         },
         {
             "id": "cat_cooling",
             "name": "Cooling Cakes",
-            "image": "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/cooling_cake.webp",
             "query": "Cooling Cakes"
         },
         {
             "id": "cat_desserts",
             "name": "Desserts",
-            "image": "desserts/WhatsApp%20Image%202026-08-08%20at%2018.04.03.jpeg",
+            "image": "assets/categories/desserts.webp",
             "query": "Desserts"
         },
         {
             "id": "cat_specialty",
             "name": "Specialty Cakes",
-            "image": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/specialty_cakes.webp",
             "query": "Specialty Cakes"
         },
         {
             "id": "cat_wedding",
             "name": "Wedding Cakes",
-            "image": "Wedding%20Cakes/Screenshot%202026-08-15%20at%202.18.27%E2%80%AFPM.png",
+            "image": "assets/categories/wedding_cakes.webp",
             "query": "Wedding Cakes"
         },
         {
             "id": "cat_half_birthday",
             "name": "Half Birthday Cakes",
-            "image": "Half%20Birthday%20Cakes/Screenshot%202026-08-15%20at%201.58.59%E2%80%AFPM.png",
+            "image": "assets/categories/half_birthday_cakes.webp",
             "query": "Half Birthday Cakes"
         },
         {
             "id": "cat_kids",
             "name": "Kids",
-            "image": "https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/kids_cake.webp",
             "query": "Kids"
         },
         {
             "id": "cat_mango",
             "name": "Mango Cakes",
-            "image": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/mango_cakes.webp",
             "query": "Mango Cakes"
         },
         {
             "id": "cat_black_currant",
             "name": "Black Currant Cakes",
-            "image": "https://images.unsplash.com/photo-1542826438-bd32f43d626f?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/black_currant_cake.webp",
             "query": "Black Currant Cakes"
         },
         {
             "id": "cat_muffins",
             "name": "Muffin Cakes",
-            "image": "https://images.unsplash.com/photo-1607958996333-41aef7caefaa?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/muffin_cakes.webp",
             "query": "Muffin Cakes"
         },
         {
             "id": "cat_square",
             "name": "Square Cakes",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/square_cakes.webp",
             "query": "Square Cakes"
         },
         {
             "id": "cat_truffle",
             "name": "Truffle Cakes",
-            "image": "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/truffle_cakes.webp",
             "query": "Truffle Cakes"
         },
         {
             "id": "cat_gelatin",
             "name": "Gelatin Cakes",
-            "image": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/gelatin_cakes.webp",
             "query": "Gelatin Cakes"
         },
         {
             "id": "cat_shakes",
             "name": "Shakes",
-            "image": "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/shakes.webp",
             "query": "Shakes"
         },
         {
             "id": "cat_extras",
             "name": "Extras",
-            "image": "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&auto=format&fit=crop&q=80",
+            "image": "assets/categories/extras.webp",
             "query": "Extras"
         }
     ],
     "banners": [
         {
-            "id": "b_tombola",
-            "tag": "",
-            "tagIcon": "",
-            "title": "TOMBOLA: Try Your Luck!",
-            "subtitle": "Try your luck with Tombola strips for £1 / ₹50! Every prize a winner — win free desserts, artisan chocolates & up to 50% discount coupons.",
-            "discountText": "COMING SOON • EVERY PRIZE A WINNER!",
-            "code": "TOMBOLA50",
-            "image": "assets/tombola-banner.png?v=3",
-            "fallbackImage": "assets/tombola-banner.png?v=3",
-            "overlayGradient": "linear-gradient(90deg, rgba(20, 10, 0, 0.75) 0%, rgba(20, 10, 0, 0.45) 45%, rgba(0, 0, 0, 0.05) 85%, rgba(0, 0, 0, 0) 100%)",
-            "badge": "COMING SOON",
-            "rating": "5.0",
-            "ratingLabel": "Community Favorite",
-            "cta": "Coming Soon",
-            "category": "Tombola",
-            "isGraphicBanner": true,
-            "bgColor": "#ffd735",
-            "redirectUrl": "",
-            "isComingSoon": true
+            "id": "b_diwali",
+            "tag": "DIWALI SPECIAL (NOV 7–9 ONLY)",
+            "tagIcon": "fa-solid fa-sparkles",
+            "title": "Happy Diwali: Luxury Hampers & Sweets 🪔✨",
+            "subtitle": "Celebrate the Festival of Lights with handcrafted Belgian pralines, golden dry-fruit cakes & festive gift hampers. Flat 40% OFF with code DIWALI40 (Valid Nov 7–9 only)!",
+            "discountText": "FLAT 40% OFF (NOV 7–9)",
+            "code": "DIWALI40",
+            "image": "assets/categories/diwali_hampers.webp",
+            "fallbackImage": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=1600&auto=format&fit=crop&q=80",
+            "overlayGradient": "linear-gradient(90deg, rgba(36, 11, 54, 0.95) 0%, rgba(74, 21, 75, 0.8) 45%, rgba(124, 45, 18, 0.25) 85%, rgba(20, 5, 25, 0.1) 100%)",
+            "badge": "VALID NOV 7–9 ONLY 🪔",
+            "rating": "4.99",
+            "ratingLabel": "Festive Choice",
+            "cta": "Claim 40% OFF",
+            "category": "Diwali Hampers"
         },
         {
             "id": "b_uni",
@@ -3084,7 +3080,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.9,
                     "reviewsCount": 248,
                     "description": "Tropical Moana island cake with ocean waves, palm trees, and cute Pua character topper.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1535141192574-5d4897c13136?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_76",
@@ -3108,7 +3104,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.5,
                     "reviewsCount": 255,
                     "description": "Pink frosted mini Barbie logo theme cake with sprinkles and sweet pink drip.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_77",
@@ -3132,7 +3128,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.6,
                     "reviewsCount": 262,
                     "description": "Tall pastel blue Moana island cake with tropical flowers and Pua mascot topper.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1562777717-dc6984f65a63?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_78",
@@ -3156,7 +3152,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.7,
                     "reviewsCount": 269,
                     "description": "Bright pink and green garden cake with Peppa Pig and George house toppers.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1576618148400-f54bed99fcfd?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_79",
@@ -3180,7 +3176,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.8,
                     "reviewsCount": 276,
                     "description": "Fun bright yellow cartoon tiger face cake with fluffy piping and sweet white chocolate whiskers.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_80",
@@ -3204,7 +3200,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.9,
                     "reviewsCount": 283,
                     "description": "Vibrant yellow Pokemon cake with Pikachu, Squirtle, Charmander & Bulbasaur toppers!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_81",
@@ -3228,7 +3224,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.5,
                     "reviewsCount": 290,
                     "description": "Artistic white & blue brushstroke cake with cute Pikachu topper and sky blue fondant spheres.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_82",
@@ -3252,7 +3248,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.6,
                     "reviewsCount": 297,
                     "description": "Adorable turquoise ocean cake with Baby Shark, Mommy & Daddy Shark toppers!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1542826438-bd32f43d626f?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_83",
@@ -3276,7 +3272,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.7,
                     "reviewsCount": 304,
                     "description": "White island cake with standing Moana topper, palm tree, golden starfish, and Hei Hei chicken.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1542826438-bd32f43d626f?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_84",
@@ -3300,7 +3296,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.8,
                     "reviewsCount": 311,
                     "description": "Vibrant sky blue cake with 3D fondant rainbow, bright yellow sun, and Peppa Pig family topper.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_85",
@@ -3324,7 +3320,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.9,
                     "reviewsCount": 318,
                     "description": "Delicate pink cake featuring Peppa Pig, Rebecca Rabbit, smiling yellow sun, and fondant rain clouds.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1576618148400-f54bed99fcfd?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_86",
@@ -3348,7 +3344,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.5,
                     "reviewsCount": 325,
                     "description": "Cute pink frosted cake topped with iconic Minnie Mouse polka dot bow and Happy Birthday piping.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_87",
@@ -3372,7 +3368,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.6,
                     "reviewsCount": 332,
                     "description": "Enchanting pink & white drip cake with Fairy Princess Peppa Pig topper, pink ribbon bow, and stars.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_88",
@@ -3396,7 +3392,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.7,
                     "reviewsCount": 339,
                     "description": "Sleek grey & blue Spider-Man cake with spider logo emblem, web topper, and colorful spheres.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1558301211-0d8c8ddee6ec?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_89",
@@ -3420,7 +3416,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.8,
                     "reviewsCount": 346,
                     "description": "Epic white cake topped with 3D fondant PokeBall, twin Pikachu toppers, and lightning bolts!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_90",
@@ -3444,7 +3440,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.9,
                     "reviewsCount": 353,
                     "description": "Red & white cake topped with Pikachu, Squirtle, Bulbasaur and a floating PokeBall balloon!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1558301211-0d8c8ddee6ec?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_91",
@@ -3468,7 +3464,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.5,
                     "reviewsCount": 360,
                     "description": "Cute white Shin-Chan cake with Shiro the puppy, hand-drawn character wraps and Crayon Shin-Chan topper.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1519869325930-281384150729?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_92",
@@ -3492,7 +3488,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.6,
                     "reviewsCount": 367,
                     "description": "Elegant white cake with gold star wands, fondant Pikachu & Eevee toppers, and mini PokeBall accents.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_93",
@@ -3516,7 +3512,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.7,
                     "reviewsCount": 374,
                     "description": "Epic grey & green Hulk fist smash cake with mini Hulk topper, POW bubble, and star accents.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_94",
@@ -3540,7 +3536,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.8,
                     "reviewsCount": 381,
                     "description": "Adorable shaped honey pot cake with fondant Winnie the Pooh sitting inside, dripping yellow honey.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_95",
@@ -3564,7 +3560,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.9,
                     "reviewsCount": 388,
                     "description": "Elegant white fondant cake with 3D Mickey face, red star accents, and 'TWO' Mickey Mouse topper.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_96",
@@ -3588,7 +3584,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.5,
                     "reviewsCount": 395,
                     "description": "Fun white & blue drip cake with big #1 topper, Mickey ear cookies, and Mickey in dungarees print.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_97",
@@ -3612,7 +3608,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.6,
                     "reviewsCount": 402,
                     "description": "Cute sculpted Winnie the Pooh bear face cake with yellow ears and beautiful sunflower border.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_98",
@@ -3636,7 +3632,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.7,
                     "reviewsCount": 409,
                     "description": "Adorable fluffy chocolate bear face cake with piped dark chocolate shag frosting and smooth fondant bear snout details.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1602351447937-745cb720612f?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_99",
@@ -3660,7 +3656,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.8,
                     "reviewsCount": 416,
                     "description": "Adorable #1 shaped vanilla cake covered with white cream puffs, fun lion cub face toppers all over!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_100",
@@ -5279,7 +5275,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.5,
                     "reviewsCount": 185,
                     "description": "Enchanting pastel rainbow cake with golden unicorn horn, marshmallow ears, and magical swirl frosting!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "assets/categories/curated_cartoon_cake.jpg"
                 },
                 {
                     "id": "choco_sql_167",
@@ -5303,7 +5299,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.6,
                     "reviewsCount": 192,
                     "description": "Action-packed vibrant red & blue superhero cake with star shield topper and chocolate pop crunch!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1558301211-0d8c8ddee6ec?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_168",
@@ -5327,7 +5323,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.7,
                     "reviewsCount": 199,
                     "description": "Fun cartoon mouse cake with cute chocolate ears, red button pants icing, and sweet vanilla swirls!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_169",
@@ -5351,7 +5347,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.8,
                     "reviewsCount": 206,
                     "description": "Adorable 3D fur-textured chocolate teddy bear cake with a cute bow tie and honey caramel center!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1602351447937-745cb720612f?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_170",
@@ -5375,7 +5371,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.9,
                     "reviewsCount": 213,
                     "description": "Vibrant rainbow cake loaded with gummy bears, colorful lollipops, smarties, and sprinkles explosion!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "assets/categories/candyland.webp"
                 },
                 {
                     "id": "choco_sql_171",
@@ -5399,7 +5395,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.5,
                     "reviewsCount": 220,
                     "description": "Decadent chocolate cake surrounded by KitKat bars and topped with colorful candy buttons.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "assets/categories/kitkat.webp"
                 },
                 {
                     "id": "choco_sql_172",
@@ -5423,7 +5419,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.6,
                     "reviewsCount": 227,
                     "description": "Cute green dinosaur cake with palm tree icing and chocolate rock crumbles!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_173",
@@ -5447,7 +5443,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.7,
                     "reviewsCount": 234,
                     "description": "Fun pink piggy cake splashing in rich chocolate fudge puddle icing!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_174",
@@ -5471,7 +5467,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.8,
                     "reviewsCount": 241,
                     "description": "Adorable black and white panda cake with edible green fondant bamboo sticks!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1602351447937-745cb720612f?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_175",
@@ -5495,7 +5491,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.9,
                     "reviewsCount": 248,
                     "description": "Heroic golden yellow cake topped with sweet motichoor laddu sprinkles!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_176",
@@ -5519,7 +5515,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.5,
                     "reviewsCount": 255,
                     "description": "Bright yellow cartoon minion cake with silver fondant goggle eyes and banana cream!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1519869325930-281384150729?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_177",
@@ -5543,7 +5539,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.6,
                     "reviewsCount": 262,
                     "description": "Thrilling red & black spider web cake with chocolate web piping and hero mask!",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1558301211-0d8c8ddee6ec?w=600&auto=format&fit=crop&q=80"
                 },
                 {
                     "id": "choco_sql_178",
@@ -7295,7 +7291,7 @@ window.SWIGGY_DATA = {
                     "rating": 4.7,
                     "reviewsCount": 120,
                     "description": "Adorable fluffy chocolate bear face cake with white ears, a cute black bow tie and polka dot accents.",
-                    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1602351447937-745cb720612f?w=600&auto=format&fit=crop&q=80"
                 }
             ]
         }
@@ -9099,7 +9095,7 @@ window.SWIGGY_DATA = {
             "rating": 4.9,
             "reviewsCount": 248,
             "description": "Tropical Moana island cake with ocean waves, palm trees, and cute Pua character topper.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1535141192574-5d4897c13136?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_76",
@@ -9123,7 +9119,7 @@ window.SWIGGY_DATA = {
             "rating": 4.5,
             "reviewsCount": 255,
             "description": "Pink frosted mini Barbie logo theme cake with sprinkles and sweet pink drip.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_77",
@@ -9147,7 +9143,7 @@ window.SWIGGY_DATA = {
             "rating": 4.6,
             "reviewsCount": 262,
             "description": "Tall pastel blue Moana island cake with tropical flowers and Pua mascot topper.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1562777717-dc6984f65a63?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_78",
@@ -9171,7 +9167,7 @@ window.SWIGGY_DATA = {
             "rating": 4.7,
             "reviewsCount": 269,
             "description": "Bright pink and green garden cake with Peppa Pig and George house toppers.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1576618148400-f54bed99fcfd?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_79",
@@ -9195,7 +9191,7 @@ window.SWIGGY_DATA = {
             "rating": 4.8,
             "reviewsCount": 276,
             "description": "Fun bright yellow cartoon tiger face cake with fluffy piping and sweet white chocolate whiskers.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_80",
@@ -9219,7 +9215,7 @@ window.SWIGGY_DATA = {
             "rating": 4.9,
             "reviewsCount": 283,
             "description": "Vibrant yellow Pokemon cake with Pikachu, Squirtle, Charmander & Bulbasaur toppers!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_81",
@@ -9243,7 +9239,7 @@ window.SWIGGY_DATA = {
             "rating": 4.5,
             "reviewsCount": 290,
             "description": "Artistic white & blue brushstroke cake with cute Pikachu topper and sky blue fondant spheres.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_82",
@@ -9267,7 +9263,7 @@ window.SWIGGY_DATA = {
             "rating": 4.6,
             "reviewsCount": 297,
             "description": "Adorable turquoise ocean cake with Baby Shark, Mommy & Daddy Shark toppers!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1542826438-bd32f43d626f?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_83",
@@ -9291,7 +9287,7 @@ window.SWIGGY_DATA = {
             "rating": 4.7,
             "reviewsCount": 304,
             "description": "White island cake with standing Moana topper, palm tree, golden starfish, and Hei Hei chicken.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1542826438-bd32f43d626f?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_84",
@@ -9315,7 +9311,7 @@ window.SWIGGY_DATA = {
             "rating": 4.8,
             "reviewsCount": 311,
             "description": "Vibrant sky blue cake with 3D fondant rainbow, bright yellow sun, and Peppa Pig family topper.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_85",
@@ -9339,7 +9335,7 @@ window.SWIGGY_DATA = {
             "rating": 4.9,
             "reviewsCount": 318,
             "description": "Delicate pink cake featuring Peppa Pig, Rebecca Rabbit, smiling yellow sun, and fondant rain clouds.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1576618148400-f54bed99fcfd?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_86",
@@ -9363,7 +9359,7 @@ window.SWIGGY_DATA = {
             "rating": 4.5,
             "reviewsCount": 325,
             "description": "Cute pink frosted cake topped with iconic Minnie Mouse polka dot bow and Happy Birthday piping.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_87",
@@ -9387,7 +9383,7 @@ window.SWIGGY_DATA = {
             "rating": 4.6,
             "reviewsCount": 332,
             "description": "Enchanting pink & white drip cake with Fairy Princess Peppa Pig topper, pink ribbon bow, and stars.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_88",
@@ -9411,7 +9407,7 @@ window.SWIGGY_DATA = {
             "rating": 4.7,
             "reviewsCount": 339,
             "description": "Sleek grey & blue Spider-Man cake with spider logo emblem, web topper, and colorful spheres.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1558301211-0d8c8ddee6ec?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_89",
@@ -9435,7 +9431,7 @@ window.SWIGGY_DATA = {
             "rating": 4.8,
             "reviewsCount": 346,
             "description": "Epic white cake topped with 3D fondant PokeBall, twin Pikachu toppers, and lightning bolts!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_90",
@@ -9459,7 +9455,7 @@ window.SWIGGY_DATA = {
             "rating": 4.9,
             "reviewsCount": 353,
             "description": "Red & white cake topped with Pikachu, Squirtle, Bulbasaur and a floating PokeBall balloon!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1558301211-0d8c8ddee6ec?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_91",
@@ -9483,7 +9479,7 @@ window.SWIGGY_DATA = {
             "rating": 4.5,
             "reviewsCount": 360,
             "description": "Cute white Shin-Chan cake with Shiro the puppy, hand-drawn character wraps and Crayon Shin-Chan topper.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1519869325930-281384150729?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_92",
@@ -9507,7 +9503,7 @@ window.SWIGGY_DATA = {
             "rating": 4.6,
             "reviewsCount": 367,
             "description": "Elegant white cake with gold star wands, fondant Pikachu & Eevee toppers, and mini PokeBall accents.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_93",
@@ -9531,7 +9527,7 @@ window.SWIGGY_DATA = {
             "rating": 4.7,
             "reviewsCount": 374,
             "description": "Epic grey & green Hulk fist smash cake with mini Hulk topper, POW bubble, and star accents.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_94",
@@ -9555,7 +9551,7 @@ window.SWIGGY_DATA = {
             "rating": 4.8,
             "reviewsCount": 381,
             "description": "Adorable shaped honey pot cake with fondant Winnie the Pooh sitting inside, dripping yellow honey.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_95",
@@ -9579,7 +9575,7 @@ window.SWIGGY_DATA = {
             "rating": 4.9,
             "reviewsCount": 388,
             "description": "Elegant white fondant cake with 3D Mickey face, red star accents, and 'TWO' Mickey Mouse topper.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_96",
@@ -9603,7 +9599,7 @@ window.SWIGGY_DATA = {
             "rating": 4.5,
             "reviewsCount": 395,
             "description": "Fun white & blue drip cake with big #1 topper, Mickey ear cookies, and Mickey in dungarees print.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_97",
@@ -9627,7 +9623,7 @@ window.SWIGGY_DATA = {
             "rating": 4.6,
             "reviewsCount": 402,
             "description": "Cute sculpted Winnie the Pooh bear face cake with yellow ears and beautiful sunflower border.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_98",
@@ -9651,7 +9647,7 @@ window.SWIGGY_DATA = {
             "rating": 4.7,
             "reviewsCount": 409,
             "description": "Adorable fluffy chocolate bear face cake with piped dark chocolate shag frosting and smooth fondant bear snout details.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1602351447937-745cb720612f?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_99",
@@ -9675,7 +9671,7 @@ window.SWIGGY_DATA = {
             "rating": 4.8,
             "reviewsCount": 416,
             "description": "Adorable #1 shaped vanilla cake covered with white cream puffs, fun lion cub face toppers all over!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_100",
@@ -11283,7 +11279,7 @@ window.SWIGGY_DATA = {
             "rating": 4.5,
             "reviewsCount": 185,
             "description": "Enchanting pastel rainbow cake with golden unicorn horn, marshmallow ears, and magical swirl frosting!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "assets/categories/curated_cartoon_cake.jpg"
         },
         {
             "id": "choco_sql_167",
@@ -11307,7 +11303,7 @@ window.SWIGGY_DATA = {
             "rating": 4.6,
             "reviewsCount": 192,
             "description": "Action-packed vibrant red & blue superhero cake with star shield topper and chocolate pop crunch!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1558301211-0d8c8ddee6ec?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_168",
@@ -11331,7 +11327,7 @@ window.SWIGGY_DATA = {
             "rating": 4.7,
             "reviewsCount": 199,
             "description": "Fun cartoon mouse cake with cute chocolate ears, red button pants icing, and sweet vanilla swirls!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_169",
@@ -11355,7 +11351,7 @@ window.SWIGGY_DATA = {
             "rating": 4.8,
             "reviewsCount": 206,
             "description": "Adorable 3D fur-textured chocolate teddy bear cake with a cute bow tie and honey caramel center!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1602351447937-745cb720612f?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_170",
@@ -11379,7 +11375,7 @@ window.SWIGGY_DATA = {
             "rating": 4.9,
             "reviewsCount": 213,
             "description": "Vibrant rainbow cake loaded with gummy bears, colorful lollipops, smarties, and sprinkles explosion!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "assets/categories/candyland.webp"
         },
         {
             "id": "choco_sql_171",
@@ -11403,7 +11399,7 @@ window.SWIGGY_DATA = {
             "rating": 4.5,
             "reviewsCount": 220,
             "description": "Decadent chocolate cake surrounded by KitKat bars and topped with colorful candy buttons.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "assets/categories/kitkat.webp"
         },
         {
             "id": "choco_sql_172",
@@ -11427,7 +11423,7 @@ window.SWIGGY_DATA = {
             "rating": 4.6,
             "reviewsCount": 227,
             "description": "Cute green dinosaur cake with palm tree icing and chocolate rock crumbles!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_173",
@@ -11451,7 +11447,7 @@ window.SWIGGY_DATA = {
             "rating": 4.7,
             "reviewsCount": 234,
             "description": "Fun pink piggy cake splashing in rich chocolate fudge puddle icing!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_174",
@@ -11475,7 +11471,7 @@ window.SWIGGY_DATA = {
             "rating": 4.8,
             "reviewsCount": 241,
             "description": "Adorable black and white panda cake with edible green fondant bamboo sticks!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1602351447937-745cb720612f?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_175",
@@ -11499,7 +11495,7 @@ window.SWIGGY_DATA = {
             "rating": 4.9,
             "reviewsCount": 248,
             "description": "Heroic golden yellow cake topped with sweet motichoor laddu sprinkles!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_176",
@@ -11523,7 +11519,7 @@ window.SWIGGY_DATA = {
             "rating": 4.5,
             "reviewsCount": 255,
             "description": "Bright yellow cartoon minion cake with silver fondant goggle eyes and banana cream!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1519869325930-281384150729?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_177",
@@ -11547,7 +11543,7 @@ window.SWIGGY_DATA = {
             "rating": 4.6,
             "reviewsCount": 262,
             "description": "Thrilling red & black spider web cake with chocolate web piping and hero mask!",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1558301211-0d8c8ddee6ec?w=600&auto=format&fit=crop&q=80"
         },
         {
             "id": "choco_sql_178",
@@ -13299,7 +13295,7 @@ window.SWIGGY_DATA = {
             "rating": 4.7,
             "reviewsCount": 120,
             "description": "Adorable fluffy chocolate bear face cake with white ears, a cute black bow tie and polka dot accents.",
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80"
+            "image": "https://images.unsplash.com/photo-1602351447937-745cb720612f?w=600&auto=format&fit=crop&q=80"
         }
     ],
     "cardOrders": [

@@ -1,3 +1,29 @@
+// Clean URL Beautifier: Ensure the address bar never displays .html extensions
+(function() {
+    try {
+        if (typeof window !== 'undefined' && window.history && window.history.replaceState && window.location) {
+            const loc = window.location;
+            let p = loc.pathname;
+            let changed = false;
+            if (p.endsWith('/index.html') || p === '/index.html' || p.endsWith('/order.html') || p === '/order.html') {
+                p = p.replace(/\/(order|index)\.html$/, '/') || '/';
+                changed = true;
+            } else if (p.endsWith('.html')) {
+                p = p.replace(/\.html$/, '');
+                changed = true;
+            }
+            let search = loc.search;
+            if (search.includes('.html')) {
+                search = search.replace(/\.html/g, '');
+                changed = true;
+            }
+            if (changed) {
+                window.history.replaceState(null, '', p + search + loc.hash);
+            }
+        }
+    } catch (e) {}
+})();
+
 // Universal Asset & Image URL Resolver for WordPress & Local Environments
 if (!window.getThemeAssetUrl) {
     window.getThemeAssetUrl = function(path) {
@@ -16,31 +42,42 @@ if (!window.getAppUrl) {
     window.getAppUrl = function(target) {
         if (!target || typeof target !== 'string') return target;
         const wpConfig = (typeof window !== 'undefined' && (window.CHOCOLOOM_WP_CONFIG || (window.parent && window.parent.CHOCOLOOM_WP_CONFIG))) || {};
-        if (!wpConfig.isWordPress) return target;
-        const homeUrl = (wpConfig.homeUrl || '/').replace(/\/+$/, '');
         const cleanTarget = target.split('?')[0].split('#')[0].replace(/^\/+/, '');
         const queryAndHash = target.slice(cleanTarget.length + (target.indexOf(cleanTarget) > -1 ? target.indexOf(cleanTarget) : 0));
 
+        if (!wpConfig.isWordPress) {
+            if (cleanTarget === 'order.html' || cleanTarget === 'order' || cleanTarget === 'index.html' || cleanTarget === '') {
+                const qh = queryAndHash ? (queryAndHash.startsWith('?') || queryAndHash.startsWith('#') ? queryAndHash : '?' + queryAndHash) : '';
+                return `./${qh}`.replace(/\.html/g, '');
+            }
+            const cleanNoExt = cleanTarget.replace(/\.html$/, '');
+            const cleanQH = queryAndHash.replace(/\.html/g, '');
+            return `${cleanNoExt}${cleanQH}`;
+        }
+
+        const homeUrl = (wpConfig.homeUrl || '/').replace(/\/+$/, '');
+
         if (cleanTarget === 'uni-chocoloom.html' || cleanTarget === 'uni-chocoloom') {
-            const cleanQuery = queryAndHash.startsWith('?') ? queryAndHash.slice(1) : queryAndHash;
+            const cleanQuery = (queryAndHash.startsWith('?') ? queryAndHash.slice(1) : queryAndHash).replace(/\.html/g, '');
             return `${homeUrl}/?page=uni-chocoloom${cleanQuery ? '&' + cleanQuery : ''}`;
         }
         if (cleanTarget === 'chocowallet.html' || cleanTarget === 'chocowallet') {
-            const cleanQuery = queryAndHash.startsWith('?') ? queryAndHash.slice(1) : queryAndHash;
+            const cleanQuery = (queryAndHash.startsWith('?') ? queryAndHash.slice(1) : queryAndHash).replace(/\.html/g, '');
             return `${homeUrl}/?page=chocowallet${cleanQuery ? '&' + cleanQuery : ''}`;
         }
         if (cleanTarget === 'login.html' || cleanTarget === 'login') {
-            const cleanQuery = queryAndHash.startsWith('?') ? queryAndHash.slice(1) : queryAndHash;
+            const cleanQuery = (queryAndHash.startsWith('?') ? queryAndHash.slice(1) : queryAndHash).replace(/\.html/g, '');
             return `${homeUrl}/?page=login${cleanQuery ? '&' + cleanQuery : ''}`;
         }
         if (cleanTarget === 'landing.html' || cleanTarget === 'landing') {
-            const cleanQuery = queryAndHash.startsWith('?') ? queryAndHash.slice(1) : queryAndHash;
+            const cleanQuery = (queryAndHash.startsWith('?') ? queryAndHash.slice(1) : queryAndHash).replace(/\.html/g, '');
             return `${homeUrl}/?page=landing${cleanQuery ? '&' + cleanQuery : ''}`;
         }
         if (cleanTarget === 'order.html' || cleanTarget === 'order' || cleanTarget === 'index.html') {
-            return `${homeUrl}/${queryAndHash}`;
+            const cleanQH = queryAndHash.replace(/\.html/g, '');
+            return `${homeUrl}/${cleanQH}`;
         }
-        return target;
+        return target.replace(/\.html/g, '');
     };
 }
 
@@ -738,7 +775,7 @@ window.showCardOrderTransitModal = function(givenCardData = null) {
 
             <!-- iOS Cupertino Action Buttons -->
             <div class="ios-modal-actions">
-                <a href="order.html" class="ios-btn ios-btn-primary" style="text-decoration: none;">
+                <a href="order" class="ios-btn ios-btn-primary" style="text-decoration: none;">
                     <i class="fa-solid fa-cake-candles"></i> Use ₹250 Credit to Order Cakes
                 </a>
                 <button type="button" class="ios-btn ios-btn-secondary" onclick="window.closeCardTransitModal(true)">
@@ -765,8 +802,8 @@ window.closeCardTransitModal = function(scrollToTracker = false) {
         setTimeout(() => { backdrop.remove(); }, 350);
     }
     if (scrollToTracker) {
-        if (!window.location.pathname.includes('chocowallet.html')) {
-            window.location.href = window.getAppUrl('chocowallet.html#physicalTrackerCard');
+        if (!window.location.pathname.includes('chocowallet')) {
+            window.location.href = window.getAppUrl('chocowallet#physicalTrackerCard');
             return;
         }
         const trackerEl = document.getElementById('physicalTrackerCard');
@@ -901,7 +938,7 @@ window.handleModalBuyCardSubmit = function(e) {
 };
 
 window.openChocowalletModal = function() {
-    window.location.href = window.getAppUrl('chocowallet.html');
+    window.location.href = window.getAppUrl('chocowallet');
 };
 
 window.closeChocowalletModal = function() {
@@ -1477,6 +1514,7 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
             if (liveItem.flavour_price_truffle !== undefined || liveItem.flavour_price_red_velvet !== undefined || liveItem.flavour_prices) {
                 const fpObj = (typeof liveItem.flavour_prices === 'object' && liveItem.flavour_prices) ? liveItem.flavour_prices : {};
                 match.flavour_prices = {
+                    ...fpObj,
                     chocolate_truffle: Number(liveItem.flavour_price_truffle ?? (fpObj.chocolate_truffle ?? 0)),
                     black_forest: Number(liveItem.flavour_price_black_forest ?? (fpObj.black_forest ?? 0)),
                     red_velvet: Number(liveItem.flavour_price_red_velvet ?? (fpObj.red_velvet ?? 50)),
@@ -1679,7 +1717,7 @@ async function initSupabaseSync() {
     }
 }
 
-// Background Live Polling: Check Supabase Cloud database with 5s interval
+// Background Live Polling: Check Cloud database fallback interval (60s)
 if (typeof window !== 'undefined') {
     setInterval(async () => {
         try {
@@ -1690,14 +1728,14 @@ if (typeof window !== 'undefined') {
                 await window.loadCatalogFromSupabase(false);
             }
         } catch (e) {}
-    }, 5000);
+    }, 60000);
 
-    // Auto-refresh live catalog immediately when user switches back to this tab (debounced 2s)
-    let lastVisibilitySync = 0;
+    // Auto-refresh live catalog when user switches back to this tab after being away
+    let lastVisibilitySync = Date.now();
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
             const now = Date.now();
-            if (now - lastVisibilitySync > 2000) {
+            if (now - lastVisibilitySync > 30000) {
                 lastVisibilitySync = now;
                 if (typeof loadServerCatalogOverrides === 'function') loadServerCatalogOverrides();
                 if (typeof window.loadCatalogFromSupabase === 'function') window.loadCatalogFromSupabase(false);
@@ -1785,7 +1823,8 @@ async function loadServerCatalogOverrides() {
                             data.customProducts.forEach(p => map.set(p.id, p));
                             curC.forEach(p => { if (!map.has(p.id)) map.set(p.id, p); });
                             const nextC = Array.from(map.values());
-                            if (JSON.stringify(curC) !== JSON.stringify(nextC)) {
+                            const sortC = arr => [...arr].map(p => p.id).sort().join(',');
+                            if (sortC(curC) !== sortC(nextC)) {
                                 localStorage.setItem("chocoloom_custom_products", JSON.stringify(nextC));
                                 hasChanges = true;
                             }
@@ -1793,7 +1832,8 @@ async function loadServerCatalogOverrides() {
                         if (data.deletedProducts && Array.isArray(data.deletedProducts) && data.deletedProducts.length > 0) {
                             const curD = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
                             const nextD = Array.from(new Set([...curD, ...data.deletedProducts]));
-                            if (JSON.stringify(curD) !== JSON.stringify(nextD)) {
+                            const sortD = arr => [...arr].sort().join(',');
+                            if (sortD(curD) !== sortD(nextD)) {
                                 localStorage.setItem("chocoloom_deleted_products", JSON.stringify(nextD));
                                 hasChanges = true;
                             }
@@ -1875,10 +1915,11 @@ function createSupabaseOrderPayload() {
         const isEggless = Boolean(dish.isEggless);
         const egglessP = Number(dish.egglessPrice || 0);
         const egglessOpt = dish.isEggless !== undefined ? (isEggless ? `100% Eggless (+₹${egglessP})` : 'With Egg') : null;
-        const weightP = Number(dish.weightPrice || (p - coolingP - egglessP));
+        const flvP = Number(dish.flavourPrice || 0);
+        const weightP = Number(dish.weightPrice || (p - coolingP - egglessP - flvP));
         const msg = dish.customMessage || null;
         const optParts = [];
-        if (flv) optParts.push(`Flavour: ${flv}`);
+        if (flv) optParts.push(`Flavour: ${flv}${flvP > 0 ? ` (+₹${flvP})` : ''}`);
         if (dish.has_weight !== false && w !== 'Standard') optParts.push(w);
         if (egglessOpt) optParts.push(isEggless ? `🌱 ${egglessOpt}` : `🥚 ${egglessOpt}`);
         if (dish.has_cooling !== false && coolingOpt !== 'Standard') optParts.push(`${coolingOpt}${coolingP > 0 ? ` (+₹${coolingP})` : ''}`);
@@ -1891,6 +1932,7 @@ function createSupabaseOrderPayload() {
             weight: w,
             flavour: flv,
             selected_flavour: flv,
+            flavour_price: flvP,
             selected_weight: w,
             weight_price: weightP,
             is_eggless: isEggless,
@@ -3471,30 +3513,37 @@ function getActiveHeroBanners() {
 
     let banners = savedBanners || (window.SWIGGY_DATA ? (SWIGGY_DATA.banners || SWIGGY_DATA.heroBanners || []) : []);
 
+    // Filter out Tombola banner permanently
+    const preTombolaCount = banners.length;
+    banners = banners.filter(ban => ban && ban.id !== 'b_tombola' && !(ban.id && ban.id.includes('tombola')) && ban.ctaAction !== 'tombola_game' && ban.category !== 'Tombola');
+    if (banners.length !== preTombolaCount) {
+        needsCacheUpdate = true;
+    }
+
     // Self-healing / sanitization pass: guarantee banner data integrity
     banners = banners.map(ban => {
         if (!ban || typeof ban !== 'object') return null;
-        const isTombola = ban.id === 'b_tombola' || (ban.id && ban.id.includes('tombola')) || ban.ctaAction === 'tombola_game';
-        
         let img = ban.image ? ban.image.trim() : '';
-        if (isTombola && (!img || img.length < 5)) {
-            img = 'assets/tombola-banner.png?v=3';
+        const fallback = ban.fallbackImage ? ban.fallbackImage.trim() : img;
+        const isComingSoon = ban.isComingSoon !== undefined ? Boolean(ban.isComingSoon) : false;
+        const redirectUrl = (ban.redirectUrl || ban.url || ban.link || '').trim();
+        if (ban.discountText && ban.discountText.includes('COMING SOON')) {
             needsCacheUpdate = true;
         }
-        
-        const fallback = ban.fallbackImage ? ban.fallbackImage.trim() : (isTombola ? 'assets/tombola-banner.png?v=3' : img);
-        const isComingSoon = isTombola ? true : (ban.isComingSoon !== undefined ? Boolean(ban.isComingSoon) : false);
-        const redirectUrl = ban.redirectUrl || ban.url || ban.link || '';
-        const discountText = isTombola ? 'COMING SOON • EVERY PRIZE A WINNER!' : (ban.discountText || '');
-        const ctaText = isTombola ? 'COMING SOON' : (ban.cta || 'Claim Offer');
-        const code = ban.code || (isTombola ? 'TOMBOLA50' : '');
-        const ctaAction = isTombola ? 'coming_soon' : (ban.ctaAction || (redirectUrl ? 'redirect_url' : 'copy_coupon'));
-        const bgColor = ban.bgColor || (ban.isGraphicBanner ? '#ffd735' : '#110722');
+        const discountText = (ban.discountText && ban.discountText.includes('COMING SOON')) ? '' : (ban.discountText || '');
+        const ctaText = ban.cta || 'Claim Offer';
+        const code = ban.code || '';
+        const ctaAction = ban.ctaAction || (redirectUrl ? 'redirect_url' : 'copy_coupon');
+        const bgColor = ban.bgColor || '#110722';
+        const isGraphic = Boolean(ban.isGraphicBanner);
+        if (ban.isGraphicBanner !== isGraphic) {
+            needsCacheUpdate = true;
+        }
 
         return {
             ...ban,
-            image: img || fallback || 'assets/tombola-banner.png?v=3',
-            fallbackImage: fallback || 'assets/tombola-banner.png?v=3',
+            image: img || fallback,
+            fallbackImage: fallback || img,
             discountText: discountText,
             cta: ctaText,
             code: code,
@@ -3502,7 +3551,7 @@ function getActiveHeroBanners() {
             bgColor: bgColor,
             redirectUrl: redirectUrl,
             isComingSoon: isComingSoon,
-            isGraphicBanner: ban.isGraphicBanner !== false,
+            isGraphicBanner: isGraphic,
             isActive: ban.isActive !== false
         };
     }).filter(Boolean);
@@ -3840,32 +3889,36 @@ function renderBanners() {
         const redirectUrl = (ban.redirectUrl || ban.url || ban.link || '').trim();
 
         if (ban.isGraphicBanner) {
-            const imgSrc = ban.image || ban.fallbackImage || 'assets/tombola-banner.png?v=3';
-            const mobileSrc = (ban.mobileImage && ban.mobileImage.trim()) ? ban.mobileImage.trim() : '';
+            const rawSrc = ban.image || ban.fallbackImage || 'assets/tombola-banner.png?v=3';
+            const imgSrc = window.getThemeAssetUrl ? window.getThemeAssetUrl(rawSrc) : rawSrc;
+            const mobileSrc = (ban.mobileImage && ban.mobileImage.trim()) 
+                ? (window.getThemeAssetUrl ? window.getThemeAssetUrl(ban.mobileImage.trim()) : ban.mobileImage.trim()) 
+                : '';
+            const fallbackSrc = window.getThemeAssetUrl ? window.getThemeAssetUrl('assets/tombola-banner.png?v=3') : 'assets/tombola-banner.png?v=3';
 
             return `
         <div class="hero-ad-slide hero-ad-graphic-slide" data-slide-index="${index}" onclick="handleBannerClick('${ban.id}', event)" style="background-color: ${ban.bgColor || '#ffd735'}; cursor: pointer;">
             <!-- Full-Bleed Graphic Poster Media with Responsive Desktop / Mobile Picture -->
             <div class="ad-bg-media graphic-ad-bg-media" style="background-color: ${ban.bgColor || '#ffd735'};">
-                <picture class="graphic-ad-picture">
+                <picture class="graphic-ad-picture" style="position: absolute; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
                     ${mobileSrc ? `<source media="(max-width: 768px)" srcset="${mobileSrc}">` : ''}
-                    <img src="${imgSrc}" alt="${ban.title || 'Advertisement'}" class="ad-bg-photo graphic-ad-photo" loading="${index === 0 ? 'eager' : 'lazy'}" onerror="this.onerror=null;this.src='assets/tombola-banner.png?v=3';">
+                    <img src="${imgSrc}" alt="${ban.title || 'Advertisement'}" class="ad-bg-photo graphic-ad-photo" loading="${index === 0 ? 'eager' : 'lazy'}" style="width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; object-position: center; display: block;" onerror="if(this.dataset.triedFallback!=='1'){this.dataset.triedFallback='1';this.src='${fallbackSrc}';}else if(this.src.indexOf('assets/')!==-1){this.src='./assets/tombola-banner.png';}else{this.onerror=null;}">
                 </picture>
             </div>
 
-            <!-- Floating Top-Left "COMING SOON" Badge -->
-            ${isComingSoon ? `
-            <div class="hero-ad-coming-soon-pill">
-                <span class="pulse-dot"></span>
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                <span>COMING SOON</span>
-            </div>` : ''}
 
             <!-- Floating Top-Right Discount Ribbon -->
             ${ban.discountText ? `
             <div class="hero-ad-discount-tag tombola-discount-ribbon">
                 <i class="fa-solid fa-ticket"></i>
                 <span>${ban.discountText}</span>
+            </div>` : ''}
+
+            <!-- Banner Content / Title & Description -->
+            ${ban.title ? `
+            <div class="hero-ad-content hero-graphic-ad-content">
+                <h2 class="hero-ad-title">${ban.title}</h2>
+                ${ban.subtitle ? `<p class="hero-ad-desc">${ban.subtitle}</p>` : ''}
             </div>` : ''}
 
             <!-- Floating Interactive Action Bar -->
@@ -3886,24 +3939,26 @@ function renderBanners() {
         </div>`;
         }
 
-        return `
-        <div class="hero-ad-slide" data-slide-index="${index}">
-            <!-- Full-Bleed Background Photo (fills 100% of entire banner, responsive picture) -->
-            <div class="ad-bg-media">
-                <picture style="width: 100%; height: 100%; position: absolute; inset: 0;">
-                    ${ban.mobileImage ? `<source media="(max-width: 768px)" srcset="${ban.mobileImage}">` : ''}
-                    <img src="${ban.image}" alt="${ban.title}" class="ad-bg-photo" loading="${index === 0 ? 'eager' : 'lazy'}" onerror="this.onerror=null;this.src='${ban.fallbackImage || 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1600&auto=format&fit=crop&q=80'}';">
-                </picture>
-                <div class="ad-media-overlay" style="background: ${ban.overlayGradient || 'linear-gradient(90deg, rgba(16, 7, 30, 0.95) 0%, rgba(16, 7, 30, 0.8) 45%, rgba(16, 7, 30, 0.25) 85%, rgba(16, 7, 30, 0.1) 100%)'};"></div>
-            </div>
+        const stdRaw = ban.image || ban.fallbackImage || 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1600&auto=format&fit=crop&q=80';
+        const stdImg = window.getThemeAssetUrl ? window.getThemeAssetUrl(stdRaw) : stdRaw;
+        const stdMob = (ban.mobileImage && ban.mobileImage.trim()) ? (window.getThemeAssetUrl ? window.getThemeAssetUrl(ban.mobileImage.trim()) : ban.mobileImage.trim()) : '';
+        const stdFallback = window.getThemeAssetUrl ? window.getThemeAssetUrl(ban.fallbackImage || 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1600&auto=format&fit=crop&q=80') : (ban.fallbackImage || 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1600&auto=format&fit=crop&q=80');
 
-            <!-- Floating Top-Left "COMING SOON" Badge -->
-            ${isComingSoon ? `
-            <div class="hero-ad-coming-soon-pill">
-                <span class="pulse-dot"></span>
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                <span>COMING SOON</span>
-            </div>` : ''}
+        const defaultOverlay = isTombola
+            ? 'linear-gradient(90deg, rgba(20, 8, 2, 0.88) 0%, rgba(28, 11, 3, 0.75) 42%, rgba(40, 16, 4, 0.22) 75%, transparent 100%)'
+            : 'linear-gradient(90deg, rgba(16, 7, 30, 0.95) 0%, rgba(16, 7, 30, 0.8) 45%, rgba(16, 7, 30, 0.25) 85%, rgba(16, 7, 30, 0.1) 100%)';
+        const overlayGradient = ban.overlayGradient || defaultOverlay;
+
+        return `
+        <div class="hero-ad-slide ${isTombola ? 'hero-ad-tombola-slide' : ''}" data-slide-index="${index}" style="background-color: ${ban.bgColor || (isTombola ? '#ffd735' : '#110722')};">
+            <!-- Full-Bleed Background Photo (fills 100% of entire banner, responsive picture) -->
+            <div class="ad-bg-media" style="background-color: ${ban.bgColor || (isTombola ? '#ffd735' : '#110722')};">
+                <picture style="width: 100%; height: 100%; position: absolute; inset: 0;">
+                    ${stdMob ? `<source media="(max-width: 768px)" srcset="${stdMob}">` : ''}
+                    <img src="${stdImg}" alt="${ban.title}" class="ad-bg-photo ${isTombola ? 'tombola-ad-photo' : ''}" loading="${index === 0 ? 'eager' : 'lazy'}" onerror="this.onerror=null;this.src='${stdFallback}';">
+                </picture>
+                <div class="ad-media-overlay ${isTombola ? 'tombola-media-overlay' : ''}" style="background: ${overlayGradient};"></div>
+            </div>
 
             <!-- Floating Top-Right Discount Ribbon -->
             ${ban.discountText ? `
@@ -3914,21 +3969,42 @@ function renderBanners() {
 
             <!-- Banner Content over Full Photo Background -->
             <div class="hero-ad-content">
-                <h2 class="hero-ad-title">${ban.title}</h2>
-                <p class="hero-ad-desc">${ban.subtitle}</p>
+                ${isTombola ? `
+                <div class="tombola-tag-pill">
+                    <i class="fa-solid fa-dice"></i>
+                    <span>COMMUNITY LUCKY DRAW</span>
+                </div>
+                ` : ''}
+                <h2 class="hero-ad-title ${isTombola ? 'tombola-ad-title' : ''}">${ban.title}</h2>
+                <p class="hero-ad-desc ${isTombola ? 'tombola-ad-desc' : ''}">${ban.subtitle}</p>
                 
                 <div class="hero-ad-actions">
-                    <button class="hero-ad-cta-btn" onclick="handleBannerClick('${ban.id}', event)">
-                        <span>${ban.cta || 'ORDER NOW'}</span>
+                    <button class="hero-ad-cta-btn ${isTombola ? 'tombola-cta-btn' : ''}" onclick="handleBannerClick('${ban.id}', event)">
+                        ${isTombola ? '<i class="fa-solid fa-hourglass-start" style="color: #ffffff; font-size: 15px;"></i>' : ''}
+                        <span>${isTombola ? 'COMING SOON' : (ban.cta || 'ORDER NOW')}</span>
                         <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-arrow-right'}"></i>
                     </button>
+                    ${ban.code ? `
+                    <div class="hero-ad-coupon-chip ${isTombola ? 'tombola-coupon-chip' : ''}" onclick="event.stopPropagation(); copyBannerCoupon('${ban.code}', this)" title="Click to copy coupon code">
+                        <span class="coupon-chip-label">CODE:</span>
+                        <span class="coupon-chip-code">${ban.code}</span>
+                        <i class="fa-regular fa-copy"></i>
+                    </div>` : ''}
                 </div>
 
+                ${isTombola ? `
+                <div class="hero-ad-perks tombola-ad-perks">
+                    <div class="hero-ad-perk"><i class="fa-solid fa-star" style="color: #ffd735;"></i> ${ban.rating || '5.0'} (${ban.ratingLabel || 'Community Favorite'})</div>
+                    <div class="hero-ad-perk"><i class="fa-solid fa-gift" style="color: #f43f5e;"></i> Every Ticket Wins</div>
+                    <div class="hero-ad-perk"><i class="fa-solid fa-cookie-bite" style="color: #4ade80;"></i> Free Chocolates & Discounts</div>
+                </div>
+                ` : `
                 <div class="hero-ad-perks">
                     <div class="hero-ad-perk"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> ${ban.rating || '4.9'} (${ban.ratingLabel || 'Top Rated'})</div>
                     <div class="hero-ad-perk"><i class="fa-solid fa-bolt" style="color: #38bdf8;"></i> 25 Min Delivery</div>
                     <div class="hero-ad-perk"><i class="fa-solid fa-certificate" style="color: #34d399;"></i> 100% Fresh Bakes</div>
                 </div>
+                `}
             </div>
         </div>`;
     }).join('');
@@ -3989,9 +4065,9 @@ window.renderBanners = renderBanners;
 function renderCategories() {
     if (!DOM.categoryScrollContainer) return;
     
-    let categories = SWIGGY_DATA.categories || [];
+    let categories = (SWIGGY_DATA.categories || []).filter(c => c.name !== 'Uni Chocoloom' && !c.name.toLowerCase().includes('uni chocoloom'));
     if (window.IS_UNI_CHOCOLOOM_PAGE) {
-        const uniSpecialNames = ['Uni Chocoloom', 'Chocolates', 'Snacks & Munchies', 'Bento Cakes', 'Desserts'];
+        const uniSpecialNames = ['Chocolates', 'Snacks & Munchies', 'Bento Cakes', 'Desserts'];
         const priorityCats = categories.filter(c => uniSpecialNames.includes(c.name));
         const otherCats = categories.filter(c => !uniSpecialNames.includes(c.name));
         categories = [...priorityCats, ...otherCats];
@@ -3999,7 +4075,7 @@ function renderCategories() {
 
     DOM.categoryScrollContainer.innerHTML = categories.map(cat => {
         const isUni = cat.name === 'Uni Chocoloom' || cat.name.toLowerCase().includes('uni');
-        const targetUrl = isUni ? 'uni-chocoloom.html' : `order.html?category=${encodeURIComponent(cat.name)}`;
+        const targetUrl = isUni ? 'uni-chocoloom' : `order?category=${encodeURIComponent(cat.name)}`;
         const isActive = AppState.activeCategory === cat.name;
 
         return `
@@ -4067,13 +4143,13 @@ window.filterByCategory = function(categoryName) {
 
     const isUni = categoryName === 'Uni Chocoloom' || categoryName.toLowerCase().includes('uni');
 
-    // 1. If clicking Uni Chocoloom from any other page, navigate to uni-chocoloom.html
+    // 1. If clicking Uni Chocoloom from any other page, navigate to uni-chocoloom
     if (isUni) {
         if (!window.IS_UNI_CHOCOLOOM_PAGE) {
-            window.location.href = window.getAppUrl('uni-chocoloom.html');
+            window.location.href = window.getAppUrl('uni-chocoloom');
             return;
         }
-        // If already on uni-chocoloom.html, activate/toggle Uni Chocoloom
+        // If already on uni-chocoloom, activate/toggle Uni Chocoloom
         AppState.activeCategory = (AppState.activeCategory === categoryName) ? null : categoryName;
         updateCategoryViewState();
         renderCategories();
@@ -4083,10 +4159,10 @@ window.filterByCategory = function(categoryName) {
         return;
     }
 
-    // 2. If on uni-chocoloom.html and user clicks ANY other category (e.g. Wedding Cakes, Bachelorette Cakes, Desserts):
-    // Open in new page: Navigate to order.html with this category pre-selected!
+    // 2. If on uni-chocoloom and user clicks ANY other category (e.g. Wedding Cakes, Bachelorette Cakes, Desserts):
+    // Open in new page: Navigate to order with this category pre-selected!
     if (window.IS_UNI_CHOCOLOOM_PAGE) {
-        window.location.href = window.getAppUrl(`order.html?category=${encodeURIComponent(categoryName)}`);
+        window.location.href = window.getAppUrl(`order?category=${encodeURIComponent(categoryName)}`);
         return;
     }
 
@@ -4220,86 +4296,26 @@ function getAllProducts() {
         }
     });
 
-    // Fisher-Yates Shuffle algorithm for product items (keeping out-of-stock items at the end)
-    function shuffleProductCatalog(items) {
-        if (!Array.isArray(items) || items.length <= 1) return items;
-        const available = [];
-        const unavailable = [];
-        items.forEach(item => {
-            if (item && item.is_available === false) {
-                unavailable.push(item);
-            } else {
-                available.push(item);
-            }
-        });
-
-        // Modern Fisher-Yates unbiased shuffle
-        for (let i = available.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            const temp = available[i];
-            available[i] = available[j];
-            available[j] = temp;
+    // Stable Catalog Ordering (active products maintain consistent position, out-of-stock items placed at the end)
+    const available = [];
+    const unavailable = [];
+    list.forEach(item => {
+        if (item && item.is_available === false) {
+            unavailable.push(item);
+        } else {
+            available.push(item);
         }
+    });
 
-        return [...available, ...unavailable];
-    }
-    window.shuffleProductCatalog = shuffleProductCatalog;
-
-    // Automatically shuffle product items on visit so visitors discover a fresh variety
-    list = shuffleProductCatalog(list);
-
+    list = [...available, ...unavailable];
     _cachedProductsList = list;
     return list;
 }
 window.getAllProducts = getAllProducts;
 
-// Interactive or automated catalog reshuffle
-window.shuffleCatalogProducts = function(showFeedback = true) {
-    if (!_cachedProductsList || _cachedProductsList.length === 0) {
-        getAllProducts();
-    }
-    if (typeof window.shuffleProductCatalog === 'function') {
-        _cachedProductsList = window.shuffleProductCatalog(_cachedProductsList);
-    }
+// Manual reshuffle stub (disabled automatic shuffling to keep items stable)
+window.shuffleCatalogProducts = function(showFeedback = false) {};
 
-    const btn = document.getElementById('catalogShuffleBtn');
-    if (btn) {
-        btn.classList.add('spinning');
-        setTimeout(() => btn.classList.remove('spinning'), 600);
-    }
-
-    const grid = document.getElementById('productsGrid') || (typeof DOM !== 'undefined' ? DOM.restaurantsGrid : null);
-    if (grid) {
-        grid.classList.remove('shuffling');
-        void grid.offsetWidth; // trigger DOM reflow for CSS animation
-        grid.classList.add('shuffling');
-        setTimeout(() => grid.classList.remove('shuffling'), 500);
-    }
-
-    if (typeof renderProductsGrid === 'function') {
-        renderProductsGrid(true);
-    }
-
-    if (showFeedback && typeof showToast === 'function') {
-        showToast('Menu shuffled! Discover fresh handcrafted treats ✨', 'fa-solid fa-shuffle', '#7c5cfc');
-    }
-};
-
-// Automatic background refresh if user returns to tab after 5+ mins of inactivity
-let _lastAutoShuffleTime = Date.now();
-if (typeof document !== 'undefined') {
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && !document.hidden) {
-            const now = Date.now();
-            if (now - _lastAutoShuffleTime > 5 * 60 * 1000 && (!AppState.searchQuery || AppState.searchQuery.trim() === '')) {
-                _lastAutoShuffleTime = now;
-                if (typeof window.shuffleCatalogProducts === 'function') {
-                    window.shuffleCatalogProducts(false);
-                }
-            }
-        }
-    });
-}
 
 // Render Dynamic Category & Filter Pills with Live Accurate Counts
 function renderFilterPills() {
@@ -4549,8 +4565,12 @@ function createProductCardHtml(prod, idPrefix = '') {
     const safeProdId = String(prod.id || '').replace(/'/g, "\\'");
     const safeRestId = String(restId || '').replace(/'/g, "\\'");
 
+    const hasFlavours = prod.has_flavours !== false && !(prod.category && ['chocolates', 'snacks', 'shakes', 'combos', 'extras', 'dark', 'milk', 'ruby'].includes(prod.category.toLowerCase()));
+    const autoFlavour = hasFlavours ? ((prod.flavour && prod.flavour.trim()) ? prod.flavour.trim() : ((typeof detectDefaultFlavour === 'function') ? detectDefaultFlavour(prod) : 'Chocolate')) : null;
+    const cardDisplayPrice = (hasFlavours && autoFlavour && typeof getDishFlavourPrice === 'function') ? getDishFlavourPrice(prod, autoFlavour, 'half_kg') : Number(prod.price || 0);
+    const cardOriginalPrice = (prod.originalPrice ? Number(prod.originalPrice) : 0) + (cardDisplayPrice > Number(prod.price || 0) ? (cardDisplayPrice - Number(prod.price || 0)) : 0);
     const hasDiscount = prod.originalPrice && Number(prod.originalPrice) > Number(prod.price);
-    const discountPercent = hasDiscount ? Math.round(((Number(prod.originalPrice) - Number(prod.price)) / Number(prod.originalPrice)) * 100) : 0;
+    const discountPercent = hasDiscount ? Math.round(((Number(cardOriginalPrice) - Number(cardDisplayPrice)) / Number(cardOriginalPrice)) * 100) : 0;
     const isWishlisted = Array.isArray(AppState.wishlist) && AppState.wishlist.includes(prod.id);
 
     return `
@@ -4587,14 +4607,21 @@ function createProductCardHtml(prod, idPrefix = '') {
                         <i class="fa-solid fa-star"></i>
                         <span>${prod.rating || '4.8'}</span>
                     </div>
+                    ${hasFlavours && autoFlavour ? `
+                        <span class="product-flavour-chip" title="Flavour: ${autoFlavour}">
+                            ${autoFlavour}
+                        </span>
+                    ` : ''}
                     ${prod.isDirectAdd ? '<span class="product-custom-hint" style="color: #16a34a; font-weight: 700;">Instant Add</span>' : '<span class="product-custom-hint">Customizable</span>'}
                 </div>
                 <h3 class="product-title" title="${prod.name}">${prod.name}</h3>
                 <p class="product-desc">${prod.description || ''}</p>
                 <div class="product-price-action-row" onclick="event.stopPropagation()">
                     <div class="product-price-wrap">
-                        <span class="product-price">₹${prod.price}</span>
-                        ${hasDiscount ? `<span class="product-strike-price">₹${prod.originalPrice}</span>` : ''}
+                        <div style="display: flex; align-items: baseline; gap: 6px;">
+                            <span class="product-price">₹${cardDisplayPrice}</span>
+                            ${hasDiscount ? `<span class="product-strike-price">₹${cardOriginalPrice}</span>` : ''}
+                        </div>
                     </div>
                     <div class="product-add-btn-wrap" id="${btnBoxId}">
                         ${prod.is_available === false ? `
@@ -4993,7 +5020,7 @@ window.closeCart = function() {
 const NORMAL_CAKE_FLAVOURS = [
     { id: 'vanilla', name: 'Vanilla', icon: '🍦', desc: 'Pure aromatic classic vanilla', extraPrice: 0, tier: 'Classic' },
     { id: 'butterscotch', name: 'Butterscotch', icon: '🧈', desc: 'Caramel sponge & crunchy praline', extraPrice: 0, tier: 'Classic' },
-    { id: 'strawberry', name: 'Strawberry', icon: '🍓', desc: 'Sweet strawberry compote & fresh cream', extraPrice: 0, tier: 'Classic' },
+    { id: 'strawberry', name: 'Strawberry', icon: '🍓', desc: 'Sweet strawberry compote & fresh cream', extraPrice: 50, tier: 'Deluxe' },
     { id: 'pineapple', name: 'Pineapple', icon: '🍍', desc: 'Tropical pineapple & light whipped cream', extraPrice: 0, tier: 'Classic' },
     { id: 'chocolate', name: 'Chocolate', icon: '🍫', desc: 'Rich Belgian chocolate sponge & truffle', extraPrice: 0, tier: 'Classic' }
 ];
@@ -5002,52 +5029,185 @@ const NORMAL_CAKE_FLAVOURS = [
 const COOLING_CAKE_FLAVOURS = [
     { id: 'vanilla', name: 'Vanilla', icon: '🍦', desc: 'Pure aromatic classic vanilla', extraPrice: 0, tier: 'Classic' },
     { id: 'butterscotch', name: 'Butterscotch', icon: '🧈', desc: 'Caramel sponge & crunchy praline', extraPrice: 0, tier: 'Classic' },
-    { id: 'strawberry', name: 'Strawberry', icon: '🍓', desc: 'Sweet strawberry compote & fresh cream', extraPrice: 0, tier: 'Classic' },
+    { id: 'strawberry', name: 'Strawberry', icon: '🍓', desc: 'Sweet strawberry compote & fresh cream', extraPrice: 50, tier: 'Deluxe' },
     { id: 'pineapple', name: 'Pineapple', icon: '🍍', desc: 'Tropical pineapple & light whipped cream', extraPrice: 0, tier: 'Classic' },
-    { id: 'blueberry', name: 'Blueberry', icon: '🫐', desc: 'Luscious wild blueberry compote & cream', extraPrice: 0, tier: 'Deluxe' },
-    { id: 'black_currant', name: 'Black Currant', icon: '🍇', desc: 'Tangy-sweet black currant glaze & cream', extraPrice: 0, tier: 'Deluxe' },
+    { id: 'blueberry', name: 'Blueberry', icon: '🫐', desc: 'Luscious wild blueberry compote & cream', extraPrice: 50, tier: 'Deluxe' },
+    { id: 'black_currant', name: 'Black Currant', icon: '🍇', desc: 'Tangy-sweet black currant glaze & cream', extraPrice: 50, tier: 'Deluxe' },
     { id: 'chocolate', name: 'Chocolate', icon: '🍫', desc: 'Rich Belgian chocolate sponge & truffle', extraPrice: 0, tier: 'Classic' },
     { id: 'black_forest', name: 'Black Forest', icon: '🍒', desc: 'Dark chocolate, cherries & whipped cream', extraPrice: 0, tier: 'Classic' },
-    { id: 'milk_badam', name: 'Milk Badam', icon: '🥛', desc: 'Rich saffron milk & roasted almonds', extraPrice: 0, tier: 'Royal' },
-    { id: 'honey_almond', name: 'Honey Almond', icon: '🍯', desc: 'Golden wild honey & toasted almonds', extraPrice: 0, tier: 'Royal' },
-    { id: 'red_velvet', name: 'Red Velvet', icon: '❤️', desc: 'Velvety red sponge & cream cheese', extraPrice: 0, tier: 'Deluxe' },
+    { id: 'milk_badam', name: 'Milk Badam', icon: '🥛', desc: 'Rich saffron milk & roasted almonds', extraPrice: 100, tier: 'Royal' },
+    { id: 'honey_almond', name: 'Honey Almond', icon: '🍯', desc: 'Golden wild honey & toasted almonds', extraPrice: 100, tier: 'Royal' },
+    { id: 'red_velvet', name: 'Red Velvet', icon: '❤️', desc: 'Velvety red sponge & cream cheese', extraPrice: 50, tier: 'Deluxe' },
     { id: 'white_forest', name: 'White Forest', icon: '🍰', desc: 'White chocolate curls & sweet cherries', extraPrice: 0, tier: 'Classic' },
-    { id: 'caramel', name: 'Caramel', icon: '🍮', desc: 'Golden salted caramel swirl & cream', extraPrice: 0, tier: 'Deluxe' },
-    { id: 'milky_butterscotch', name: 'Milky Butterscotch', icon: '🍨', desc: 'Creamy milk fudge & butterscotch crunch', extraPrice: 0, tier: 'Deluxe' },
-    { id: 'nutty_bubble', name: 'Nutty Bubble', icon: '🫧', desc: 'Loaded roasted nuts & bubble chocolate', extraPrice: 0, tier: 'Royal' }
+    { id: 'caramel', name: 'Caramel', icon: '🍮', desc: 'Golden salted caramel swirl & cream', extraPrice: 50, tier: 'Deluxe' },
+    { id: 'milky_butterscotch', name: 'Milky Butterscotch', icon: '🍨', desc: 'Creamy milk fudge & butterscotch crunch', extraPrice: 50, tier: 'Deluxe' },
+    { id: 'nutty_bubble', name: 'Nutty Bubble', icon: '🫧', desc: 'Loaded roasted nuts & bubble chocolate', extraPrice: 100, tier: 'Royal' }
 ];
 
 // Master list containing all flavours
 const CAKE_FLAVOURS = COOLING_CAKE_FLAVOURS;
 window.NORMAL_CAKE_FLAVOURS = NORMAL_CAKE_FLAVOURS;
 window.COOLING_CAKE_FLAVOURS = COOLING_CAKE_FLAVOURS;
-window.CAKE_FLAVOURS = CAKE_FLAVOURS;
-
-function getFlavourExtraPrice(dish, flavourName) {
-    if (!dish || !flavourName) return 0;
-    // Check if custom flavour prices exist for this dish
-    if (dish.flavour_prices && typeof dish.flavour_prices === 'object') {
-        if (dish.flavour_prices[flavourName] !== undefined) {
-            return Number(dish.flavour_prices[flavourName]) || 0;
+window.LIVE_FLAVOUR_WEIGHTS = [];
+async function syncLiveFlavourWeights() {
+    try {
+        const supaUrl = (typeof SUPABASE_CONFIG !== 'undefined' && SUPABASE_CONFIG.url) ? SUPABASE_CONFIG.url : 'https://icedyeuagmkgitkoznxr.supabase.co';
+        const supaKey = (typeof SUPABASE_CONFIG !== 'undefined' && SUPABASE_CONFIG.anonKey) ? SUPABASE_CONFIG.anonKey : '';
+        if (!supaKey) return;
+        const res = await fetch(`${supaUrl}/rest/v1/flavour_weights?select=*`, {
+            headers: { 'apikey': supaKey, 'Authorization': `Bearer ${supaKey}` }
+        });
+        if (res.ok) {
+            const list = await res.json();
+            if (Array.isArray(list) && list.length > 0) {
+                window.LIVE_FLAVOUR_WEIGHTS = list;
+                list.forEach(fw => {
+                    const matched = COOLING_CAKE_FLAVOURS.find(f => f.id === fw.id || f.name.toLowerCase() === (fw.name || '').toLowerCase());
+                    if (matched) {
+                        matched.extraPrice = Number(fw.price_half_kg || 0);
+                        matched.price_half_kg = Number(fw.price_half_kg || 0);
+                        matched.price_1kg = Number(fw.price_1kg || 0);
+                        matched.price_1_5kg = Number(fw.price_1_5kg || 0);
+                        matched.price_2kg = Number(fw.price_2kg || 0);
+                    }
+                });
+            }
         }
-        // Match by id or substring or altId
-        const found = COOLING_CAKE_FLAVOURS.find(f => f.name.toLowerCase() === flavourName.toLowerCase() || f.id.toLowerCase() === flavourName.toLowerCase());
-        if (found) {
-            if (dish.flavour_prices[found.id] !== undefined) return Number(dish.flavour_prices[found.id]) || 0;
-            if (dish.flavour_prices[found.name] !== undefined) return Number(dish.flavour_prices[found.name]) || 0;
-            if (found.id === 'chocolate' && dish.flavour_prices['chocolate_truffle'] !== undefined) return Number(dish.flavour_prices['chocolate_truffle']) || 0;
+    } catch(e) {}
+}
+if (typeof window !== 'undefined') {
+    setTimeout(syncLiveFlavourWeights, 1000);
+}
+
+function getDishFlavourPrice(dish, flavourName, currentWeightKey) {
+    const baseP = (typeof getWeightPrice === 'function') ? getWeightPrice(dish, currentWeightKey || 'half_kg') : Number(dish && dish.price || 0);
+    if (!flavourName || (dish && dish.has_flavours === false)) return baseP;
+
+    const cleanFlavour = String(flavourName).trim().toLowerCase();
+    const cleanKey = cleanFlavour.replace(/\s+/g, '_');
+
+    // Weight multiplier based on standard cake units (0.5kg = 1x, 1kg = 2x, 1.5kg = 3x, 2kg = 4x, 3kg = 6x)
+    const weightMultMap = {
+        'half_kg': 1,
+        '1kg': 2,
+        '1_5kg': 3,
+        '2kg': 4,
+        '3kg': 6
+    };
+    const mult = weightMultMap[currentWeightKey || 'half_kg'] || 1;
+
+    // 1. First priority: Check if an explicit weight price is saved for this particular flavour
+    if (dish && dish.flavour_prices && typeof dish.flavour_prices === 'object') {
+        const fp = dish.flavour_prices;
+        const weightSuffixMap = {
+            'half_kg': ['_05', '_half_kg'],
+            '1kg': ['_10', '_1kg'],
+            '1_5kg': ['_15', '_1_5kg'],
+            '2kg': ['_20', '_2kg'],
+            '3kg': ['_30', '_3kg']
+        };
+        const sfxList = weightSuffixMap[currentWeightKey || 'half_kg'] || [];
+        for (const sfx of sfxList) {
+            const candidates = [
+                cleanKey + sfx,
+                cleanFlavour + sfx,
+                flavourName + sfx
+            ];
+            for (const ck of candidates) {
+                if (fp[ck] !== undefined && fp[ck] !== "" && Number(fp[ck]) > 0) {
+                    return Number(fp[ck]);
+                }
+            }
         }
     }
-    // Fallback to COOLING_CAKE_FLAVOURS default extra price if defined
-    const fObj = COOLING_CAKE_FLAVOURS.find(f => f.name.toLowerCase() === flavourName.toLowerCase() || f.id.toLowerCase() === flavourName.toLowerCase());
-    return (fObj && fObj.extraPrice) ? Number(fObj.extraPrice) : 0;
+
+    // 2. Check live flavour_weights table from Supabase
+    if (window.LIVE_FLAVOUR_WEIGHTS && Array.isArray(window.LIVE_FLAVOUR_WEIGHTS) && window.LIVE_FLAVOUR_WEIGHTS.length > 0) {
+        const liveFw = window.LIVE_FLAVOUR_WEIGHTS.find(fw => fw.id === cleanKey || (fw.name && fw.name.toLowerCase() === cleanFlavour));
+        if (liveFw) {
+            const weightColMap = {
+                'half_kg': 'price_half_kg',
+                '1kg': 'price_1kg',
+                '1_5kg': 'price_1_5kg',
+                '2kg': 'price_2kg'
+            };
+            const col = weightColMap[currentWeightKey || 'half_kg'];
+            if (col && liveFw[col] !== undefined && Number(liveFw[col]) > 0) {
+                const liveP = Number(liveFw[col]);
+                if (liveP >= 150) return liveP;
+                return baseP + liveP;
+            }
+        }
+    }
+
+    let entered = null;
+    if (dish && dish.flavour_prices && typeof dish.flavour_prices === 'object') {
+        if (dish.flavour_prices[flavourName] !== undefined && dish.flavour_prices[flavourName] !== "") {
+            entered = Number(dish.flavour_prices[flavourName]);
+        } else if (dish.flavour_prices[cleanKey] !== undefined && dish.flavour_prices[cleanKey] !== "") {
+            entered = Number(dish.flavour_prices[cleanKey]);
+        } else {
+            for (const [k, v] of Object.entries(dish.flavour_prices)) {
+                const kClean = String(k).toLowerCase().trim();
+                if (kClean === cleanFlavour || kClean === cleanKey || kClean.replace(/_/g, ' ') === cleanFlavour) {
+                    entered = Number(v);
+                    break;
+                }
+            }
+        }
+    }
+
+    if (entered !== null && !isNaN(entered) && entered > 0) {
+        // If admin entered a direct price rate for this flavour (e.g. 850, 899)
+        if (entered >= 150) {
+            if (!currentWeightKey || currentWeightKey === 'half_kg') {
+                return entered;
+            } else {
+                const baseHalf = (typeof getWeightPrice === 'function') ? getWeightPrice(dish, 'half_kg') : Number(dish && dish.price || 0);
+                const diff = Math.max(0, entered - baseHalf);
+                // Flavour price difference scales with cake weight!
+                return baseP + (diff * mult);
+            }
+        } else {
+            // Surcharge per 0.5kg (e.g. +50 for 0.5kg): scales with cake weight (1kg = +100, 2kg = +200)
+            return baseP + (entered * mult);
+        }
+    }
+
+    // Fallback: check master flavour list for standard extra surcharge (e.g. Deluxe +50, Royal +100)
+    const allFlavours = (typeof COOLING_CAKE_FLAVOURS !== 'undefined') ? COOLING_CAKE_FLAVOURS : [];
+    const matchedF = allFlavours.find(f => f.name.toLowerCase() === cleanFlavour || f.id.toLowerCase() === cleanKey);
+    if (matchedF && matchedF.extraPrice > 0) {
+        return baseP + (matchedF.extraPrice * mult);
+    }
+
+    // Default base price for this weight
+    return baseP;
 }
+
+function getFlavourExtraPrice(dish, flavourName, currentWeightKey) {
+    const fullP = getDishFlavourPrice(dish, flavourName, currentWeightKey || 'half_kg');
+    const baseP = (typeof getWeightPrice === 'function') ? getWeightPrice(dish, currentWeightKey || 'half_kg') : Number(dish && dish.price || 0);
+    return Math.max(0, fullP - baseP);
+}
+
+window.getDishFlavourPrice = getDishFlavourPrice;
+window.getFlavourExtraPrice = getFlavourExtraPrice;
 
 function detectDefaultFlavour(dish, isNormalOnly = false) {
     const activeList = isNormalOnly ? NORMAL_CAKE_FLAVOURS : COOLING_CAKE_FLAVOURS;
     if (dish && dish.flavour && dish.flavour.trim()) {
         const found = activeList.find(f => f.name.toLowerCase() === dish.flavour.trim().toLowerCase() || f.id.toLowerCase() === dish.flavour.trim().toLowerCase());
         if (found) return found.name;
+    }
+    if (dish && dish.flavour_prices && typeof dish.flavour_prices === 'object') {
+        for (const [k, v] of Object.entries(dish.flavour_prices)) {
+            if (v !== '' && v !== null && Number(v) > 0) {
+                const clean = String(k).toLowerCase().trim().replace(/_/g, ' ');
+                const found = activeList.find(f => f.name.toLowerCase() === clean || f.id.toLowerCase() === clean || f.name.toLowerCase() === String(k).toLowerCase().trim());
+                if (found) return found.name;
+            }
+        }
     }
     const text = `${(dish && dish.name) || ''} ${(dish && dish.category) || ''}`.toLowerCase();
     if (isNormalOnly) {
@@ -5176,12 +5336,12 @@ window.openCustomizationModal = function(dishId, restaurantId) {
     // Check if category indicates cooling cake default
     const isCoolingCategory = (dish.category || '').toLowerCase().includes('cooling') || (dish.name || '').toLowerCase().includes('cooling');
     const initialCooling = (dish.has_cooling !== false) ? isCoolingCategory : false;
-    const defaultFlavour = detectDefaultFlavour(dish, !initialCooling);
+    const defaultFlavour = (dish.has_flavours !== false) ? detectDefaultFlavour(dish, !initialCooling) : null;
     currentCustomization = {
         dish: dish,
         restaurant: restaurant,
         selectedWeightKey: 'half_kg',
-        selectedFlavour: defaultFlavour,
+        selectedFlavour: defaultFlavour, // Automatically pre-select default flavour
         isEggless: false,
         isCooling: initialCooling,
         customMessage: ''
@@ -5232,19 +5392,20 @@ function renderCustomizationModalContent() {
     const currentWeightKey = currentCustomization.selectedWeightKey || 'half_kg';
     const isCooling = Boolean(currentCustomization.isCooling);
     const isEggless = Boolean(currentCustomization.isEggless);
-    const customMsg = currentCustomization.customMessage || '';
-    const currentFlavour = currentCustomization.selectedFlavour || detectDefaultFlavour(dish);
+    const hasFlavours = dish.has_flavours !== false;
+    const currentFlavour = currentCustomization.selectedFlavour || (hasFlavours ? detectDefaultFlavour(dish, !isCooling) : null);
+    currentCustomization.selectedFlavour = currentFlavour;
 
     const hasWeight = dish.has_weight !== false;
     const hasCooling = dish.has_cooling !== false;
+    const isFlavourChosen = !hasFlavours || Boolean(currentFlavour);
 
-    const selectedWeightPrice = hasWeight ? getWeightPrice(dish, currentWeightKey) : Number(dish.price || 0);
+    const baseWeightPrice = hasWeight ? getWeightPrice(dish, currentWeightKey) : Number(dish.price || 0);
+    const flavourPriceForWeight = (hasFlavours && currentFlavour) ? getDishFlavourPrice(dish, currentFlavour, currentWeightKey) : baseWeightPrice;
     const selectedCoolingPrice = hasCooling ? getCoolingCharge(dish, currentWeightKey) : 0;
     const currentCoolingCharge = (hasCooling && isCooling) ? selectedCoolingPrice : 0;
-    const hasFlavours = dish.has_flavours !== false;
-    const selectedFlavourPrice = hasFlavours ? getFlavourExtraPrice(dish, currentFlavour) : 0;
     const currentEgglessPrice = isEggless ? getEgglessPrice(currentWeightKey) : 0;
-    const totalUnit = selectedWeightPrice + currentCoolingCharge + selectedFlavourPrice + currentEgglessPrice;
+    const totalUnit = flavourPriceForWeight + currentCoolingCharge + currentEgglessPrice;
 
     const dishImg = dish.image || 'assets/logo.png';
     const isVeg = isEggless;
@@ -5395,32 +5556,52 @@ function renderCustomizationModalContent() {
         ` : ''}
 
         ${dish.has_flavours !== false ? `
-        <!-- Section 4: Choose Cake Flavour -->
-        <div class="customization-section-card">
+        <!-- Section 4: Choose Cake Flavour (REQUIRED) -->
+        <div class="customization-section-card ${!isFlavourChosen ? 'flavour-selection-pending' : ''}" id="customFlavourSection">
             <div class="customization-section-header">
                 <div class="customization-section-title">
                     <i class="fa-solid fa-wand-magic-sparkles" style="color: #db2777;"></i>
                     <span>Select Cake Flavour</span>
                 </div>
-                <span class="customization-badge-required active" style="${isCooling ? 'background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;' : 'background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8;'}">
-                    ${isCooling ? '<i class="fa-solid fa-snowflake"></i> 15 Cooling Flavours' : '<i class="fa-solid fa-cake-candles"></i> 5 Normal Flavours'}
+                <span class="customization-badge-required ${!isFlavourChosen ? 'pending' : 'active'}" style="${!isFlavourChosen ? 'background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; font-weight: 800;' : (isCooling ? 'background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;' : 'background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8;')}">
+                    ${!isFlavourChosen ? '<i class="fa-solid fa-circle-exclamation"></i> Required: Choose 1 Flavour' : (isCooling ? '<i class="fa-solid fa-snowflake"></i> 15 Cooling Flavours' : '<i class="fa-solid fa-cake-candles"></i> 5 Normal Flavours')}
                 </span>
             </div>
 
+            ${!isFlavourChosen ? `
+            <div class="flavour-prompt-banner" style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1.5px dashed #f59e0b; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px;">👉</span>
+                <span style="font-size: 12px; font-weight: 800; color: #92400e;">Please select your favourite cake flavour below to enable "Add to Cart"!</span>
+            </div>
+            ` : ''}
+
             <div class="custom-flavour-grid">
                 ${(isCooling ? COOLING_CAKE_FLAVOURS : NORMAL_CAKE_FLAVOURS).map(f => {
-                    const isSelected = (currentFlavour.toLowerCase() === f.name.toLowerCase() || currentFlavour.toLowerCase() === f.id.toLowerCase());
-                    const extraP = getFlavourExtraPrice(dish, f.name);
+                    const isSelected = currentFlavour && (currentFlavour.toLowerCase() === f.name.toLowerCase() || currentFlavour.toLowerCase() === f.id.toLowerCase());
+                    const fPrice = getDishFlavourPrice(dish, f.name, currentWeightKey);
+                    const extraP = getFlavourExtraPrice(dish, f.name, currentWeightKey);
+                    const flavourTotal = fPrice + currentCoolingCharge + currentEgglessPrice;
                     return `
                         <div class="custom-flavour-card ${isSelected ? 'selected' : ''}" onclick="selectCustomFlavour('${f.name}')">
                             <div class="custom-flavour-left">
                                 <span class="custom-flavour-icon">${f.icon}</span>
                                 <div class="custom-flavour-text">
-                                    <div class="custom-flavour-name">${f.name}</div>
+                                    <div class="custom-flavour-name-row">
+                                        <span class="custom-flavour-name">${f.name}</span>
+                                        <span class="custom-flavour-tier-badge ${f.tier ? f.tier.toLowerCase() : 'classic'}">${f.tier || 'Classic'}</span>
+                                    </div>
                                     <div class="custom-flavour-desc">${f.desc}</div>
                                 </div>
                             </div>
-                            <div class="custom-flavour-radio"></div>
+                            <div class="custom-flavour-right">
+                                <div class="custom-flavour-price-col" style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px;">
+                                    <span class="custom-flavour-extra-badge" style="font-size: 10.5px; font-weight: 800; color: ${extraP > 0 ? '#db2777' : '#16a34a'}; background: ${extraP > 0 ? '#fdf2f8' : '#dcfce7'}; padding: 1px 6px; border-radius: 4px; border: 1px solid ${extraP > 0 ? '#fbcfe8' : '#bbf7d0'};">
+                                        ${extraP > 0 ? `+₹${extraP}` : 'Included'}
+                                    </span>
+                                    <span class="custom-flavour-total-pill">₹${flavourTotal}</span>
+                                </div>
+                                <div class="custom-flavour-radio"></div>
+                            </div>
                         </div>
                     `;
                 }).join('')}
@@ -5439,13 +5620,45 @@ function renderCustomizationModalContent() {
             </div>
             <input type="text" id="customCakeMessageInput" placeholder="e.g. Happy Birthday Rahul!" maxlength="50" value="${customMsg}" oninput="updateCustomMessage(this.value)" style="width: 100%; padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 13px; background: #fff; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'">
         </div>
+
+        <!-- Section 6: Live Itemized Price Breakdown with Flavour Included -->
+        <div class="customization-price-summary-bar">
+            <div class="price-breakdown-row">
+                <span>🎂 Base Cake (${currentWeightKey.replace('_', '.').toUpperCase()}): <strong>₹${baseWeightPrice}</strong></span>
+                <span>•</span>
+                <span>✨ Flavour (${currentFlavour || 'None'}): <strong style="color: ${flavourPriceForWeight > baseWeightPrice ? '#db2777' : '#16a34a'};">₹${flavourPriceForWeight}</strong></span>
+                ${hasCooling && isCooling ? `<span>•</span><span>❄️ Cooling: <strong>+₹${currentCoolingCharge}</strong></span>` : ''}
+                ${isEggless ? `<span>•</span><span>🌱 Eggless: <strong>+₹${currentEgglessPrice}</strong></span>` : ''}
+            </div>
+            <div class="price-breakdown-total">
+                <span>Total Price (with ${currentFlavour} flavour):</span>
+                <span class="price-val">₹${totalUnit}</span>
+            </div>
+        </div>
     `;
 
     // Update footer total and button
     const totalEl = document.getElementById('customModalTotalPrice');
-    if (totalEl) totalEl.textContent = `₹${totalUnit}`;
+    if (totalEl) totalEl.textContent = !currentFlavour ? `₹${totalUnit}` : `₹${totalUnit}`;
+    const addBtn = document.getElementById('customModalAddBtn');
+    if (addBtn) {
+        addBtn.disabled = !isFlavourChosen;
+        if (!isFlavourChosen) {
+            addBtn.style.opacity = '0.65';
+            addBtn.style.background = '#94a3b8';
+            addBtn.style.cursor = 'not-allowed';
+            addBtn.style.boxShadow = 'none';
+        } else {
+            addBtn.style.opacity = '1';
+            addBtn.style.background = 'var(--primary)';
+            addBtn.style.cursor = 'pointer';
+            addBtn.style.boxShadow = '0 8px 24px -4px rgba(124, 58, 237, 0.45)';
+        }
+    }
     const btnText = document.getElementById('customModalAddBtnText');
-    if (btnText) btnText.textContent = `ADD ITEM • ₹${totalUnit}`;
+    if (btnText) {
+        btnText.innerHTML = !isFlavourChosen ? '<i class="fa-solid fa-wand-magic-sparkles"></i> CHOOSE A FLAVOUR' : `ADD ITEM • ₹${totalUnit}`;
+    }
 }
 
 window.selectCustomWeight = function(weightKey) {
@@ -5464,8 +5677,12 @@ window.selectCustomCooling = function(isCooling) {
     if (!currentCustomization) return;
     currentCustomization.isCooling = Boolean(isCooling);
     const activeFlavours = currentCustomization.isCooling ? COOLING_CAKE_FLAVOURS : NORMAL_CAKE_FLAVOURS;
-    const isFlavourValid = activeFlavours.some(f => f.name.toLowerCase() === (currentCustomization.selectedFlavour || '').toLowerCase() || f.id.toLowerCase() === (currentCustomization.selectedFlavour || '').toLowerCase());
-    if (!isFlavourValid) {
+    if (currentCustomization.selectedFlavour) {
+        const isFlavourValid = activeFlavours.some(f => f.name.toLowerCase() === (currentCustomization.selectedFlavour || '').toLowerCase() || f.id.toLowerCase() === (currentCustomization.selectedFlavour || '').toLowerCase());
+        if (!isFlavourValid) {
+            currentCustomization.selectedFlavour = detectDefaultFlavour(currentCustomization.dish, !currentCustomization.isCooling);
+        }
+    } else {
         currentCustomization.selectedFlavour = detectDefaultFlavour(currentCustomization.dish, !currentCustomization.isCooling);
     }
     renderCustomizationModalContent();
@@ -5484,6 +5701,21 @@ window.confirmAddCustomizedItem = function() {
     if (!currentCustomization || !currentCustomization.dish) return;
 
     const dish = currentCustomization.dish;
+
+    // Require choosing a flavour before adding to cart
+    if (dish.has_flavours !== false && !currentCustomization.selectedFlavour) {
+        if (typeof showToast === 'function') {
+            showToast('Please select a cake flavour before adding to cart!', 'fa-solid fa-wand-magic-sparkles', '#ef4444');
+        }
+        const flvSec = document.getElementById('customFlavourSection');
+        if (flvSec) {
+            flvSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            flvSec.style.outline = '2px solid #ef4444';
+            setTimeout(() => { flvSec.style.outline = 'none'; }, 1500);
+        }
+        return;
+    }
+
     const restaurant = currentCustomization.restaurant;
     const weightKey = currentCustomization.selectedWeightKey || 'half_kg';
     const isCooling = Boolean(currentCustomization.isCooling);
@@ -5497,9 +5729,10 @@ window.confirmAddCustomizedItem = function() {
     const weightPrice = hasWeight ? getWeightPrice(dish, weightKey) : Number(dish.price || 0);
     const coolingPrice = (hasCooling && isCooling) ? getCoolingCharge(dish, weightKey) : 0;
     const egglessPrice = isEggless ? getEgglessPrice(weightKey) : 0;
-    const selectedFlavour = currentCustomization.selectedFlavour || detectDefaultFlavour(dish);
-    const flavourPrice = (dish.has_flavours !== false) ? getFlavourExtraPrice(dish, selectedFlavour) : 0;
-    const finalUnitPrice = weightPrice + coolingPrice + flavourPrice + egglessPrice;
+    const selectedFlavour = currentCustomization.selectedFlavour || (dish.has_flavours === false ? 'Standard' : detectDefaultFlavour(dish));
+    const flavourRate = (dish.has_flavours !== false) ? getDishFlavourPrice(dish, selectedFlavour, weightKey) : weightPrice;
+    const flavourPrice = Math.max(0, flavourRate - weightPrice);
+    const finalUnitPrice = flavourRate + coolingPrice + egglessPrice;
 
     // Sanitize any corrupt cart items
     if (!Array.isArray(AppState.cart)) AppState.cart = [];
@@ -5799,6 +6032,14 @@ function updateCartUI() {
         } else if (itemTotal >= 149) {
             couponDiscount = Math.min(200, Math.round(itemTotal * 0.25));
         }
+    } else if (AppState.activeCoupon === 'DIWALI40' || AppState.activeCoupon === 'DIWALI') {
+        if (itemTotal >= 249) {
+            couponDiscount = Math.min(300, Math.round(itemTotal * 0.40));
+        }
+    } else if (AppState.activeCoupon === 'DIWALI250') {
+        if (itemTotal >= 699) {
+            couponDiscount = 250;
+        }
     } else if (AppState.activeCoupon === 'CHOCO50' || AppState.activeCoupon === 'TOMBOLA50' || AppState.activeCoupon === 'TOMBOLA' || AppState.activeCoupon === 'CHOCOLOOM50') {
         if (itemTotal >= 149) {
             couponDiscount = Math.min(150, Math.round(itemTotal * 0.50));
@@ -5896,7 +6137,7 @@ function updateCartUI() {
                                 <span class="cart-tag ${dish.isEggless ? 'cart-tag-veg' : 'cart-tag-egg'}">
                                     ${dish.isEggless ? `🌱 Eggless${dish.egglessPrice > 0 ? ` (+₹${dish.egglessPrice})` : ''}` : '🥚 With Egg'}
                                 </span>` : ''}
-                                ${dish.selectedFlavour ? `<span class="cart-tag cart-tag-flavour" style="background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; font-weight: 700;"><i class="fa-solid fa-wand-magic-sparkles"></i> ${dish.selectedFlavour}</span>` : ''}
+                                ${dish.selectedFlavour ? `<span class="cart-tag cart-tag-flavour" style="background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; font-weight: 700;"><i class="fa-solid fa-wand-magic-sparkles"></i> ${dish.selectedFlavour}${Number(dish.flavourPrice) > 0 ? ` (+₹${dish.flavourPrice})` : ''}</span>` : ''}
                                 ${(dish.has_weight !== false && dish.selectedWeight && dish.selectedWeight !== 'Standard') ? `<span class="cart-tag cart-tag-weight"><i class="fa-solid fa-weight-scale"></i> ${dish.selectedWeight}</span>` : ''}
                                 ${(dish.has_cooling !== false && dish.coolingOption && dish.coolingOption !== 'Standard' && dish.coolingOption !== 'Fresh & Ready') ? `
                                 <span class="cart-tag ${dish.isCooling ? 'cart-tag-cooling' : 'cart-tag-normal'}">
@@ -5907,7 +6148,7 @@ function updateCartUI() {
 
                             <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 4px;">
                                 <span style="font-size: 11px; color: var(--primary); font-weight: 600; background: rgba(124, 92, 252, 0.1); padding: 1px 6px; border-radius: 4px;">${itemCat}</span>
-                                <span style="font-size: 12px; color: #64748b; font-weight: 600;">₹${price} each ${((dish.coolingPrice > 0) || (dish.egglessPrice > 0)) ? `<span style="font-size: 11px; color: #0284c7;">(Cake ₹${dish.weightPrice || (price - (dish.coolingPrice || 0) - (dish.egglessPrice || 0))}${dish.egglessPrice > 0 ? ` + 🌱 Eggless ₹${dish.egglessPrice}` : ''}${dish.coolingPrice > 0 ? ` + ❄️ Cooling ₹${dish.coolingPrice}` : ''})</span>` : ''}</span>
+                                <span style="font-size: 12px; color: #64748b; font-weight: 600;">₹${price} each ${((dish.coolingPrice > 0) || (dish.egglessPrice > 0) || (Number(dish.flavourPrice) > 0)) ? `<span style="font-size: 11px; color: #0284c7;">(Base ₹${dish.weightPrice || (price - (dish.coolingPrice || 0) - (dish.egglessPrice || 0) - (dish.flavourPrice || 0))}${Number(dish.flavourPrice) > 0 ? ` + ✨ ${dish.selectedFlavour} ₹${dish.flavourPrice}` : ''}${dish.egglessPrice > 0 ? ` + 🌱 Eggless ₹${dish.egglessPrice}` : ''}${dish.coolingPrice > 0 ? ` + ❄️ Cooling ₹${dish.coolingPrice}` : ''})</span>` : ''}</span>
                             </div>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0;">
@@ -6122,7 +6363,7 @@ function updateCartUI() {
                             <i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>
                             ${(walletBalance >= finalPayable) ? `Sufficient balance (₹${finalPayable} will be deducted)` : `Balance: ₹${walletBalance} (Needs ₹${finalPayable - walletBalance} more)`}
                         </span>
-                        <a href="chocowallet.html" style="color: #9333ea; font-weight: 800; text-decoration: none; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                        <a href="chocowallet" style="color: #9333ea; font-weight: 800; text-decoration: none; font-size: 11px; display: flex; align-items: center; gap: 4px;">
                             Card Page <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px;"></i>
                         </a>
                     </div>
@@ -8082,6 +8323,31 @@ function bindEvents() {
         });
     }
 
+    // Swipe for more indicator & progress tracking
+    const swipeWrapper = document.getElementById('categorySwipeWrapper');
+    const swipeThumb = document.getElementById('categorySwipeThumb');
+    if (catContainer) {
+        const updateSwipeProgress = () => {
+            if (!swipeThumb) return;
+            const maxScroll = catContainer.scrollWidth - catContainer.clientWidth;
+            if (maxScroll > 0) {
+                const scrollPct = Math.min(1, Math.max(0, catContainer.scrollLeft / maxScroll));
+                const trackWidth = 46;
+                const thumbWidth = 16;
+                const moveDist = (trackWidth - thumbWidth) * scrollPct;
+                swipeThumb.style.transform = `translateX(${moveDist}px)`;
+            }
+        };
+        catContainer.addEventListener('scroll', updateSwipeProgress, { passive: true });
+        setTimeout(updateSwipeProgress, 400);
+        window.addEventListener('resize', updateSwipeProgress);
+    }
+    if (swipeWrapper && catContainer) {
+        swipeWrapper.addEventListener('click', () => {
+            catContainer.scrollBy({ left: 280, behavior: 'smooth' });
+        });
+    }
+
     // Search Input
     const searchInput = document.getElementById('dishOrRestSearchInput') || DOM.dishOrRestSearchInput;
     const searchClear = document.getElementById('searchClearBtn') || DOM.searchClearBtn;
@@ -8235,7 +8501,7 @@ function bindEvents() {
     if (navOffers) {
         navOffers.addEventListener('click', (e) => {
             e.preventDefault();
-            window.location.href = window.getAppUrl('uni-chocoloom.html');
+            window.location.href = window.getAppUrl('uni-chocoloom');
         });
     }
 
@@ -8261,7 +8527,7 @@ function bindEvents() {
     const brandLogo = document.getElementById('brandLogoBtn');
     if (brandLogo) {
         brandLogo.addEventListener('click', (e) => {
-            if (brandLogo.getAttribute('href') && brandLogo.getAttribute('href').includes('index.html')) {
+            if (brandLogo.getAttribute('href') && (brandLogo.getAttribute('href').includes('index') || brandLogo.getAttribute('href') === '/')) {
                 return;
             }
             e.preventDefault();
@@ -8287,7 +8553,7 @@ function bindEvents() {
     if (mobFood) {
         mobFood.addEventListener('click', () => {
             if (window.IS_UNI_CHOCOLOOM_PAGE) {
-                window.location.href = window.getAppUrl('order.html');
+                window.location.href = window.getAppUrl('order');
                 return;
             }
             updateMobileNavActive(mobFood);
@@ -8303,7 +8569,7 @@ function bindEvents() {
     if (mobInsta) {
         mobInsta.addEventListener('click', () => {
             if (window.IS_UNI_CHOCOLOOM_PAGE) {
-                window.location.href = window.getAppUrl('order.html#gamezone');
+                window.location.href = window.getAppUrl('order#gamezone');
                 return;
             }
             updateMobileNavActive(mobInsta);
@@ -8353,7 +8619,7 @@ function bindEvents() {
             }
             e.preventDefault();
             updateMobileNavActive(mobOffers);
-            window.location.href = window.getAppUrl('uni-chocoloom.html');
+            window.location.href = window.getAppUrl('uni-chocoloom');
         });
     }
 
@@ -9350,25 +9616,20 @@ function updateAuthUI() {
     } catch (e) {}
 }
 
-// Auth Navigation / Modal controls
 window.openAuthModal = function(defaultTab = 'passcode') {
-    const modal = document.getElementById('authModalBackdrop');
-    if (modal) {
-        modal.classList.add('open');
-        switchAuthTab('passcode');
-        setTimeout(() => {
-            const inputToFocus = document.getElementById('passcodePhoneNumber') || document.getElementById('otpPhoneNumber');
-            if (inputToFocus) inputToFocus.focus();
-        }, 150);
-        return;
-    }
-
-    const isLoginPage = window.location.pathname.endsWith('login.html') || window.location.search.includes('page=login');
+    const isLoginPage = window.location.pathname.endsWith('/login') || window.location.pathname.endsWith('login.html') || window.location.pathname === '/login' || window.location.search.includes('page=login');
     if (!isLoginPage) {
-        const currentPage = window.location.pathname.split('/').pop() || 'order.html';
-        const currentSearch = window.location.search ? window.location.search.replace(/[\?&]auth=[^&]+/, '') : '';
-        const redirectParam = encodeURIComponent(currentPage + currentSearch);
-        window.location.href = window.getAppUrl(`login.html?redirect=${redirectParam}`);
+        let currentPage = window.location.pathname.split('/').pop() || '';
+        if (currentPage.endsWith('.html')) currentPage = currentPage.replace(/\.html$/, '');
+        if (!currentPage || currentPage === 'index' || currentPage === 'order') currentPage = '';
+        const currentSearch = window.location.search ? window.location.search.replace(/[\?&]auth=[^&]+/, '').replace(/\.html/g, '') : '';
+        const redirectParam = encodeURIComponent((currentPage || './') + currentSearch);
+        let target = `login?redirect=${redirectParam}`;
+        if (defaultTab === 'signup' || defaultTab === 'register' || defaultTab === 'onboard') {
+            target += '&tab=signup';
+        }
+        const finalUrl = (typeof window.getAppUrl === 'function') ? window.getAppUrl(target) : target;
+        window.location.href = finalUrl;
         return;
     }
 };
@@ -9691,9 +9952,9 @@ window.handlePasscodeLoginSubmit = async function(event) {
             submitBtn.innerHTML = '<span>Log In with Passcode</span> <i class="fa-solid fa-arrow-right"></i>';
         }
 
-        if (window.location.pathname.endsWith('login.html')) {
+        if (window.location.pathname.endsWith('login.html') || window.location.pathname.endsWith('/login') || window.location.pathname === '/login' || window.location.search.includes('page=login')) {
             setTimeout(() => {
-                const target = (typeof getRedirectTarget === 'function') ? getRedirectTarget() : 'uni-chocoloom.html';
+                const target = (typeof getRedirectTarget === 'function') ? getRedirectTarget() : 'uni-chocoloom';
                 window.location.href = window.getAppUrl(target);
             }, 600);
         } else {
@@ -9727,6 +9988,11 @@ window.openNewUserOnboardingScreen = function(phone = '', passcode = '') {
         if (stepLogin) stepLogin.style.display = 'none';
         if (stepOnboarding) stepOnboarding.style.display = 'block';
     }
+
+    const titleEl = document.getElementById('authModalTitle') || document.getElementById('loginCardTitle');
+    const subEl = document.getElementById('authModalSub') || document.getElementById('loginCardSub');
+    if (titleEl) titleEl.textContent = 'Create Account';
+    if (subEl) subEl.textContent = 'Set your 4-digit passcode & delivery details to join';
 
     // Editable mobile number input
     const phoneInput = document.getElementById('onboardingPhoneNumber');
@@ -9780,17 +10046,28 @@ window.backToPhoneStep = function() {
     } else {
         const stepLogin = document.getElementById('passcodeStepLogin') || document.getElementById('otpStepPhone');
         const stepOnboarding = document.getElementById('passcodeStepOnboarding') || document.getElementById('otpStepNewUserName');
+        const stepProfile = document.getElementById('loggedInProfileScreen');
         const stepForgot = document.getElementById('passcodeStepForgot');
         if (stepLogin) stepLogin.style.display = 'block';
         if (stepOnboarding) stepOnboarding.style.display = 'none';
+        if (stepProfile) stepProfile.style.display = 'none';
         if (stepForgot) stepForgot.style.display = 'none';
     }
+
+    const titleEl = document.getElementById('authModalTitle') || document.getElementById('loginCardTitle');
+    const subEl = document.getElementById('authModalSub') || document.getElementById('loginCardSub');
+    if (titleEl) titleEl.textContent = 'Login with Passcode';
+    if (subEl) subEl.textContent = 'Enter your mobile number and 4-digit passcode to sign in';
 
     // Sync phone number from onboarding/forgot input to login input
     const sourcePhone = document.getElementById('onboardingPhoneNumber') || document.getElementById('forgotPasscodePhone');
     const loginPhone = document.getElementById('passcodePhoneNumber') || document.getElementById('otpPhoneNumber');
     if (sourcePhone && loginPhone && sourcePhone.value) {
         loginPhone.value = sourcePhone.value;
+    }
+
+    if (typeof setupPasscodeInputs === 'function') {
+        setupPasscodeInputs();
     }
 };
 
@@ -10103,9 +10380,9 @@ window.completePasscodeOnboarding = async function(event) {
     if (typeof updateLocationDisplay === 'function') updateLocationDisplay();
     showToast(`Welcome to Chocoloom, ${name}! 🎂 Passcode set successfully!`, 'fa-solid fa-cake-candles', '#10b981');
 
-    if (window.location && window.location.pathname && window.location.pathname.endsWith('login.html')) {
+    if (window.location && window.location.pathname && (window.location.pathname.endsWith('login.html') || window.location.pathname.endsWith('/login') || window.location.pathname === '/login' || window.location.search.includes('page=login'))) {
         setTimeout(() => {
-            const target = (typeof getRedirectTarget === 'function') ? getRedirectTarget() : 'uni-chocoloom.html';
+            const target = (typeof getRedirectTarget === 'function') ? getRedirectTarget() : 'uni-chocoloom';
             window.location.href = window.getAppUrl(target);
         }, 700);
     } else {
@@ -10511,7 +10788,7 @@ window.openAccountDetailsModal = function() {
 
     const modal = document.getElementById('accountDetailsModalBackdrop');
     if (!modal) {
-        window.location.href = window.getAppUrl('login.html?view=account');
+        window.location.href = window.getAppUrl('login?view=account');
         return;
     }
 
@@ -12616,3 +12893,22 @@ if (typeof window !== 'undefined') {
     }
 }
 
+// ==========================================================================
+// REMOVED DIWALI CRACKER ANIMATIONS & ACTIVE CLEANUP
+// ==========================================================================
+(function cleanupDiwaliAnimations() {
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+    function cleanup() {
+        const ids = ["diwaliFireworksCanvas", "diwaliCrackerHub", "diwaliThemeWidget", "diwaliCrackerToolbar"];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        });
+        document.querySelectorAll(".diwali-fireworks-canvas, .diwali-cracker-hub, .diwali-theme-floating-widget").forEach(el => el.remove());
+    }
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", cleanup);
+    } else {
+        cleanup();
+    }
+})();

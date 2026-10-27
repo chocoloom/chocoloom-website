@@ -231,7 +231,7 @@
                 </a>
 
                 <!-- User Sign In / Profile Navigation Trigger -->
-                <a href="login.html?redirect=chocowallet.html" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;" onclick="if(typeof openAuthModal === 'function'){ openAuthModal('passcode'); return false; }">
+                <a href="<?php echo chocoloom_get_page_url('login'); ?>?redirect=chocowallet" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;">
                     <i class="fa-regular fa-user"></i>
                     <span class="nav-text">Sign In</span>
                 </a>
@@ -1000,6 +1000,10 @@
                 orders = JSON.parse(localStorage.getItem('chocoloom_orders_history') || '[]');
                 if (typeof window.cleanDuplicateOrders === 'function') {
                     orders = window.cleanDuplicateOrders(orders);
+                }
+                const curUser = (window.AppState && window.AppState.currentUser) || null;
+                if (curUser && typeof window.isOrderBelongingToUser === 'function') {
+                    orders = orders.filter(o => window.isOrderBelongingToUser(o, curUser));
                 }
             } catch (e) {}
 

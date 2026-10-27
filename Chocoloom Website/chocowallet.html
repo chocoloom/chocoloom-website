@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chocowallet VIP Card - Instant 1-Click Digital Card | Chocoloom</title>
     <meta name="description" content="Chocowallet Black VIP Digital Prepaid Card for Chocoloom - Instant 1-click checkout, zero payment failures, and exclusive campus cashbacks.">
@@ -204,22 +205,23 @@
 </head>
 <body>
 
+
     <!-- Navigation Header -->
     <header class="navbar" id="catalogNavbar">
         <div class="container nav-inner">
             <div class="nav-left">
-                <a href="order.html" class="brand-logo" title="Back to Chocoloom Store">
+                <a href="./" class="brand-logo" title="Back to Chocoloom Store">
                     <img src="assets/logo.png" alt="Chocoloom Logo" class="brand-logo-img">
                 </a>
 
-                <a href="order.html" style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #475569; text-decoration: none; padding: 6px 12px; background: #f1f5f9; border-radius: 8px;">
+                <a href="./" style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #475569; text-decoration: none; padding: 6px 12px; background: #f1f5f9; border-radius: 8px;">
                     <i class="fa-solid fa-arrow-left"></i>
                     <span>Back to Cakes Menu</span>
                 </a>
             </div>
 
             <div class="nav-right">
-                <a href="uni-chocoloom.html" class="nav-item nav-item-uni" title="Uni Chocoloom - Student Store" style="text-decoration: none; color: inherit;">
+                <a href="uni-chocoloom" class="nav-item nav-item-uni" title="Uni Chocoloom - Student Store" style="text-decoration: none; color: inherit;">
                     <div class="uni-nav-glow-wrap">
                         <i class="fa-solid fa-graduation-cap uni-nav-icon"></i>
                     </div>
@@ -228,7 +230,7 @@
                 </a>
 
                 <!-- User Sign In / Profile Navigation Trigger -->
-                <a href="login.html?redirect=chocowallet.html" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;" onclick="if(typeof openAuthModal === 'function'){ openAuthModal('passcode'); return false; }">
+                <a href="login?redirect=chocowallet" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;">
                     <i class="fa-regular fa-user"></i>
                     <span class="nav-text">Sign In</span>
                 </a>
@@ -238,7 +240,7 @@
                     <div class="nav-user-pill" id="navUserPill" onclick="toggleUserProfileDropdown(event)">
                         <div class="user-avatar-circle" id="userAvatarCircle">M</div>
                         <div class="user-pill-text">
-                            <span class="user-pill-greeting">Hi, <strong id="userPillName">User</strong></span>
+                            <span class="user-pill-greeting"><strong id="userPillName">User</strong></span>
                         </div>
                         <i class="fa-solid fa-chevron-down user-pill-chevron"></i>
                     </div>
@@ -254,7 +256,7 @@
                         </div>
                         <div class="user-dropdown-divider"></div>
                         <div class="user-dropdown-menu">
-                            <a href="chocowallet.html" class="user-menu-item" style="text-decoration: none; color: inherit; background: linear-gradient(135deg, #fdf4ff, #fae8ff); border: 1px solid #f0abfc; margin-bottom: 6px; border-radius: 10px;">
+                            <a href="chocowallet" class="user-menu-item" style="text-decoration: none; color: inherit; background: linear-gradient(135deg, #fdf4ff, #fae8ff); border: 1px solid #f0abfc; margin-bottom: 6px; border-radius: 10px;">
                                 <i class="fa-solid fa-credit-card" style="color: #9333ea;"></i>
                                 <span style="font-weight: 800; color: #581c87;">Chocowallet VIP Card</span>
                                 <span class="menu-badge" id="dropdownWalletBadge" style="background: #f59e0b; color: #ffffff; font-weight: 900;">Coming Soon</span>
@@ -267,7 +269,7 @@
                     </div>
                 </div>
 
-                <a href="order.html" class="nav-item" style="text-decoration: none; color: inherit; background: var(--primary); color: #fff; padding: 7px 16px; border-radius: 10px; font-weight: 800; font-size: 13px;">
+                <a href="./" class="nav-item" style="text-decoration: none; color: inherit; background: var(--primary); color: #fff; padding: 7px 16px; border-radius: 10px; font-weight: 800; font-size: 13px;">
                     <i class="fa-solid fa-bag-shopping"></i> Order Now
                 </a>
             </div>
@@ -293,7 +295,7 @@
                     </p>
                 </div>
             </div>
-            <a href="order.html" style="background: #92400e; color: #ffffff; text-decoration: none; font-weight: 800; font-size: 12.5px; padding: 10px 18px; border-radius: 10px; white-space: nowrap; transition: transform 0.2s;">
+            <a href="./" style="background: #92400e; color: #ffffff; text-decoration: none; font-weight: 800; font-size: 12.5px; padding: 10px 18px; border-radius: 10px; white-space: nowrap; transition: transform 0.2s;">
                 Back to Menu
             </a>
         </div>
@@ -596,7 +598,7 @@
                         <button class="wallet-action-btn" onclick="toggleFreezeCard(this)" id="freezeCardBtn">
                             <i class="fa-solid fa-lock-open"></i> <span>Card Active</span>
                         </button>
-                        <a href="order.html" class="wallet-action-btn" style="text-decoration: none; background: #0f172a; color: #fff; border-color: #0f172a;">
+                        <a href="./" class="wallet-action-btn" style="text-decoration: none; background: #0f172a; color: #fff; border-color: #0f172a;">
                             <i class="fa-solid fa-bag-shopping"></i> <span>Pay with Card</span>
                         </a>
                     </div>
@@ -850,7 +852,7 @@
 
     <!-- Scripts -->
     <script src="data.js?v=4.0"></script>
-    <script src="app.js?v=7.5"></script>
+    <script src="app.js?v=8.9"></script>
     <script>
         let selectedEdition = 'Matte Black Titanium VIP';
 
@@ -999,6 +1001,10 @@
                 orders = JSON.parse(localStorage.getItem('chocoloom_orders_history') || '[]');
                 if (typeof window.cleanDuplicateOrders === 'function') {
                     orders = window.cleanDuplicateOrders(orders);
+                }
+                const curUser = (window.AppState && window.AppState.currentUser) || null;
+                if (curUser && typeof window.isOrderBelongingToUser === 'function') {
+                    orders = orders.filter(o => window.isOrderBelongingToUser(o, curUser));
                 }
             } catch (e) {}
 

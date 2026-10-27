@@ -393,8 +393,18 @@ const server = http.createServer((req, res) => {
     // =========================================================================
     // 4. Default Static File Server for Customer Storefront
     // =========================================================================
+    // Clean URL Redirect: 301 redirect any direct *.html request to clean URL
+    if (reqPath.endsWith('.html')) {
+        let clean = reqPath.slice(0, -5);
+        if (clean === '/index' || clean === '/order') clean = '/';
+        const target = clean + (parsedUrl.search || '');
+        res.writeHead(301, { 'Location': target });
+        res.end();
+        return;
+    }
+
     let reqUrl = reqPath;
-    if (reqUrl === '/') reqUrl = '/order.html';
+    if (reqUrl === '/' || reqUrl === '/order') reqUrl = '/index.html';
 
     let filePath = path.join(websiteDir, reqUrl);
 
@@ -448,13 +458,13 @@ server.listen(PORT, HOST, () => {
     console.log(` 🚀 Chocoloom Server with Neon Postgres Cloud Sync is LIVE!`);
     console.log(`======================================================`);
     console.log(` 🍰 Customer Storefront:`);
-    console.log(`    http://localhost:${PORT}/order.html`);
+    console.log(`    http://localhost:${PORT}/`);
     console.log(` 👑 Live Admin Panel:`);
     console.log(`    http://localhost:${PORT}/admin`);
     console.log(` ⚡ Neon Cloud Database: Connected & Active`);
     console.log(`\n 📱 On your Mobile Phone (connected to same Wi-Fi):`);
     ips.forEach(ip => {
-        console.log(`    http://${ip}:${PORT}/order.html`);
+        console.log(`    http://${ip}:${PORT}/`);
     });
     console.log(`======================================================\n`);
 });
