@@ -151,34 +151,6 @@
         </div>
     </header>
 
-    <!-- Top Full-Width Edge-to-Edge Hero Advertisement Showcase Billboard -->
-    <section class="hero-ad-section full-bleed">
-        <div class="hero-ad-billboard" id="heroAdWrapper">
-            <div class="hero-ad-track" id="bannersContainer">
-                <!-- Dynamic Full Advertisement Banners populated via JS -->
-            </div>
-
-            <!-- Fullscreen Mode Toggle Button -->
-            <button class="hero-ad-fullscreen-btn" id="heroAdFullscreenBtn" onclick="toggleHeroAdFullscreen(event)" title="Toggle Fullscreen Mode" aria-label="Toggle Fullscreen">
-                <i class="fa-solid fa-expand" id="heroAdFullscreenIcon"></i>
-                <span class="fs-text">Full Screen</span>
-            </button>
-
-            <!-- Carousel Navigation Arrows -->
-            <button class="hero-ad-arrow prev" id="heroAdPrevBtn" aria-label="Previous Offer" onclick="prevAdSlide(event)">
-                <i class="fa-solid fa-chevron-left"></i>
-            </button>
-            <button class="hero-ad-arrow next" id="heroAdNextBtn" aria-label="Next Offer" onclick="nextAdSlide(event)">
-                <i class="fa-solid fa-chevron-right"></i>
-            </button>
-
-            <!-- Indicator Dots -->
-            <div class="hero-ad-dots" id="heroAdIndicators">
-                <!-- Dynamic Dots populated via JS -->
-            </div>
-        </div>
-    </section>
-
     <!-- Main Content Container -->
     <main class="container">
 

@@ -22011,27 +22011,6 @@
   "deletedProducts": [],
   "banners": [
     {
-      "id": "b_uni",
-      "tag": "🎓 UNI CHOCOLOOM • CAMPUS STORE",
-      "tagIcon": "fa-solid fa-graduation-cap",
-      "title": "Uni Chocoloom: College Student Hub",
-      "subtitle": "Order Chocolates, Cakes, Desserts & Midnight Snacks with flat 25% OFF! Delivered to your hostel or campus in 20 mins.",
-      "discountText": "FLAT 25% OFF",
-      "code": "UNICHOCO",
-      "image": "https://images.unsplash.com/photo-1541167760496-1628856ab772?w=1600&auto=format&fit=crop&q=80",
-      "mobileImage": "",
-      "fallbackImage": "chocoloom%20desert/WhatsApp%20Image%202026-08-13%20at%2019.27.18.jpeg",
-      "bgColor": "#110722",
-      "badge": "UNI SPECIAL",
-      "rating": "4.96",
-      "ratingLabel": "Student Choice",
-      "cta": "Open Uni Chocoloom",
-      "ctaAction": "category",
-      "category": "Uni Chocoloom",
-      "isGraphicBanner": false,
-      "isActive": true
-    },
-    {
       "id": "b1",
       "tag": "CHOCOLOOM SIGNATURE",
       "tagIcon": "fa-solid fa-sparkles",

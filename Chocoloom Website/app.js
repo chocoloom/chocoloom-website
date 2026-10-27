@@ -3763,10 +3763,13 @@ function getActiveHeroBanners() {
         needsCacheUpdate = true;
     }
 
-    // Filter out Tombola banner permanently
-    const preTombolaCount = banners.length;
-    banners = banners.filter(ban => ban && ban.id !== 'b_tombola' && !(ban.id && ban.id.includes('tombola')) && ban.ctaAction !== 'tombola_game' && ban.category !== 'Tombola');
-    if (banners.length !== preTombolaCount) {
+    // Filter out Tombola banner and Uni Chocoloom ad banner permanently
+    const preFilterCount = banners.length;
+    banners = banners.filter(ban => ban && 
+        ban.id !== 'b_tombola' && !(ban.id && ban.id.includes('tombola')) && ban.ctaAction !== 'tombola_game' && ban.category !== 'Tombola' &&
+        ban.id !== 'b_uni' && !(ban.id && ban.id.includes('b_uni')) && !(ban.title && ban.title.toLowerCase().includes('uni chocoloom')) && ban.category !== 'Uni Chocoloom'
+    );
+    if (banners.length !== preFilterCount) {
         needsCacheUpdate = true;
     }
 
@@ -3886,6 +3889,7 @@ window.goToAdSlideIndex = function(index) {
 
 function startAdAutoPlay() {
     stopAdAutoPlay();
+    if (window.IS_UNI_CHOCOLOOM_PAGE || (window.location && window.location.pathname.includes('uni-chocoloom'))) return;
     const count = (currentRenderedBanners && currentRenderedBanners.length) || 0;
     if (count <= 1) return;
     adAutoPlayTimer = setInterval(() => {
@@ -4162,6 +4166,14 @@ window.closeTombolaComingSoonModal = function() {
 
 // Render Top Hero Advertisement Billboard
 function renderBanners() {
+    // Uni Chocoloom page: do not display advertisement billboard
+    if (window.IS_UNI_CHOCOLOOM_PAGE || (window.location && window.location.pathname.includes('uni-chocoloom'))) {
+        const heroAd = document.querySelector('.hero-ad-section');
+        if (heroAd) heroAd.remove();
+        stopAdAutoPlay();
+        return;
+    }
+
     if (!DOM.bannersContainer) return;
     
     const banners = getActiveHeroBanners();

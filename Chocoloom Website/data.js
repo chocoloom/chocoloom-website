@@ -719,23 +719,6 @@ window.SWIGGY_DATA = {
             "category": "Diwali Hampers"
         },
         {
-            "id": "b_uni",
-            "tag": "",
-            "tagIcon": "",
-            "title": "Uni Chocoloom: College Student Hub",
-            "subtitle": "Order Chocolates, Cakes, Desserts & Midnight Snacks with flat 25% OFF! Delivered to your hostel or campus in 20 mins.",
-            "discountText": "FLAT 25% OFF",
-            "code": "UNICHOCO",
-            "image": "https://images.unsplash.com/photo-1541167760496-1628856ab772?w=1600&auto=format&fit=crop&q=80",
-            "fallbackImage": "chocoloom%20desert/WhatsApp%20Image%202026-08-13%20at%2019.27.18.jpeg",
-            "overlayGradient": "linear-gradient(90deg, rgba(35, 10, 65, 0.95) 0%, rgba(28, 10, 52, 0.8) 45%, rgba(18, 6, 35, 0.25) 85%, rgba(12, 4, 25, 0.1) 100%)",
-            "badge": "UNI SPECIAL",
-            "rating": "4.96",
-            "ratingLabel": "Student Choice",
-            "cta": "Open Uni Chocoloom",
-            "category": "Uni Chocoloom"
-        },
-        {
             "id": "b1",
             "tag": "",
             "tagIcon": "",
