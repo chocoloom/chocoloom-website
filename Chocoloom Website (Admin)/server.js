@@ -394,7 +394,9 @@ const server = http.createServer((req, res) => {
     // 4. Default Static File Server for Customer Storefront
     // =========================================================================
     let reqUrl = reqPath;
-    if (reqUrl === '/') reqUrl = '/order.html';
+    if (reqUrl === '/') {
+        reqUrl = __dirname.includes('(Admin)') ? '/index.html' : '/order.html';
+    }
 
     let filePath = path.join(websiteDir, reqUrl);
 
