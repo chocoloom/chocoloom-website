@@ -184,7 +184,7 @@
             ),
 
             // Section 1: Weight Selector
-            dish.has_weight !== false && e('div', { style: { marginBottom: '18px' } },
+            dish.has_weight !== false ? e('div', { style: { marginBottom: '18px' } },
                 e('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' } },
                     e('span', { style: { fontSize: '13px', fontWeight: '800', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' } },
                         '⚖️ Choose Cake Weight / Size'
@@ -217,10 +217,33 @@
                         );
                     })
                 )
+            ) : e('div', {
+                style: {
+                    background: '#f8fafc',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '12px',
+                    padding: '12px 14px',
+                    marginBottom: '18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                }
+            },
+                e('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '700', color: '#334155' } },
+                    e('span', null, '📦 Standard Unit (Fixed Size)')
+                ),
+                e('div', { style: { fontSize: '16px', fontWeight: '800', color: '#7c5cfc' } }, `₹${dish.price || 499}`)
             ),
 
             // Section 2: Preferences (Eggless & Cooling Cake)
-            e('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '18px' } },
+            e('div', {
+                style: {
+                    display: 'grid',
+                    gridTemplateColumns: dish.has_cooling !== false ? '1fr 1fr' : '1fr',
+                    gap: '10px',
+                    marginBottom: '18px'
+                }
+            },
                 // Eggless Card
                 e('div', {
                     onClick: () => setIsEggless(!isEggless),
@@ -242,8 +265,8 @@
                     e('input', { type: 'checkbox', checked: isEggless, readOnly: true, style: { accentColor: '#16a34a' } })
                 ),
 
-                // Cooling Cake Card
-                e('div', {
+                // Cooling Cake Card (rendered only when has_cooling !== false)
+                dish.has_cooling !== false && e('div', {
                     onClick: () => handleToggleCooling(!isCooling),
                     style: {
                         padding: '10px 12px',
@@ -472,7 +495,14 @@
         mountCakeCustomizer: function(containerId, dishData, onAddCallback) {
             const container = document.getElementById(containerId);
             if (!container) return;
+            if (window._cakeStudioRoot) {
+                try {
+                    window._cakeStudioRoot.unmount();
+                } catch(e) {}
+                window._cakeStudioRoot = null;
+            }
             const root = createRoot(container);
+            window._cakeStudioRoot = root;
             root.render(e(ReactCakeCustomizer, { dish: dishData, onAdd: onAddCallback }));
             return root;
         },

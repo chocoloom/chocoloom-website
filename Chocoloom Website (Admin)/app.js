@@ -1764,9 +1764,13 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 dbCache[normalizeKey(lp.name)] = pObj;
             }
         });
-        localStorage.setItem('chocoloom_db_catalog_cache', JSON.stringify(dbCache));
-        const curO = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
-        localStorage.setItem('chocoloom_price_overrides', JSON.stringify({ ...curO, ...dbCache }));
+        if (anyPriceUpdated || !localStorage.getItem('chocoloom_db_catalog_cache')) {
+            try {
+                localStorage.setItem('chocoloom_db_catalog_cache', JSON.stringify(dbCache));
+                const curO = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
+                localStorage.setItem('chocoloom_price_overrides', JSON.stringify({ ...curO, ...dbCache }));
+            } catch(e) {}
+        }
     } catch(e) {}
 
     // Sync any items currently in AppState.cart
@@ -1901,7 +1905,7 @@ async function initSupabaseSync() {
     }
 }
 
-// Background Live Polling: Check Cloud database (Fast 5s polling for instant stock sync)
+// Background Passive Polling: Check Cloud database fallback (Realtime WebSocket handles instant push)
 if (typeof window !== 'undefined') {
     setInterval(async () => {
         try {
@@ -1911,7 +1915,7 @@ if (typeof window !== 'undefined') {
                 }
             }
         } catch (e) {}
-    }, 5000);
+    }, 120000);
 
     // Auto-refresh live catalog immediately when user switches back to this tab
     document.addEventListener('visibilitychange', () => {
@@ -6524,12 +6528,6 @@ window.openCustomizationModal = function(dishId, restaurantId) {
     };
     const restaurant = (SWIGGY_DATA.restaurants && SWIGGY_DATA.restaurants.find(r => r.id === (restaurantId || dish.restaurantId))) || defaultRest;
 
-    // If product has weight options, cooling temperature, and flavours all disabled, add directly to cart
-    if (dish.has_weight === false && dish.has_cooling === false && dish.has_flavours === false) {
-        addDirectItemToCart(dish);
-        return;
-    }
-
     // Check if category indicates cooling cake default
     const isCoolingCategory = (dish.category || '').toLowerCase().includes('cooling') || (dish.name || '').toLowerCase().includes('cooling');
     const initialCooling = (dish.has_cooling !== false) ? isCoolingCategory : false;
@@ -6554,6 +6552,10 @@ window.closeCustomizationModal = function() {
     if (modal) modal.classList.remove('open');
     const modalFooter = document.querySelector('.customization-modal-footer');
     if (modalFooter) modalFooter.style.display = 'flex';
+    if (window._cakeStudioRoot) {
+        try { window._cakeStudioRoot.unmount(); } catch(e) {}
+        window._cakeStudioRoot = null;
+    }
     currentCustomization = null;
 };
 
@@ -6984,7 +6986,7 @@ window.confirmAddCustomizedItem = function() {
 
     saveCart();
     updateCartUI();
-    renderProductsGrid();
+    updateProductCardBtn(dish.id);
     closeCustomizationModal();
 
     const dietaryToast = isEggless ? '🌱 Eggless' : '🥚 With Egg';
@@ -7082,7 +7084,7 @@ window.addDirectItemToCart = function(dish) {
 
     saveCart();
     updateCartUI();
-    renderProductsGrid();
+    updateProductCardBtn(dish.id || dish.sql_id);
     if (typeof renderUniModalProducts === 'function') renderUniModalProducts();
     if (typeof renderQuoteQuickCards === 'function') renderQuoteQuickCards();
 
@@ -7110,7 +7112,7 @@ window.updateItemQuantity = function(dishId, change) {
 
     saveCart();
     updateCartUI();
-    renderProductsGrid();
+    updateProductCardBtn(dishId);
     if (typeof renderUniModalProducts === 'function') renderUniModalProducts();
     if (typeof renderQuoteQuickCards === 'function') renderQuoteQuickCards();
 };
@@ -7121,12 +7123,14 @@ window.updateCartByIndex = function(index, change) {
     if (isNaN(idx) || idx < 0 || idx >= AppState.cart.length) return;
 
     AppState.cart[idx].quantity = (Number(AppState.cart[idx].quantity) || 1) + change;
+    const dishId = AppState.cart[idx]?.dish?.id;
     if (AppState.cart[idx].quantity <= 0) {
         AppState.cart.splice(idx, 1);
     }
     saveCart();
     updateCartUI();
-    renderProductsGrid();
+    if (dishId) updateProductCardBtn(dishId);
+    else syncAllProductCardButtons();
     if (typeof renderUniModalProducts === 'function') renderUniModalProducts();
 };
 
@@ -7134,37 +7138,72 @@ window.removeFromCart = function(index) {
     if (!Array.isArray(AppState.cart)) return;
     const idx = parseInt(index, 10);
     if (isNaN(idx) || idx < 0 || idx >= AppState.cart.length) return;
+    const dishId = AppState.cart[idx]?.dish?.id;
     AppState.cart.splice(idx, 1);
     saveCart();
     updateCartUI();
-    renderProductsGrid();
+    if (dishId) updateProductCardBtn(dishId);
+    else syncAllProductCardButtons();
     if (typeof renderUniModalProducts === 'function') renderUniModalProducts();
     if (typeof renderQuoteQuickCards === 'function') renderQuoteQuickCards();
 };
 
 function updateProductCardBtn(dishId) {
-    const prodBtnBox = document.getElementById(`prodBtnBox_${dishId}`);
-    if (prodBtnBox) {
-        const cartItem = AppState.cart.find(c => c && c.dish && (c.dish.id === dishId || (c.dish.sql_id && c.dish.sql_id === dishId)));
-        const qty = cartItem ? (Number(cartItem.quantity) || 0) : 0;
-        if (qty > 0) {
+    if (!dishId) return;
+    const safeProdId = String(dishId).replace(/'/g, "\\'");
+    const boxes = document.querySelectorAll(`[id$="prodBtnBox_${dishId}"]`);
+    if (!boxes || boxes.length === 0) return;
+
+    const prod = (typeof getAllProducts === 'function' ? getAllProducts() : []).find(p => p.id === dishId || p.sql_id === dishId || (p.name && p.name.trim().toLowerCase() === String(dishId).trim().toLowerCase()));
+    const cartItem = (Array.isArray(AppState.cart) ? AppState.cart : []).find(c => c && c.dish && (c.dish.id === dishId || (c.dish.sql_id && c.dish.sql_id === dishId) || (c.dish.name && c.dish.name === dishId)));
+    const qty = cartItem ? (Number(cartItem.quantity) || 0) : 0;
+    const rId = (prod && prod.restaurantId) ? prod.restaurantId : 'rest_chocoloom_flagship';
+    const safeRestId = String(rId).replace(/'/g, "\\'");
+
+    boxes.forEach(prodBtnBox => {
+        if (prod && prod.is_available === false) {
+            prodBtnBox.innerHTML = `
+                <button class="direct-add-btn disabled" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #cbd5e1; cursor: not-allowed; padding: 7px 12px; font-size: 11px; font-weight: 800; border-radius: 8px;">
+                    <span>OUT OF STOCK</span>
+                </button>
+            `;
+        } else if (qty > 0) {
             prodBtnBox.innerHTML = `
                 <div class="qty-counter-box">
-                    <button class="qty-btn" onclick="updateItemQuantity('${dishId}', -1)">-</button>
+                    <button class="qty-btn" onclick="event.stopPropagation(); updateItemQuantity('${safeProdId}', -1)" aria-label="Decrease">−</button>
                     <span class="qty-val">${qty}</span>
-                    <button class="qty-btn" onclick="addToCart('${dishId}')">+</button>
+                    <button class="qty-btn" onclick="event.stopPropagation(); updateItemQuantity('${safeProdId}', 1)" aria-label="Increase">+</button>
                 </div>
             `;
         } else {
-            const prod = getAllProducts().find(p => p.id === dishId || p.sql_id === dishId);
-            const rId = prod ? (prod.restaurantId || 'rest_chocoloom_flagship') : 'rest_chocoloom_flagship';
-            prodBtnBox.innerHTML = `<button class="direct-add-btn" onclick="addToCart('${dishId}', '${rId}')">ADD</button>`;
+            prodBtnBox.innerHTML = `
+                <button class="direct-add-btn" onclick="event.stopPropagation(); addToCart('${safeProdId}', '${safeRestId}')">
+                    <span>ADD</span>
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            `;
         }
-    }
+    });
+}
+
+function syncAllProductCardButtons() {
+    const btnBoxes = document.querySelectorAll('[id*="prodBtnBox_"]');
+    if (!btnBoxes || btnBoxes.length === 0) return;
+    btnBoxes.forEach(box => {
+        const parts = box.id.split('prodBtnBox_');
+        if (parts[1]) updateProductCardBtn(parts[1]);
+    });
 }
 
 function saveCart() {
-    localStorage.setItem('swiggy_cart', JSON.stringify(AppState.cart));
+    try {
+        localStorage.setItem('swiggy_cart', JSON.stringify(AppState.cart));
+    } catch (e) {
+        console.warn('saveCart localStorage warning:', e);
+        try {
+            sessionStorage.setItem('swiggy_cart', JSON.stringify(AppState.cart));
+        } catch(se) {}
+    }
 }
 
 // Update Cart UI, Drawer & Badges
