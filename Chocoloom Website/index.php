@@ -37,7 +37,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=9.7">
+    <link rel="stylesheet" href="styles.css?v=9.8">
     <!-- Instant Centered Plain Logo Splash Preloader CSS (Zero-delay, Plain logo, no box) -->
     <style>
         #siteLoadingSplash {
@@ -1539,6 +1539,6 @@
     <script src="data.js?v=6.6"></script>
     <script src="react-components.js?v=2.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
-    <script src="app.js?v=9.9"></script>
+    <script src="app.js?v=10.0"></script>
 </body>
 </html>

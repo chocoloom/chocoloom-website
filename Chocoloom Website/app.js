@@ -7136,207 +7136,35 @@ function updateCartUI() {
     if (!cartBody) return;
 
     if (AppState.cart.length === 0) {
-        // When cart is empty, do not show distracting login or member banner
+        // When cart is empty, keep drawer clean & clutter-free
         if (cartPrompt) cartPrompt.style.display = 'none';
         if (cartLogged) cartLogged.style.display = 'none';
 
         cartBody.innerHTML = `
             <div class="cart-empty-wrapper">
-                <!-- Visual Hero with Animated Dessert SVG & Floating Badges -->
-                <div class="empty-cart-hero">
-                    <div class="empty-cart-orb-wrapper">
-                        <div class="empty-cart-pulse-ring"></div>
-                        <div class="empty-cart-visual-art">
-                            <svg class="empty-cart-svg" viewBox="0 0 140 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <defs>
-                                    <linearGradient id="standGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stop-color="#ede9fe"/>
-                                        <stop offset="100%" stop-color="#ddd6fe"/>
-                                    </linearGradient>
-                                    <linearGradient id="cakeChoco" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stop-color="#581c87"/>
-                                        <stop offset="50%" stop-color="#7c3aed"/>
-                                        <stop offset="100%" stop-color="#a855f7"/>
-                                    </linearGradient>
-                                    <linearGradient id="frostPink" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stop-color="#ec4899"/>
-                                        <stop offset="100%" stop-color="#f43f5e"/>
-                                    </linearGradient>
-                                    <radialGradient id="haloGlow" cx="50%" cy="50%" r="50%">
-                                        <stop offset="0%" stop-color="#c4b5fd" stop-opacity="0.6"/>
-                                        <stop offset="100%" stop-color="#c4b5fd" stop-opacity="0"/>
-                                    </radialGradient>
-                                </defs>
-                                <!-- Ambient Glow Halo -->
-                                <circle cx="70" cy="62" r="48" fill="url(#haloGlow)"/>
-                                
-                                <!-- Stand Pedestal -->
-                                <ellipse cx="70" cy="100" rx="42" ry="7" fill="url(#standGrad)" opacity="0.9"/>
-                                <path d="M64 88H76L74 99H66L64 88Z" fill="#c4b5fd"/>
-                                <ellipse cx="70" cy="88" rx="48" ry="8" fill="#ffffff" stroke="#ddd6fe" stroke-width="2"/>
-                                <ellipse cx="70" cy="87.5" rx="44" ry="6" fill="url(#standGrad)"/>
-
-                                <!-- Cake Body -->
-                                <g class="empty-cart-cake-anim">
-                                    <path d="M42 66C42 66 52 74 70 74C88 74 98 66 98 66V80C98 80 88 88 70 88C52 88 42 80 42 80V66Z" fill="url(#cakeChoco)"/>
-                                    <path d="M42 71C42 71 52 78 70 78C88 78 98 71 98 71V74C98 74 88 81 70 81C52 81 42 74 42 74V71Z" fill="#fdf2f8"/>
-                                    <ellipse cx="70" cy="66" rx="28" ry="8" fill="url(#frostPink)"/>
-                                    <path d="M42 66C44 71 46 75 48 71C50 67 52 73 54 75C56 77 58 72 61 70C64 68 66 74 69 75C72 76 75 70 78 72C81 74 84 76 87 72C90 68 93 74 95 72C97 70 98 66 98 66C98 66 88 74 70 74C52 74 42 66 42 66Z" fill="url(#frostPink)"/>
-
-                                    <rect x="68" y="44" width="4" height="16" rx="2" fill="#fef08a"/>
-                                    <ellipse class="empty-candle-flame" cx="70" cy="40" rx="3.5" ry="5.5" fill="#f59e0b"/>
-                                    <ellipse class="empty-candle-core" cx="70" cy="41" rx="1.8" ry="3" fill="#ffffff"/>
-
-                                    <circle cx="58" cy="64" r="2.5" fill="#f59e0b"/>
-                                    <circle cx="80" cy="65" r="2" fill="#38bdf8"/>
-                                    <circle cx="70" cy="68" r="2" fill="#ffffff"/>
-                                </g>
-
-                                <!-- Sparkles -->
-                                <g class="empty-sparkle-1">
-                                    <path d="M30 40L31.5 44.5L36 46L31.5 47.5L30 52L28.5 47.5L24 46L28.5 44.5L30 40Z" fill="#fbbf24"/>
-                                </g>
-                                <g class="empty-sparkle-2">
-                                    <path d="M108 36L109.5 39.5L113 41L109.5 42.5L108 46L106.5 42.5L103 41L106.5 39.5L108 36Z" fill="#ec4899"/>
-                                </g>
-                                <g class="empty-sparkle-3">
-                                    <path d="M112 78L113 80.5L115.5 81.5L113 82.5L112 85L111 82.5L108.5 81.5L111 80.5L112 78Z" fill="#818cf8"/>
-                                </g>
-                            </svg>
-                        </div>
-                        <span class="empty-cart-floating-badge badge-left">🎂 Freshly Baked</span>
-                        <span class="empty-cart-floating-badge badge-right">✨ 100% Veg</span>
-                    </div>
-
-                    <h3 class="empty-cart-title">Your cart is feeling sweet & light!</h3>
-                    <p class="empty-cart-subtitle">
-                        "Life lo sweet moments kavala? Chocoloom undiga!" Explore freshly baked artisanal cakes, Belgian truffles & gourmet tubs.
-                    </p>
-
-                    <!-- First Order Welcome Perk Pill -->
-                    <div class="empty-cart-welcome-perk">
-                        <span class="welcome-perk-badge">🎁 FIRST ORDER</span>
-                        <span class="welcome-perk-text">Flat <strong>20% OFF</strong> applied at checkout!</span>
-                    </div>
-
-                    <button type="button" class="empty-cart-browse-btn" onclick="closeCart(); if(typeof scrollToOrderingCatalog==='function'){scrollToOrderingCatalog();}else{window.scrollTo({top: 450, behavior: 'smooth'});}">
-                        <i class="fa-solid fa-sparkles"></i>
-                        <span>EXPLORE FRESH CAKES</span>
-                        <i class="fa-solid fa-arrow-right" style="font-size: 11px;"></i>
-                    </button>
-                </div>
-
-                <!-- Category Quick Jump Chips -->
-                <div class="empty-cart-cat-chips-section">
-                    <span class="empty-cart-chips-title">Quick Cravings:</span>
-                    <div class="empty-cart-category-chips">
-                        <button type="button" class="empty-cat-chip" onclick="closeCart(); if(typeof selectCategoryFilter==='function'){selectCategoryFilter('Anniversary Cakes');} if(typeof scrollToOrderingCatalog==='function'){scrollToOrderingCatalog();}">
-                            <span>🎂</span> Cakes
-                        </button>
-                        <button type="button" class="empty-cat-chip" onclick="closeCart(); if(typeof selectCategoryFilter==='function'){selectCategoryFilter('Chocolates');} if(typeof scrollToOrderingCatalog==='function'){scrollToOrderingCatalog();}">
-                            <span>🍫</span> Truffles
-                        </button>
-                        <button type="button" class="empty-cat-chip" onclick="closeCart(); if(typeof selectCategoryFilter==='function'){selectCategoryFilter('Bento Cakes');} if(typeof scrollToOrderingCatalog==='function'){scrollToOrderingCatalog();}">
-                            <span>🍱</span> Bento
-                        </button>
-                        <button type="button" class="empty-cat-chip game-chip" onclick="closeCart(); if(typeof switchToGameZone==='function'){switchToGameZone();}">
-                            <span>🎮</span> Game Zone
-                        </button>
+                <div class="empty-cart-boutique-visual">
+                    <div class="empty-cart-boutique-glow"></div>
+                    <div class="empty-cart-boutique-img-frame">
+                        <img src="assets/empty_cart_cake.webp" alt="Chocoloom Gourmet Cakes" class="empty-cart-boutique-img" onerror="this.src='assets/categories/truffle_cakes.webp'">
                     </div>
                 </div>
 
-                <!-- Quick Add Popular Cravings -->
-                <div class="empty-cart-recommendations">
-                    <div class="empty-cart-rec-header">
-                        <span class="empty-cart-rec-title">
-                            <span class="rec-fire-icon"><i class="fa-solid fa-fire"></i></span>
-                            Popular Right Now
-                        </span>
-                        <span class="empty-cart-rec-hint">1-Tap Quick Add</span>
-                    </div>
-                    <div class="empty-cart-rec-list">
-                        <div class="empty-cart-rec-item" onclick="window.handleQuoteCardAdd(event, 'quick_assorted_truffies')">
-                            <div class="rec-img-wrapper">
-                                <img src="assets/categories/truffle_cakes.webp" alt="Assorted Truffies" class="empty-cart-rec-img" loading="lazy" onerror="this.src='assets/categories/candyland.webp'">
-                                <span class="rec-veg-icon" title="100% Pure Veg"></span>
-                            </div>
-                            <div class="empty-cart-rec-info">
-                                <div class="rec-top-row">
-                                    <h4 class="empty-cart-rec-name">Assorted Truffies Box</h4>
-                                    <span class="rec-rating"><i class="fa-solid fa-star"></i> 4.9</span>
-                                </div>
-                                <p class="rec-desc">Pure couverture cocoa & fresh cream</p>
-                                <div class="empty-cart-rec-meta">
-                                    <span class="empty-cart-rec-price">₹199</span>
-                                    <span class="empty-cart-rec-orig">₹249</span>
-                                    <span class="rec-save-pill">20% OFF</span>
-                                </div>
-                            </div>
-                            <button type="button" class="empty-cart-add-btn" onclick="window.handleQuoteCardAdd(event, 'quick_assorted_truffies')">
-                                <i class="fa-solid fa-plus"></i> ADD
-                            </button>
-                        </div>
+                <h3 class="empty-cart-boutique-title">Your cart is empty</h3>
+                <p class="empty-cart-boutique-subtitle">
+                    Good food is always cooking! Explore our handcrafted celebration cakes & gourmet desserts to fill your cart.
+                </p>
 
-                        <div class="empty-cart-rec-item" onclick="window.handleQuoteCardAdd(event, 'quick_dutch_truffle_bento')">
-                            <div class="rec-img-wrapper">
-                                <img src="assets/categories/bento_cakes.webp" alt="Dutch Truffle Bento" class="empty-cart-rec-img" loading="lazy" onerror="this.src='assets/categories/candyland.webp'">
-                                <span class="rec-veg-icon" title="100% Pure Veg"></span>
-                            </div>
-                            <div class="empty-cart-rec-info">
-                                <div class="rec-top-row">
-                                    <h4 class="empty-cart-rec-name">Dutch Truffle Bento</h4>
-                                    <span class="rec-rating"><i class="fa-solid fa-star"></i> 4.9</span>
-                                </div>
-                                <p class="rec-desc">Silky dark chocolate ganache bento</p>
-                                <div class="empty-cart-rec-meta">
-                                    <span class="empty-cart-rec-price">₹199</span>
-                                    <span class="empty-cart-rec-orig">₹250</span>
-                                    <span class="rec-save-pill">20% OFF</span>
-                                </div>
-                            </div>
-                            <button type="button" class="empty-cart-add-btn" onclick="window.handleQuoteCardAdd(event, 'quick_dutch_truffle_bento')">
-                                <i class="fa-solid fa-plus"></i> ADD
-                            </button>
-                        </div>
+                <button type="button" class="empty-cart-boutique-btn" onclick="closeCart(); if(typeof scrollToOrderingCatalog==='function'){scrollToOrderingCatalog();}else{window.scrollTo({top: 450, behavior: 'smooth'});}">
+                    <span>EXPLORE FRESH CAKES</span>
+                    <i class="fa-solid fa-arrow-right" style="font-size: 11px;"></i>
+                </button>
 
-                        <div class="empty-cart-rec-item" onclick="window.handleQuoteCardAdd(event, 'quick_choco_fudge_tub')">
-                            <div class="rec-img-wrapper">
-                                <img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=300&auto=format&fit=crop&q=80" alt="Choco Fudge Tub" class="empty-cart-rec-img" loading="lazy">
-                                <span class="rec-veg-icon" title="100% Pure Veg"></span>
-                            </div>
-                            <div class="empty-cart-rec-info">
-                                <div class="rec-top-row">
-                                    <h4 class="empty-cart-rec-name">Choco Fudge Lava Tub</h4>
-                                    <span class="rec-rating"><i class="fa-solid fa-star"></i> 4.8</span>
-                                </div>
-                                <p class="rec-desc">Molten Belgian chocolate & crunchy crisps</p>
-                                <div class="empty-cart-rec-meta">
-                                    <span class="empty-cart-rec-price">₹199</span>
-                                    <span class="empty-cart-rec-orig">₹229</span>
-                                    <span class="rec-save-pill">13% OFF</span>
-                                </div>
-                            </div>
-                            <button type="button" class="empty-cart-add-btn" onclick="window.handleQuoteCardAdd(event, 'quick_choco_fudge_tub')">
-                                <i class="fa-solid fa-plus"></i> ADD
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Trust / Perks Bar -->
-                <div class="empty-cart-trust-bar">
-                    <div class="empty-trust-item">
-                        <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i>
-                        <span>30m Express Drop</span>
-                    </div>
-                    <div class="empty-trust-item">
-                        <i class="fa-solid fa-leaf" style="color: #10b981;"></i>
-                        <span>100% Eggless Pure Veg</span>
-                    </div>
-                    <div class="empty-trust-item">
-                        <i class="fa-solid fa-heart" style="color: #ec4899;"></i>
-                        <span>Freshly Baked Today</span>
-                    </div>
+                <div class="empty-cart-boutique-trust">
+                    <span>⚡ 30m Drop</span>
+                    <span class="trust-dot">•</span>
+                    <span>🌿 100% Eggless</span>
+                    <span class="trust-dot">•</span>
+                    <span>🎂 Baked Fresh</span>
                 </div>
             </div>
         `;
