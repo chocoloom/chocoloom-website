@@ -870,8 +870,30 @@
 
                     
 
-                    <!-- Pricing -->
-                    <div class="form-row-2">
+                    <!-- Pricing & Flavour Sync -->
+                    <div class="form-row-3" style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; justify-content: space-between;">
+                                <span><i class="fa-solid fa-cake-candles" style="color: #7c5cfc;"></i> Flavour for Price</span>
+                            </label>
+                            <select id="prodInputPriceFlavour" onchange="syncAdminPriceFlavour(this.value)" style="width: 100%; padding: 8px 10px; border: 1.5px solid #7c5cfc; border-radius: 8px; font-size: 13px; font-weight: 700; color: #0f172a; background: #faf5ff;">
+                                <option value="Chocolate">🍫 Chocolate</option>
+                                <option value="Vanilla">🍦 Vanilla</option>
+                                <option value="Butterscotch">🧈 Butterscotch</option>
+                                <option value="Strawberry">🍓 Strawberry</option>
+                                <option value="Pineapple">🍍 Pineapple</option>
+                                <option value="Blueberry">🫐 Blueberry</option>
+                                <option value="Black Currant">🍇 Black Currant</option>
+                                <option value="Black Forest">🍒 Black Forest</option>
+                                <option value="Milk Badam">🥛 Milk Badam</option>
+                                <option value="Honey Almond">🍯 Honey Almond</option>
+                                <option value="Red Velvet">❤️ Red Velvet</option>
+                                <option value="White Forest">🍰 White Forest</option>
+                                <option value="Caramel">🍮 Caramel</option>
+                                <option value="Milky Butterscotch">🍨 Milky Butterscotch</option>
+                                <option value="Nutty Bubble">🫧 Nutty Bubble</option>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label>Selling Price (₹) *</label>
                             <input type="number" id="prodInputPrice" placeholder="e.g. 749" min="1" step="1" required oninput="autoComputeWeightPrices(this.value)">
@@ -1050,6 +1072,7 @@
                                     <input type="number" id="prodInputPrice20" placeholder="+₹1200">
                                 </div>
                             </div>
+                            <div id="adminWeightFlavourSyncNote" style="font-size: 11.5px; font-weight: 700; color: #7c5cfc; margin-top: 6px;"></div>
                         </div>
 
                         <!-- Cooling Temperature Surcharge -->
@@ -1113,7 +1136,8 @@
                                         <i class="fa-solid fa-tags" style="color: #db2777;"></i>
                                         <span style="font-size: 12px; font-weight: 800; color: #9d174d;">Cake Flavour Surcharges & Pricing (₹)</span>
                                     </div>
-                                    <div style="display: flex; gap: 6px;">
+                                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                        <button type="button" onclick="window.autoFillAllFlavourWeights()" style="background: #eff6ff; border: 1.5px solid #3b82f6; color: #1d4ed8; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">⚡ Auto-Fill All KG Weights (+₹400 / +₹800 / +₹1200)</button>
                                         <button type="button" onclick="window.setAllFlavourPrices(0)" style="background: #ffffff; border: 1.5px solid #f472b6; color: #db2777; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">All ₹0 (Free)</button>
                                         <button type="button" onclick="window.resetDefaultFlavourPrices()" style="background: #fdf2f8; border: 1.5px solid #db2777; color: #9d174d; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">Standard Pricing</button>
                                     </div>
@@ -1123,26 +1147,130 @@
                                 <div style="font-size: 11px; font-weight: 800; color: #be185d; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
                                     <span>🎂 Normal & Cooling Shared Flavours (5 Standard Flavours)</span>
                                 </div>
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍦 Vanilla (₹)</label>
-                                        <input type="number" id="flavourPrice_vanilla" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #fbcfe8; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 14px;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #fbcfe8; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🍦 Vanilla</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('vanilla')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #fdf2f8; border: 1px solid #fbcfe8; color: #db2777; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_vanilla" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('vanilla', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_vanilla_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_vanilla_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_vanilla_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🧈 Butterscotch (₹)</label>
-                                        <input type="number" id="flavourPrice_butterscotch" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #fbcfe8; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #fbcfe8; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🧈 Butterscotch</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('butterscotch')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #fdf2f8; border: 1px solid #fbcfe8; color: #db2777; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_butterscotch" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('butterscotch', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_butterscotch_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_butterscotch_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_butterscotch_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍓 Strawberry (₹)</label>
-                                        <input type="number" id="flavourPrice_strawberry" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #fbcfe8; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #fbcfe8; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🍓 Strawberry</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('strawberry')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #fdf2f8; border: 1px solid #fbcfe8; color: #db2777; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_strawberry" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('strawberry', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_strawberry_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_strawberry_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_strawberry_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍍 Pineapple (₹)</label>
-                                        <input type="number" id="flavourPrice_pineapple" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #fbcfe8; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #fbcfe8; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🍍 Pineapple</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('pineapple')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #fdf2f8; border: 1px solid #fbcfe8; color: #db2777; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_pineapple" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('pineapple', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_pineapple_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_pineapple_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_pineapple_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍫 Chocolate (₹)</label>
-                                        <input type="number" id="flavourPrice_chocolate" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #fbcfe8; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #fbcfe8; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🍫 Chocolate</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('chocolate')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #fdf2f8; border: 1px solid #fbcfe8; color: #db2777; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_chocolate" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('chocolate', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_chocolate_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_chocolate_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_chocolate_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
                                         <input type="hidden" id="flavourPrice_chocolate_truffle" value="0">
                                     </div>
                                 </div>
@@ -1151,46 +1279,256 @@
                                 <div style="font-size: 11px; font-weight: 800; color: #0284c7; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
                                     <span>❄️ Cooling Cakes Exclusive (10 Additional Flavours)</span>
                                 </div>
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🫐 Blueberry (₹)</label>
-                                        <input type="number" id="flavourPrice_blueberry" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🫐 Blueberry</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('blueberry')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0284c7; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_blueberry" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('blueberry', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_blueberry_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_blueberry_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_blueberry_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍇 Black Currant (₹)</label>
-                                        <input type="number" id="flavourPrice_black_currant" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🍇 Black Currant</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('black_currant')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0284c7; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_black_currant" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('black_currant', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_black_currant_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_black_currant_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_black_currant_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍒 Black Forest (₹)</label>
-                                        <input type="number" id="flavourPrice_black_forest" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🍒 Black Forest</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('black_forest')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0284c7; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_black_forest" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('black_forest', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_black_forest_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_black_forest_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_black_forest_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🥛 Milk Badam (₹)</label>
-                                        <input type="number" id="flavourPrice_milk_badam" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🥛 Milk Badam</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('milk_badam')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0284c7; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_milk_badam" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('milk_badam', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_milk_badam_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_milk_badam_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_milk_badam_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍯 Honey Almond (₹)</label>
-                                        <input type="number" id="flavourPrice_honey_almond" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🍯 Honey Almond</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('honey_almond')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0284c7; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_honey_almond" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('honey_almond', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_honey_almond_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_honey_almond_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_honey_almond_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">❤️ Red Velvet (₹)</label>
-                                        <input type="number" id="flavourPrice_red_velvet" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">❤️ Red Velvet</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('red_velvet')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0284c7; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_red_velvet" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('red_velvet', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_red_velvet_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_red_velvet_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_red_velvet_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍰 White Forest (₹)</label>
-                                        <input type="number" id="flavourPrice_white_forest" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🍰 White Forest</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('white_forest')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0284c7; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_white_forest" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('white_forest', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_white_forest_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_white_forest_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_white_forest_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍮 Caramel (₹)</label>
-                                        <input type="number" id="flavourPrice_caramel" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🍮 Caramel</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('caramel')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0284c7; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_caramel" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('caramel', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_caramel_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_caramel_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_caramel_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🍨 Milky Butterscotch (₹)</label>
-                                        <input type="number" id="flavourPrice_milky_butterscotch" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🍨 Milky Butterscotch</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('milky_butterscotch')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0284c7; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_milky_butterscotch" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('milky_butterscotch', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_milky_butterscotch_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_milky_butterscotch_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_milky_butterscotch_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="form-group">
-                                        <label style="font-size: 11.5px; font-weight: 700; color: #334155;">🫧 Nutty Bubble (₹)</label>
-                                        <input type="number" id="flavourPrice_nutty_bubble" value="0" min="0" placeholder="0" style="padding: 8px 10px; border-radius: 8px; border: 1.5px solid #bae6fd; font-size: 13px; font-weight: 700; color: #0f172a; background: #fff; width: 100%; box-sizing: border-box;">
+                                    <div class="form-group" style="background: #fff; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <label style="font-size: 12px; font-weight: 800; color: #334155; margin: 0;">🫧 Nutty Bubble</label>
+                                            <button type="button" onclick="window.autoCalcSingleFlavourWeights('nutty_bubble')" title="Auto-fill 1kg, 1.5kg, 2kg weights (+₹400/+₹800/+₹1200)" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0284c7; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; cursor: pointer;">⚡ Auto KG</button>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">0.5KG</span>
+                                                <input type="number" id="flavourPrice_nutty_bubble" value="0" min="0" placeholder="0" oninput="window.onFlavour05Input('nutty_bubble', this.value)" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1KG</span>
+                                                <input type="number" id="flavourPrice_nutty_bubble_10" value="" min="0" placeholder="+400" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">1.5KG</span>
+                                                <input type="number" id="flavourPrice_nutty_bubble_15" value="" min="0" placeholder="+800" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                            <div>
+                                                <span style="font-size: 9px; font-weight: 700; color: #64748b; display: block;">2KG</span>
+                                                <input type="number" id="flavourPrice_nutty_bubble_20" value="" min="0" placeholder="+1200" style="padding: 5px 6px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 700; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
                                     </div>
                                 </div>
 

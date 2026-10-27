@@ -39,6 +39,7 @@
             { key: 'half_kg', label: '0.5 kg', serves: '2-4 Guests', icon: '🎂' },
             { key: '1kg', label: '1.0 kg', serves: '6-8 Guests', icon: '🎉' },
             { key: '1_5kg', label: '1.5 kg', serves: '10-12 Guests', icon: '✨' },
+            { key: '2kg', label: '2.0 kg', serves: '16-18 Guests', icon: '👑' },
             { key: '3kg', label: '3.0 kg', serves: '20+ Grand Celebration', icon: '🏆' }
         ];
 
@@ -102,7 +103,7 @@
         const flavourPrice = useMemo(() => {
             if (!flavour) return 0;
             if (typeof window.getFlavourExtraPrice === 'function') {
-                return window.getFlavourExtraPrice(dish, flavour);
+                return window.getFlavourExtraPrice(dish, flavour, weightKey);
             }
             if (dish && dish.flavour_prices && typeof dish.flavour_prices === 'object') {
                 if (dish.flavour_prices[flavour] !== undefined) return Number(dish.flavour_prices[flavour]) || 0;
@@ -111,7 +112,7 @@
             }
             const activeItem = activeFlavoursList.find(f => f.name.toLowerCase() === flavour.toLowerCase());
             return (activeItem && activeItem.extraPrice) ? Number(activeItem.extraPrice) : 0;
-        }, [flavour, dish, activeFlavoursList]);
+        }, [flavour, dish, activeFlavoursList, weightKey]);
 
         const egglessPrice = isEggless ? (weightKey === 'half_kg' ? 30 : 50) : 0;
 
@@ -211,7 +212,8 @@
                         },
                             e('div', { style: { fontSize: '14px', marginBottom: '2px' } }, w.icon),
                             e('div', { style: { fontSize: '13px', fontWeight: '800' } }, w.label),
-                            e('div', { style: { fontSize: '10px', color: isSelected ? '#7c5cfc' : '#94a3b8', marginTop: '2px' } }, w.serves)
+                            e('div', { style: { fontSize: '10px', color: isSelected ? '#7c5cfc' : '#94a3b8', marginTop: '2px' } }, w.serves),
+                            e('div', { style: { fontSize: '11px', fontWeight: '800', color: isSelected ? '#581c87' : '#0f172a', marginTop: '3px' } }, '₹' + ((typeof window.getDishFlavourPrice === 'function' && flavour) ? window.getDishFlavourPrice(dish, flavour, w.key) : ((typeof window.getWeightPrice === 'function') ? window.getWeightPrice(dish, w.key) : Number(dish.price || 499))))
                         );
                     })
                 )
@@ -300,7 +302,7 @@
                     activeFlavoursList.map(f => {
                         const isSelected = flavour && (flavour.toLowerCase() === f.name.toLowerCase());
                         const fExtra = (typeof window.getFlavourExtraPrice === 'function') 
-                            ? window.getFlavourExtraPrice(dish, f.name) 
+                            ? window.getFlavourExtraPrice(dish, f.name, weightKey) 
                             : (f.extraPrice || 0);
                         const fTotal = Math.round(basePrice + coolingPrice + fExtra + egglessPrice);
                         return e('div', {

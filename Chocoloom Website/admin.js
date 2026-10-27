@@ -3973,6 +3973,21 @@ window.handleQuickPriceSubmit = async function(e) {
         prod.price_2kg = price20;
         prod.price_3kg = price30;
 
+        if (prod.flavour) {
+            if (!prod.flavour_prices || typeof prod.flavour_prices !== 'object') prod.flavour_prices = {};
+            prod.flavour_prices[prod.flavour] = newPrice;
+            prod.flavour_prices[prod.flavour + '_05'] = price05;
+            prod.flavour_prices[prod.flavour + '_10'] = price10;
+            prod.flavour_prices[prod.flavour + '_15'] = price15;
+            prod.flavour_prices[prod.flavour + '_20'] = price20;
+            const fKey = prod.flavour.toLowerCase().replace(/\s+/g, '_');
+            prod.flavour_prices[fKey] = newPrice;
+            prod.flavour_prices[fKey + '_05'] = price05;
+            prod.flavour_prices[fKey + '_10'] = price10;
+            prod.flavour_prices[fKey + '_15'] = price15;
+            prod.flavour_prices[fKey + '_20'] = price20;
+        }
+
         const updateData = {
             id: prod.id,
             sql_id: prod.sql_id,

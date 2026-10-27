@@ -6560,7 +6560,7 @@ function renderCustomizationModalContent() {
 
             <div class="custom-options-grid">
                 ${WEIGHT_CONFIG.map(w => {
-                    const price = getWeightPrice(dish, w.key);
+                    const price = (hasFlavours && currentFlavour) ? getDishFlavourPrice(dish, currentFlavour, w.key) : getWeightPrice(dish, w.key);
                     const isSelected = currentWeightKey === w.key;
                     return `
                         <label class="custom-option-label ${isSelected ? 'selected' : ''}" onclick="selectCustomWeight('${w.key}')">
