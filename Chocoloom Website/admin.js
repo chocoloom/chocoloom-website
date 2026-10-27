@@ -3717,99 +3717,140 @@ window.setPresetImage = function(url) {
 window.handleProductFormSubmit = async function(e) {
     if (e && e.preventDefault) e.preventDefault();
 
-    const formId = document.getElementById("prodFormId").value.trim();
-    const name = document.getElementById("prodInputName").value.trim();
-    const category = document.getElementById("prodInputCategory").value;
-    const price = Number(document.getElementById("prodInputPrice").value);
-    const origPrice = Number(document.getElementById("prodInputOrigPrice").value || Math.round(price * 1.3));
-    const image = document.getElementById("prodInputImage").value.trim();
-    const desc = document.getElementById("prodInputDesc").value.trim();
-
-    const price05 = Number(document.getElementById("prodInputPrice05").value || price);
-    const price10 = Number(document.getElementById("prodInputPrice10").value || (price + 400));
-    const price15 = Number(document.getElementById("prodInputPrice15").value || (price + 800));
-    const price20 = Number(document.getElementById("prodInputPrice20").value || (price + 1200));
-    const price30 = price + 2000;
-    const coolingP = Number(document.getElementById("prodInputCoolingPrice").value || 50);
-
-    const isVeg = document.getElementById("prodInputIsVeg").checked;
-    const isUni = document.getElementById("prodInputIsUni").checked;
-    const inStock = document.getElementById("prodInputInStock").checked;
-
-    // Read weight, cooling, and flavours toggles
-    const hasWeight = document.getElementById("prodInputHasWeight") ? document.getElementById("prodInputHasWeight").checked : true;
-    const hasCooling = document.getElementById("prodInputHasCooling") ? document.getElementById("prodInputHasCooling").checked : true;
-    const hasFlavours = document.getElementById("prodInputHasFlavours") ? document.getElementById("prodInputHasFlavours").checked : true;
-    const priceFlavourEl = document.getElementById("prodInputPriceFlavour");
-    const flavour = priceFlavourEl ? priceFlavourEl.value.trim() : (document.getElementById("prodInputFlavour") ? document.getElementById("prodInputFlavour").value.trim() : "");
-    const flavourPrices = {};
-    ADMIN_FLAVOUR_KEYS.forEach(f => {
-        const inp05 = document.getElementById('flavourPrice_' + f.id);
-        const inp10 = document.getElementById('flavourPrice_' + f.id + '_10');
-        const inp15 = document.getElementById('flavourPrice_' + f.id + '_15');
-        const inp20 = document.getElementById('flavourPrice_' + f.id + '_20');
-
-        const val05 = inp05 ? (Number(inp05.value) || 0) : f.defaultPrice;
-        const val10 = inp10 && inp10.value !== "" ? (Number(inp10.value) || 0) : (val05 > 0 ? (val05 + 400) : 0);
-        const val15 = inp15 && inp15.value !== "" ? (Number(inp15.value) || 0) : (val05 > 0 ? (val05 + 800) : 0);
-        const val20 = inp20 && inp20.value !== "" ? (Number(inp20.value) || 0) : (val05 > 0 ? (val05 + 1200) : 0);
-
-        flavourPrices[f.id] = val05;
-        flavourPrices[f.name] = val05;
-        if (f.altId) flavourPrices[f.altId] = val05;
-
-        flavourPrices[f.id + '_05'] = val05;
-        flavourPrices[f.id + '_10'] = val10;
-        flavourPrices[f.id + '_15'] = val15;
-        flavourPrices[f.id + '_20'] = val20;
-
-        flavourPrices[f.name + '_05'] = val05;
-        flavourPrices[f.name + '_10'] = val10;
-        flavourPrices[f.name + '_15'] = val15;
-        flavourPrices[f.name + '_20'] = val20;
-    });
-    if (flavour) {
-        flavourPrices[flavour] = price;
-        flavourPrices[flavour.toLowerCase().replace(/\s+/g, '_')] = price;
-    }
-    const flavourPricingMode = document.getElementById("prodInputFlavourPricingMode") ? document.getElementById("prodInputFlavourPricingMode").value : "tiered";
-
-    // If weight options are disabled, unify all weight variants to base price
-    const finalPrice05 = hasWeight ? price05 : price;
-    const finalPrice10 = hasWeight ? price10 : price;
-    const finalPrice15 = hasWeight ? price15 : price;
-    const finalPrice20 = hasWeight ? price20 : price;
-    const finalPrice30 = hasWeight ? price30 : price;
-    const finalCoolingP = hasCooling ? coolingP : 0;
-
-    if (!name || isNaN(price) || price <= 0) {
-        showToast("Please provide a valid product name and selling price!", "fa-solid fa-triangle-exclamation", "#f59e0b");
-        return;
-    }
-
     const saveBtn = document.getElementById("saveProductBtn");
-    if (saveBtn) {
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
-    }
 
-    let updatedProduct = null;
+    try {
+        const formId = document.getElementById("prodFormId").value.trim();
+        const name = document.getElementById("prodInputName").value.trim();
+        const category = document.getElementById("prodInputCategory").value;
+        const price = Number(document.getElementById("prodInputPrice").value);
+        const origPrice = Number(document.getElementById("prodInputOrigPrice").value || Math.round(price * 1.3));
+        const image = document.getElementById("prodInputImage").value.trim();
+        const desc = document.getElementById("prodInputDesc").value.trim();
 
-    if (formId) {
-        // Edit existing product in memory
-        const idx = AdminState.products.findIndex(p => p.id === formId || p.sql_id === formId || String(p.id) === String(formId) || String(p.sql_id) === String(formId));
-        if (idx !== -1) {
-            AdminState.products[idx] = {
-                ...AdminState.products[idx],
-                name,
-                category,
+        const price05 = Number(document.getElementById("prodInputPrice05").value || price);
+        const price10 = Number(document.getElementById("prodInputPrice10").value || (price + 400));
+        const price15 = Number(document.getElementById("prodInputPrice15").value || (price + 800));
+        const price20 = Number(document.getElementById("prodInputPrice20").value || (price + 1200));
+        const price30 = price + 2000;
+        const coolingP = Number(document.getElementById("prodInputCoolingPrice").value || 50);
+
+        const isVeg = document.getElementById("prodInputIsVeg").checked;
+        const isUni = document.getElementById("prodInputIsUni").checked;
+        const inStock = document.getElementById("prodInputInStock").checked;
+
+        // Read weight, cooling, and flavours toggles
+        const hasWeight = document.getElementById("prodInputHasWeight") ? document.getElementById("prodInputHasWeight").checked : true;
+        const hasCooling = document.getElementById("prodInputHasCooling") ? document.getElementById("prodInputHasCooling").checked : true;
+        const hasFlavours = document.getElementById("prodInputHasFlavours") ? document.getElementById("prodInputHasFlavours").checked : true;
+        const isDirectAdd = (!hasWeight && !hasCooling && !hasFlavours);
+
+        const priceFlavourEl = document.getElementById("prodInputPriceFlavour");
+        const flavour = priceFlavourEl ? priceFlavourEl.value.trim() : (document.getElementById("prodInputFlavour") ? document.getElementById("prodInputFlavour").value.trim() : "");
+        const flavourPrices = {};
+        ADMIN_FLAVOUR_KEYS.forEach(f => {
+            const inp05 = document.getElementById('flavourPrice_' + f.id);
+            const inp10 = document.getElementById('flavourPrice_' + f.id + '_10');
+            const inp15 = document.getElementById('flavourPrice_' + f.id + '_15');
+            const inp20 = document.getElementById('flavourPrice_' + f.id + '_20');
+
+            const val05 = inp05 ? (Number(inp05.value) || 0) : f.defaultPrice;
+            const val10 = inp10 && inp10.value !== "" ? (Number(inp10.value) || 0) : (val05 > 0 ? (val05 + 400) : 0);
+            const val15 = inp15 && inp15.value !== "" ? (Number(inp15.value) || 0) : (val05 > 0 ? (val05 + 800) : 0);
+            const val20 = inp20 && inp20.value !== "" ? (Number(inp20.value) || 0) : (val05 > 0 ? (val05 + 1200) : 0);
+
+            flavourPrices[f.id] = val05;
+            flavourPrices[f.name] = val05;
+            if (f.altId) flavourPrices[f.altId] = val05;
+
+            flavourPrices[f.id + '_05'] = val05;
+            flavourPrices[f.id + '_10'] = val10;
+            flavourPrices[f.id + '_15'] = val15;
+            flavourPrices[f.id + '_20'] = val20;
+
+            flavourPrices[f.name + '_05'] = val05;
+            flavourPrices[f.name + '_10'] = val10;
+            flavourPrices[f.name + '_15'] = val15;
+            flavourPrices[f.name + '_20'] = val20;
+        });
+        if (flavour) {
+            flavourPrices[flavour] = price;
+            flavourPrices[flavour.toLowerCase().replace(/\s+/g, '_')] = price;
+        }
+        const flavourPricingMode = document.getElementById("prodInputFlavourPricingMode") ? document.getElementById("prodInputFlavourPricingMode").value : "tiered";
+
+        // If weight options are disabled, unify all weight variants to base price
+        const finalPrice05 = hasWeight ? price05 : price;
+        const finalPrice10 = hasWeight ? price10 : price;
+        const finalPrice15 = hasWeight ? price15 : price;
+        const finalPrice20 = hasWeight ? price20 : price;
+        const finalPrice30 = hasWeight ? price30 : price;
+        const finalCoolingP = hasCooling ? coolingP : 0;
+
+        if (!name || isNaN(price) || price <= 0) {
+            showToast("Please provide a valid product name and selling price!", "fa-solid fa-triangle-exclamation", "#f59e0b");
+            return;
+        }
+
+        let updatedProduct = null;
+
+        if (formId) {
+            // Edit existing product in memory
+            const idx = AdminState.products.findIndex(p => p.id === formId || p.sql_id === formId || String(p.id) === String(formId) || String(p.sql_id) === String(formId));
+            if (idx !== -1) {
+                AdminState.products[idx] = {
+                    ...AdminState.products[idx],
+                    name,
+                    category,
+                    price,
+                    discount_price: price,
+                    originalPrice: origPrice,
+                    original_price: origPrice,
+                    image: image || AdminState.products[idx].image,
+                    image_url: image || AdminState.products[idx].image_url || AdminState.products[idx].image,
+                    description: desc,
+                    price_half_kg: finalPrice05,
+                    price_1kg: finalPrice10,
+                    price_1_5kg: finalPrice15,
+                    price_2kg: finalPrice20,
+                    price_3kg: finalPrice30,
+                    cooling_price_half_kg: finalCoolingP,
+                    cooling_price_charge: finalCoolingP,
+                    has_weight: hasWeight,
+                    has_cooling: hasCooling,
+                    has_flavours: hasFlavours,
+                    isDirectAdd: isDirectAdd,
+                    flavour: hasFlavours ? flavour : "",
+                    flavour_prices: hasFlavours ? flavourPrices : {},
+                    flavour_pricing_mode: flavourPricingMode,
+                    isVeg,
+                    isUniSpecial: isUni,
+                    is_available: inStock
+                };
+                updatedProduct = AdminState.products[idx];
+            } else {
+                updatedProduct = {
+                    id: formId,
+                    name, category, price, discount_price: price, originalPrice: origPrice, original_price: origPrice,
+                    image, image_url: image, description: desc,
+                    price_half_kg: price05, price_1kg: price10, price_1_5kg: price15, price_2kg: price20, price_3kg: price30,
+                    cooling_price_half_kg: coolingP, cooling_price_charge: coolingP, isVeg, isUniSpecial: isUni, is_available: inStock
+                };
+                AdminState.products.unshift(updatedProduct);
+            }
+
+            // Persist overrides locally in localStorage under chocoloom_price_overrides
+            savePriceOverrideLocally(formId, {
                 price,
                 discount_price: price,
                 originalPrice: origPrice,
                 original_price: origPrice,
-                image: image || AdminState.products[idx].image,
-                image_url: image || AdminState.products[idx].image_url || AdminState.products[idx].image,
+                is_available: inStock,
+                name,
+                category,
                 description: desc,
+                image: image || (updatedProduct ? updatedProduct.image : ''),
+                image_url: image || (updatedProduct ? updatedProduct.image : ''),
                 price_half_kg: finalPrice05,
                 price_1kg: finalPrice10,
                 price_1_5kg: finalPrice15,
@@ -3817,129 +3858,91 @@ window.handleProductFormSubmit = async function(e) {
                 price_3kg: finalPrice30,
                 cooling_price_half_kg: finalCoolingP,
                 cooling_price_charge: finalCoolingP,
+                cooling_price_1kg: hasCooling ? Math.round(coolingP * 1.8) : 0,
+                cooling_price_1_5kg: hasCooling ? Math.round(coolingP * 2.5) : 0,
+                cooling_price_2kg: hasCooling ? Math.round(coolingP * 3.2) : 0,
+                cooling_price_3kg: hasCooling ? Math.round(coolingP * 4.5) : 0,
                 has_weight: hasWeight,
                 has_cooling: hasCooling,
                 has_flavours: hasFlavours,
                 isDirectAdd: isDirectAdd,
                 flavour: hasFlavours ? flavour : "",
                 flavour_prices: hasFlavours ? flavourPrices : {},
-                flavour_pricing_mode: flavourPricingMode,
                 isVeg,
-                isUniSpecial: isUni,
+                isUniSpecial: isUni
+            });
+
+            // Also update in chocoloom_custom_products if was custom and un-delete
+            try {
+                let customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
+                const cIdx = customs.findIndex(c => c.id === formId || (c.sql_id && c.sql_id === formId));
+                if (cIdx !== -1) {
+                    customs[cIdx] = { ...customs[cIdx], ...updatedProduct };
+                    localStorage.setItem("chocoloom_custom_products", JSON.stringify(customs));
+                }
+                let dels = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
+                if (dels.includes(formId)) {
+                    dels = dels.filter(d => d !== formId);
+                    localStorage.setItem("chocoloom_deleted_products", JSON.stringify(dels));
+                }
+            } catch(e) {}
+        } else {
+            // Create new product
+            const newId = "choco_custom_" + Date.now();
+            updatedProduct = {
+                id: newId,
+                sql_id: null,
+                name, category, price, discount_price: price, originalPrice: origPrice, original_price: origPrice,
+                image: image || "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600",
+                image_url: image || "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600",
+                description: desc,
+                price_half_kg: finalPrice05, price_1kg: finalPrice10, price_1_5kg: finalPrice15, price_2kg: finalPrice20, price_3kg: finalPrice30,
+                cooling_price_half_kg: finalCoolingP,
+                cooling_price_charge: finalCoolingP,
+                has_weight: hasWeight,
+                has_cooling: hasCooling,
+                has_flavours: hasFlavours,
+                flavour: hasFlavours ? flavour : "",
+                flavour_prices: hasFlavours ? flavourPrices : {},
+                isDirectAdd: isDirectAdd,
+                isVeg, isUniSpecial: isUni,
                 is_available: inStock
             };
-            updatedProduct = AdminState.products[idx];
-        } else {
-            updatedProduct = {
-                id: formId,
-                name, category, price, discount_price: price, originalPrice: origPrice, original_price: origPrice,
-                image, image_url: image, description: desc,
-                price_half_kg: price05, price_1kg: price10, price_1_5kg: price15, price_2kg: price20, price_3kg: price30,
-                cooling_price_half_kg: coolingP, cooling_price_charge: coolingP, isVeg, isUniSpecial: isUni, is_available: inStock
-            };
+
             AdminState.products.unshift(updatedProduct);
+            saveCustomProductLocally(updatedProduct);
         }
 
-        // Persist overrides locally in localStorage under chocoloom_price_overrides
-        savePriceOverrideLocally(formId, {
-            price,
-            discount_price: price,
-            originalPrice: origPrice,
-            original_price: origPrice,
-            is_available: inStock,
-            name,
-            category,
-            description: desc,
-            image: image || (updatedProduct ? updatedProduct.image : ''),
-            image_url: image || (updatedProduct ? updatedProduct.image : ''),
-            price_half_kg: finalPrice05,
-            price_1kg: finalPrice10,
-            price_1_5kg: finalPrice15,
-            price_2kg: finalPrice20,
-            price_3kg: finalPrice30,
-            cooling_price_half_kg: finalCoolingP,
-            cooling_price_charge: finalCoolingP,
-            cooling_price_1kg: hasCooling ? Math.round(coolingP * 1.8) : 0,
-            cooling_price_1_5kg: hasCooling ? Math.round(coolingP * 2.5) : 0,
-            cooling_price_2kg: hasCooling ? Math.round(coolingP * 3.2) : 0,
-            cooling_price_3kg: hasCooling ? Math.round(coolingP * 4.5) : 0,
-            has_weight: hasWeight,
-            has_cooling: hasCooling,
-            has_flavours: hasFlavours,
-            isDirectAdd: isDirectAdd,
-            flavour: hasFlavours ? flavour : "",
-            flavour_prices: hasFlavours ? flavourPrices : {},
-            isVeg,
-            isUniSpecial: isUni
-        });
+        // 1. Instantly close modal, update UI, and notify user (0ms latency)
+        closeAdminModal("productModal");
+        renderProducts();
+        renderProductsStats();
+        showToast(formId ? `✅ Product "${name}" saved!` : `🎂 Added "${name}"!`, "fa-solid fa-circle-check", "#10b981");
 
-        // Also update in chocoloom_custom_products if was custom and un-delete
-        try {
-            let customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
-            const cIdx = customs.findIndex(c => c.id === formId || (c.sql_id && c.sql_id === formId));
-            if (cIdx !== -1) {
-                customs[cIdx] = { ...customs[cIdx], ...updatedProduct };
-                localStorage.setItem("chocoloom_custom_products", JSON.stringify(customs));
+        // 2. Broadcast via BroadcastChannel and cross-origin sync so customer site updates in real time
+        broadcastProductUpdate("SAVE", updatedProduct);
+
+        // 3. Asynchronously persist to Cloud Database (Supabase & Neon) and server in background without blocking
+        (async () => {
+            try {
+                await Promise.allSettled([
+                    syncProductToSupabase(updatedProduct),
+                    syncProductToNeon(updatedProduct),
+                    syncCatalogToServer()
+                ]);
+            } catch(syncErr) {
+                console.warn('Background sync error:', syncErr);
             }
-            let dels = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
-            if (dels.includes(formId)) {
-                dels = dels.filter(d => d !== formId);
-                localStorage.setItem("chocoloom_deleted_products", JSON.stringify(dels));
-            }
-        } catch(e) {}
-    } else {
-        // Create new product
-        const newId = "choco_custom_" + Date.now();
-        updatedProduct = {
-            id: newId,
-            sql_id: null,
-            name, category, price, discount_price: price, originalPrice: origPrice, original_price: origPrice,
-            image: image || "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600",
-            image_url: image || "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600",
-            description: desc,
-            price_half_kg: finalPrice05, price_1kg: finalPrice10, price_1_5kg: finalPrice15, price_2kg: finalPrice20, price_3kg: finalPrice30,
-            cooling_price_half_kg: finalCoolingP,
-            cooling_price_charge: finalCoolingP,
-            has_weight: hasWeight,
-            has_cooling: hasCooling,
-            has_flavours: hasFlavours,
-            flavour: hasFlavours ? flavour : "",
-            flavour_prices: hasFlavours ? flavourPrices : {},
-            isDirectAdd: isDirectAdd,
-            isVeg, isUniSpecial: isUni,
-            is_available: inStock
-        };
-
-        AdminState.products.unshift(updatedProduct);
-        saveCustomProductLocally(updatedProduct);
-    }
-
-    // 1. Instantly close modal, update UI, and notify user (0ms latency)
-    closeAdminModal("productModal");
-    renderProducts();
-    renderProductsStats();
-    showToast(formId ? `✅ Product "${name}" saved!` : `🎂 Added "${name}"!`, "fa-solid fa-circle-check", "#10b981");
-
-    if (saveBtn) {
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Product';
-    }
-
-    // 2. Broadcast via BroadcastChannel and cross-origin sync so customer site updates in real time
-    broadcastProductUpdate("SAVE", updatedProduct);
-
-    // 3. Asynchronously persist to Cloud Database (Supabase & Neon) and server in background without blocking
-    (async () => {
-        try {
-            await Promise.allSettled([
-                syncProductToSupabase(updatedProduct),
-                syncProductToNeon(updatedProduct),
-                syncCatalogToServer()
-            ]);
-        } catch(syncErr) {
-            console.warn('Background sync error:', syncErr);
+        })();
+    } catch(err) {
+        console.error("Error in handleProductFormSubmit:", err);
+        showToast("Error: " + (err.message || "Failed to save"), "fa-solid fa-triangle-exclamation", "#ef4444");
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Product';
         }
-    })();
+    }
 };
 
 // Quick 1-Click Price Update Modal
