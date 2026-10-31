@@ -1,0 +1,85 @@
+{
+  "id": "/?source=pwa",
+  "name": "Chocoloom - Artisan Bakery & Sweets",
+  "short_name": "Chocoloom",
+  "description": "Order delicious artisan chocolates, custom cakes, pastries, and gourmet desserts online with instant delivery.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#faf8ff",
+  "theme_color": "#7c5cfc",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": [
+    "food",
+    "shopping",
+    "lifestyle"
+  ],
+  "icons": [
+    {
+      "src": "assets/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Order Cakes & Treats",
+      "short_name": "Order",
+      "description": "Browse gourmet chocolates, cakes and desserts",
+      "url": "./order.html",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "ChocoWallet VIP Card",
+      "short_name": "Wallet",
+      "description": "Access your cashback balance and tap-to-pay card",
+      "url": "./chocowallet.html",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Uni Chocoloom",
+      "short_name": "Campus",
+      "description": "Student discounts and midnight hostel delivery",
+      "url": "./uni-chocoloom.html",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

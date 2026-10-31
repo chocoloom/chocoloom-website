@@ -3,7 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <base href="/">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <!-- Progressive Web App & Chrome Mobile App Installability -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#7c5cfc">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Chocoloom">
+    <meta name="application-name" content="Chocoloom">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="assets/icons/icon-512x512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512x512.png">
     <title>Uni Chocoloom - College Student Store | Chocolates, Cakes & Snacks</title>
     <meta name="description" content="Order handcrafted artisan chocolates, bento birthday cakes, gooey desserts, and midnight snacks with Flat 25% Student Discount on Uni Chocoloom.">
     <link rel="icon" type="image/png" href="assets/logo.png">
@@ -301,10 +314,6 @@
         <!-- ==================== BESPOKE STUDIO & CUSTOM CREATIONS ==================== -->
         <section class="bespoke-custom-section" id="bespokeCustomSection">
             <div class="bespoke-section-header">
-                <div class="bespoke-pill-badge">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span>Bespoke Studio & Custom Creations</span>
-                </div>
                 <h2 class="bespoke-section-title">Design Your Custom Celebrations 🎂</h2>
                 <p class="bespoke-section-subtitle">
                     Turn your vision into reality: upload reference photos from Pinterest or Instagram, build multi-step tiered cakes, or curate a luxury Chocoloom Wave Box.
@@ -1102,5 +1111,6 @@
     <script src="data.js?v=6.6"></script>
     <script src="react-components.js?v=2.0"></script>
     <script src="app.js?v=9.3"></script>
+    <script src="pwa.js" defer></script>
 </body>
 </html>

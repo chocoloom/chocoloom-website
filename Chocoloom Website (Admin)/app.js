@@ -269,7 +269,8 @@ const AppState = {
     trackingInterval: null,
     customerProfile: savedCustProfile,
     currentUser: savedUserSession,
-    activeOrder: null
+    activeOrder: null,
+    showAllCoupons: false
 };
 
 window.saveCustomerField = function(field, value) {
@@ -1450,7 +1451,16 @@ function applyNeonProductsToCatalog(liveProducts, showToastNotification = false)
             has_weight: hasWeight,
             has_cooling: hasCooling,
             isDirectAdd: isDirectAdd,
-            is_available: r.is_available !== false,
+            is_available: (() => {
+                // Honour admin override for is_available if one exists (always takes precedence over Neon DB)
+                try {
+                    const adminOverrides = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
+                    const normName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const over = adminOverrides[id] || (normName ? adminOverrides[normName] : null) || adminOverrides[name.toLowerCase().trim()];
+                    if (over && over.is_available !== undefined) return Boolean(over.is_available);
+                } catch(e) {}
+                return r.is_available !== false;
+            })(),
             stock: Number(r.stock || 100),
             restaurantId: rest.id || 'rest_chocoloom_flagship',
             restaurantName: rest.name || 'Chocoloom Flagship Bakery & Confectionery'
@@ -1496,34 +1506,56 @@ window.loadCatalogFromNeon = async function(showToast = false) {
     return false;
 };
 
-// Fetch all products directly from Supabase (Available and Unavailable for complete price & stock synchronization)
+// Fetch all products directly from Supabase (Egress Optimized with Client-Side 10-min Cache)
 async function fetchLiveProductsFromSupabase() {
+    const CACHE_KEY = 'chocoloom_products_cache_v2';
+    const CACHE_TTL_MS = 600000; // 10 minutes cache TTL
+    const PRODUCT_SELECT_COLUMNS = 'id, name, price, discount_price, original_price, price_half_kg, price_1kg, price_1_5kg, price_2kg, price_3kg, cooling_price_half_kg, cooling_price_1kg, cooling_price_1_5kg, cooling_price_2kg, cooling_price_3kg, is_available';
+
+    // 0. Check client-side memory/session cache first (0 bytes egress!)
+    try {
+        const rawCached = sessionStorage.getItem(CACHE_KEY);
+        if (rawCached) {
+            const cached = JSON.parse(rawCached);
+            if (cached && cached.timestamp && (Date.now() - cached.timestamp < CACHE_TTL_MS) && Array.isArray(cached.data)) {
+                return cached.data;
+            }
+        }
+    } catch (cacheReadErr) {}
+
     const client = getSupabaseClient();
     if (client) {
         try {
             const { data, error } = await client
                 .from('products')
-                .select('*');
-            if (!error && Array.isArray(data) && data.length > 0) return data;
+                .select(PRODUCT_SELECT_COLUMNS);
+            if (!error && Array.isArray(data) && data.length > 0) {
+                try {
+                    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data }));
+                } catch(e) {}
+                return data;
+            }
         } catch (e) {
             console.warn('Supabase JS query error, falling back to REST fetch:', e);
         }
     }
 
-    // Direct REST API fallback with cache-busting
+    // Direct REST API fallback
     try {
-        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*&_t=${Date.now()}`, {
-            cache: 'no-store',
+        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=${encodeURIComponent(PRODUCT_SELECT_COLUMNS)}`, {
             headers: {
                 'apikey': SUPABASE_CONFIG.anonKey,
-                'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`,
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache'
+                'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
             }
         });
         if (res.ok) {
             const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) return data;
+            if (Array.isArray(data) && data.length > 0) {
+                try {
+                    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data }));
+                } catch(e) {}
+                return data;
+            }
         }
     } catch (e) {
         console.warn('Supabase REST fetch error:', e);
@@ -1614,8 +1646,26 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
             }
             if (liveItem.is_available !== undefined) {
                 const itemIsAvail = (liveItem.is_available !== false && liveItem.is_available !== 'false' && liveItem.is_available !== 0 && liveItem.is_available !== '0');
-                if (match.is_available !== itemIsAvail) {
-                    match.is_available = itemIsAvail;
+                const overrideKey = match.sql_id || match.id;
+                let effectiveIsAvail = itemIsAvail;
+                try {
+                    const adminOverrides = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
+                    const normName = (match.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const over = adminOverrides[overrideKey] || adminOverrides[match.id] || (normName ? adminOverrides[normName] : null) || (match.name ? adminOverrides[match.name.toLowerCase().trim()] : null);
+                    if (over && over.is_available !== undefined) {
+                        if (over.is_available === false || over.is_available === 'false' || over.is_available === 0 || over.is_available === '0') {
+                            effectiveIsAvail = false;
+                        } else if (itemIsAvail) {
+                            effectiveIsAvail = true;
+                        }
+                    }
+                } catch(e) {}
+                // If live cloud database explicitly marked item as out of stock, live DB takes absolute precedence
+                if (!itemIsAvail) {
+                    effectiveIsAvail = false;
+                }
+                if (match.is_available !== effectiveIsAvail) {
+                    match.is_available = effectiveIsAvail;
                     anyPriceUpdated = true;
                 }
             }
@@ -1746,7 +1796,17 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 cooling_price_1_5kg: Number(lp.cooling_price_1_5kg || 199),
                 cooling_price_2kg: Number(lp.cooling_price_2kg || 200),
                 cooling_price_3kg: Number(lp.cooling_price_3kg || 299),
-                is_available: lp.is_available !== false,
+                is_available: (() => {
+                    const lpIsAvail = (lp.is_available !== false && lp.is_available !== 'false' && lp.is_available !== 0 && lp.is_available !== '0');
+                    if (!lpIsAvail) return false;
+                    try {
+                        const ao = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
+                        const lpId = lp.id; const lpNorm = (lp.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+                        const ov = ao[lpId] || (lpNorm ? ao[lpNorm] : null) || (lp.name ? ao[lp.name.toLowerCase().trim()] : null);
+                        if (ov && ov.is_available !== undefined) return Boolean(ov.is_available);
+                    } catch(e) {}
+                    return true;
+                })(),
                 has_weight: hasW,
                 has_cooling: hasC,
                 has_flavours: hasF,
@@ -1768,7 +1828,7 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
             try {
                 localStorage.setItem('chocoloom_db_catalog_cache', JSON.stringify(dbCache));
                 const curO = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
-                localStorage.setItem('chocoloom_price_overrides', JSON.stringify({ ...curO, ...dbCache }));
+                localStorage.setItem('chocoloom_price_overrides', JSON.stringify({ ...dbCache, ...curO }));
             } catch(e) {}
         }
     } catch(e) {}
@@ -1833,6 +1893,19 @@ function subscribeToSupabaseRealtime() {
                                 });
                             }
                             syncSupabaseProducts([payload.new], false);
+                            // Update client-side cache dynamically without re-querying
+                            try {
+                                const rawCached = sessionStorage.getItem('chocoloom_products_cache_v2');
+                                if (rawCached) {
+                                    const cachedObj = JSON.parse(rawCached);
+                                    if (Array.isArray(cachedObj.data)) {
+                                        const idx = cachedObj.data.findIndex(p => p.id === payload.new.id);
+                                        if (idx !== -1) cachedObj.data[idx] = { ...cachedObj.data[idx], ...payload.new };
+                                        else cachedObj.data.push(payload.new);
+                                        sessionStorage.setItem('chocoloom_products_cache_v2', JSON.stringify(cachedObj));
+                                    }
+                                }
+                            } catch(e) {}
                         }
                     } else if (payload.eventType === 'DELETE') {
                         const oldId = payload.old?.id;
@@ -1906,27 +1979,32 @@ async function initSupabaseSync() {
 }
 
 // Background Passive Polling: Check Cloud database fallback (Realtime WebSocket handles instant push)
+// Optimized to 10 minutes to minimize Supabase Egress (Realtime WebSocket handles live push)
 if (typeof window !== 'undefined') {
     setInterval(async () => {
         try {
             if (document.visibilityState === 'visible') {
-                if (typeof window.loadCatalogFromSupabase === 'function') {
+                const rawCached = sessionStorage.getItem('chocoloom_products_cache_v2');
+                const isExpired = !rawCached || (Date.now() - (JSON.parse(rawCached)?.timestamp || 0) > 600000);
+                if (isExpired && typeof window.loadCatalogFromSupabase === 'function') {
                     await window.loadCatalogFromSupabase(false);
                 }
             }
         } catch (e) {}
-    }, 120000);
+    }, 600000);
 
-    // Auto-refresh live catalog immediately when user switches back to this tab
+    // Auto-refresh live catalog only if cache has truly expired when returning to tab
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
-            if (typeof window.loadCatalogFromSupabase === 'function') window.loadCatalogFromSupabase(false);
+            try {
+                const rawCached = sessionStorage.getItem('chocoloom_products_cache_v2');
+                const isExpired = !rawCached || (Date.now() - (JSON.parse(rawCached)?.timestamp || 0) > 600000);
+                if (isExpired && typeof window.loadCatalogFromSupabase === 'function') {
+                    window.loadCatalogFromSupabase(false);
+                }
+            } catch(e) {}
             if (typeof loadServerCatalogOverrides === 'function') loadServerCatalogOverrides();
         }
-    });
-
-    window.addEventListener('focus', () => {
-        if (typeof window.loadCatalogFromSupabase === 'function') window.loadCatalogFromSupabase(false);
     });
 }
 
@@ -1996,10 +2074,13 @@ async function loadServerCatalogOverrides() {
                             }
                         }
 
-                        if (data.overrides && Object.keys(data.overrides).length > 0 && !window._neonDatabaseLoaded) {
+                        if (data.overrides && Object.keys(data.overrides).length > 0) {
                             const curO = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
-                            if (JSON.stringify(curO) !== JSON.stringify({ ...curO, ...data.overrides })) {
-                                localStorage.setItem("chocoloom_price_overrides", JSON.stringify({ ...curO, ...data.overrides }));
+                            // Always merge admin overrides (stock/availability). Admin is_available overrides
+                            // must take absolute precedence even when Neon/Supabase DB is loaded.
+                            const merged = { ...curO, ...data.overrides };
+                            if (JSON.stringify(curO) !== JSON.stringify(merged)) {
+                                localStorage.setItem("chocoloom_price_overrides", JSON.stringify(merged));
                                 hasChanges = true;
                             }
                         }
@@ -2032,17 +2113,16 @@ async function loadServerCatalogOverrides() {
                                 hasChanges = true;
                             }
                         }
-                        if (hasChanges) {
-                            if (typeof window.invalidateProductsCache === "function") window.invalidateProductsCache();
-                            if (typeof syncLiveCatalogState === "function") syncLiveCatalogState();
-                            if (typeof syncCartItemPrices === "function") syncCartItemPrices();
-                            if (typeof renderCategories === "function") renderCategories();
-                            if (typeof renderFilterPills === "function") renderFilterPills();
-                            if (typeof renderProductsGrid === "function") renderProductsGrid();
-                            if (typeof renderBanners === "function") renderBanners();
-                            if (typeof updateCartUI === "function") updateCartUI();
-                            if (typeof updateStoreOperatingStatusUI === "function") updateStoreOperatingStatusUI();
-                        }
+                        // Always ensure catalog state is synchronized and UI reflects latest overrides
+                        if (typeof window.invalidateProductsCache === "function") window.invalidateProductsCache();
+                        if (typeof syncLiveCatalogState === "function") syncLiveCatalogState();
+                        if (typeof syncCartItemPrices === "function") syncCartItemPrices();
+                        if (typeof renderCategories === "function") renderCategories();
+                        if (typeof renderFilterPills === "function") renderFilterPills();
+                        if (typeof renderProductsGrid === "function") renderProductsGrid();
+                        if (typeof renderBanners === "function") renderBanners();
+                        if (typeof updateCartUI === "function") updateCartUI();
+                        if (typeof updateStoreOperatingStatusUI === "function") updateStoreOperatingStatusUI();
                         break;
                     }
                 }
@@ -5384,7 +5464,23 @@ window.invalidateProductsCache = function() {
 };
 
 function getAllProducts() {
-    if (_cachedProductsList) return _cachedProductsList;
+    if (_cachedProductsList) {
+        // Always ensure live out-of-stock flags are strictly respected
+        try {
+            const liveOverrides = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
+            _cachedProductsList.forEach(item => {
+                const key = item.sql_id || item.id;
+                const normName = item.name ? item.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+                const over = liveOverrides[key] || liveOverrides[item.id] || (normName ? liveOverrides[normName] : null) || (item.name ? liveOverrides[item.name.toLowerCase().trim()] : null);
+                if (over && over.is_available !== undefined) {
+                    if (over.is_available === false || over.is_available === 'false' || over.is_available === 0 || over.is_available === '0') {
+                        item.is_available = false;
+                    }
+                }
+            });
+        } catch(e) {}
+        return _cachedProductsList;
+    }
 
     let list = [];
     const seen = new Set();
@@ -5434,7 +5530,13 @@ function getAllProducts() {
         const normName = item.name ? item.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
         const over = priceOverrides[key] || priceOverrides[item.id] || (normName ? priceOverrides[normName] : null) || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
         if (over) {
-            if (over.is_available !== undefined) item.is_available = Boolean(over.is_available);
+            if (over.is_available !== undefined) {
+                if (over.is_available === false || over.is_available === 'false' || over.is_available === 0 || over.is_available === '0') {
+                    item.is_available = false;
+                } else if (item.is_available !== false) {
+                    item.is_available = Boolean(over.is_available);
+                }
+            }
             if (over.price !== undefined) item.price = Number(over.price);
             if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
             if (over.name) item.name = over.name;
@@ -6215,10 +6317,14 @@ function renderDishItem(dish, restaurant) {
 }
 
 window.openCart = function() {
+    if (typeof AppState !== 'undefined') {
+        AppState.showAllCoupons = false;
+    }
     const drawer = document.getElementById('cartDrawer');
     const overlay = document.getElementById('cartOverlay');
     if (drawer) drawer.classList.add('open');
     if (overlay) overlay.classList.add('open');
+    if (typeof updateCartUI === 'function') updateCartUI();
 };
 
 window.closeCart = function() {
@@ -7523,7 +7629,7 @@ function updateCartUI() {
         <!-- Apply Coupon & All Offers Section -->
         <div class="cart-offers-section">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                <div style="font-size: 13.5px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 7px;">
+                <div style="font-size: 13.5px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 7px; cursor: pointer; user-select: none;" onclick="window.toggleAllCouponsView()" title="Click to view/hide offers">
                     <i class="fa-solid fa-tags" style="color: var(--primary); font-size: 14px;"></i>
                     <span>Apply Coupon & Offers</span>
                 </div>
@@ -7532,9 +7638,11 @@ function updateCartUI() {
                         <i class="fa-solid fa-xmark"></i> Remove
                     </button>
                 ` : `
-                    <span style="font-size: 11px; font-weight: 800; color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 999px;">
-                        7 OFFERS AVAILABLE
-                    </span>
+                    <button type="button" onclick="window.toggleAllCouponsView()" style="border: none; background: transparent; padding: 0; cursor: pointer;">
+                        <span style="font-size: 11px; font-weight: 800; color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;">
+                            7 OFFERS AVAILABLE <i class="fa-solid ${AppState.showAllCoupons ? 'fa-chevron-up' : 'fa-chevron-down'}" style="font-size: 9px;"></i>
+                        </span>
+                    </button>
                 `}
             </div>
 
@@ -7553,7 +7661,7 @@ function updateCartUI() {
                         </div>
                     </div>
                     <button type="button" onclick="window.toggleAllCouponsView()" style="background: #fff; border: 1px solid #86efac; color: #15803d; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; cursor: pointer;">
-                        Change
+                        ${AppState.showAllCoupons ? 'Close' : 'Change'}
                     </button>
                 </div>
             ` : `
@@ -7573,15 +7681,15 @@ function updateCartUI() {
             <button type="button" onclick="window.toggleAllCouponsView()" style="width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s ease;">
                 <span style="font-size: 12px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 7px;">
                     <i class="fa-solid fa-gift" style="color: #8b5cf6;"></i>
-                    <span>${(AppState.showAllCoupons === false) ? 'View All Available Offers (7 Offers)' : 'Available Coupons & Offers (7 Available)'}</span>
+                    <span>${AppState.showAllCoupons ? 'Available Coupons & Offers (7 Available)' : 'View All Available Offers (7 Offers)'}</span>
                 </span>
                 <span style="font-size: 12px; color: #64748b; font-weight: 800;">
-                    ${(AppState.showAllCoupons === false) ? '<i class="fa-solid fa-chevron-down"></i>' : '<i class="fa-solid fa-chevron-up"></i>'}
+                    ${AppState.showAllCoupons ? '<i class="fa-solid fa-chevron-up"></i>' : '<i class="fa-solid fa-chevron-down"></i>'}
                 </span>
             </button>
 
             <!-- All Available Offers Scroll List -->
-            <div id="allCouponsContainer" class="cart-offers-scroll-list" style="display: ${(AppState.showAllCoupons === false) ? 'none' : 'flex'}; flex-direction: column; gap: 10px; margin-top: 12px; max-height: 380px; overflow-y: auto; padding-right: 4px;">
+            <div id="allCouponsContainer" class="cart-offers-scroll-list" style="display: ${AppState.showAllCoupons ? 'flex' : 'none'}; flex-direction: column; gap: 10px; margin-top: 12px; max-height: 380px; overflow-y: auto; padding-right: 4px;">
                 ${(typeof window.renderAllAvailableCouponsHTML === 'function') ? window.renderAllAvailableCouponsHTML(itemTotal) : ''}
             </div>
         </div>
@@ -7849,6 +7957,7 @@ window.applyDiwaliCoupon = function() {
         return false;
     }
     AppState.activeCoupon = 'DIWALI40';
+    AppState.showAllCoupons = false;
     if (typeof updateCartUI === 'function') {
         updateCartUI();
     }
@@ -7860,6 +7969,7 @@ window.applyDiwaliCoupon = function() {
 
 window.removeCoupon = function() {
     AppState.activeCoupon = null;
+    AppState.showAllCoupons = false;
     if (typeof updateCartUI === 'function') {
         updateCartUI();
     }
@@ -8048,6 +8158,7 @@ window.applySpecificCoupon = function(code) {
             }
         }
         AppState.activeCoupon = 'DIWALI250';
+        AppState.showAllCoupons = false;
         updateCartUI();
         if (typeof showToast === 'function') {
             showToast('🪔 DIWALI250 applied! Flat ₹250 OFF on orders ₹699+', 'fa-solid fa-sparkles', '#16a34a');
@@ -8064,6 +8175,7 @@ window.applySpecificCoupon = function(code) {
             }
         }
         AppState.activeCoupon = clean;
+        AppState.showAllCoupons = false;
         updateCartUI();
         if (typeof showToast === 'function') {
             showToast('✨ ' + clean + ' applied! Flat 50% OFF up to ₹150', 'fa-solid fa-tag', '#16a34a');
@@ -8077,6 +8189,7 @@ window.applySpecificCoupon = function(code) {
             }
         }
         AppState.activeCoupon = 'CHOCO100';
+        AppState.showAllCoupons = false;
         updateCartUI();
         if (typeof showToast === 'function') {
             showToast('💰 CHOCO100 applied! Flat ₹100 OFF on orders ₹499+', 'fa-solid fa-tag', '#16a34a');
@@ -8090,6 +8203,7 @@ window.applySpecificCoupon = function(code) {
             }
         }
         AppState.activeCoupon = clean;
+        AppState.showAllCoupons = false;
         updateCartUI();
         if (typeof showToast === 'function') {
             showToast('🚚 Free Delivery applied! You save delivery fee', 'fa-solid fa-truck-fast', '#16a34a');
@@ -8103,6 +8217,7 @@ window.applySpecificCoupon = function(code) {
             }
         }
         AppState.activeCoupon = 'PARTY20';
+        AppState.showAllCoupons = false;
         updateCartUI();
         if (typeof showToast === 'function') {
             showToast('🎉 PARTY20 applied! Flat 20% OFF up to ₹300', 'fa-solid fa-tags', '#16a34a');
@@ -8112,6 +8227,7 @@ window.applySpecificCoupon = function(code) {
 
     // Generic fallback for any other valid code
     AppState.activeCoupon = clean;
+    AppState.showAllCoupons = false;
     updateCartUI();
     if (typeof showToast === 'function') {
         showToast(`Coupon ${clean} applied!`, 'fa-solid fa-check', '#16a34a');
@@ -8131,7 +8247,7 @@ window.applyManualCouponInput = function() {
 };
 
 window.toggleAllCouponsView = function() {
-    AppState.showAllCoupons = (AppState.showAllCoupons === false) ? true : false;
+    AppState.showAllCoupons = !AppState.showAllCoupons;
     if (typeof updateCartUI === 'function') updateCartUI();
 };
 
@@ -8162,6 +8278,7 @@ window.applyUniCoupon = function() {
         return;
     }
     AppState.activeCoupon = 'UNICHOCO';
+    AppState.showAllCoupons = false;
     updateCartUI();
     showToast('🎓 UNICHOCO 25% student discount applied!', 'fa-solid fa-graduation-cap', '#16a34a');
 };
@@ -11167,61 +11284,90 @@ function validateActiveSessionAgainstCloud(cloudUsers) {
     }
 }
 
-// Synchronize users database from Supabase (Primary Production Database - Single Source of Truth)
+// Synchronize user account from Supabase (Egress Optimized: Single-User Validation)
 async function syncUsersFromSupabase() {
     try {
+        // EGRESS OPTIMIZATION: If visitor is a guest / not logged in, skip fetching user data completely!
+        if (!AppState || !AppState.currentUser) {
+            return false;
+        }
+
         const client = getSupabaseClient();
-        let cloudData = null;
+        const cur = AppState.currentUser;
+        const curId = cur.id;
+        const curPhone = String(cur.phone || '').replace(/\D/g, '').slice(-10);
+        const curEmail = String(cur.email || '').trim().toLowerCase();
+
+        let userData = null;
+        const USER_COLS = 'id, name, email, phone, role, is_student, college_id, college_name, addresses, created_at';
+
         if (client) {
-            const { data, error } = await client.from('users').select('*').order('created_at', { ascending: false });
-            if (!error && Array.isArray(data)) {
-                cloudData = data;
+            let q = client.from('users').select(USER_COLS);
+            if (curId) {
+                q = q.eq('id', curId);
+            } else if (curPhone) {
+                q = q.eq('phone', curPhone);
+            } else if (curEmail) {
+                q = q.eq('email', curEmail);
+            }
+            const { data, error } = await q.maybeSingle();
+            if (!error && data) {
+                userData = data;
             }
         }
-        if (!cloudData) {
-            // Direct REST fallback for Supabase
-            const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/users?select=*&order=created_at.desc`, {
+
+        if (!userData && (curId || curPhone || curEmail)) {
+            // Direct REST fallback for single user
+            let filter = curId ? `id=eq.${encodeURIComponent(curId)}` : (curPhone ? `phone=eq.${encodeURIComponent(curPhone)}` : `email=eq.${encodeURIComponent(curEmail)}`);
+            const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/users?select=${encodeURIComponent(USER_COLS)}&${filter}&limit=1`, {
                 headers: {
                     'apikey': SUPABASE_CONFIG.anonKey,
                     'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
                 }
             });
             if (res.ok) {
-                const data = await res.json();
-                if (Array.isArray(data)) {
-                    cloudData = data;
+                const arr = await res.json();
+                if (Array.isArray(arr) && arr.length > 0) {
+                    userData = arr[0];
                 }
             }
         }
 
-        if (Array.isArray(cloudData)) {
-            const mapped = cloudData.map(u => ({
-                id: u.id,
-                name: u.name,
-                email: u.email,
-                phone: u.phone,
-                password: u.password,
-                role: u.role || 'Customer',
-                isStudent: Boolean(u.is_student),
-                college: u.college_id,
-                collegeName: u.college_name,
-                address: Array.isArray(u.addresses) && u.addresses.length > 0 ? (u.addresses[0].address || u.addresses[0]) : null,
-                addresses: Array.isArray(u.addresses) ? u.addresses : [],
-                createdAt: u.created_at
-            }));
+        if (userData) {
+            const mappedUser = {
+                id: userData.id,
+                name: userData.name,
+                email: userData.email,
+                phone: userData.phone,
+                role: userData.role || 'Customer',
+                isStudent: Boolean(userData.is_student),
+                college: userData.college_id,
+                collegeName: userData.college_name,
+                address: Array.isArray(userData.addresses) && userData.addresses.length > 0 ? (userData.addresses[0].address || userData.addresses[0]) : null,
+                addresses: Array.isArray(userData.addresses) ? userData.addresses : [],
+                createdAt: userData.created_at
+            };
 
-            // Supabase is the single source of truth: replace local cache with cloud state
+            // Update session with fresh user data
+            AppState.currentUser = { ...AppState.currentUser, ...mappedUser };
             try {
-                localStorage.setItem('chocoloom_users_db', JSON.stringify(mapped));
+                localStorage.setItem('chocoloom_user_session', JSON.stringify(AppState.currentUser));
             } catch (e) {}
 
-            // Validate active logged-in session: if user was deleted from database, log them out!
-            validateActiveSessionAgainstCloud(mapped);
-            console.log(`✅ Loaded ${mapped.length} users from Supabase (Primary Database)`);
+            console.log(`✅ Verified active user session for ${mappedUser.name || 'User'} (Egress Optimized: 1 record)`);
             return true;
+        } else if (curId || curPhone) {
+            // User was removed from cloud database - safely clear session
+            console.warn('⚠️ User account not found in Supabase. Clearing stale session.');
+            try {
+                localStorage.removeItem('chocoloom_user_session');
+                localStorage.removeItem('chocoloom_customer_profile');
+            } catch(e) {}
+            AppState.currentUser = null;
+            if (typeof updateAuthUI === 'function') updateAuthUI();
         }
     } catch (e) {
-        console.warn('Supabase users sync fallback:', e);
+        console.warn('Supabase user sync fallback:', e);
     }
     return false;
 }
@@ -13045,31 +13191,32 @@ window.openOrdersModal = async function() {
         const cleanPhone = String(currentUser.phone || '').replace(/\D/g, '').slice(-10);
         const cleanEmail = String(currentUser.email || '').trim().toLowerCase();
 
+        const ORDER_HISTORY_COLS = 'id, order_number, status, items, final_total, created_at, delivery_address, restaurant_name, payment_method, payment_status';
         if (client && (cleanPhone || cleanEmail)) {
             let cloudOrders = null;
             if (cleanPhone && cleanEmail) {
                 const { data } = await client
                     .from('orders')
-                    .select('*')
+                    .select(ORDER_HISTORY_COLS)
                     .or(`customer_phone.ilike.%${cleanPhone}%,customer_email.ilike.%${cleanEmail}%`)
                     .order('created_at', { ascending: false })
-                    .limit(25);
+                    .limit(20);
                 cloudOrders = data;
             } else if (cleanPhone) {
                 const { data } = await client
                     .from('orders')
-                    .select('*')
+                    .select(ORDER_HISTORY_COLS)
                     .ilike('customer_phone', `%${cleanPhone}%`)
                     .order('created_at', { ascending: false })
-                    .limit(25);
+                    .limit(20);
                 cloudOrders = data;
             } else if (cleanEmail) {
                 const { data } = await client
                     .from('orders')
-                    .select('*')
+                    .select(ORDER_HISTORY_COLS)
                     .ilike('customer_email', `%${cleanEmail}%`)
                     .order('created_at', { ascending: false })
-                    .limit(25);
+                    .limit(20);
                 cloudOrders = data;
             }
 
@@ -13883,6 +14030,24 @@ const GAME_ZONE_DATA = [
         btnText: 'ENTER DIWALI DRAW',
         btnIcon: 'fa-wand-magic-sparkles',
         action: 'openDiwaliDrawModal'
+    },
+    {
+        id: 'event_bhimavaram_workshop',
+        category: 'workshop',
+        categoryName: 'Offline Workshop',
+        title: 'Bhimavaram Offline Workshop 🍫🎂',
+        subtitle: '🔔 Event Coming Soon • Live Masterclass in Bhimavaram',
+        description: '🎉 Exciting news! Chocoloom\'s first hands-on offline workshop is coming soon to Bhimavaram! Learn chocolate tempering, cake styling & artisan truffle moulding — right here in your city. Register now to get early-bird WhatsApp alerts!',
+        image: 'assets/workshop_banner.jpg',
+        badge: '🔔 EVENT SOON',
+        badgeColor: 'linear-gradient(135deg, #db2777, #f59e0b)',
+        rating: 5.0,
+        players: 'Limited Seats • Register Now',
+        status: 'Bhimavaram – Registrations Open Soon!',
+        cost: 'OFFLINE EVENT',
+        btnText: 'NOTIFY ME 🔔',
+        btnIcon: 'fa-bell',
+        action: 'openWorkshopModal'
     }
 ];
 
@@ -14196,6 +14361,217 @@ window.applyDiwaliCoupon = function(code) {
     }
 };
 
+// ==================== BHIMAVARAM OFFLINE WORKSHOP EVENT MODAL ====================
+window.openWorkshopModal = function() {
+    window.ensureWorkshopModalDOM();
+    const modal = document.getElementById('workshopModalBackdrop');
+    if (modal) {
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        renderWorkshopUI();
+    }
+};
+
+window.closeWorkshopModal = function() {
+    const modal = document.getElementById('workshopModalBackdrop');
+    if (modal) modal.classList.remove('open');
+    document.body.style.overflow = '';
+};
+
+window.ensureWorkshopModalDOM = function() {
+    if (document.getElementById('workshopModalBackdrop')) return;
+    const backdrop = document.createElement('div');
+    backdrop.id = 'workshopModalBackdrop';
+    backdrop.className = 'game-modal-backdrop workshop-backdrop';
+    backdrop.onclick = function(e) {
+        if (e.target === backdrop) window.closeWorkshopModal();
+    };
+    backdrop.innerHTML = `
+        <div class="game-modal-card workshop-modal-card" onclick="event.stopPropagation()">
+            <!-- Banner Image & Badges -->
+            <div class="workshop-modal-banner-wrap">
+                <img src="assets/workshop_banner.jpg" alt="Chocoloom Offline Workshop Bhimavaram" class="workshop-modal-banner-img" onerror="this.src='assets/categories/specialty_cakes.webp'">
+                <div class="workshop-modal-banner-overlay">
+                    <div class="workshop-banner-top">
+                        <span class="workshop-pill-offline">
+                            <i class="fa-solid fa-location-dot" style="color: #db2777;"></i> OFFLINE IN BHIMAVARAM
+                        </span>
+                        <span class="workshop-pill-soon">
+                            <span class="pulse-dot" style="background:#fff; width:6px; height:6px; border-radius:50%; display:inline-block;"></span> COMING SOON
+                        </span>
+                        <button type="button" class="modal-close-btn" style="position:static; margin-left:auto; background:rgba(0,0,0,0.5); color:#fff; border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;" onclick="window.closeWorkshopModal()">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <div class="workshop-banner-bottom">
+                        <h3 class="workshop-banner-title">Chocoloom Artisanal Workshop 🍫🎂</h3>
+                        <div class="workshop-banner-location">
+                            <i class="fa-solid fa-store" style="color: #f472b6;"></i>
+                            <span>Offline Masterclass • In-Person Studio, Bhimavaram</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Content Body -->
+            <div class="workshop-modal-body">
+                <p class="workshop-overview-text">
+                    Join Chocoloom's first-ever <strong>hands-on offline culinary masterclass</strong> in Bhimavaram! Learn the secret art of chocolate tempering, artisan truffle moulding, and professional cake piping directly from our pastry masters.
+                </p>
+
+                <!-- Highlights Grid -->
+                <div class="workshop-highlights-grid">
+                    <div class="workshop-highlight-item">
+                        <div class="workshop-hl-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <div>
+                            <div class="workshop-hl-title">Chocolate Tempering</div>
+                            <div class="workshop-hl-desc">Master velvet ganache, Belgian truffle dipping & chocolate bar moulding.</div>
+                        </div>
+                    </div>
+                    <div class="workshop-highlight-item">
+                        <div class="workshop-hl-icon"><i class="fa-solid fa-cake-candles"></i></div>
+                        <div>
+                            <div class="workshop-hl-title">Cake Styling & Piping</div>
+                            <div class="workshop-hl-desc">Hands-on sharp edge frosting, floral nozzles & gourmet drip techniques.</div>
+                        </div>
+                    </div>
+                    <div class="workshop-highlight-item">
+                        <div class="workshop-hl-icon"><i class="fa-solid fa-box-open"></i></div>
+                        <div>
+                            <div class="workshop-hl-title">Take-Home Hamper</div>
+                            <div class="workshop-hl-desc">Pack & carry home all chocolates & cakes you handcraft during the class.</div>
+                        </div>
+                    </div>
+                    <div class="workshop-highlight-item">
+                        <div class="workshop-hl-icon"><i class="fa-solid fa-certificate"></i></div>
+                        <div>
+                            <div class="workshop-hl-title">Official Certificate</div>
+                            <div class="workshop-hl-desc">Receive an authentic Chocoloom Masterclass Certificate & chef apron.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic RSVP / Success Form Container -->
+                <div id="workshopRsvpContainer"></div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(backdrop);
+};
+
+window.renderWorkshopUI = function() {
+    const container = document.getElementById('workshopRsvpContainer');
+    if (!container) return;
+
+    let savedRsvp = null;
+    try {
+        savedRsvp = JSON.parse(localStorage.getItem('chocoloom_workshop_rsvps') || 'null');
+    } catch(e) {}
+
+    if (savedRsvp && savedRsvp.phone) {
+        // Already registered! Show VIP status
+        container.innerHTML = `
+            <div class="workshop-success-box">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #dcfce7; color: #16a34a; font-size: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div style="font-size: 11px; font-weight: 800; color: #16a34a; letter-spacing: 0.6px; text-transform: uppercase;">
+                    🎉 VIP EARLY ACCESS PASS CONFIRMED
+                </div>
+                <h4 style="font-size: 16px; font-weight: 850; color: #065f46; margin: 4px 0 6px;">
+                    You're On The VIP List, ${savedRsvp.name || 'Foodie'}!
+                </h4>
+                <p style="font-size: 12.5px; color: #047857; margin: 0 0 12px; line-height: 1.45;">
+                    We will WhatsApp you at <strong>${savedRsvp.phone}</strong> as soon as the exact dates, venue, and early-bird ticket booking go live in Bhimavaram!
+                </p>
+                <div style="display: flex; gap: 8px; justify-content: center;">
+                    <button type="button" onclick="window.resetWorkshopRSVP()" style="background: #ffffff; border: 1px solid #a7f3d0; color: #065f46; padding: 7px 14px; border-radius: 8px; font-size: 11.5px; font-weight: 700; cursor: pointer;">
+                        Change Details
+                    </button>
+                    <button type="button" onclick="window.closeWorkshopModal()" style="background: #10b981; border: none; color: #ffffff; padding: 7px 18px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+                        Got It, Thanks!
+                    </button>
+                </div>
+            </div>
+        `;
+    } else {
+        // Show RSVP Form
+        const profile = (typeof AppState !== 'undefined' && AppState.customerProfile) ? AppState.customerProfile : {};
+        const prefillName = profile.name || '';
+        const prefillPhone = profile.phone || '';
+
+        container.innerHTML = `
+            <div class="workshop-rsvp-box">
+                <div class="workshop-rsvp-title">
+                    <i class="fa-brands fa-whatsapp" style="color: #25d366; font-size: 16px;"></i>
+                    <span>Get VIP WhatsApp Notification & Early Pass</span>
+                </div>
+                <div class="workshop-rsvp-sub">
+                    Offline batch seats are strictly limited (max 20 per batch). Register your interest below to receive first-priority booking before public announcement.
+                </div>
+                <form id="workshopRsvpForm" onsubmit="window.handleWorkshopRSVPSubmit(event)">
+                    <input type="text" id="workshopInputName" class="workshop-input-field" placeholder="Your Full Name *" required value="${prefillName}">
+                    <input type="tel" id="workshopInputPhone" class="workshop-input-field" placeholder="WhatsApp Number (10 digits) *" pattern="[0-9]{10}" maxlength="10" required value="${prefillPhone}">
+                    <select id="workshopInputCampus" class="workshop-input-field" style="cursor: pointer;">
+                        <option value="SRKR Engineering College">SRKR Engineering College (Bhimavaram)</option>
+                        <option value="Vishnu Educational Society">Vishnu Educational Society / BVRIT</option>
+                        <option value="DNR College">DNR College Campus (Bhimavaram)</option>
+                        <option value="Bhimavaram Town Area" selected>Bhimavaram Town / Local Resident</option>
+                        <option value="Other">Other Nearby Town (Palakollu, Tanuku, etc.)</option>
+                    </select>
+                    <button type="submit" class="workshop-submit-btn">
+                        <i class="fa-solid fa-bell"></i>
+                        <span>NOTIFY ME ON WHATSAPP & GET VIP PASS</span>
+                    </button>
+                </form>
+            </div>
+        `;
+    }
+};
+
+window.handleWorkshopRSVPSubmit = function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const nameEl = document.getElementById('workshopInputName');
+    const phoneEl = document.getElementById('workshopInputPhone');
+    const campusEl = document.getElementById('workshopInputCampus');
+
+    const name = nameEl ? nameEl.value.trim() : '';
+    const phone = phoneEl ? phoneEl.value.trim() : '';
+    const campus = campusEl ? campusEl.value : 'Bhimavaram Town Area';
+
+    if (!name || !phone || phone.length < 10) {
+        if (typeof showToast === 'function') {
+            showToast('Please enter your valid name & 10-digit WhatsApp number!', 'fa-solid fa-triangle-exclamation', '#ef4444');
+        }
+        return false;
+    }
+
+    const rsvpData = {
+        name: name,
+        phone: phone,
+        campus: campus,
+        timestamp: new Date().toISOString()
+    };
+
+    try {
+        localStorage.setItem('chocoloom_workshop_rsvps', JSON.stringify(rsvpData));
+    } catch(err) {}
+
+    renderWorkshopUI();
+
+    if (typeof showToast === 'function') {
+        showToast('🎉 VIP Waitlist Confirmed! We will message you on WhatsApp first.', 'fa-solid fa-certificate', '#10b981');
+    }
+    return false;
+};
+
+window.resetWorkshopRSVP = function() {
+    try {
+        localStorage.removeItem('chocoloom_workshop_rsvps');
+    } catch(err) {}
+    renderWorkshopUI();
+};
+
 window.openTambolaGame = function() {
     if (typeof filterGameZoneCategory === 'function') {
         filterGameZoneCategory('tombola');
@@ -14346,7 +14722,7 @@ function renderGameZoneContent(cat = 'all') {
 
     const countSub = document.getElementById('gameZoneCountSubtitle');
     if (countSub) {
-        countSub.textContent = `Showing ${items.length} of ${GAME_ZONE_DATA.length} playable games & challenges`;
+        countSub.textContent = `Showing ${items.length} of ${GAME_ZONE_DATA.length} playable events & games`;
     }
 
     grid.innerHTML = items.map(game => `

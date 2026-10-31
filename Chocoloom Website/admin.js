@@ -833,14 +833,37 @@ async function loadAllOrders(isUserInitiated = false) {
     let supabaseReachable = false;
     const incomingBatch = [];
 
+    const ORDER_COLUMNS = 'id, order_number, customer_name, customer_phone, delivery_address, items, final_total, payment_method, payment_status, status, created_at, updated_at, total_items, delivery_notes, is_prebooking, prebook_slot';
+
+    // 0. EGRESS OPTIMIZATION: If Supabase Realtime WebSocket is connected and this is passive polling,
+    // do a tiny 1-row delta check before downloading full order history.
+    if (!isUserInitiated && supabaseClient && AdminState.orders.length > 0 && supabaseRealtimeChannel && supabaseRealtimeChannel.state === 'joined') {
+        try {
+            const { data: latestCheck } = await supabaseClient
+                .from('orders')
+                .select('order_number, updated_at')
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            const newestInDb = latestCheck?.[0];
+            const newestInMemory = AdminState.orders?.[0];
+            if (newestInDb && newestInMemory && 
+                newestInDb.order_number === newestInMemory.order_number && 
+                newestInDb.updated_at === newestInMemory.updated_at) {
+                // Zero new orders or changes: exit immediately, saving 100% of payload egress!
+                return;
+            }
+        } catch (deltaErr) {}
+    }
+
     // 1. Try Supabase JS Client
     if (supabaseClient) {
         try {
             const { data, error } = await supabaseClient
                 .from('orders')
-                .select('*')
+                .select(ORDER_COLUMNS)
                 .order('created_at', { ascending: false })
-                .limit(100);
+                .limit(50);
 
             if (error) {
                 console.warn('Supabase order fetch error:', error.message || error);
@@ -849,7 +872,7 @@ async function loadAllOrders(isUserInitiated = false) {
                 if (data.length > 0) {
                     incomingBatch.push(...data);
                     loadedFromSupabase = true;
-                    console.log('Loaded ' + data.length + ' orders from Supabase');
+                    console.log('Loaded ' + data.length + ' orders from Supabase (Egress Optimized)');
                 } else {
                     loadedFromSupabase = true;
                     console.log('Supabase orders table reachable (0 orders found)');
@@ -863,7 +886,7 @@ async function loadAllOrders(isUserInitiated = false) {
     // Direct REST API fallback if JS client did not succeed
     if (!loadedFromSupabase) {
         try {
-            const res = await fetch(SUPABASE_CONFIG.url + '/rest/v1/orders?select=*&order=created_at.desc&limit=100', {
+            const res = await fetch(SUPABASE_CONFIG.url + '/rest/v1/orders?select=' + encodeURIComponent(ORDER_COLUMNS) + '&order=created_at.desc&limit=50', {
                 headers: {
                     'apikey': SUPABASE_CONFIG.anonKey,
                     'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
@@ -2161,12 +2184,13 @@ function initEventListeners() {
         }
     });
 
-    // High-frequency live polling fallback (every 3 seconds) to guarantee immediate order appearance
+    // EGRESS OPTIMIZATION: Smart polling fallback (45s instead of 3s)
+    // Supabase Realtime WebSocket already pushes instant orders with near-zero egress.
     setInterval(() => {
         if (!document.hidden) {
             loadAllOrders(false);
         }
-    }, 3000);
+    }, 45000);
 }
 
 function updateAudioButtonUI() {
@@ -2407,18 +2431,19 @@ window.switchAdminTab = function(tabName) {
 // Load all products directly from Supabase Cloud (with fallback to Neon / Local)
 window.loadAllProducts = async function() {
     // 1. PRIMARY: Receive all live products directly from Supabase Cloud Database!
+    const PRODUCT_COLUMNS = "id, name, description, price, discount_price, original_price, price_half_kg, price_1kg, price_1_5kg, price_2kg, price_3kg, cooling_price_half_kg, cooling_price_1kg, cooling_price_1_5kg, cooling_price_2kg, cooling_price_3kg, category, is_available, stock, image_url";
     try {
         let supaProds = null;
         if (supabaseClient) {
             try {
-                const { data, error } = await supabaseClient.from("products").select("*").order("category", { ascending: true }).order("name", { ascending: true });
+                const { data, error } = await supabaseClient.from("products").select(PRODUCT_COLUMNS).order("category", { ascending: true }).order("name", { ascending: true });
                 if (!error && Array.isArray(data) && data.length > 0) supaProds = data;
             } catch(e) {}
         }
         if (!supaProds) {
             // Direct REST API fetch to Supabase
             try {
-                const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*&order=category.asc,name.asc`, {
+                const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=${encodeURIComponent(PRODUCT_COLUMNS)}&order=category.asc,name.asc`, {
                     headers: {
                         'apikey': SUPABASE_CONFIG.anonKey,
                         'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
@@ -3108,20 +3133,53 @@ window.processAndUploadProductImage = async function(file) {
     try {
         let generatedUrl = null;
 
-        // 1. Try Supabase Storage first (if client is active)
+        // 1. Try Supabase Storage (with client-side WebP compression and 1-year immutable cache)
         if (supabaseClient && supabaseClient.storage) {
             try {
-                const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-                const fileName = `item_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+                // Compress client-side to WebP (<100KB) before uploading to save Supabase Egress
+                const compressedBlob = await new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let w = img.width;
+                        let h = img.height;
+                        const maxDim = 1000;
+                        if (w > maxDim || h > maxDim) {
+                            if (w > h) {
+                                h = Math.round((h * maxDim) / w);
+                                w = maxDim;
+                            } else {
+                                w = Math.round((w * maxDim) / h);
+                                h = maxDim;
+                            }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        canvas.toBlob((b) => resolve(b || file), 'image/webp', 0.82);
+                    };
+                    img.onerror = () => resolve(file);
+                    img.src = URL.createObjectURL(file);
+                });
+
+                const uploadPayload = (compressedBlob && compressedBlob.size) ? compressedBlob : file;
+                const fileName = `item_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.webp`;
+                
+                // 1-year browser cache (31536000s) prevents repeated downloads from Supabase Storage
                 const { data, error } = await supabaseClient.storage
                     .from('products')
-                    .upload(fileName, file, { cacheControl: '3600', upsert: true });
+                    .upload(fileName, uploadPayload, { 
+                        cacheControl: '31536000', 
+                        upsert: true,
+                        contentType: 'image/webp'
+                    });
 
                 if (!error && data) {
                     const { data: pubData } = supabaseClient.storage.from('products').getPublicUrl(fileName);
                     if (pubData && pubData.publicUrl) {
                         generatedUrl = pubData.publicUrl;
-                        console.log('✅ Uploaded directly to Supabase Storage:', generatedUrl);
+                        console.log('✅ Uploaded optimized WebP to Supabase Storage (1-year cache):', generatedUrl);
                     }
                 }
             } catch (supErr) {

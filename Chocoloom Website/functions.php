@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 
 // 0. Full Cross-Origin Resource Sharing (CORS) support for Admin & Website Sync across domains
 add_action('init', function() {
-     = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
+    $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
     header("Access-Control-Allow-Origin: " . $origin);
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
     header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization, X-WP-Nonce');
@@ -85,6 +85,10 @@ function chocoloom_enqueue_scripts() {
     }
     if (file_exists($dir . '/admin.js') && is_admin()) {
         wp_enqueue_script('chocoloom-admin-script', $uri . '/admin.js', array('chocoloom-data', 'supabase-js'), $admin_ver, true);
+    }
+    if (file_exists($dir . '/pwa.js')) {
+        $pwa_ver = filemtime($dir . '/pwa.js');
+        wp_enqueue_script('chocoloom-pwa', $uri . '/pwa.js', array(), $pwa_ver, true);
     }
 
     // Inject WordPress Configuration for Javascript

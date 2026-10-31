@@ -7,7 +7,20 @@
 <html lang="en">
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <!-- Progressive Web App & Chrome Mobile App Installability -->
+    <link rel="manifest" href="<?php echo get_template_directory_uri(); ?>/manifest.json">
+    <meta name="theme-color" content="#7c5cfc">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Chocoloom">
+    <meta name="application-name" content="Chocoloom">
+    <link rel="apple-touch-icon" href="<?php echo get_template_directory_uri(); ?>/assets/icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="<?php echo get_template_directory_uri(); ?>/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="<?php echo get_template_directory_uri(); ?>/assets/icons/icon-512x512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?php echo get_template_directory_uri(); ?>/assets/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?php echo get_template_directory_uri(); ?>/assets/icons/icon-512x512.png">
     <link rel="icon" type="image/png" href="<?php echo get_template_directory_uri(); ?>/assets/logo.png">
     
     <style>
@@ -297,10 +310,6 @@
         <!-- ==================== BESPOKE STUDIO & CUSTOM CREATIONS ==================== -->
         <section class="bespoke-custom-section" id="bespokeCustomSection">
             <div class="bespoke-section-header">
-                <div class="bespoke-pill-badge">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span>Bespoke Studio & Custom Creations</span>
-                </div>
                 <h2 class="bespoke-section-title">Design Your Custom Celebrations 🎂</h2>
                 <p class="bespoke-section-subtitle">
                     Turn your vision into reality: upload reference photos from Pinterest or Instagram, build multi-step tiered cakes, or curate a luxury Chocoloom Wave Box.
@@ -1095,5 +1104,6 @@
 
     <!-- Razorpay Checkout, Supabase SDK & React Suite -->
     <?php wp_footer(); ?>
+    <script src="<?php echo get_template_directory_uri(); ?>/pwa.js" defer></script>
 </body>
 </html>

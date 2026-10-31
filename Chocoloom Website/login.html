@@ -3,7 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <base href="/">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <!-- Progressive Web App & Chrome Mobile App Installability -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#7c5cfc">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Chocoloom">
+    <meta name="application-name" content="Chocoloom">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="assets/icons/icon-512x512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512x512.png">
     <title>Login & Sign Up - Chocoloom</title>
     <meta name="description" content="Sign in or create an account on Chocoloom. Fast 4-digit passcode login, instant ordering, and 25% student discounts at SRKR Engineering College.">
     <link rel="icon" type="image/png" href="assets/logo.png">
@@ -740,5 +753,6 @@
             }
         };
     </script>
+    <script src="pwa.js" defer></script>
 </body>
 </html>

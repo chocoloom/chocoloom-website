@@ -14,3 +14,8 @@ npm-debug.log*
 *.bak
 scratch/
 *categories_backup/
+
+# Always track PWA App icons
+!assets/icons/
+!assets/icons/*
+!**/assets/icons/*

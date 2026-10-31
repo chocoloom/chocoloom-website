@@ -37,10 +37,19 @@
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-html, body {
+html {
+    overflow-x: clip;
+    max-width: 100%;
+    touch-action: pan-x pan-y pinch-zoom;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
     overflow-x: hidden;
     max-width: 100%;
     width: 100%;
+    touch-action: pan-x pan-y pinch-zoom;
 }
 
 body {
@@ -15379,6 +15388,16 @@ html.category-view-active .bespoke-custom-section {
     background: linear-gradient(135deg, #ea580c, #f59e0b);
 }
 
+.game-action-btn.workshop {
+    background: linear-gradient(135deg, #7c5cfc, #db2777);
+    color: #ffffff;
+}
+
+.game-action-btn.workshop:hover {
+    box-shadow: 0 4px 14px rgba(219, 39, 119, 0.4);
+    transform: translateY(-1px);
+}
+
 @media (max-width: 640px) {
     .game-action-btn {
         padding: 5px 9px;
@@ -16388,4 +16407,383 @@ img.emoji {
     vertical-align: -0.18em !important;
 }
 
+/* ==================== WORKSHOP EVENT MODAL (BHIMAVARAM OFFLINE) ==================== */
+.workshop-modal-card {
+    max-width: 500px;
+    padding: 0 !important;
+    overflow: hidden !important;
+    text-align: left !important;
+    border-radius: 24px !important;
+    background: #ffffff;
+    box-shadow: 0 25px 60px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(124, 92, 252, 0.2);
+}
 
+.workshop-modal-banner-wrap {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    background: #1e1b4b;
+    overflow: hidden;
+}
+
+.workshop-modal-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: brightness(0.92);
+}
+
+.workshop-modal-banner-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.45) 55%, rgba(15, 23, 42, 0.15) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.workshop-banner-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.workshop-pill-offline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #db2777;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.workshop-pill-soon {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+}
+
+.workshop-banner-title {
+    font-size: 20px;
+    font-weight: 850;
+    line-height: 1.25;
+    margin: 0 0 4px 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    color: #ffffff;
+}
+
+.workshop-banner-location {
+    font-size: 12px;
+    font-weight: 600;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.workshop-modal-body {
+    padding: 18px 20px 22px;
+    max-height: calc(88vh - 180px);
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.workshop-overview-text {
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.5;
+    margin: 0 0 14px 0;
+}
+
+.workshop-highlights-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 480px) {
+    .workshop-highlights-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.workshop-highlight-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 9px 11px;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    text-align: left;
+}
+
+.workshop-hl-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(124, 92, 252, 0.12), rgba(219, 39, 119, 0.12));
+    color: #7c5cfc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.workshop-hl-title {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 2px;
+}
+
+.workshop-hl-desc {
+    font-size: 10.5px;
+    color: #64748b;
+    line-height: 1.35;
+}
+
+.workshop-rsvp-box {
+    background: linear-gradient(135deg, #faf5ff 0%, #fdf2f8 100%);
+    border: 1.5px solid #f0abfc;
+    border-radius: 16px;
+    padding: 15px;
+    margin-top: 6px;
+}
+
+.workshop-rsvp-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #701a75;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 3px;
+}
+
+.workshop-rsvp-sub {
+    font-size: 11.5px;
+    color: #86198f;
+    opacity: 0.9;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.workshop-input-field {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 9px;
+    font-size: 12.5px;
+    background: #ffffff;
+    color: #0f172a;
+    outline: none;
+    transition: all 0.2s ease;
+    margin-bottom: 7px;
+    box-sizing: border-box;
+}
+
+.workshop-input-field:focus {
+    border-color: #a855f7;
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+}
+
+.workshop-submit-btn {
+    width: 100%;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 11px;
+    background: linear-gradient(135deg, #7c5cfc 0%, #db2777 100%);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(219, 39, 119, 0.35);
+    transition: all 0.2s ease;
+    margin-top: 4px;
+}
+
+.workshop-submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(219, 39, 119, 0.45);
+}
+
+.workshop-success-box {
+    background: #ecfdf5;
+    border: 1.5px solid #86efac;
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+}
+
+/* ==========================================================================
+   Progressive Web App (PWA) Banner & Notification Toast Styles
+   ========================================================================== */
+.chocoloom-pwa-banner {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(120%);
+    width: calc(100% - 32px);
+    max-width: 480px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1.5px solid rgba(124, 92, 252, 0.25);
+    border-radius: 18px;
+    box-shadow: 0 12px 36px rgba(36, 19, 68, 0.18), 0 2px 8px rgba(124, 92, 252, 0.08);
+    z-index: 999999;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.chocoloom-pwa-banner.visible {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+    .chocoloom-pwa-banner {
+        bottom: 80px; /* Above mobile bottom bar */
+        width: calc(100% - 24px);
+    }
+}
+
+.pwa-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+}
+
+.pwa-banner-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 4px 10px rgba(124, 92, 252, 0.15);
+    flex-shrink: 0;
+}
+
+.pwa-banner-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.pwa-banner-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #14092b;
+    line-height: 1.25;
+}
+
+.pwa-banner-desc {
+    font-size: 11px;
+    color: #6b6380;
+    font-weight: 500;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pwa-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.pwa-install-btn {
+    background: linear-gradient(135deg, #7c5cfc, #633ef3);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 8px 14px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 12px rgba(124, 92, 252, 0.3);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pwa-install-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(124, 92, 252, 0.4);
+}
+
+.pwa-install-btn:active {
+    transform: scale(0.97);
+}
+
+.pwa-close-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9d96b0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.pwa-close-btn:hover {
+    color: #14092b;
+    background: #f3f0ff;
+}
+
+/* Toast Message */
+.chocoloom-pwa-toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #14092b;
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    z-index: 1000000;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    text-align: center;
+    max-width: 90%;
+}
+
+.chocoloom-pwa-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
