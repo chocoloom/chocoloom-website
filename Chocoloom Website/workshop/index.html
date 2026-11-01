@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chocoloom Workshop - Clay Toy Cakes Masterclass & Free Tote Bags</title>
+    <meta name="description" content="Join Chocoloom's exclusive Clay Toy Cakes crafting workshop in Bhimavaram. Sculpt your customised miniature cake like a cute clay toy. Take home your creation in a display dome + receive a FREE Chocoloom Canvas Tote Bag!">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="canonical" href="https://chocoloom.com/workshop">
+    <meta property="og:url" content="https://chocoloom.com/workshop">
+    <meta property="og:title" content="Chocoloom Workshop - Clay Toy Cakes Masterclass & Free Tote Bags">
+    <meta property="og:description" content="Join Chocoloom's exclusive Clay Toy Cakes crafting workshop in Bhimavaram. Sculpt your customised miniature cake like a cute clay toy. Take home your creation in a display dome + receive a FREE Chocoloom Canvas Tote Bag!">
+
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="workshop.css?v=5">
+</head>
+<body>
+
+    <!-- ==================== HEADER NAVBAR ==================== -->
+    <header class="navbar" id="mainNavbar">
+        <div class="container nav-inner">
+            <div class="nav-left">
+                <!-- Brand Logo (links to Chocoloom main store) -->
+                <a href="https://chocoloom.com" class="brand-logo" title="Back to Chocoloom Store">
+                    <img src="assets/logo.png" alt="Chocoloom Logo" class="brand-logo-img">
+                </a>
+            </div>
+
+            <!-- Navbar Right Actions -->
+            <div class="nav-right">
+                <!-- Book Pass Primary CTA -->
+                <a href="#passesSection" class="nav-book-cta">
+                    <i class="fa-solid fa-ticket"></i>
+                    <span>Book Pass</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
+    <main class="container" style="padding-top: 24px;">
+
+        <!-- ==================== 0. STARTING HERO BANNER IMAGE ==================== -->
+        <section class="starting-hero-banner" id="heroBannerSection">
+            <div class="shb-card">
+                <a href="#passesSection" class="shb-link" aria-label="Explore Workshop & Passes">
+                    <img src="assets/craft_happy_moments.jpg" alt="Craft Your Happy Moments - Chocoloom Creative Workshop & Kits" class="shb-img" loading="eager">
+                </a>
+            </div>
+        </section>
+
+        <!-- ==================== 1. TOP BANNER: BOLD WORKSHOP TITLE & INFO ==================== -->
+        <section class="workshop-top-banner">
+            <div class="wtb-content">
+                <h1 class="wtb-title">
+                    Sculpt Customised Clay Toy Cakes 🎂✨
+                </h1>
+                <p class="wtb-subtitle">Hands-on Clay Cake Workshop & Miniature Toy Sculpting</p>
+                <div class="wtb-meta-chips">
+                    <span class="wtb-chip highlight-date"><i class="fa-solid fa-calendar-days"></i> Sunday, Nov 15</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 2. ABOUT THAT WORKSHOP DETAILS ==================== -->
+        <section class="about-workshop-card" id="aboutSection">
+            <div class="aw-header">
+                <div class="aw-title-group">
+                    <div class="aw-icon-circle"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <h2 class="aw-heading">About This Workshop</h2>
+                </div>
+                <span class="section-tag-pill" style="margin: 0;">3-Hour Hands-on</span>
+            </div>
+
+            <p class="aw-intro-text">
+                Learn how to sculpt and decorate adorable miniature cakes that look like cute collectible clay toys! You will work with ultra-light velvety polymer air-dry clay, practice authentic faux whipped cream piping with real star nozzles, sculpt miniature cherries & candles, and seal your creation in an acrylic keepsake display dome to preserve forever.
+            </p>
+
+            <div class="aw-perks-grid">
+                <!-- Perk 1: Free Tote Bag -->
+                <div class="aw-perk-box tote-special">
+                    <div class="aw-pb-icon"><i class="fa-solid fa-gift"></i></div>
+                    <div class="aw-pb-title">FREE Chocoloom Tote Bag 🎒</div>
+                    <div class="aw-pb-desc">Heavy-duty 340 GSM pure organic cotton canvas tote with Chocoloom artwork (worth ₹499), given 100% free with every registration!</div>
+                </div>
+
+                <!-- Perk 2: Keepsake Display Dome -->
+                <div class="aw-perk-box">
+                    <div class="aw-pb-icon"><i class="fa-solid fa-shield-heart"></i></div>
+                    <div class="aw-pb-title">Permanent Display Dome 🍰</div>
+                    <div class="aw-pb-desc">Crystal-clear acrylic dome with wooden base to protect your finished clay toy cake forever on your desk.</div>
+                </div>
+
+                <!-- Perk 3: Chocolates & Drinks -->
+                <div class="aw-perk-box">
+                    <div class="aw-pb-icon"><i class="fa-solid fa-mug-hot"></i></div>
+                    <div class="aw-pb-title">Belgian Chocolates & Drinks 🍫</div>
+                    <div class="aw-pb-desc">Enjoy complimentary artisan chocolate pralines, cake treats & cold brew or berry coolers during your session.</div>
+                </div>
+
+                <!-- Perk 4: All Tools Included -->
+                <div class="aw-perk-box">
+                    <div class="aw-pb-icon"><i class="fa-solid fa-palette"></i></div>
+                    <div class="aw-pb-title">All Materials Provided 🎨</div>
+                    <div class="aw-pb-desc">12 vibrant pastel clays, star piping tips, silicone molds, aprons, and official certificates. Zero prior experience needed!</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 3. PRICING & PASSES ==================== -->
+        <section class="passes-section" id="passesSection" style="margin-bottom: 48px;">
+            <div class="section-head-center">
+                <span class="section-tag-pill">Choose Your Pass</span>
+                <h2 class="section-h2">Workshop Pricing & Passes</h2>
+                <p class="section-lead">Every pass includes full workshop access, your clay cake model & a FREE Chocoloom Canvas Tote Bag.</p>
+            </div>
+
+            <div class="passes-grid">
+                <!-- Solo Creator Pass -->
+                <div class="pass-card">
+                    <div class="pass-head">
+                        <h3 class="pass-name">Solo Creator Pass</h3>
+                        <p class="pass-desc">Perfect for individual art lovers & hobbyists</p>
+                    </div>
+
+                    <div class="pass-price-wrap">
+                        <span class="pass-currency">₹</span>
+                        <span class="pass-amount">499</span>
+                        <span class="pass-strike">₹999</span>
+                        <span class="pass-discount-pill">50% OFF</span>
+                    </div>
+
+                    <ul class="pass-benefits">
+                        <li class="pass-benefit"><i class="fa-solid fa-circle-check"></i> <span>1 Person Workshop Seat</span></li>
+                        <li class="pass-benefit"><i class="fa-solid fa-circle-check"></i> <span>1 Custom Clay Toy Cake to take home</span></li>
+                        <li class="pass-benefit highlight"><i class="fa-solid fa-bag-shopping"></i> <span><strong>1 FREE Chocoloom Canvas Tote Bag</strong> (₹499 value)</span></li>
+                        <li class="pass-benefit"><i class="fa-solid fa-circle-check"></i> <span>Acrylic Display Cloche Dome Included</span></li>
+                        <li class="pass-benefit"><i class="fa-solid fa-circle-check"></i> <span>Belgian Chocolates & Beverage</span></li>
+                        <li class="pass-benefit"><i class="fa-solid fa-circle-check"></i> <span>Official Creator Certificate</span></li>
+                    </ul>
+
+                    <button class="btn-pass-select" onclick="selectPassAndOpenModal('solo')">
+                        <span>Select Solo Pass</span>
+                    </button>
+                </div>
+
+                <!-- Duo Creative Pass (Featured) -->
+                <div class="pass-card featured">
+                    <div class="pass-pill-flag">MOST POPULAR • SAVE ₹1,100</div>
+                    <div class="pass-head">
+                        <h3 class="pass-name">Duo Creative Pass</h3>
+                        <p class="pass-desc">Ideal for friends, besties, couples or pairs</p>
+                    </div>
+
+                    <div class="pass-price-wrap">
+                        <span class="pass-currency">₹</span>
+                        <span class="pass-amount">899</span>
+                        <span class="pass-strike">₹1,999</span>
+                        <span class="pass-discount-pill">55% OFF</span>
+                    </div>
+
+                    <ul class="pass-benefits">
+                        <li class="pass-benefit"><i class="fa-solid fa-circle-check"></i> <span><strong>2 Persons</strong> Workshop Access</span></li>
+                        <li class="pass-benefit"><i class="fa-solid fa-circle-check"></i> <span><strong>2 Custom Clay Toy Cakes</strong> to take home</span></li>
+                        <li class="pass-benefit highlight"><i class="fa-solid fa-bag-shopping"></i> <span><strong>2x FREE Chocoloom Canvas Tote Bags</strong></span></li>
+                        <li class="pass-benefit"><i class="fa-solid fa-circle-check"></i> <span>2x Acrylic Keepsake Display Domes</span></li>
+                        <li class="pass-benefit"><i class="fa-solid fa-circle-check"></i> <span>Luxury Chocolate Hamper Box + 2 Drinks</span></li>
+                        <li class="pass-benefit"><i class="fa-solid fa-circle-check"></i> <span>2x Official Certificates & Polaroid Photos</span></li>
+                    </ul>
+
+                    <button class="btn-pass-select" onclick="selectPassAndOpenModal('duo')">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Select Duo Pass (₹449/person)</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 4. BATCHES & SLOT SELECTOR ==================== -->
+        <section class="schedule-section" id="scheduleSection">
+            <div class="schedule-header">
+                <span class="section-tag-pill">Confirmed Workshop Slot</span>
+                <h2 class="section-h2">Upcoming Workshop Schedule</h2>
+                <p class="section-lead">Strictly limited to 15 creators to ensure 1-on-1 personal mentoring.</p>
+
+                <!-- Countdown Timer -->
+                <div class="countdown-bar">
+                    <div class="cd-label">
+                        <i class="fa-solid fa-fire"></i>
+                        <span>Early Bird Closes in:</span>
+                    </div>
+                    <div class="cd-units">
+                        <div class="cd-unit"><strong id="cdDays">02</strong><span>Days</span></div>
+                        <span class="cd-colon">:</span>
+                        <div class="cd-unit"><strong id="cdHours">14</strong><span>Hours</span></div>
+                        <span class="cd-colon">:</span>
+                        <div class="cd-unit"><strong id="cdMinutes">36</strong><span>Mins</span></div>
+                        <span class="cd-colon">:</span>
+                        <div class="cd-unit"><strong id="cdSeconds">45</strong><span>Secs</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slots Grid -->
+            <div class="slots-grid">
+                <!-- Single Slot: Nov 15 Sunday -->
+                <div class="slot-card selected" data-slot-id="batch1" data-day="Sunday" data-date="Nov 15, 2026" data-time="10:00 AM - 1:00 PM" data-batch="Exclusive Sunday Masterclass">
+                    <span class="slot-badge urgent"><i class="fa-solid fa-fire"></i> Only 15 Seats • High Demand</span>
+                    <div class="slot-day">Sunday Masterclass</div>
+                    <div class="slot-date-pill"><i class="fa-solid fa-calendar-check"></i> Sunday, Nov 15, 2026</div>
+                    <div class="slot-time"><i class="fa-regular fa-clock"></i> 10:00 AM – 1:00 PM (3 Hours)</div>
+                    <div class="slot-seats-left"><i class="fa-solid fa-location-dot"></i> Bhimavaram (Venue will be announced soon)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 7. WORKSHOP MASTERCLASS TIMELINE ==================== -->
+        <section class="timeline-section">
+            <div class="section-head-center">
+                <span class="section-tag-pill">Step-by-Step Journey</span>
+                <h2 class="section-h2">What Happens in the 3-Hour Workshop?</h2>
+                <p class="section-lead">Designed for complete beginners. No prior art or sculpture experience required!</p>
+            </div>
+
+            <div class="timeline-wrap">
+                <div class="timeline-step">
+                    <div class="timeline-dot"><i class="fa-solid fa-check" style="font-size: 10px; color: var(--primary);"></i></div>
+                    <div class="timeline-card">
+                        <span class="step-time-badge">00 – 20 Mins</span>
+                        <h4 class="step-title">Welcome, Chocolate Shots & Kit Unboxing</h4>
+                        <p class="step-desc">Arrive at Chocoloom Cafe, collect your personalized sculpting apron, unbox your clay kit, and receive your <strong>FREE Chocoloom Canvas Tote Bag</strong> at reception.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-dot"><i class="fa-solid fa-check" style="font-size: 10px; color: var(--primary);"></i></div>
+                    <div class="timeline-card">
+                        <span class="step-time-badge">20 – 60 Mins</span>
+                        <h4 class="step-title">Clay Conditioning, Color Mixing & Cake Base Shaping</h4>
+                        <p class="step-desc">Learn how to blend pastel clay colors, condition air-dry polymer clay, and sculpt a sturdy miniature sponge cake foundation with crisp edges.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-dot"><i class="fa-solid fa-check" style="font-size: 10px; color: var(--primary);"></i></div>
+                    <div class="timeline-card">
+                        <span class="step-time-badge">60 – 100 Mins</span>
+                        <h4 class="step-title">Faux Frosting Piping & Ruffle Piping Masterclass</h4>
+                        <p class="step-desc">Hold pastry piping nozzles to apply realistic whipped clay cream, Lambeth scallops, shell borders, and delicate drips over your cake model.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-dot"><i class="fa-solid fa-check" style="font-size: 10px; color: var(--primary);"></i></div>
+                    <div class="timeline-card">
+                        <span class="step-time-badge">100 – 150 Mins</span>
+                        <h4 class="step-title">Sculpting Miniature Toy Charms & Personalization</h4>
+                        <p class="step-desc">Craft miniature clay strawberries, teddy bears, cherries, candles, and letter banners. Decorate your cake to make it 100% unique to you!</p>
+                    </div>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-dot"><i class="fa-solid fa-check" style="font-size: 10px; color: var(--primary);"></i></div>
+                    <div class="timeline-card">
+                        <span class="step-time-badge">150 – 180 Mins</span>
+                        <h4 class="step-title">Gloss Glazing, Acrylic Dome Sealing & Certificate Ceremony</h4>
+                        <p class="step-desc">Apply protective gloss glaze, seal your finished clay toy cake inside its acrylic display dome, take photos at the photobooth, and take home your certificate and tote bag!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 8. VENUE & CONTACT STRIP ==================== -->
+        <section class="venue-section">
+            <div class="venue-card">
+                <div class="venue-info">
+                    <span class="section-tag-pill" style="margin-bottom: 10px; background: #fef3c7; color: #b45309; border: 1px solid #fde68a;"><i class="fa-solid fa-clock"></i> Venue Being Finalized</span>
+                    <h3>Workshop Venue: Bhimavaram</h3>
+                    <p>
+                        The masterclass will be hosted centrally in <strong>Bhimavaram</strong>. The exact venue location is currently being finalized and will be officially announced soon. All registered participants will receive the complete venue address and Google Maps location directly on WhatsApp prior to the workshop date.
+                    </p>
+
+                    <div class="venue-meta-items">
+                        <div class="v-item">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span><strong>City:</strong> Bhimavaram, Andhra Pradesh (Exact venue will be announced soon)</span>
+                        </div>
+                        <div class="v-item">
+                            <i class="fa-brands fa-whatsapp" style="color: #25d366; font-size: 16px;"></i>
+                            <span><strong>Helpline WhatsApp:</strong> <a href="https://wa.me/919849783788?text=Hi%20Chocoloom%2C%20I%20have%20a%20query%20about%20the%20Clay%20Toy%20Cakes%20Workshop%20in%20Bhimavaram" target="_blank" style="color: inherit; text-decoration: underline; font-weight: 700;">+91 98497 83788</a></span>
+                        </div>
+                        <div class="v-item">
+                            <i class="fa-solid fa-phone" style="color: var(--primary);"></i>
+                            <span><strong>Calling Helpline:</strong> <a href="tel:+919849783788" style="color: inherit; text-decoration: underline; font-weight: 700;">+91 98497 83788</a></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="venue-actions">
+                    <a href="https://wa.me/919849783788?text=Hi%20Chocoloom%2C%20I%20have%20a%20query%20about%20the%20Clay%20Toy%20Cakes%20Workshop%20in%20Bhimavaram" target="_blank" class="btn-venue-maps" style="background: #25d366; color: #ffffff; border-color: #25d366;">
+                        <i class="fa-brands fa-whatsapp" style="font-size: 18px;"></i>
+                        <span>WhatsApp Helpline</span>
+                    </a>
+                    <a href="tel:+919849783788" class="btn-venue-call">
+                        <i class="fa-solid fa-phone"></i>
+                        <span>Call: 98497 83788</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 9. FAQ ACCORDION ==================== -->
+        <section class="faq-section" id="faqSection">
+            <div class="section-head-center">
+                <span class="section-tag-pill">Common Questions</span>
+                <h2 class="section-h2">Frequently Asked Questions</h2>
+                <p class="section-lead">Everything you need to know before attending the Chocoloom workshop.</p>
+            </div>
+
+            <div class="faq-grid">
+                <div class="faq-card open">
+                    <button class="faq-question">
+                        <span>Do I need any previous art, painting, or clay sculpting experience?</span>
+                        <i class="fa-solid fa-chevron-down faq-chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Zero experience required! Over 80% of our attendees have never touched modeling clay before. Our master instructors break down every step into simple, fun, foolproof techniques.
+                    </div>
+                </div>
+
+                <div class="faq-card">
+                    <button class="faq-question">
+                        <span>Will my clay toy cake spoil or rot over time?</span>
+                        <i class="fa-solid fa-chevron-down faq-chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Not at all! We use premium air-dry polymer modeling clay that completely cures into a durable, lightweight permanent collectible toy within 24 hours. Sealed in your included acrylic dome, it will last for years as home or desk decor.
+                    </div>
+                </div>
+
+                <div class="faq-card">
+                    <button class="faq-question">
+                        <span>When do I receive my FREE Chocoloom Signature Canvas Tote Bag?</span>
+                        <i class="fa-solid fa-chevron-down faq-chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        You will receive your brand-new premium tote bag at the check-in reception counter upon showing your digital workshop pass on your phone!
+                    </div>
+                </div>
+
+                <div class="faq-card">
+                    <button class="faq-question">
+                        <span>Can college students get an extra discount?</span>
+                        <i class="fa-solid fa-chevron-down faq-chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Yes! As part of our <strong>Uni Chocoloom</strong> campus initiative, all college students from SRKR, Vishnu, and nearby colleges can use the promo code <strong>UNI25</strong> during registration to get an instant 25% discount.
+                    </div>
+                </div>
+
+                <div class="faq-card">
+                    <button class="faq-question">
+                        <span>Can I bring my friend, partner, or sibling?</span>
+                        <i class="fa-solid fa-chevron-down faq-chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Absolutely! Choose our <strong>Duo Creative Pass</strong> to get seats for 2 people with 2 custom clay cakes and 2 FREE Chocoloom Tote Bags at a heavy discount (only ₹449 per person).
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== SITE FOOTER ==================== -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-col">
+                    <img src="assets/logo-white.png" alt="Chocoloom Logo" style="height: 36px; object-fit: contain;">
+                    <p class="footer-brand-desc">
+                        Chocoloom is Bhimavaram's premier artisanal dessert & chocolate cafe. Now bringing hands-on craft workshops for creators, friends, and families.
+                    </p>
+                </div>
+
+                <div class="footer-col">
+                    <h5>Workshops</h5>
+                    <ul class="footer-links">
+                        <li><a href="#scheduleSection">Clay Toy Cakes Masterclass</a></li>
+                        <li><a href="#toteBagSection">Free Tote Bag Offer</a></li>
+                        <li><a href="#passesSection">Book Workshop Pass</a></li>
+                        <li><a href="#scheduleSection">Batch Timings</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h5>Chocoloom Hub</h5>
+                    <ul class="footer-links">
+                        <li><a href="javascript:void(0)" onclick="applyCouponCodeQuick('UNI25')">Uni Chocoloom (25% OFF)</a></li>
+                        <li><a href="javascript:void(0)" onclick="showToast('Venue City: Bhimavaram. Exact venue address will be shared on WhatsApp soon!')">Venue: Bhimavaram (TBA)</a></li>
+                        <li><a href="https://wa.me/919849783788" target="_blank">24/7 WhatsApp: +91 98497 83788</a></li>
+                        <li><a href="javascript:void(0)" onclick="showToast('Terms: Passes are non-refundable but transferable to another attendee.')">Terms & Conditions</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h5>Connect With Us</h5>
+                    <ul class="footer-links">
+                        <li><a href="https://wa.me/919849783788?text=Hi%20Chocoloom%2C%20I%20have%20a%20query%20about%20the%20Clay%20Toy%20Cakes%20Workshop" target="_blank"><i class="fa-brands fa-whatsapp" style="color: #25d366;"></i> WhatsApp: +91 98497 83788</a></li>
+                        <li><a href="tel:+919849783788"><i class="fa-solid fa-phone"></i> Call: +91 98497 83788</a></li>
+                        <li><a href="mailto:workshops@chocoloom.com"><i class="fa-solid fa-envelope"></i> workshops@chocoloom.com</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <span>© 2026 Chocoloom Inc. All Rights Reserved. Handcrafted with passion in Bhimavaram.</span>
+                <span>Crafted for Chocoloom Workshop Events</span>
+            </div>
+        </div>
+    </footer>
+
+
+
+    <!-- ==================== REGISTRATION MODAL ==================== -->
+    <div class="modal-backdrop" id="registrationModal">
+        <div class="modal-card">
+            <button class="modal-close-btn" onclick="closeRegistrationModal()"><i class="fa-solid fa-xmark"></i></button>
+
+            <div class="modal-head">
+                <span class="modal-badge"><i class="fa-solid fa-ticket"></i> Reserve Your Spot</span>
+                <h3 class="modal-title">Workshop Registration</h3>
+            </div>
+
+            <!-- Auto-selected Pass Card Banner -->
+            <div class="selected-pass-banner">
+                <div class="spb-left">
+                    <span class="spb-tag" id="modalPassBadgeTag">SELECTED PASS</span>
+                    <h4 class="spb-title" id="modalPassTitle">Solo Creator Pass</h4>
+                    <p class="spb-date" id="modalPassDate"><i class="fa-solid fa-calendar-check"></i> Sunday, Nov 15 • 10:00 AM – 1:00 PM</p>
+                </div>
+                <div class="spb-price" id="modalPassPrice">₹499</div>
+            </div>
+
+            <form onsubmit="handleRegistrationSubmit(event)">
+                <!-- Hidden inputs to keep state in sync -->
+                <input type="hidden" id="regPassTierSelect" value="solo">
+                <input type="hidden" id="regBatchSelect" value="batch1">
+
+                <div class="form-group">
+                    <label class="form-label" for="regName" id="lblRegName">Full Name *</label>
+                    <input type="text" id="regName" class="form-input" placeholder="e.g. Mohith Kumar" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="regPhone" id="lblRegPhone">WhatsApp Phone Number *</label>
+                    <input type="tel" id="regPhone" class="form-input" placeholder="e.g. 98497 83788" required>
+                </div>
+
+                <!-- Duo Pass Fields (Person 2) - displayed dynamically for Duo registration -->
+                <div id="duoFieldsWrap" style="display: none;">
+                    <div class="duo-divider" style="display: flex; align-items: center; gap: 8px; margin: 18px 0 12px; color: var(--primary); font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <i class="fa-solid fa-user-group"></i>
+                        <span>Person 2 Details (Duo Creative Pass)</span>
+                        <div style="flex: 1; height: 1px; background: #e2d9fc;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="regName2">Person 2 Full Name *</label>
+                        <input type="text" id="regName2" class="form-input" placeholder="e.g. Partner / Friend Full Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="regPhone2">Person 2 WhatsApp Number *</label>
+                        <input type="tel" id="regPhone2" class="form-input" placeholder="e.g. 98497 83789">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="regEmail">Email Address (for Passes & Updates) *</label>
+                    <input type="email" id="regEmail" class="form-input" placeholder="e.g. name@gmail.com" required>
+                </div>
+
+                <!-- Order Summary Box -->
+                <div class="order-summary-box">
+                    <div class="summary-line">
+                        <span id="sumPassName">Solo Creator Pass</span>
+                        <span id="sumPassPrice">₹499</span>
+                    </div>
+                    <div class="summary-line total">
+                        <span>Total Payable</span>
+                        <span id="sumTotalPrice">₹499</span>
+                    </div>
+                    <div class="summary-free-tote">
+                        <i class="fa-solid fa-gift"></i>
+                        <span>Includes <strong id="sumToteCount">1</strong>x FREE Chocoloom Canvas Tote Bag!</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-confirm-reg" id="btnProceedPayment">
+                    <span>Proceed to Payment • <strong id="btnPayAmount">₹499</strong> →</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== PAYMENT STEP MODAL ==================== -->
+    <div class="modal-backdrop" id="paymentModal">
+        <div class="modal-card payment-modal-card">
+            <button class="modal-close-btn" onclick="closePaymentModal()"><i class="fa-solid fa-xmark"></i></button>
+
+            <div class="modal-head">
+                <span class="modal-badge"><i class="fa-solid fa-shield-halved"></i> Secure Checkout</span>
+                <h3 class="modal-title">Complete Payment</h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Choose your payment method to confirm your workshop seat.</p>
+            </div>
+
+            <div class="payment-amount-display">
+                <span class="pad-label">Amount Payable</span>
+                <span class="pad-amount" id="payModalAmount">₹499</span>
+            </div>
+
+            <div class="payment-methods-list">
+                <label class="pay-method-opt selected">
+                    <input type="radio" name="payMethod" value="upi" checked>
+                    <div class="pmo-content">
+                        <div class="pmo-title"><i class="fa-solid fa-mobile-screen-button"></i> UPI (Google Pay / PhonePe / Paytm / BHIM)</div>
+                        <div class="pmo-desc">Instant online confirmation with zero convenience fees</div>
+                    </div>
+                </label>
+
+                <label class="pay-method-opt">
+                    <input type="radio" name="payMethod" value="card">
+                    <div class="pmo-content">
+                        <div class="pmo-title"><i class="fa-regular fa-credit-card"></i> Credit / Debit Card & Net Banking</div>
+                        <div class="pmo-desc">All Visa, Mastercard, RuPay & net banking options</div>
+                    </div>
+                </label>
+
+                <label class="pay-method-opt">
+                    <input type="radio" name="payMethod" value="counter">
+                    <div class="pmo-content">
+                        <div class="pmo-title"><i class="fa-solid fa-store"></i> Pay at Chocoloom Studio Counter</div>
+                        <div class="pmo-desc">Pay upon arrival on Sunday, Nov 15 via cash or card</div>
+                    </div>
+                </label>
+            </div>
+
+            <button type="button" class="btn-confirm-reg" onclick="completePaymentAndGetTicket()">
+                <span>Pay & Confirm Booking 🎟️✨</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== DIGITAL WORKSHOP PASS MODAL ==================== -->
+    <div class="modal-backdrop" id="passModal">
+        <div class="pass-ticket-modal-card">
+            <button class="modal-close-btn" onclick="closePassModal()"><i class="fa-solid fa-xmark"></i></button>
+
+            <!-- Digital Pass Card Layout -->
+            <div class="ticket-wrapper" id="ticketToPrint">
+                <div class="ticket-top">
+                    <div class="ticket-logo-text">CHOCOLOOM WORKSHOP</div>
+                    <span class="ticket-vip-tag">OFFICIAL PASS</span>
+                </div>
+
+                <div class="ticket-body">
+                    <div class="tb-left">
+                        <div class="tb-item">
+                            <span class="tb-label">Attendee Name</span>
+                            <div class="tb-val" id="ticketAttendeeName">Mohith Kumar</div>
+                        </div>
+
+                        <div class="tb-item">
+                            <span class="tb-label">Pass Tier</span>
+                            <div class="tb-val" id="ticketPassType">Duo Creative Pass (2 Persons)</div>
+                        </div>
+
+                        <div class="tb-item">
+                            <span class="tb-label">Date & Timing</span>
+                            <div class="tb-val" id="ticketDateInfo">Sunday, Nov 15, 2026</div>
+                            <div style="font-size: 13px; color: #cbd5e1;" id="ticketBatchInfo">Exclusive Sunday Masterclass • 10:00 AM – 1:00 PM</div>
+                        </div>
+
+                        <div class="tb-item" style="margin-bottom: 0;">
+                            <span class="tb-label">Venue</span>
+                            <div class="tb-val" style="font-size: 13px;">Bhimavaram (Venue to be announced soon • WhatsApp: +91 98497 83788)</div>
+                        </div>
+                    </div>
+
+                    <div class="tb-right">
+                        <div class="ticket-qr-area">
+                            <div class="ticket-qr-code"></div>
+                            <span class="ticket-code-id" id="ticketCodeDisplay">CL-WRK-2026-8942</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ticket-tote-claimed-strip">
+                    <i class="fa-solid fa-circle-check" style="font-size: 16px;"></i>
+                    <span id="ticketToteText">2x FREE Chocoloom Canvas Tote Bags Reserved</span>
+                </div>
+            </div>
+
+            <!-- Ticket Actions -->
+            <div class="ticket-actions-group">
+                <button class="btn-ticket-download" onclick="downloadTicket()">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Print / Save Pass</span>
+                </button>
+
+                <button class="btn-ticket-share" onclick="shareToWhatsApp()">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <span>Share on WhatsApp</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SEARCH MODAL (⌘K) ==================== -->
+    <div class="search-modal-backdrop" id="searchModal" onclick="if(event.target===this) closeSearchModal()">
+        <div class="search-modal-box">
+            <div class="search-input-header">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchModalInput" class="search-input-field" placeholder="Search workshop topics, tote bags, clay cakes, slots, FAQs..." oninput="handleSearchFilter()">
+                <button onclick="closeSearchModal()" style="color: var(--text-muted); font-size: 14px;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="search-results-list">
+                <div class="search-result-item" onclick="closeSearchModal(); location.href='#toteBagSection';">
+                    <div class="sri-info">
+                        <strong>Free Chocoloom Canvas Tote Bag</strong>
+                        <span>Included 100% free with every registration (worth ₹499)</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right" style="color: var(--primary);"></i>
+                </div>
+
+                <div class="search-result-item" onclick="closeSearchModal(); location.href='#craftingSection';">
+                    <div class="sri-info">
+                        <strong>Clay Customised Cakes (Clay Toys)</strong>
+                        <span>How to sculpt non-perishable miniature cakes from polymer clay</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right" style="color: var(--primary);"></i>
+                </div>
+
+                <div class="search-result-item" onclick="closeSearchModal(); location.href='#scheduleSection';">
+                    <div class="sri-info">
+                        <strong>Workshop Date & Timing</strong>
+                        <span>Sunday, Nov 15 morning session (10 AM - 1 PM) in Bhimavaram</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right" style="color: var(--primary);"></i>
+                </div>
+
+                <div class="search-result-item" onclick="closeSearchModal(); location.href='#passesSection';">
+                    <div class="sri-info">
+                        <strong>Pass Pricing & Tiers (Solo, Duo)</strong>
+                        <span>Early bird starting at ₹499 with 50% discount</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right" style="color: var(--primary);"></i>
+                </div>
+
+                <div class="search-result-item" onclick="closeSearchModal(); applyCouponCodeQuick('UNI25');">
+                    <div class="sri-info">
+                        <strong>Uni Chocoloom Student Discount (UNI25)</strong>
+                        <span>25% off for SRKR & college students</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right" style="color: var(--primary);"></i>
+                </div>
+
+                <div class="search-result-item" onclick="closeSearchModal(); location.href='#faqSection';">
+                    <div class="sri-info">
+                        <strong>FAQs & What to Bring</strong>
+                        <span>No materials required — everything provided!</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right" style="color: var(--primary);"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LOCATION PICKER MODAL ==================== -->
+    <div class="modal-backdrop" id="locationModal">
+        <div class="modal-card" style="max-width: 480px;">
+            <button class="modal-close-btn" onclick="closeLocationModal()"><i class="fa-solid fa-xmark"></i></button>
+
+            <div class="modal-head">
+                <span class="modal-badge"><i class="fa-solid fa-location-dot"></i> Choose Location</span>
+                <h3 class="modal-title">Select Your Area</h3>
+            </div>
+
+            <button class="use-gps-btn" onclick="selectLocation('Current GPS Location', 'Bhimavaram Center')" style="width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 12px; background: #faf8ff; border: 1.5px dashed #c4b5fd; cursor: pointer; margin-bottom: 14px;">
+                <div class="gps-btn-icon" style="width: 36px; height: 36px; border-radius: 50%; background: #7c5cfc; color: #fff; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-crosshairs"></i>
+                </div>
+                <div style="text-align: left;">
+                    <strong style="display: block; font-size: 13.5px; color: var(--dark);">Detect Current Location</strong>
+                    <span style="font-size: 11.5px; color: var(--text-muted);">Using device GPS</span>
+                </div>
+            </button>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div class="search-result-item" onclick="selectLocation('Simhadri Appana temple', 'Bhimavaram, Andhra Pradesh')">
+                    <div class="sri-info">
+                        <strong>Simhadri Appana temple</strong>
+                        <span>Bhimavaram, Andhra Pradesh</span>
+                    </div>
+                    <i class="fa-solid fa-check" style="color: var(--primary);"></i>
+                </div>
+
+                <div class="search-result-item" onclick="selectLocation('SRKR Campus / Amiram', 'Bhimavaram, Andhra Pradesh')">
+                    <div class="sri-info">
+                        <strong>SRKR Campus / Amiram</strong>
+                        <span>Near Chocoloom Studio</span>
+                    </div>
+                </div>
+
+                <div class="search-result-item" onclick="selectLocation('Town Railway Station / J.P. Road', 'Bhimavaram, Andhra Pradesh')">
+                    <div class="sri-info">
+                        <strong>Town Railway Station / J.P. Road</strong>
+                        <span>Bhimavaram Center</span>
+                    </div>
+                </div>
+
+                <div class="search-result-item" onclick="selectLocation('Somaram / Palakollu Road', 'Bhimavaram, Andhra Pradesh')">
+                    <div class="sri-info">
+                        <strong>Somaram / Palakollu Road</strong>
+                        <span>Bhimavaram Suburbs</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- ==================== ENTRY ADVERTISEMENT MODAL (SHOWCASE IMAGE) ==================== -->
+    <div class="ad-modal-backdrop" id="advertisementModal" onclick="if(event.target===this) closeAdvertisementModal()" role="dialog" aria-modal="true" aria-label="Chocoloom Advertisement">
+        <div class="ad-image-modal-card">
+            <!-- Close Button (X) -->
+            <button class="ad-image-close-btn" onclick="closeAdvertisementModal()" aria-label="Close Advertisement" title="Close (Esc)">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Full Uncropped Advertisement Image -->
+            <a href="#passesSection" class="ad-image-click-wrap" onclick="handleAdModalCta()" title="Shop Creative Kits & Workshop Passes">
+                <img src="assets/craft_happy_moments.jpg" alt="Craft Your Happy Moments - Chocoloom Creative Kits & Workshop Advertisement" class="ad-full-image" loading="eager">
+            </a>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="workshop.js"></script>
+    <script>
+        function showHelpInfo() {
+            showToast('Chocoloom Helpline: WhatsApp or Call +91 98497 83788');
+            window.open('https://wa.me/919849783788?text=Hi%20Chocoloom%2C%20I%20have%20a%20query%20about%20the%20Clay%20Toy%20Cakes%20Workshop%20in%20Bhimavaram', '_blank');
+        }
+
+        function applyCouponCodeQuick(code) {
+            const input = document.getElementById('couponInput');
+            if (input) input.value = code;
+            openRegistrationModal();
+            setTimeout(() => {
+                applyCoupon();
+            }, 300);
+        }
+    </script>
+</body>
+</html>
