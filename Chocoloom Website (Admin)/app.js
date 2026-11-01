@@ -3790,7 +3790,16 @@ function getActiveHeroBanners() {
         const stored = localStorage.getItem("chocoloom_banners");
         if (stored) {
             const parsed = JSON.parse(stored);
-            if (Array.isArray(parsed) && parsed.length > 0) savedBanners = parsed;
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                const storedCraft = parsed.find(b => b && b.id === 'b_craft_happy_moments');
+                if (storedCraft && storedCraft.isGraphicBanner === false && storedCraft.discountText === 'FREE TOTE BAG 🎒') {
+                    savedBanners = parsed;
+                } else {
+                    localStorage.removeItem("chocoloom_banners");
+                    savedBanners = null;
+                    needsCacheUpdate = true;
+                }
+            }
         }
     } catch (e) {}
 
@@ -3838,10 +3847,39 @@ function getActiveHeroBanners() {
         diwaliItem.tag = 'DIWALI SPECIAL (NOV 7–9 ONLY)';
         diwaliItem.image = diwaliItem.image || 'assets/categories/diwali_hampers.webp';
         diwaliItem.subtitle = diwaliItem.subtitle || 'Celebrate the Festival of Lights with handcrafted Belgian pralines, golden dry-fruit cakes & festive gift hampers. Flat 40% OFF with code DIWALI40 (Valid Nov 7–9 only)!';
-        // Pin Diwali as Slide #1
         banners.unshift(diwaliItem);
         needsCacheUpdate = true;
     }
+
+    // Ensure Craft Your Happy Moments Creative Kit Banner is ALWAYS present and styled like Diwali
+    const craftItem = {
+        id: "b_craft_happy_moments",
+        tag: "CREATIVE KITS & WORKSHOP 🎨",
+        tagIcon: "fa-solid fa-wand-magic-sparkles",
+        title: "Craft Your Happy Moments 🎨✨",
+        subtitle: "Explore our premium collection of Chocoloom canvas tote bags, chef aprons, colour paints, sculpting clays & creative essentials!",
+        discountText: "FREE TOTE BAG 🎒",
+        code: "CRAFTFUN",
+        image: "assets/craft_happy_moments.jpg",
+        fallbackImage: "assets/craft_happy_moments.jpg",
+        mobileImage: "assets/craft_happy_moments.jpg",
+        overlayGradient: "linear-gradient(90deg, rgba(26, 8, 38, 0.96) 0%, rgba(38, 12, 58, 0.88) 45%, rgba(68, 20, 95, 0.35) 85%, rgba(20, 5, 28, 0.15) 100%)",
+        bgColor: "#1a0826",
+        badge: "STUDIO SPECIAL 🎨",
+        rating: "4.98",
+        ratingLabel: "Studio Choice",
+        cta: "Explore Workshop & Kits",
+        ctaAction: "redirect_url",
+        redirectUrl: "http://127.0.0.1:5501/",
+        category: "Creative Kits",
+        isGraphicBanner: false,
+        isActive: true
+    };
+
+    // Filter and Pin Creative Banner as Slide #1
+    banners = banners.filter(b => b && b.id !== 'b_craft_happy_moments');
+    banners.unshift(craftItem);
+    needsCacheUpdate = true;
 
     // Filter out Tombola banner and Uni Chocoloom ad banner permanently
     const preFilterCount = banners.length;
@@ -3905,11 +3943,13 @@ function getActiveHeroBanners() {
         banners = (window.SWIGGY_DATA && SWIGGY_DATA.banners) ? SWIGGY_DATA.banners : [];
     }
 
-    // Always keep Diwali banner as Slide #1
-    const dIdx = banners.findIndex(b => b && b.id === 'b_diwali');
-    if (dIdx > 0) {
-        const [dItem] = banners.splice(dIdx, 1);
-        banners.unshift(dItem);
+    // Pin Creative Kits Banner as Slide #1 in Billboard
+    const craftIdx = banners.findIndex(b => b && b.id === 'b_craft_happy_moments');
+    if (craftIdx > 0) {
+        const [cItem] = banners.splice(craftIdx, 1);
+        banners.unshift(cItem);
+    } else if (craftIdx === -1) {
+        banners.unshift(craftItem);
     }
 
     return banners;
@@ -4153,7 +4193,15 @@ window.handleBannerClick = function(bannerId, e) {
     const ban = banners.find(b => b.id === bannerId) || banners.find(b => b.id && b.id.includes('tombola')) || banners[0];
     if (!ban) return;
 
-    const redirectUrl = (ban.redirectUrl || ban.url || ban.link || '').trim();
+    let redirectUrl = (ban.redirectUrl || ban.url || ban.link || '').trim();
+    if (ban.id === 'b_craft_happy_moments') {
+        const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+        if (!isLocal) {
+            redirectUrl = (window.CHOCOLOOM_WP_CONFIG && window.CHOCOLOOM_WP_CONFIG.pages && window.CHOCOLOOM_WP_CONFIG.pages.workshop)
+                ? window.CHOCOLOOM_WP_CONFIG.pages.workshop
+                : (window.location.origin + '/workshop');
+        }
+    }
 
     // 1. If custom redirect link is configured, navigate immediately
     if (redirectUrl) {
@@ -4271,49 +4319,53 @@ function renderBanners() {
         const redirectUrl = (ban.redirectUrl || ban.url || ban.link || '').trim();
 
         if (ban.isGraphicBanner) {
-            const rawSrc = ban.image || ban.fallbackImage || 'assets/tombola-banner.png?v=3';
+            const isCraft = ban.id === 'b_craft_happy_moments';
+            const rawSrc = ban.image || ban.fallbackImage || (isCraft ? 'assets/craft_happy_moments.jpg' : 'assets/tombola-banner.png?v=3');
             const imgSrc = window.getThemeAssetUrl ? window.getThemeAssetUrl(rawSrc) : rawSrc;
             const mobileSrc = (ban.mobileImage && ban.mobileImage.trim()) 
                 ? (window.getThemeAssetUrl ? window.getThemeAssetUrl(ban.mobileImage.trim()) : ban.mobileImage.trim()) 
                 : '';
-            const fallbackSrc = window.getThemeAssetUrl ? window.getThemeAssetUrl('assets/tombola-banner.png?v=3') : 'assets/tombola-banner.png?v=3';
+            const fallbackSrc = isCraft ? 'assets/craft_happy_moments.jpg' : (window.getThemeAssetUrl ? window.getThemeAssetUrl('assets/tombola-banner.png?v=3') : 'assets/tombola-banner.png?v=3');
+            const slideBg = ban.bgColor || (isCraft ? '#240b36' : '#ffd735');
 
             return `
-        <div class="hero-ad-slide hero-ad-graphic-slide" data-slide-index="${index}" onclick="handleBannerClick('${ban.id}', event)" style="background-color: ${ban.bgColor || '#ffd735'}; cursor: pointer;">
+        <div class="hero-ad-slide hero-ad-graphic-slide ${isCraft ? 'hero-ad-craft-slide' : ''}" data-slide-index="${index}" data-slide-id="${ban.id}" onclick="handleBannerClick('${ban.id}', event)" style="background-color: ${slideBg} !important; cursor: pointer;">
             <!-- Full-Bleed Graphic Poster Media with Responsive Desktop / Mobile Picture -->
-            <div class="ad-bg-media graphic-ad-bg-media" style="background-color: ${ban.bgColor || '#ffd735'};">
+            <div class="ad-bg-media graphic-ad-bg-media" style="background-color: ${slideBg} !important;">
                 <picture class="graphic-ad-picture" style="position: absolute; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
                     ${mobileSrc ? `<source media="(max-width: 768px)" srcset="${mobileSrc}">` : ''}
-                    <img src="${imgSrc}" alt="${ban.title || 'Advertisement'}" class="ad-bg-photo graphic-ad-photo" loading="${index === 0 ? 'eager' : 'lazy'}" style="width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; object-position: center; display: block;" onerror="if(this.dataset.triedFallback!=='1'){this.dataset.triedFallback='1';this.src='${fallbackSrc}';}else if(this.src.indexOf('assets/')!==-1){this.src='./assets/tombola-banner.png';}else{this.onerror=null;}">
+                    <img src="${imgSrc}" alt="${ban.title || 'Creative Workshop Advertisement'}" class="ad-bg-photo graphic-ad-photo ${isCraft ? 'craft-ad-photo' : ''}" loading="${index === 0 ? 'eager' : 'lazy'}" style="width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; object-position: center; display: block;" onerror="if(this.dataset.triedFallback!=='1'){this.dataset.triedFallback='1';this.src='${fallbackSrc}';}else{this.onerror=null;}">
                 </picture>
             </div>
 
-
             <!-- Floating Top-Right Discount Ribbon -->
-            ${ban.discountText ? `
+            ${(!isCraft && ban.discountText) ? `
             <div class="hero-ad-discount-tag tombola-discount-ribbon">
                 <i class="fa-solid fa-ticket"></i>
                 <span>${ban.discountText}</span>
             </div>` : ''}
 
             <!-- Banner Content / Title & Description -->
-            ${ban.title ? `
+            ${(!isCraft && ban.title) ? `
             <div class="hero-ad-content hero-graphic-ad-content">
                 <h2 class="hero-ad-title">${ban.title}</h2>
                 ${ban.subtitle ? `<p class="hero-ad-desc">${ban.subtitle}</p>` : ''}
             </div>` : ''}
 
             <!-- Floating Interactive Action Bar -->
+            ${!isCraft ? `
             <div class="hero-graphic-cta-container">
-                <button class="hero-ad-cta-btn tombola-cta-btn" onclick="handleBannerClick('${ban.id}', event)">
+                <button class="hero-ad-cta-btn ${isTombola ? 'tombola-cta-btn' : ''}" onclick="handleBannerClick('${ban.id}', event)">
                     <i class="${isTombola ? 'fa-solid fa-hourglass-start' : 'fa-solid fa-bolt'}" style="color: #ffffff; font-size: 15px;"></i>
                     <span>${isTombola ? 'COMING SOON' : (ban.cta || 'CLAIM OFFER')}</span>
                     <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-arrow-right'}"></i>
                 </button>
-            </div>
+            </div>` : ''}
         </div>`;
         }
 
+        const isDiwali = ban.id === 'b_diwali';
+        const isCraft = ban.id === 'b_craft_happy_moments';
         const stdRaw = ban.image || ban.fallbackImage || 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1600&auto=format&fit=crop&q=80';
         const stdImg = window.getThemeAssetUrl ? window.getThemeAssetUrl(stdRaw) : stdRaw;
         const stdMob = (ban.mobileImage && ban.mobileImage.trim()) ? (window.getThemeAssetUrl ? window.getThemeAssetUrl(ban.mobileImage.trim()) : ban.mobileImage.trim()) : '';
@@ -4321,13 +4373,15 @@ function renderBanners() {
 
         const defaultOverlay = isTombola
             ? 'linear-gradient(90deg, rgba(20, 8, 2, 0.88) 0%, rgba(28, 11, 3, 0.75) 42%, rgba(40, 16, 4, 0.22) 75%, transparent 100%)'
-            : 'linear-gradient(90deg, rgba(16, 7, 30, 0.95) 0%, rgba(16, 7, 30, 0.8) 45%, rgba(16, 7, 30, 0.25) 85%, rgba(16, 7, 30, 0.1) 100%)';
+            : (isCraft
+                ? 'linear-gradient(90deg, rgba(26, 8, 38, 0.96) 0%, rgba(38, 12, 58, 0.88) 45%, rgba(68, 20, 95, 0.35) 85%, rgba(20, 5, 28, 0.15) 100%)'
+                : 'linear-gradient(90deg, rgba(16, 7, 30, 0.95) 0%, rgba(16, 7, 30, 0.8) 45%, rgba(16, 7, 30, 0.25) 85%, rgba(16, 7, 30, 0.1) 100%)');
         const overlayGradient = ban.overlayGradient || defaultOverlay;
 
         return `
-        <div class="hero-ad-slide ${isTombola ? 'hero-ad-tombola-slide' : ''}" data-slide-index="${index}" style="background-color: ${ban.bgColor || (isTombola ? '#ffd735' : '#110722')};">
+        <div class="hero-ad-slide ${isTombola ? 'hero-ad-tombola-slide' : ''} ${isCraft ? 'hero-ad-craft-slide' : ''}" data-slide-index="${index}" data-slide-id="${ban.id}" style="background-color: ${ban.bgColor || (isCraft ? '#1a0826' : (isTombola ? '#ffd735' : '#110722'))};">
             <!-- Full-Bleed Background Photo (fills 100% of entire banner, responsive picture) -->
-            <div class="ad-bg-media" style="background-color: ${ban.bgColor || (isTombola ? '#ffd735' : '#110722')};">
+            <div class="ad-bg-media" style="background-color: ${ban.bgColor || (isCraft ? '#1a0826' : (isTombola ? '#ffd735' : '#110722'))};">
                 <picture style="width: 100%; height: 100%; position: absolute; inset: 0;">
                     ${stdMob ? `<source media="(max-width: 768px)" srcset="${stdMob}">` : ''}
                     <img src="${stdImg}" alt="${ban.title}" class="ad-bg-photo ${isTombola ? 'tombola-ad-photo' : ''}" loading="${index === 0 ? 'eager' : 'lazy'}" onerror="this.onerror=null;this.src='${stdFallback}';">
@@ -4337,40 +4391,51 @@ function renderBanners() {
 
             <!-- Floating Top-Right Discount Ribbon -->
             ${ban.discountText ? `
-            <div class="hero-ad-discount-tag">
-                <i class="fa-solid fa-fire"></i>
+            <div class="hero-ad-discount-tag ${isCraft ? 'craft-discount-tag' : ''}">
+                <i class="${isCraft ? 'fa-solid fa-gift' : 'fa-solid fa-fire'}"></i>
                 <span>${ban.discountText}</span>
             </div>` : ''}
 
             <!-- Banner Content over Full Photo Background -->
             <div class="hero-ad-content">
-                ${ban.id === 'b_diwali' ? `
+                ${isDiwali ? `
                 <div class="diwali-tag-pill">
                     <i class="fa-solid fa-sparkles"></i>
                     <span>DIWALI FESTIVE SPECIAL (NOV 7–9 ONLY)</span>
+                </div>
+                ` : (isCraft ? `
+                <div class="diwali-tag-pill craft-tag-pill">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>CREATIVE WORKSHOP & KITS 🎨</span>
                 </div>
                 ` : (isTombola ? `
                 <div class="tombola-tag-pill">
                     <i class="fa-solid fa-dice"></i>
                     <span>COMMUNITY LUCKY DRAW</span>
                 </div>
-                ` : '')}
+                ` : ''))}
                 <h2 class="hero-ad-title ${isTombola ? 'tombola-ad-title' : ''}">${ban.title}</h2>
                 <p class="hero-ad-desc ${isTombola ? 'tombola-ad-desc' : ''}">${ban.subtitle}</p>
                 
                 <div class="hero-ad-actions">
-                    <button class="hero-ad-cta-btn ${isTombola ? 'tombola-cta-btn' : ''}" onclick="handleBannerClick('${ban.id}', event)" style="${ban.id === 'b_diwali' ? 'background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45); border: none;' : ''}">
-                        ${isTombola ? '<i class="fa-solid fa-hourglass-start" style="color: #ffffff; font-size: 15px;"></i>' : (ban.id === 'b_diwali' ? '<i class="fa-solid fa-gift" style="color: #ffffff; margin-right: 4px;"></i>' : '')}
+                    <button class="hero-ad-cta-btn ${isTombola ? 'tombola-cta-btn' : ''} ${isCraft ? 'craft-cta-btn' : ''}" onclick="handleBannerClick('${ban.id}', event)" style="${isDiwali ? 'background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45); border: none;' : (isCraft ? 'background: linear-gradient(135deg, #7c5cfc, #ec4899); color: #fff; box-shadow: 0 4px 14px rgba(124, 92, 252, 0.45); border: none;' : '')}">
+                        ${isTombola ? '<i class="fa-solid fa-hourglass-start" style="color: #ffffff; font-size: 15px;"></i>' : (isDiwali ? '<i class="fa-solid fa-gift" style="color: #ffffff; margin-right: 4px;"></i>' : (isCraft ? '<i class="fa-solid fa-palette" style="color: #ffffff; margin-right: 4px;"></i>' : ''))}
                         <span>${isTombola ? 'COMING SOON' : (ban.cta || 'ORDER NOW')}</span>
                         <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-arrow-right'}"></i>
                     </button>
                 </div>
 
-                ${ban.id === 'b_diwali' ? `
+                ${isDiwali ? `
                 <div class="hero-ad-perks diwali-ad-perks">
                     <div class="hero-ad-perk"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> 4.99 (Festive Choice)</div>
                     <div class="hero-ad-perk"><i class="fa-solid fa-truck-fast" style="color: #38bdf8;"></i> 25 Min Delivery</div>
                     <div class="hero-ad-perk"><i class="fa-solid fa-sparkles" style="color: #fbbf24;"></i> Handcrafted Hampers & Sweets</div>
+                </div>
+                ` : (isCraft ? `
+                <div class="hero-ad-perks craft-ad-perks">
+                    <div class="hero-ad-perk"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> 4.98 (Studio Choice)</div>
+                    <div class="hero-ad-perk"><i class="fa-solid fa-gift" style="color: #ec4899;"></i> Free Canvas Tote Bag</div>
+                    <div class="hero-ad-perk"><i class="fa-solid fa-wand-magic-sparkles" style="color: #38bdf8;"></i> All Materials Included</div>
                 </div>
                 ` : (isTombola ? `
                 <div class="hero-ad-perks tombola-ad-perks">
@@ -4384,7 +4449,7 @@ function renderBanners() {
                     <div class="hero-ad-perk"><i class="fa-solid fa-bolt" style="color: #38bdf8;"></i> 25 Min Delivery</div>
                     <div class="hero-ad-perk"><i class="fa-solid fa-certificate" style="color: #34d399;"></i> 100% Fresh Bakes</div>
                 </div>
-                `)}
+                `))}
             </div>
         </div>`;
     }).join('');
@@ -15718,3 +15783,49 @@ if (typeof window !== 'undefined') {
         cleanup();
     }
 })();
+
+
+// ==================== ENTRY ADVERTISEMENT MODAL (Craft Your Happy Moments) ====================
+window.openAdvertisementModal = function() {
+    const modal = document.getElementById('advertisementModal');
+    if (modal) {
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+};
+
+window.closeAdvertisementModal = function() {
+    const modal = document.getElementById('advertisementModal');
+    if (modal) {
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+};
+
+window.handleAdModalCta = function() {
+    window.closeAdvertisementModal();
+    // Navigate or scroll to workshop / creative kits
+    if (window.location.pathname.includes('workshop')) {
+        const passes = document.getElementById('passesSection');
+        if (passes) passes.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        const billboard = document.getElementById('heroAdWrapper');
+        if (billboard) {
+            billboard.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+    if (typeof showToast === 'function') {
+        showToast('Explore creative kits & Chocoloom workshop items! 🎒🎨');
+    }
+};
+
+if (typeof window !== 'undefined') {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('advertisementModal');
+            if (modal && modal.classList.contains('open')) {
+                window.closeAdvertisementModal();
+            }
+        }
+    });
+}
