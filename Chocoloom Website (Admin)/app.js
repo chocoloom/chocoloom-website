@@ -1510,7 +1510,7 @@ window.loadCatalogFromNeon = async function(showToast = false) {
 async function fetchLiveProductsFromSupabase() {
     const CACHE_KEY = 'chocoloom_products_cache_v2';
     const CACHE_TTL_MS = 600000; // 10 minutes cache TTL
-    const PRODUCT_SELECT_COLUMNS = 'id, name, price, discount_price, original_price, price_half_kg, price_1kg, price_1_5kg, price_2kg, price_3kg, cooling_price_half_kg, cooling_price_1kg, cooling_price_1_5kg, cooling_price_2kg, cooling_price_3kg, is_available';
+    const PRODUCT_SELECT_COLUMNS = 'id, name, price, discount_price, price_half_kg, price_1kg, price_1_5kg, price_2kg, price_3kg, cooling_price_half_kg, cooling_price_1kg, cooling_price_1_5kg, cooling_price_2kg, cooling_price_3kg, is_available';
 
     // 0. Check client-side memory/session cache first (0 bytes egress!)
     try {
@@ -1560,6 +1560,25 @@ async function fetchLiveProductsFromSupabase() {
     } catch (e) {
         console.warn('Supabase REST fetch error:', e);
     }
+
+    // Direct REST API wildcard fallback
+    try {
+        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*`, {
+            headers: {
+                'apikey': SUPABASE_CONFIG.anonKey,
+                'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
+            }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+                try {
+                    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data }));
+                } catch(e) {}
+                return data;
+            }
+        }
+    } catch (e) {}
     return null;
 }
 

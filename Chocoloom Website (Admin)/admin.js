@@ -833,7 +833,7 @@ async function loadAllOrders(isUserInitiated = false) {
     let supabaseReachable = false;
     const incomingBatch = [];
 
-    const ORDER_COLUMNS = 'id, order_number, customer_name, customer_phone, delivery_address, items, final_total, payment_method, payment_status, status, created_at, updated_at, total_items, delivery_notes, is_prebooking, prebook_slot';
+    const ORDER_COLUMNS = '*';
 
     // 0. EGRESS OPTIMIZATION: If Supabase Realtime WebSocket is connected and this is passive polling,
     // do a tiny 1-row delta check before downloading full order history.
@@ -859,11 +859,19 @@ async function loadAllOrders(isUserInitiated = false) {
     // 1. Try Supabase JS Client
     if (supabaseClient) {
         try {
-            const { data, error } = await supabaseClient
+            let { data, error } = await supabaseClient
                 .from('orders')
                 .select(ORDER_COLUMNS)
                 .order('created_at', { ascending: false })
                 .limit(50);
+
+            if (error && ORDER_COLUMNS !== '*') {
+                const retry = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
+                if (!retry.error) {
+                    data = retry.data;
+                    error = null;
+                }
+            }
 
             if (error) {
                 console.warn('Supabase order fetch error:', error.message || error);
@@ -886,7 +894,7 @@ async function loadAllOrders(isUserInitiated = false) {
     // Direct REST API fallback if JS client did not succeed
     if (!loadedFromSupabase) {
         try {
-            const res = await fetch(SUPABASE_CONFIG.url + '/rest/v1/orders?select=' + encodeURIComponent(ORDER_COLUMNS) + '&order=created_at.desc&limit=50', {
+            const res = await fetch(SUPABASE_CONFIG.url + '/rest/v1/orders?select=*&order=created_at.desc&limit=50', {
                 headers: {
                     'apikey': SUPABASE_CONFIG.anonKey,
                     'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
@@ -974,7 +982,25 @@ async function loadAllOrders(isUserInitiated = false) {
     if (AdminState.orders.length === 0 && dedupedBatch.length === 0 && !supabaseReachable) {
         seedInitialDemoOrders();
     } else if (dedupedBatch.length > 0) {
-        mergeOrdersIntoState(dedupedBatch, isInitialOrderLoadDone);
+        if (loadedFromSupabase) {
+            if (isInitialOrderLoadDone) {
+                dedupedBatch.forEach(raw => {
+                    const item = normalizeOrderData(raw);
+                    const orderKey = item.order_number || item.id;
+                    if (orderKey && !seenOrderKeys.has(orderKey) && !recentlyAlertedOrders.has(orderKey)) {
+                        recentlyAlertedOrders.add(orderKey);
+                        setTimeout(() => recentlyAlertedOrders.delete(orderKey), 45000);
+                        playOrderChime();
+                        sendDesktopNotification(item);
+                        showNewOrderToast(item);
+                    }
+                });
+            }
+            AdminState.orders = dedupedBatch.map(normalizeOrderData);
+            AdminState.orders.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+        } else {
+            mergeOrdersIntoState(dedupedBatch, isInitialOrderLoadDone);
+        }
     }
 
     // Mark initial load done so future polling triggers new-order alerts
@@ -2184,13 +2210,13 @@ function initEventListeners() {
         }
     });
 
-    // EGRESS OPTIMIZATION: Smart polling fallback (45s instead of 3s)
-    // Supabase Realtime WebSocket already pushes instant orders with near-zero egress.
+    // EGRESS OPTIMIZATION: Smart polling fallback (10s interval with instant 1-row delta check)
+    // Supabase Realtime WebSocket pushes instant orders; polling checks delta if disconnected.
     setInterval(() => {
         if (!document.hidden) {
             loadAllOrders(false);
         }
-    }, 45000);
+    }, 10000);
 }
 
 function updateAudioButtonUI() {
@@ -2431,7 +2457,7 @@ window.switchAdminTab = function(tabName) {
 // Load all products directly from Supabase Cloud (with fallback to Neon / Local)
 window.loadAllProducts = async function() {
     // 1. PRIMARY: Receive all live products directly from Supabase Cloud Database!
-    const PRODUCT_COLUMNS = "id, name, description, price, discount_price, original_price, price_half_kg, price_1kg, price_1_5kg, price_2kg, price_3kg, cooling_price_half_kg, cooling_price_1kg, cooling_price_1_5kg, cooling_price_2kg, cooling_price_3kg, category, is_available, stock, image_url";
+    const PRODUCT_COLUMNS = "id, name, description, price, discount_price, price_half_kg, price_1kg, price_1_5kg, price_2kg, price_3kg, cooling_price_half_kg, cooling_price_1kg, cooling_price_1_5kg, cooling_price_2kg, cooling_price_3kg, category, is_available, stock, image_url";
     try {
         let supaProds = null;
         if (supabaseClient) {
@@ -2444,6 +2470,21 @@ window.loadAllProducts = async function() {
             // Direct REST API fetch to Supabase
             try {
                 const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=${encodeURIComponent(PRODUCT_COLUMNS)}&order=category.asc,name.asc`, {
+                    headers: {
+                        'apikey': SUPABASE_CONFIG.anonKey,
+                        'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
+                    }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) supaProds = data;
+                }
+            } catch(e) {}
+        }
+        if (!supaProds) {
+            // Wildcard fallback if column mismatch
+            try {
+                const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*&order=category.asc,name.asc`, {
                     headers: {
                         'apikey': SUPABASE_CONFIG.anonKey,
                         'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
