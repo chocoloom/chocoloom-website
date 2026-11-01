@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chocoloom Workshop - Clay Toy Cakes Masterclass & Free Tote Bags</title>
     <meta name="description" content="Join Chocoloom's exclusive Clay Toy Cakes crafting workshop in Bhimavaram. Sculpt your customised miniature cake like a cute clay toy. Take home your creation in a display dome + receive a FREE Chocoloom Canvas Tote Bag!">
-    <link rel="icon" type="image/png" href="assets/logo.png">
+    <base href="/workshop/">
+    <link rel="icon" type="image/png" href="/workshop/assets/logo.png">
     <link rel="canonical" href="https://chocoloom.com/workshop">
     <meta property="og:url" content="https://chocoloom.com/workshop">
     <meta property="og:title" content="Chocoloom Workshop - Clay Toy Cakes Masterclass & Free Tote Bags">
@@ -20,8 +21,48 @@
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
-    <!-- Stylesheets -->
-    <link rel="stylesheet" href="workshop.css?v=5">
+    <!-- Stylesheets: primary with /workshop/ prefix, also resolves via base href -->
+    <link rel="stylesheet" href="/workshop/workshop.css?v=8">
+    <link rel="stylesheet" href="workshop.css?v=8">
+
+    <style>
+        /* Critical CSS to guarantee correct layout instantly under all network speeds */
+        .navbar {
+            background: #ffffff;
+            border-bottom: 1px solid #f1edfd;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            height: 68px;
+            display: flex;
+            align-items: center;
+        }
+        .nav-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        .brand-logo-img {
+            height: 36px !important;
+            max-height: 40px !important;
+            width: auto !important;
+            max-width: 130px !important;
+            object-fit: contain !important;
+            display: block !important;
+        }
+        .shb-img {
+            max-width: 100%;
+            width: 100%;
+            height: auto;
+            border-radius: 24px;
+            display: block;
+        }
+    </style>
 </head>
 <body>
 
@@ -757,7 +798,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="workshop.js"></script>
+    <script src="/workshop/workshop.js?v=8"></script>
     <script>
         function showHelpInfo() {
             showToast('Chocoloom Helpline: WhatsApp or Call +91 98497 83788');
