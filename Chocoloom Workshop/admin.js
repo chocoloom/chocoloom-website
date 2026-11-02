@@ -8,7 +8,7 @@
 (function () {
     'use strict';
 
-    const MASTER_PIN = '2026';
+    const MASTER_PIN = '0909';
     const STORAGE_KEY = 'chocoloom_workshop_registrations';
     const AUTH_KEY = 'chocoloom_admin_auth';
     const MAX_CAPACITY = 15;
@@ -291,7 +291,7 @@
                 authCard.classList.add('shake');
             }
             if (errorMsg) {
-                errorMsg.textContent = 'Incorrect PIN. Master PIN is 2026.';
+                errorMsg.textContent = 'Incorrect PIN. Master PIN is 0909.';
             }
             setTimeout(() => {
                 window.clearPin();
