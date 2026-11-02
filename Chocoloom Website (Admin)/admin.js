@@ -833,7 +833,7 @@ async function loadAllOrders(isUserInitiated = false) {
     let supabaseReachable = false;
     const incomingBatch = [];
 
-    const ORDER_COLUMNS = '*';
+    const ORDER_COLUMNS = 'id, order_number, customer_name, customer_phone, delivery_address, items, final_total, payment_method, payment_status, status, created_at, updated_at, total_items, delivery_notes, is_prebooking, prebook_slot';
 
     // 0. EGRESS OPTIMIZATION: If Supabase Realtime WebSocket is connected and this is passive polling,
     // do a tiny 1-row delta check before downloading full order history.
@@ -859,19 +859,11 @@ async function loadAllOrders(isUserInitiated = false) {
     // 1. Try Supabase JS Client
     if (supabaseClient) {
         try {
-            let { data, error } = await supabaseClient
+            const { data, error } = await supabaseClient
                 .from('orders')
                 .select(ORDER_COLUMNS)
                 .order('created_at', { ascending: false })
                 .limit(50);
-
-            if (error && ORDER_COLUMNS !== '*') {
-                const retry = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
-                if (!retry.error) {
-                    data = retry.data;
-                    error = null;
-                }
-            }
 
             if (error) {
                 console.warn('Supabase order fetch error:', error.message || error);
@@ -894,7 +886,7 @@ async function loadAllOrders(isUserInitiated = false) {
     // Direct REST API fallback if JS client did not succeed
     if (!loadedFromSupabase) {
         try {
-            const res = await fetch(SUPABASE_CONFIG.url + '/rest/v1/orders?select=*&order=created_at.desc&limit=50', {
+            const res = await fetch(SUPABASE_CONFIG.url + '/rest/v1/orders?select=' + encodeURIComponent(ORDER_COLUMNS) + '&order=created_at.desc&limit=50', {
                 headers: {
                     'apikey': SUPABASE_CONFIG.anonKey,
                     'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
@@ -982,25 +974,7 @@ async function loadAllOrders(isUserInitiated = false) {
     if (AdminState.orders.length === 0 && dedupedBatch.length === 0 && !supabaseReachable) {
         seedInitialDemoOrders();
     } else if (dedupedBatch.length > 0) {
-        if (loadedFromSupabase) {
-            if (isInitialOrderLoadDone) {
-                dedupedBatch.forEach(raw => {
-                    const item = normalizeOrderData(raw);
-                    const orderKey = item.order_number || item.id;
-                    if (orderKey && !seenOrderKeys.has(orderKey) && !recentlyAlertedOrders.has(orderKey)) {
-                        recentlyAlertedOrders.add(orderKey);
-                        setTimeout(() => recentlyAlertedOrders.delete(orderKey), 45000);
-                        playOrderChime();
-                        sendDesktopNotification(item);
-                        showNewOrderToast(item);
-                    }
-                });
-            }
-            AdminState.orders = dedupedBatch.map(normalizeOrderData);
-            AdminState.orders.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-        } else {
-            mergeOrdersIntoState(dedupedBatch, isInitialOrderLoadDone);
-        }
+        mergeOrdersIntoState(dedupedBatch, isInitialOrderLoadDone);
     }
 
     // Mark initial load done so future polling triggers new-order alerts
@@ -2210,13 +2184,13 @@ function initEventListeners() {
         }
     });
 
-    // EGRESS OPTIMIZATION: Smart polling fallback (10s interval with instant 1-row delta check)
-    // Supabase Realtime WebSocket pushes instant orders; polling checks delta if disconnected.
+    // EGRESS OPTIMIZATION: Smart polling fallback (45s instead of 3s)
+    // Supabase Realtime WebSocket already pushes instant orders with near-zero egress.
     setInterval(() => {
         if (!document.hidden) {
             loadAllOrders(false);
         }
-    }, 10000);
+    }, 45000);
 }
 
 function updateAudioButtonUI() {
@@ -2469,21 +2443,6 @@ window.loadAllProducts = async function() {
         if (!supaProds) {
             // Direct REST API fetch to Supabase
             try {
-                const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=${encodeURIComponent(PRODUCT_COLUMNS)}&order=category.asc,name.asc`, {
-                    headers: {
-                        'apikey': SUPABASE_CONFIG.anonKey,
-                        'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
-                    }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (Array.isArray(data) && data.length > 0) supaProds = data;
-                }
-            } catch(e) {}
-        }
-        if (!supaProds) {
-            // Wildcard fallback if column mismatch
-            try {
                 const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*&order=category.asc,name.asc`, {
                     headers: {
                         'apikey': SUPABASE_CONFIG.anonKey,
@@ -2498,7 +2457,7 @@ window.loadAllProducts = async function() {
         }
 
         if (supaProds && supaProds.length > 0) {
-            AdminState.products = supaProds.map(r => ({
+            let mappedProds = supaProds.map(r => ({
                 id: r.id,
                 sql_id: r.id,
                 name: r.name,
@@ -2527,6 +2486,44 @@ window.loadAllProducts = async function() {
                 flavour: r.flavour || "",
                 flavour_prices: (typeof r.flavour_prices === 'object' && r.flavour_prices !== null) ? r.flavour_prices : {}
             }));
+
+            // Merge locally added custom products that are still in localStorage
+            try {
+                const customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
+                customs.forEach(c => {
+                    const exists = mappedProds.some(p => p.id === c.id || (p.sql_id && p.sql_id === c.sql_id) || (p.name && c.name && p.name.toLowerCase().trim() === c.name.toLowerCase().trim()));
+                    if (!exists) {
+                        mappedProds.unshift(c);
+                    }
+                });
+            } catch(e) {}
+
+            // Apply any local price/stock overrides
+            try {
+                const overrides = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
+                mappedProds.forEach(p => {
+                    const key = p.sql_id || p.id;
+                    const normName = p.name ? p.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+                    const over = overrides[key] || overrides[p.id] || (normName ? overrides[normName] : null) || (p.name ? overrides[p.name.toLowerCase().trim()] : null);
+                    if (over) {
+                        if (over.price !== undefined) p.price = Number(over.price);
+                        if (over.is_available !== undefined) p.is_available = (over.is_available === true || over.is_available === 'true' || over.is_available === 1 || over.is_available === '1');
+                        if (over.name) p.name = over.name;
+                        if (over.category) p.category = over.category;
+                        if (over.image) { p.image = over.image; p.image_url = over.image; }
+                    }
+                });
+            } catch(e) {}
+
+            // Filter out deleted items
+            try {
+                const dels = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
+                if (dels.length > 0) {
+                    mappedProds = mappedProds.filter(p => !dels.includes(p.id) && (!p.sql_id || !dels.includes(p.sql_id)));
+                }
+            } catch(e) {}
+
+            AdminState.products = mappedProds;
             AdminState.supabaseConnected = true;
             updateCloudStatusBadges();
             console.log(`✅ Admin Panel received ${AdminState.products.length} live products directly from Supabase!`);
@@ -4827,9 +4824,32 @@ async function syncProductToSupabase(prod) {
                 if (postRes.ok) {
                     const inserted = await postRes.json();
                     if (inserted && inserted[0]) {
-                        prod.sql_id = inserted[0].id;
+                        const newSqlId = inserted[0].id;
+                        prod.sql_id = newSqlId;
                         updated = true;
+                        // Keep AdminState.products linked
+                        const matchAdmin = AdminState.products.find(p => p.id === prod.id || p.name === prod.name);
+                        if (matchAdmin) {
+                            matchAdmin.sql_id = newSqlId;
+                        }
+                        // Keep chocoloom_custom_products in localStorage linked
+                        try {
+                            let customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
+                            const cIdx = customs.findIndex(c => c.id === prod.id || c.name === prod.name);
+                            if (cIdx !== -1) {
+                                customs[cIdx].sql_id = newSqlId;
+                                localStorage.setItem("chocoloom_custom_products", JSON.stringify(customs));
+                            }
+                        } catch(e) {}
+                        // Keep price overrides linked
+                        try {
+                            let overs = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
+                            overs[newSqlId] = { ...(overs[prod.id] || {}), ...prod, sql_id: newSqlId };
+                            localStorage.setItem("chocoloom_price_overrides", JSON.stringify(overs));
+                        } catch(e) {}
                         console.log(`✅ [Supabase REST] Inserted new product "${prod.name}" (${prod.sql_id})`);
+                        // Re-broadcast so customer site knows the permanent sql_id
+                        broadcastProductUpdate("SAVE", { ...prod, sql_id: newSqlId });
                     }
                 } else {
                     lastError = await postRes.text();
