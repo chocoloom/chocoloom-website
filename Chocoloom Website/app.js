@@ -1616,6 +1616,9 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
         );
 
         if (match) {
+            if (liveItem.id && (!match.sql_id || match.sql_id !== liveItem.id)) {
+                match.sql_id = liveItem.id;
+            }
             // Apply fresh live price from database
             if (match.price !== effectivePrice) {
                 match.price = effectivePrice;
@@ -1675,17 +1678,9 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                     const normName = (match.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
                     const over = adminOverrides[overrideKey] || adminOverrides[match.id] || (normName ? adminOverrides[normName] : null) || (match.name ? adminOverrides[match.name.toLowerCase().trim()] : null);
                     if (over && over.is_available !== undefined) {
-                        if (over.is_available === false || over.is_available === 'false' || over.is_available === 0 || over.is_available === '0') {
-                            effectiveIsAvail = false;
-                        } else if (itemIsAvail) {
-                            effectiveIsAvail = true;
-                        }
+                        effectiveIsAvail = (over.is_available === true || over.is_available === 'true' || over.is_available === 1 || over.is_available === '1');
                     }
                 } catch(e) {}
-                // If live cloud database explicitly marked item as out of stock, live DB takes absolute precedence
-                if (!itemIsAvail) {
-                    effectiveIsAvail = false;
-                }
                 if (match.is_available !== effectiveIsAvail) {
                     match.is_available = effectiveIsAvail;
                     anyPriceUpdated = true;
@@ -2105,11 +2100,19 @@ async function loadServerCatalogOverrides() {
                             }
                         }
 
+                        // If cloud database (Supabase/Neon) is connected, static file overrides must NOT clobber live availability or prices
                         if (data.overrides && Object.keys(data.overrides).length > 0) {
                             const curO = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
-                            // Always merge admin overrides (stock/availability). Admin is_available overrides
-                            // must take absolute precedence even when Neon/Supabase DB is loaded.
-                            const merged = { ...curO, ...data.overrides };
+                            // CRITICAL: Local admin overrides (curO) MUST take absolute precedence over static server overrides (data.overrides)
+                            const merged = { ...data.overrides, ...curO };
+                            // If cloud database is already active, don't allow static file to force items out of stock
+                            if (window._cloudDatabaseLoaded || window._supabaseLoaded) {
+                                Object.keys(data.overrides).forEach(k => {
+                                    if (data.overrides[k]?.is_available === false && curO[k]?.is_available === undefined) {
+                                        delete merged[k];
+                                    }
+                                });
+                            }
                             if (JSON.stringify(curO) !== JSON.stringify(merged)) {
                                 localStorage.setItem("chocoloom_price_overrides", JSON.stringify(merged));
                                 hasChanges = true;
@@ -2127,7 +2130,7 @@ async function loadServerCatalogOverrides() {
                                 hasChanges = true;
                             }
                         }
-                        if (data.deletedProducts && Array.isArray(data.deletedProducts) && data.deletedProducts.length > 0) {
+                        if (data.deletedProducts && Array.isArray(data.deletedProducts) && data.deletedProducts.length > 0 && !ep.includes('catalog_overrides.json')) {
                             const curD = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
                             const nextD = Array.from(new Set([...curD, ...data.deletedProducts]));
                             const sortD = arr => [...arr].sort().join(',');
@@ -5564,9 +5567,7 @@ function getAllProducts() {
                 const normName = item.name ? item.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
                 const over = liveOverrides[key] || liveOverrides[item.id] || (normName ? liveOverrides[normName] : null) || (item.name ? liveOverrides[item.name.toLowerCase().trim()] : null);
                 if (over && over.is_available !== undefined) {
-                    if (over.is_available === false || over.is_available === 'false' || over.is_available === 0 || over.is_available === '0') {
-                        item.is_available = false;
-                    }
+                    item.is_available = (over.is_available === true || over.is_available === 'true' || over.is_available === 1 || over.is_available === '1');
                 }
             });
         } catch(e) {}
@@ -5623,11 +5624,7 @@ function getAllProducts() {
         const over = priceOverrides[key] || priceOverrides[item.id] || (normName ? priceOverrides[normName] : null) || (item.name ? priceOverrides[item.name.toLowerCase().trim()] : null);
         if (over) {
             if (over.is_available !== undefined) {
-                if (over.is_available === false || over.is_available === 'false' || over.is_available === 0 || over.is_available === '0') {
-                    item.is_available = false;
-                } else if (item.is_available !== false) {
-                    item.is_available = Boolean(over.is_available);
-                }
+                item.is_available = (over.is_available === true || over.is_available === 'true' || over.is_available === 1 || over.is_available === '1');
             }
             if (over.price !== undefined) item.price = Number(over.price);
             if (over.originalPrice !== undefined) item.originalPrice = Number(over.originalPrice);
@@ -9780,6 +9777,8 @@ function applyLiveAdminUpdates(data) {
                                 (targetName && item.name && item.name.toLowerCase().trim() === targetName) ||
                                 (normTarget && item.name && item.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normTarget)) {
                                 item.is_available = isAvail;
+                                if (prod.sql_id) item.sql_id = prod.sql_id;
+                                if (targetId && !item.sql_id && !String(targetId).startsWith('choco_') && !String(targetId).startsWith('uni_')) item.sql_id = targetId;
                                 if (prod.price !== undefined) item.price = Number(prod.price);
                                 if (prod.category) item.category = prod.category;
                                 if (prod.image_url || prod.image) item.image = prod.image_url || prod.image;
@@ -9796,12 +9795,29 @@ function applyLiveAdminUpdates(data) {
                         });
                     }
 
-                    if (String(prod.id).startsWith("choco_custom_") || prod.isCustom) {
-                        let curC = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
-                        const cIdx = curC.findIndex(c => c.id === prod.id || (c.sql_id && c.sql_id === prod.sql_id));
-                        if (cIdx !== -1) curC[cIdx] = { ...curC[cIdx], ...prod };
-                        else curC.unshift(prod);
+                    // Keep custom products synced and un-deleted
+                    let curC = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
+                    const cIdx = curC.findIndex(c => 
+                        (prod.id && (c.id === prod.id || c.sql_id === prod.id)) ||
+                        (prod.sql_id && (c.sql_id === prod.sql_id || c.id === prod.sql_id)) ||
+                        (targetName && c.name && c.name.toLowerCase().trim() === targetName) ||
+                        (normTarget && c.name && c.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normTarget)
+                    );
+                    if (cIdx !== -1) {
+                        curC[cIdx] = { ...curC[cIdx], ...prod };
+                        if (prod.sql_id) curC[cIdx].sql_id = prod.sql_id;
                         localStorage.setItem("chocoloom_custom_products", JSON.stringify(curC));
+                    } else if (String(prod.id).startsWith("choco_custom_") || prod.isCustom) {
+                        curC.unshift(prod);
+                        localStorage.setItem("chocoloom_custom_products", JSON.stringify(curC));
+                    }
+
+                    // Ensure saved product is not suppressed by deletedProducts
+                    let curD = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
+                    const origLen = curD.length;
+                    curD = curD.filter(d => d !== prod.id && (!prod.sql_id || d !== prod.sql_id) && (!targetId || d !== targetId));
+                    if (curD.length !== origLen) {
+                        localStorage.setItem("chocoloom_deleted_products", JSON.stringify(curD));
                     }
                 }
             }

@@ -2457,7 +2457,7 @@ window.loadAllProducts = async function() {
         }
 
         if (supaProds && supaProds.length > 0) {
-            AdminState.products = supaProds.map(r => ({
+            let mappedProds = supaProds.map(r => ({
                 id: r.id,
                 sql_id: r.id,
                 name: r.name,
@@ -2486,6 +2486,44 @@ window.loadAllProducts = async function() {
                 flavour: r.flavour || "",
                 flavour_prices: (typeof r.flavour_prices === 'object' && r.flavour_prices !== null) ? r.flavour_prices : {}
             }));
+
+            // Merge locally added custom products that are still in localStorage
+            try {
+                const customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
+                customs.forEach(c => {
+                    const exists = mappedProds.some(p => p.id === c.id || (p.sql_id && p.sql_id === c.sql_id) || (p.name && c.name && p.name.toLowerCase().trim() === c.name.toLowerCase().trim()));
+                    if (!exists) {
+                        mappedProds.unshift(c);
+                    }
+                });
+            } catch(e) {}
+
+            // Apply any local price/stock overrides
+            try {
+                const overrides = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
+                mappedProds.forEach(p => {
+                    const key = p.sql_id || p.id;
+                    const normName = p.name ? p.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+                    const over = overrides[key] || overrides[p.id] || (normName ? overrides[normName] : null) || (p.name ? overrides[p.name.toLowerCase().trim()] : null);
+                    if (over) {
+                        if (over.price !== undefined) p.price = Number(over.price);
+                        if (over.is_available !== undefined) p.is_available = (over.is_available === true || over.is_available === 'true' || over.is_available === 1 || over.is_available === '1');
+                        if (over.name) p.name = over.name;
+                        if (over.category) p.category = over.category;
+                        if (over.image) { p.image = over.image; p.image_url = over.image; }
+                    }
+                });
+            } catch(e) {}
+
+            // Filter out deleted items
+            try {
+                const dels = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
+                if (dels.length > 0) {
+                    mappedProds = mappedProds.filter(p => !dels.includes(p.id) && (!p.sql_id || !dels.includes(p.sql_id)));
+                }
+            } catch(e) {}
+
+            AdminState.products = mappedProds;
             AdminState.supabaseConnected = true;
             updateCloudStatusBadges();
             console.log(`✅ Admin Panel received ${AdminState.products.length} live products directly from Supabase!`);
@@ -4786,9 +4824,32 @@ async function syncProductToSupabase(prod) {
                 if (postRes.ok) {
                     const inserted = await postRes.json();
                     if (inserted && inserted[0]) {
-                        prod.sql_id = inserted[0].id;
+                        const newSqlId = inserted[0].id;
+                        prod.sql_id = newSqlId;
                         updated = true;
+                        // Keep AdminState.products linked
+                        const matchAdmin = AdminState.products.find(p => p.id === prod.id || p.name === prod.name);
+                        if (matchAdmin) {
+                            matchAdmin.sql_id = newSqlId;
+                        }
+                        // Keep chocoloom_custom_products in localStorage linked
+                        try {
+                            let customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
+                            const cIdx = customs.findIndex(c => c.id === prod.id || c.name === prod.name);
+                            if (cIdx !== -1) {
+                                customs[cIdx].sql_id = newSqlId;
+                                localStorage.setItem("chocoloom_custom_products", JSON.stringify(customs));
+                            }
+                        } catch(e) {}
+                        // Keep price overrides linked
+                        try {
+                            let overs = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
+                            overs[newSqlId] = { ...(overs[prod.id] || {}), ...prod, sql_id: newSqlId };
+                            localStorage.setItem("chocoloom_price_overrides", JSON.stringify(overs));
+                        } catch(e) {}
                         console.log(`✅ [Supabase REST] Inserted new product "${prod.name}" (${prod.sql_id})`);
+                        // Re-broadcast so customer site knows the permanent sql_id
+                        broadcastProductUpdate("SAVE", { ...prod, sql_id: newSqlId });
                     }
                 } else {
                     lastError = await postRes.text();
