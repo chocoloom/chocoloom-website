@@ -14144,19 +14144,19 @@ const GAME_ZONE_DATA = [
     {
         id: 'event_bhimavaram_workshop',
         category: 'workshop',
-        categoryName: 'Offline Workshop',
-        title: 'Bhimavaram Offline Workshop 🍫🎂',
-        subtitle: '🔔 Event Coming Soon • Live Masterclass in Bhimavaram',
-        description: '🎉 Exciting news! Chocoloom\'s first hands-on offline workshop is coming soon to Bhimavaram! Learn chocolate tempering, cake styling & artisan truffle moulding — right here in your city. Register now to get early-bird WhatsApp alerts!',
+        categoryName: 'Clay Art Workshop',
+        title: 'Clay Art Workshop 🎂🎨',
+        subtitle: 'Create • Play • Enjoy • Design Your Own Custom Bento Cake!',
+        description: 'Chocoloom Presents Clay Art Workshop on 15 Nov 2026 (Sunday) in Bhimavaram! Sculpt & customise your Bento Cake design with clay. Exciting winners selection, Chocoloom Signature Tote Bag, Chef Apron & goodies included! Solo ₹499 | Duo ₹899.',
         image: 'assets/workshop_banner.jpg',
-        badge: '🔔 EVENT SOON',
-        badgeColor: 'linear-gradient(135deg, #db2777, #f59e0b)',
+        badge: 'REGISTRATIONS OPEN',
+        badgeColor: 'linear-gradient(135deg, #10b981, #059669)',
         rating: 5.0,
-        players: 'Limited Seats • Register Now',
-        status: 'Bhimavaram – Registrations Open Soon!',
-        cost: 'OFFLINE EVENT',
-        btnText: 'NOTIFY ME 🔔',
-        btnIcon: 'fa-bell',
+        players: 'Limited Seats • 15 Nov 2026',
+        status: 'Bhimavaram – Registrations Are Open!',
+        cost: 'SOLO ₹499 • DUO ₹899',
+        btnText: 'BOOK PASS NOW 🎟️',
+        btnIcon: 'fa-ticket',
         action: 'openWorkshopModal'
     }
 ];
@@ -14500,24 +14500,25 @@ window.ensureWorkshopModalDOM = function() {
         <div class="game-modal-card workshop-modal-card" onclick="event.stopPropagation()">
             <!-- Banner Image & Badges -->
             <div class="workshop-modal-banner-wrap">
-                <img src="assets/workshop_banner.jpg" alt="Chocoloom Offline Workshop Bhimavaram" class="workshop-modal-banner-img" onerror="this.src='assets/categories/specialty_cakes.webp'">
+                <img src="assets/workshop_banner.jpg" alt="Chocoloom Clay Art Workshop Bhimavaram" class="workshop-modal-banner-img" onerror="this.src='assets/categories/specialty_cakes.webp'">
                 <div class="workshop-modal-banner-overlay">
                     <div class="workshop-banner-top">
-                        <span class="workshop-pill-offline">
-                            <i class="fa-solid fa-location-dot" style="color: #db2777;"></i> OFFLINE IN BHIMAVARAM
+                        <span class="workshop-pill-offline" style="background:#ede8ff; color:#7c5cfc; font-weight:800;">
+                            <i class="fa-solid fa-sparkles"></i> CHOCOLOOM PRESENTS
                         </span>
-                        <span class="workshop-pill-soon">
-                            <span class="pulse-dot" style="background:#fff; width:6px; height:6px; border-radius:50%; display:inline-block;"></span> COMING SOON
+                        <span class="workshop-pill-soon" style="background:#10b981; color:#fff; font-weight:800;">
+                            <span class="pulse-dot" style="background:#fff; width:6px; height:6px; border-radius:50%; display:inline-block;"></span> REGISTRATIONS OPEN
                         </span>
                         <button type="button" class="modal-close-btn" style="position:static; margin-left:auto; background:rgba(0,0,0,0.5); color:#fff; border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;" onclick="window.closeWorkshopModal()">
                             <i class="fa-solid fa-xmark"></i>
                         </button>
                     </div>
                     <div class="workshop-banner-bottom">
-                        <h3 class="workshop-banner-title">Chocoloom Artisanal Workshop 🍫🎂</h3>
+                        <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #fef08a; text-transform: uppercase; margin-bottom: 2px;">Create • Play • Enjoy</div>
+                        <h3 class="workshop-banner-title">Clay Art Workshop 🎂🎨</h3>
                         <div class="workshop-banner-location">
-                            <i class="fa-solid fa-store" style="color: #f472b6;"></i>
-                            <span>Offline Masterclass • In-Person Studio, Bhimavaram</span>
+                            <i class="fa-solid fa-calendar-days" style="color: #f472b6;"></i>
+                            <span>15 November 2026 (Sunday) • Bhimavaram, Andhra Pradesh</span>
                         </div>
                     </div>
                 </div>
@@ -14525,41 +14526,61 @@ window.ensureWorkshopModalDOM = function() {
 
             <!-- Modal Content Body -->
             <div class="workshop-modal-body">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px;">
+                    <h4 style="font-size: 18px; font-weight: 900; color: #1e1b4b; margin: 0;">Design Your Own Custom Bento Cake! 🎂</h4>
+                    <span style="background: #ede8ff; color: #7c5cfc; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px;">Solo ₹499 • Duo ₹899</span>
+                </div>
                 <p class="workshop-overview-text">
-                    Join Chocoloom's first-ever <strong>hands-on offline culinary masterclass</strong> in Bhimavaram! Learn the secret art of chocolate tempering, artisan truffle moulding, and professional cake piping directly from our pastry masters.
+                    Get ready for a fun-filled creative experience with Chocoloom! Join us for an exciting <strong>Clay Art Workshop</strong> where you can sculpt, create and customise your very own <strong>Bento Cake Design using clay</strong>. Bring your imagination to life, explore your creativity and enjoy a memorable artistic experience!
                 </p>
+
+                <!-- Contest Winner Strip -->
+                <div style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1.5px dashed #f59e0b; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 24px;">🏆</div>
+                    <div>
+                        <div style="font-size: 11px; font-weight: 850; color: #b45309; text-transform: uppercase;">SPECIAL CONTEST</div>
+                        <div style="font-size: 13.5px; font-weight: 800; color: #78350f;">EXCITING WINNERS SELECTION!</div>
+                        <div style="font-size: 12px; color: #92400e;">The most creative and impressive Bento Cake designs will be selected as winners!</div>
+                    </div>
+                </div>
 
                 <!-- Highlights Grid -->
                 <div class="workshop-highlights-grid">
                     <div class="workshop-highlight-item">
-                        <div class="workshop-hl-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <div class="workshop-hl-icon"><i class="fa-solid fa-user"></i></div>
                         <div>
-                            <div class="workshop-hl-title">Chocolate Tempering</div>
-                            <div class="workshop-hl-desc">Master velvet ganache, Belgian truffle dipping & chocolate bar moulding.</div>
+                            <div class="workshop-hl-title">SOLO PASS – ₹499</div>
+                            <div class="workshop-hl-desc">1 participant • Enjoy your own creative experience • Sculpt custom bento cake.</div>
                         </div>
                     </div>
                     <div class="workshop-highlight-item">
-                        <div class="workshop-hl-icon"><i class="fa-solid fa-cake-candles"></i></div>
+                        <div class="workshop-hl-icon"><i class="fa-solid fa-user-group"></i></div>
                         <div>
-                            <div class="workshop-hl-title">Cake Styling & Piping</div>
-                            <div class="workshop-hl-desc">Hands-on sharp edge frosting, floral nozzles & gourmet drip techniques.</div>
+                            <div class="workshop-hl-title">DUO PASS – ₹899</div>
+                            <div class="workshop-hl-desc">2 participants • Bring bestie, friend or cousin • Create & enjoy together.</div>
                         </div>
                     </div>
                     <div class="workshop-highlight-item">
-                        <div class="workshop-hl-icon"><i class="fa-solid fa-box-open"></i></div>
+                        <div class="workshop-hl-icon"><i class="fa-solid fa-gift"></i></div>
                         <div>
-                            <div class="workshop-hl-title">Take-Home Hamper</div>
-                            <div class="workshop-hl-desc">Pack & carry home all chocolates & cakes you handcraft during the class.</div>
+                            <div class="workshop-hl-title">Exclusive Goodies</div>
+                            <div class="workshop-hl-desc">Chocoloom Signature Tote Bag, Chef Apron, Clay essentials & surprises!</div>
                         </div>
                     </div>
                     <div class="workshop-highlight-item">
-                        <div class="workshop-hl-icon"><i class="fa-solid fa-certificate"></i></div>
+                        <div class="workshop-hl-icon"><i class="fa-solid fa-location-dot"></i></div>
                         <div>
-                            <div class="workshop-hl-title">Official Certificate</div>
-                            <div class="workshop-hl-desc">Receive an authentic Chocoloom Masterclass Certificate & chef apron.</div>
+                            <div class="workshop-hl-title">Event Details</div>
+                            <div class="workshop-hl-desc">15 Nov 2026 (Sun) • Bhimavaram, AP (Venue announced upon registration).</div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Direct Book Button to /workshop -->
+                <a href="/workshop" class="workshop-submit-btn" style="text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; margin: 16px 0 14px; background:linear-gradient(135deg, #7c5cfc, #ec4899); box-shadow:0 8px 24px rgba(124,92,252,0.35); padding: 13px 20px; font-size: 13.5px; font-weight: 850; border-radius: 10px; color:#fff;">
+                    <i class="fa-solid fa-ticket"></i>
+                    <span>CHOOSE PASS & REGISTER ONLINE NOW →</span>
+                </a>
 
                 <!-- Dynamic RSVP / Success Form Container -->
                 <div id="workshopRsvpContainer"></div>
