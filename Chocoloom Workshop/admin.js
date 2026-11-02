@@ -35,7 +35,7 @@
             amount: 899,
             payMethod: 'upi',
             paymentStatus: 'paid',
-            utr: '430192837461',
+            paymentScreenshot: 'assets/payment_qr.jpg',
             checkedIn: true,
             toteGiven: true
         },
@@ -59,7 +59,7 @@
             amount: 899,
             payMethod: 'upi',
             paymentStatus: 'paid',
-            utr: '430188921045',
+            paymentScreenshot: 'assets/payment_qr.jpg',
             checkedIn: false,
             toteGiven: false
         },
@@ -83,7 +83,7 @@
             amount: 499,
             payMethod: 'counter',
             paymentStatus: 'counter',
-            utr: '',
+            paymentScreenshot: null,
             checkedIn: false,
             toteGiven: false
         },
@@ -107,11 +107,13 @@
             amount: 499,
             payMethod: 'upi',
             paymentStatus: 'paid',
-            utr: '430177651239',
+            paymentScreenshot: 'assets/payment_qr.jpg',
             checkedIn: false,
             toteGiven: false
         }
     ];
+
+    let manualUploadedScreenshot = null;
 
     // State Variables
     let currentFilter = 'all';
@@ -643,16 +645,23 @@
                         </div>
                     </td>
 
-                    <!-- Amount & Payment Method -->
+                    <!-- Amount & Payment Method / Screenshot -->
                     <td>
                         <div class="amount-val">₹${amount}</div>
                         <div class="pay-method-tag">
                             <i class="fa-solid ${item.payMethod === 'upi' ? 'fa-qrcode' : 'fa-cash-register'}"></i>
                             <span>${item.payMethod === 'upi' ? 'Paytm UPI' : 'Counter'}</span>
                         </div>
-                        ${item.utr ? `
-                            <div class="utr-ref-code" title="UTR Reference">UTR: ${escapeHtml(item.utr)}</div>
-                        ` : ''}
+                        ${item.paymentScreenshot ? `
+                            <button type="button" class="screenshot-thumb-btn" onclick="openScreenshotModal('${item.id}')" title="Click to view payment receipt screenshot">
+                                <img src="${item.paymentScreenshot}" alt="Screenshot">
+                                <span><i class="fa-solid fa-image"></i> Screenshot</span>
+                            </button>
+                        ` : (item.paymentStatus === 'paid' ? `
+                            <span class="no-screenshot-tag"><i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b;"></i> No screenshot</span>
+                        ` : `
+                            <span class="no-screenshot-tag">Pay at Counter</span>
+                        `)}
                     </td>
 
                     <!-- Payment Status (Toggleable Pill) -->
@@ -829,6 +838,75 @@
         }
     };
 
+    // ==========================================
+    // 6.1 PAYMENT SCREENSHOT PREVIEW MODAL
+    // ==========================================
+    window.openScreenshotModal = function (ticketId) {
+        const roster = getRegistrations();
+        const ticket = roster.find(t => t.id === ticketId);
+        if (!ticket || !ticket.paymentScreenshot) {
+            showToast('No payment screenshot found for this pass.');
+            return;
+        }
+
+        const modal = document.getElementById('screenshotModal');
+        const title = document.getElementById('screenshotModalTitle');
+        const meta = document.getElementById('screenshotModalMeta');
+        const img = document.getElementById('screenshotModalImg');
+        const dlBtn = document.getElementById('btnDownloadScreenshot');
+
+        if (title) title.textContent = `Payment Screenshot • ${ticket.id}`;
+        if (meta) meta.textContent = `Uploaded by ${ticket.name1} (${ticket.phone1 || 'No Phone'}) • Amount: ₹${ticket.amount}`;
+        if (img) img.src = ticket.paymentScreenshot;
+        if (dlBtn) dlBtn.href = ticket.paymentScreenshot;
+
+        if (modal) {
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+    };
+
+    window.closeScreenshotModal = function () {
+        const modal = document.getElementById('screenshotModal');
+        if (modal) {
+            modal.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    };
+
+    window.handleManualScreenshotUpload = function (event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                const maxDim = 900;
+                let width = img.width;
+                let height = img.height;
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round((height * maxDim) / width);
+                        width = maxDim;
+                    } else {
+                        width = Math.round((width * maxDim) / height);
+                        height = maxDim;
+                    }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                manualUploadedScreenshot = canvas.toDataURL('image/jpeg', 0.75);
+                showToast('Screenshot attached for manual pass! 📸');
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
     function createQrCodeSvg(code) {
         // High quality aesthetic SVG representation with scanner corners and grid
         return `
@@ -933,7 +1011,6 @@
         const phone2 = isDuo ? (document.getElementById('manualPhone2')?.value.trim() || '') : '';
         const email = document.getElementById('manualEmail')?.value.trim() || '';
         const payMethod = document.getElementById('manualPayMethod').value;
-        const utr = document.getElementById('manualUtr')?.value.trim() || '';
 
         if (!name1 || !phone1) {
             alert('Please enter Person 1 name and WhatsApp number.');
@@ -970,10 +1047,15 @@
             amount: amount,
             payMethod: payMethod,
             paymentStatus: (payMethod === 'counter') ? 'counter' : 'paid',
-            utr: utr,
+            paymentScreenshot: manualUploadedScreenshot || null,
             checkedIn: false,
             toteGiven: false
         };
+
+        // Reset manual uploaded screenshot
+        manualUploadedScreenshot = null;
+        const fileInp = document.getElementById('manualScreenshotInput');
+        if (fileInp) fileInp.value = '';
 
         const roster = getRegistrations();
         roster.unshift(newPass); // Prepend to top
@@ -1019,7 +1101,7 @@
             'Amount (INR)',
             'Payment Method',
             'Payment Status',
-            'UPI UTR Ref',
+            'Payment Screenshot Attached',
             'Event Checked In',
             'Tote Bag Handed Over',
             'Registered Timestamp'
@@ -1045,7 +1127,7 @@
                 r.amount || (isDuo ? 899 : 499),
                 `"${r.payMethod || 'upi'}"`,
                 `"${r.paymentStatus || 'paid'}"`,
-                `"${(r.utr || '').replace(/"/g, '""')}"`,
+                r.paymentScreenshot ? '"YES"' : '"NO"',
                 r.checkedIn ? '"YES"' : '"NO"',
                 r.toteGiven ? '"YES"' : '"NO"',
                 `"${r.createdAt || ''}"`

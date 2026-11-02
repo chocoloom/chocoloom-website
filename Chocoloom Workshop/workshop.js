@@ -30,6 +30,7 @@
             phone2: '',
             email: ''
         },
+        paymentScreenshot: null,
         appliedCoupon: null,
         discountAmount: 0,
         currentLocation: {
@@ -389,14 +390,95 @@
         }
     };
 
+    // Handle Payment Screenshot Upload (Auto-compressed via Canvas)
+    window.handlePaymentScreenshotUpload = function (event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid screenshot image file (PNG, JPG, WEBP).');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                // Resize to max 900px for instant fast upload & lightweight storage
+                const maxDim = 900;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round((height * maxDim) / width);
+                        width = maxDim;
+                    } else {
+                        width = Math.round((width * maxDim) / height);
+                        height = maxDim;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+                WorkshopState.paymentScreenshot = compressedDataUrl;
+
+                // Update UI elements
+                const dropzone = document.getElementById('screenshotDropzone');
+                const placeholder = document.getElementById('screenshotDropPlaceholder');
+                const previewCard = document.getElementById('screenshotPreviewCard');
+                const previewImg = document.getElementById('screenshotPreviewImg');
+                const fileName = document.getElementById('screenshotFileName');
+
+                if (dropzone) dropzone.classList.add('has-file');
+                if (placeholder) placeholder.style.display = 'none';
+                if (previewCard) previewCard.style.display = 'flex';
+                if (previewImg) previewImg.src = compressedDataUrl;
+                if (fileName) fileName.textContent = file.name || 'payment_screenshot.jpg';
+
+                showToast('Payment screenshot attached! 📸✨');
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
+    window.removePaymentScreenshot = function (event) {
+        if (event) event.stopPropagation();
+        WorkshopState.paymentScreenshot = null;
+
+        const input = document.getElementById('paymentScreenshotInput');
+        if (input) input.value = '';
+
+        const dropzone = document.getElementById('screenshotDropzone');
+        const placeholder = document.getElementById('screenshotDropPlaceholder');
+        const previewCard = document.getElementById('screenshotPreviewCard');
+        const previewImg = document.getElementById('screenshotPreviewImg');
+
+        if (dropzone) dropzone.classList.remove('has-file');
+        if (placeholder) placeholder.style.display = 'flex';
+        if (previewCard) previewCard.style.display = 'none';
+        if (previewImg) previewImg.src = '';
+    };
+
     // 9. Complete Payment & Generate Workshop Pass
     window.completePaymentAndGetTicket = function () {
-        const utrInput = document.getElementById('upiUtrInput');
-        const utrVal = utrInput ? utrInput.value.trim() : '';
         const payMethod = document.querySelector('input[name="payMethod"]:checked')?.value || 'upi';
+
+        // If paying via UPI and screenshot not attached, prompt nicely
+        if (payMethod === 'upi' && !WorkshopState.paymentScreenshot) {
+            const confirmedWithout = confirm('You haven\'t attached a payment screenshot yet.\n\nClick OK to confirm booking now (you can send the screenshot to our WhatsApp: +91 98497 83788), or Cancel to attach your screenshot.');
+            if (!confirmedWithout) return;
+        }
+
         WorkshopState.payment = {
             method: payMethod,
-            utr: utrVal,
+            screenshot: WorkshopState.paymentScreenshot || null,
             amount: WorkshopState.totalPrice || 499
         };
         const isDuo = (WorkshopState.selectedPass.id === 'duo');
@@ -453,7 +535,7 @@
                 amount: WorkshopState.totalPrice || WorkshopState.selectedPass.basePrice,
                 payMethod: payMethod,
                 paymentStatus: (payMethod === 'counter') ? 'counter' : 'paid',
-                utr: utrVal,
+                paymentScreenshot: WorkshopState.paymentScreenshot || null,
                 checkedIn: false,
                 toteGiven: false
             };

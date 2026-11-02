@@ -180,7 +180,7 @@
                 <section class="controls-card">
                     <div class="search-box">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="adminSearchInput" class="search-field" placeholder="Search attendee name, WhatsApp phone, ticket code, UTR or email..." oninput="handleSearch()">
+                        <input type="text" id="adminSearchInput" class="search-field" placeholder="Search attendee name, WhatsApp phone, ticket code, or email..." oninput="handleSearch()">
                         <button type="button" class="btn-clear-search" id="btnClearSearch" onclick="clearSearch()" style="display: none;">
                             <i class="fa-solid fa-xmark"></i>
                         </button>
@@ -330,6 +330,30 @@
         </div>
     </div>
 
+    <!-- ==================== PAYMENT SCREENSHOT VIEW MODAL ==================== -->
+    <div class="modal-backdrop" id="screenshotModal" onclick="if(event.target===this) closeScreenshotModal()">
+        <div class="modal-card" style="max-width: 500px; text-align: center; padding: 22px;">
+            <button class="modal-close-btn" onclick="closeScreenshotModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-head" style="margin-bottom: 14px; text-align: left;">
+                <span class="modal-badge"><i class="fa-solid fa-image"></i> Verified Receipt</span>
+                <h3 class="modal-title" id="screenshotModalTitle">Payment Screenshot</h3>
+                <p id="screenshotModalMeta" style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Uploaded by attendee during UPI checkout.</p>
+            </div>
+            <div style="background: #0f172a; border-radius: 12px; overflow: hidden; max-height: 65vh; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); padding: 8px;">
+                <img id="screenshotModalImg" src="" alt="Attendee Payment Screenshot" style="max-width: 100%; max-height: 62vh; object-fit: contain; border-radius: 8px; display: block;">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
+                <a id="btnDownloadScreenshot" href="#" download="chocoloom_payment_screenshot.jpg" class="btn-action secondary" style="text-decoration: none;">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Download Image</span>
+                </a>
+                <button type="button" class="btn-action primary" onclick="closeScreenshotModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== MANUAL REGISTRATION MODAL (+ PASS) ==================== -->
     <div class="modal-backdrop" id="manualRegModal" onclick="if(event.target===this) closeManualRegModal()">
         <div class="modal-card">
@@ -394,8 +418,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="manualUtr">UPI Ref / UTR / Note</label>
-                        <input type="text" id="manualUtr" class="form-input" placeholder="Optional 12-digit UTR">
+                        <label class="form-label" for="manualScreenshotInput">Payment Screenshot</label>
+                        <input type="file" id="manualScreenshotInput" class="form-input" accept="image/*" onchange="handleManualScreenshotUpload(event)" style="padding: 7px; font-size: 12px;">
                     </div>
                 </div>
 

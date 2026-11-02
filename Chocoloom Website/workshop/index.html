@@ -629,13 +629,32 @@
                         <span>Tap to Pay on UPI App (Mobile)</span>
                     </a>
 
-                    <!-- UTR / Reference Number Input -->
-                    <div class="utr-input-group">
-                        <label for="upiUtrInput" class="utr-label">
-                            <span>UPI Reference / UTR Number</span>
-                            <small>(Optional, 12 digits from receipt)</small>
+                    <!-- Payment Screenshot Upload -->
+                    <div class="screenshot-upload-wrap">
+                        <label class="screenshot-label">
+                            <span><i class="fa-solid fa-camera" style="color: #a855f7; margin-right: 4px;"></i> Upload Payment Screenshot *</span>
+                            <small>GPay, PhonePe, Paytm</small>
                         </label>
-                        <input type="text" id="upiUtrInput" class="form-input utr-field" placeholder="e.g. 431289567812" maxlength="20">
+                        <div class="screenshot-dropzone" id="screenshotDropzone">
+                            <input type="file" id="paymentScreenshotInput" accept="image/*" onchange="handlePaymentScreenshotUpload(event)">
+                            <div class="screenshot-drop-content" id="screenshotDropPlaceholder">
+                                <div class="screenshot-drop-icon">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </div>
+                                <span class="screenshot-drop-title">Tap to Upload Payment Screenshot</span>
+                                <span class="screenshot-drop-sub">JPG, PNG, WEBP or phone screenshot</span>
+                            </div>
+                            <div class="screenshot-preview-card" id="screenshotPreviewCard" style="display: none;">
+                                <img src="" alt="Payment Screenshot Preview" class="screenshot-preview-img" id="screenshotPreviewImg">
+                                <div class="screenshot-preview-info">
+                                    <div class="screenshot-preview-name" id="screenshotFileName">screenshot.jpg</div>
+                                    <div class="screenshot-preview-status"><i class="fa-solid fa-circle-check"></i> Screenshot Attached</div>
+                                </div>
+                                <button type="button" class="btn-remove-screenshot" onclick="removePaymentScreenshot(event)" title="Remove screenshot">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
