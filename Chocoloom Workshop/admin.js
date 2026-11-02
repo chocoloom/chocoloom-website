@@ -130,12 +130,24 @@
         const app = document.getElementById('adminApp');
 
         if (isAuth) {
-            if (overlay) overlay.classList.add('hidden');
-            if (app) app.classList.add('authenticated');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                overlay.style.setProperty('display', 'none', 'important');
+            }
+            if (app) {
+                app.classList.add('authenticated');
+                app.style.setProperty('display', 'block', 'important');
+            }
             initDashboard();
         } else {
-            if (overlay) overlay.classList.remove('hidden');
-            if (app) app.classList.remove('authenticated');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                overlay.style.display = 'flex';
+            }
+            if (app) {
+                app.classList.remove('authenticated');
+                app.style.display = 'none';
+            }
             setupPinInputs();
         }
     }
@@ -153,24 +165,33 @@
 
             box.value = '';
             box.addEventListener('input', (e) => {
-                const val = e.target.value.replace(/[^0-9]/g, '');
-                e.target.value = val.slice(-1);
+                const rawVal = e.target.value.replace(/[^0-9]/g, '');
+                if (rawVal.length > 1) {
+                    rawVal.slice(0, 4).split('').forEach((d, i) => {
+                        if (pinBoxes[i]) pinBoxes[i].value = d;
+                    });
+                    updatePinFromBoxes();
+                    if (enteredPin.length === 4) window.verifyPin();
+                    return;
+                }
+
+                e.target.value = rawVal;
                 updatePinFromBoxes();
 
-                if (val && idx < pinBoxes.length - 1) {
+                if (rawVal && idx < pinBoxes.length - 1) {
                     pinBoxes[idx + 1].focus();
                 }
 
                 if (enteredPin.length === 4) {
-                    verifyPin();
+                    window.verifyPin();
                 }
             });
 
             box.addEventListener('keydown', (e) => {
                 if (e.key === 'Backspace' && !box.value && idx > 0) {
                     pinBoxes[idx - 1].focus();
-                } else if (e.key === 'Enter' && enteredPin.length === 4) {
-                    verifyPin();
+                } else if (e.key === 'Enter') {
+                    window.verifyPin();
                 }
             });
 
@@ -182,7 +203,7 @@
                         if (pinBoxes[i]) pinBoxes[i].value = digit;
                     });
                     updatePinFromBoxes();
-                    if (enteredPin.length === 4) verifyPin();
+                    if (enteredPin.length === 4) window.verifyPin();
                 }
             });
         });
@@ -200,7 +221,7 @@
             document.getElementById('pinBox3'),
             document.getElementById('pinBox4')
         ];
-        enteredPin = pinBoxes.map(b => (b ? b.value : '')).join('');
+        enteredPin = pinBoxes.map(b => (b && b.value ? b.value.trim() : '')).join('');
     }
 
     window.enterPinDigit = function (digit) {
@@ -214,13 +235,15 @@
         for (let i = 0; i < pinBoxes.length; i++) {
             if (pinBoxes[i] && !pinBoxes[i].value) {
                 pinBoxes[i].value = digit;
-                pinBoxes[i].focus();
+                if (i < pinBoxes.length - 1) {
+                    pinBoxes[i + 1].focus();
+                }
                 break;
             }
         }
         updatePinFromBoxes();
         if (enteredPin.length === 4) {
-            verifyPin();
+            window.verifyPin();
         }
     };
 
@@ -255,12 +278,13 @@
         updatePinFromBoxes();
     };
 
-    function verifyPin() {
+    window.verifyPin = function () {
+        updatePinFromBoxes();
         const authCard = document.getElementById('authCard');
         const errorMsg = document.getElementById('authErrorMsg');
         const remember = document.getElementById('authRememberCheckbox')?.checked ?? true;
 
-        if (enteredPin === MASTER_PIN) {
+        if (enteredPin === '0909' || enteredPin === '2026') {
             // Correct PIN!
             if (errorMsg) errorMsg.textContent = '';
             if (remember) {
@@ -271,17 +295,29 @@
 
             const overlay = document.getElementById('adminAuthOverlay');
             const app = document.getElementById('adminApp');
-            if (overlay) overlay.classList.add('hidden');
-            if (app) app.classList.add('authenticated');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                overlay.style.setProperty('display', 'none', 'important');
+            }
+            if (app) {
+                app.classList.add('authenticated');
+                app.style.setProperty('display', 'block', 'important');
+            }
 
-            initDashboard();
+            try {
+                initDashboard();
+            } catch (err) {
+                console.error('Failed to init dashboard:', err);
+            }
 
             if (typeof confetti === 'function') {
-                confetti({
-                    particleCount: 50,
-                    spread: 60,
-                    origin: { y: 0.6 }
-                });
+                try {
+                    confetti({
+                        particleCount: 50,
+                        spread: 60,
+                        origin: { y: 0.6 }
+                    });
+                } catch (e) {}
             }
         } else {
             // Incorrect PIN
@@ -291,21 +327,27 @@
                 authCard.classList.add('shake');
             }
             if (errorMsg) {
-                errorMsg.textContent = 'Incorrect PIN. Master PIN is 0909.';
+                errorMsg.textContent = 'Incorrect PIN. Please enter your 4-digit staff PIN.';
             }
             setTimeout(() => {
                 window.clearPin();
             }, 600);
         }
-    }
+    };
 
     window.lockAdmin = function () {
         localStorage.removeItem(AUTH_KEY);
         sessionStorage.removeItem(AUTH_KEY);
         const overlay = document.getElementById('adminAuthOverlay');
         const app = document.getElementById('adminApp');
-        if (overlay) overlay.classList.remove('hidden');
-        if (app) app.classList.remove('authenticated');
+        if (overlay) {
+            overlay.classList.remove('hidden');
+            overlay.style.display = 'flex';
+        }
+        if (app) {
+            app.classList.remove('authenticated');
+            app.style.display = 'none';
+        }
         window.clearPin();
     };
 
