@@ -2457,7 +2457,7 @@ window.switchAdminTab = function(tabName) {
 // Load all products directly from Supabase Cloud (with fallback to Neon / Local)
 window.loadAllProducts = async function() {
     // 1. PRIMARY: Receive all live products directly from Supabase Cloud Database!
-    const PRODUCT_COLUMNS = "id, name, description, price, discount_price, price_half_kg, price_1kg, price_1_5kg, price_2kg, price_3kg, cooling_price_half_kg, cooling_price_1kg, cooling_price_1_5kg, cooling_price_2kg, cooling_price_3kg, category, is_available, stock, image_url";
+    const PRODUCT_COLUMNS = "*";
     try {
         let supaProds = null;
         if (supabaseClient) {

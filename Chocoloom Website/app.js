@@ -1478,8 +1478,19 @@ function applyNeonProductsToCatalog(liveProducts, showToastNotification = false)
         };
     });
 
-    // Replace menu with complete live Neon catalog
-    rest.menu = mappedMenu;
+    // Safely merge Neon catalog into rest.menu instead of replacing and losing Supabase items
+    if (!rest.menu || !Array.isArray(rest.menu) || rest.menu.length === 0) {
+        rest.menu = mappedMenu;
+    } else {
+        mappedMenu.forEach(item => {
+            const idx = rest.menu.findIndex(p => (p.sql_id && p.sql_id === item.sql_id) || (p.id && p.id === item.id) || (p.name && item.name && p.name.toLowerCase().trim() === item.name.toLowerCase().trim()));
+            if (idx !== -1) {
+                rest.menu[idx] = { ...rest.menu[idx], ...item };
+            } else {
+                rest.menu.push(item);
+            }
+        });
+    }
 
     // Invalidate product cache so all callers compute from live updated menu
     if (typeof window.invalidateProductsCache === 'function') {
@@ -1521,7 +1532,7 @@ window.loadCatalogFromNeon = async function(showToast = false) {
 async function fetchLiveProductsFromSupabase() {
     const CACHE_KEY = 'chocoloom_products_cache_v2';
     const CACHE_TTL_MS = 600000; // 10 minutes cache TTL
-    const PRODUCT_SELECT_COLUMNS = 'id, name, price, discount_price, original_price, price_half_kg, price_1kg, price_1_5kg, price_2kg, price_3kg, cooling_price_half_kg, cooling_price_1kg, cooling_price_1_5kg, cooling_price_2kg, cooling_price_3kg, is_available';
+    const PRODUCT_SELECT_COLUMNS = '*';
 
     // 0. Check client-side memory/session cache first (0 bytes egress!)
     try {
@@ -1553,7 +1564,7 @@ async function fetchLiveProductsFromSupabase() {
 
     // Direct REST API fallback
     try {
-        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=${encodeURIComponent(PRODUCT_SELECT_COLUMNS)}`, {
+        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*`, {
             headers: {
                 'apikey': SUPABASE_CONFIG.anonKey,
                 'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
@@ -1740,7 +1751,8 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                     hazelnut_ferrero: Number(liveItem.flavour_price_hazelnut ?? (fpObj.hazelnut_ferrero ?? 100))
                 };
             }
-        } else if (liveItem.is_available !== false) {
+        } else {
+            const isAvail = (liveItem.is_available !== false && liveItem.is_available !== 'false' && liveItem.is_available !== 0 && liveItem.is_available !== '0');
             const isBento = isBentoCake(liveItem);
             const hasWeight = isBento ? false : (liveItem.has_weight !== undefined 
                 ? (liveItem.has_weight === true || liveItem.has_weight === 'true' || liveItem.has_weight === 1 || liveItem.has_weight === '1') 
@@ -1752,7 +1764,7 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 ? (liveItem.has_flavours === true || liveItem.has_flavours === 'true' || liveItem.has_flavours === 1 || liveItem.has_flavours === '1') 
                 : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(liveItem.category || ''));
             menu.push({
-                id: `choco_sql_${menu.length + 1}`,
+                id: liveItem.id || `choco_sql_${menu.length + 1}`,
                 sql_id: liveItem.id,
                 name: liveItem.name,
                 price: effectivePrice,
@@ -1773,11 +1785,15 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 isDirectAdd: (!hasWeight && !hasCooling && !hasFlavours) || (!isBento && Boolean(liveItem.is_direct_add)),
                 category: liveItem.category || 'Specialty Cakes',
                 isVeg: true,
+                is_available: isAvail,
                 isBestseller: false,
                 rating: 4.8,
                 reviewsCount: 120,
                 description: liveItem.description || '',
-                image: liveItem.image_url || 'desserts/WhatsApp%20Image%202026-08-08%20at%2018.04.03.jpeg'
+                image: liveItem.image_url || 'desserts/WhatsApp%20Image%202026-08-08%20at%2018.04.03.jpeg',
+                image_url: liveItem.image_url || 'desserts/WhatsApp%20Image%202026-08-08%20at%2018.04.03.jpeg',
+                flavour: liveItem.default_flavour || liveItem.flavour || '',
+                flavour_prices: (typeof liveItem.flavour_prices === 'object' && liveItem.flavour_prices) ? liveItem.flavour_prices : {}
             });
             anyPriceUpdated = true;
         }
@@ -1860,6 +1876,7 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
         if (typeof window.invalidateProductsCache === 'function') {
             window.invalidateProductsCache();
         }
+        if (typeof renderCategories === 'function') renderCategories();
         renderFilterPills();
         renderProductsGrid();
         updateCartUI();
@@ -1941,6 +1958,7 @@ function subscribeToSupabaseRealtime() {
                 ({ payload }) => {
                     console.log('⚡ Supabase Realtime Broadcast PRODUCT_UPDATE:', payload);
                     if (payload) {
+                        try { sessionStorage.removeItem('chocoloom_products_cache_v2'); } catch(e) {}
                         if (typeof applyLiveAdminUpdates === 'function') {
                             applyLiveAdminUpdates({
                                 type: 'PRODUCTS_UPDATED',
@@ -9763,6 +9781,9 @@ function applyLiveAdminUpdates(data) {
                                 (normTarget && item.name && item.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normTarget)) {
                                 item.is_available = isAvail;
                                 if (prod.price !== undefined) item.price = Number(prod.price);
+                                if (prod.category) item.category = prod.category;
+                                if (prod.image_url || prod.image) item.image = prod.image_url || prod.image;
+                                if (prod.description) item.description = prod.description;
                                 if (prod.has_weight !== undefined) item.has_weight = (prod.has_weight === true || prod.has_weight === 'true' || prod.has_weight === 1 || prod.has_weight === '1');
                                 if (prod.has_cooling !== undefined) item.has_cooling = (prod.has_cooling === true || prod.has_cooling === 'true' || prod.has_cooling === 1 || prod.has_cooling === '1');
                                 if (prod.has_flavours !== undefined) item.has_flavours = (prod.has_flavours === true || prod.has_flavours === 'true' || prod.has_flavours === 1 || prod.has_flavours === '1');
@@ -9787,6 +9808,7 @@ function applyLiveAdminUpdates(data) {
         }
 
         // Invalidate product cache so getAllProducts computes fresh state
+        try { sessionStorage.removeItem('chocoloom_products_cache_v2'); } catch(e) {}
         if (typeof window.invalidateProductsCache === "function") {
             window.invalidateProductsCache();
         }
