@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chocoloom Workshop - Clay Toy Cakes Masterclass & Free Tote Bags</title>
     <meta name="description" content="Join Chocoloom's exclusive Clay Toy Cakes crafting workshop in Bhimavaram. Sculpt your customised miniature cake like a cute clay toy. Take home your creation in a display dome + receive a FREE Chocoloom Canvas Tote Bag!">
-    <base href="/workshop/">
-    <link rel="icon" type="image/png" href="/workshop/assets/logo.png">
+    <script>
+        // Redirect /workshop to /workshop/ so relative assets resolve properly when hosted on subpath
+        if (window.location.pathname === '/workshop') {
+            window.location.replace('/workshop/' + window.location.search + window.location.hash);
+        }
+    </script>
+    <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="canonical" href="https://chocoloom.com/workshop">
     <meta property="og:url" content="https://chocoloom.com/workshop">
     <meta property="og:title" content="Chocoloom Workshop - Clay Toy Cakes Masterclass & Free Tote Bags">
@@ -21,9 +26,8 @@
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
-    <!-- Stylesheets: primary with /workshop/ prefix, also resolves via base href -->
-    <link rel="stylesheet" href="/workshop/workshop.css?v=8">
-    <link rel="stylesheet" href="workshop.css?v=8">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="workshop.css?v=9">
 
     <style>
         /* Critical CSS to guarantee correct layout instantly under all network speeds */
@@ -207,6 +211,7 @@
                         <span class="pass-amount">899</span>
                         <span class="pass-strike">₹1,999</span>
                         <span class="pass-discount-pill">55% OFF</span>
+                        <span class="pass-unit-pill">₹449 / person</span>
                     </div>
 
                     <ul class="pass-benefits">
@@ -219,8 +224,7 @@
                     </ul>
 
                     <button class="btn-pass-select" onclick="selectPassAndOpenModal('duo')">
-                        <i class="fa-solid fa-bolt"></i>
-                        <span>Select Duo Pass (₹449/person)</span>
+                        <span>Select Duo Pass</span>
                     </button>
                 </div>
             </div>
@@ -229,37 +233,47 @@
         <!-- ==================== 4. BATCHES & SLOT SELECTOR ==================== -->
         <section class="schedule-section" id="scheduleSection">
             <div class="schedule-header">
-                <span class="section-tag-pill">Confirmed Workshop Slot</span>
+                <span class="section-tag-pill"><i class="fa-solid fa-calendar-star"></i> Workshop Date & Venue</span>
                 <h2 class="section-h2">Upcoming Workshop Schedule</h2>
                 <p class="section-lead">Strictly limited to 15 creators to ensure 1-on-1 personal mentoring.</p>
-
-                <!-- Countdown Timer -->
-                <div class="countdown-bar">
-                    <div class="cd-label">
-                        <i class="fa-solid fa-fire"></i>
-                        <span>Early Bird Closes in:</span>
-                    </div>
-                    <div class="cd-units">
-                        <div class="cd-unit"><strong id="cdDays">02</strong><span>Days</span></div>
-                        <span class="cd-colon">:</span>
-                        <div class="cd-unit"><strong id="cdHours">14</strong><span>Hours</span></div>
-                        <span class="cd-colon">:</span>
-                        <div class="cd-unit"><strong id="cdMinutes">36</strong><span>Mins</span></div>
-                        <span class="cd-colon">:</span>
-                        <div class="cd-unit"><strong id="cdSeconds">45</strong><span>Secs</span></div>
-                    </div>
-                </div>
             </div>
 
             <!-- Slots Grid -->
             <div class="slots-grid">
                 <!-- Single Slot: Nov 15 Sunday -->
                 <div class="slot-card selected" data-slot-id="batch1" data-day="Sunday" data-date="Nov 15, 2026" data-time="10:00 AM - 1:00 PM" data-batch="Exclusive Sunday Masterclass">
-                    <span class="slot-badge urgent"><i class="fa-solid fa-fire"></i> Only 15 Seats • High Demand</span>
-                    <div class="slot-day">Sunday Masterclass</div>
-                    <div class="slot-date-pill"><i class="fa-solid fa-calendar-check"></i> Sunday, Nov 15, 2026</div>
-                    <div class="slot-time"><i class="fa-regular fa-clock"></i> 10:00 AM – 1:00 PM (3 Hours)</div>
-                    <div class="slot-seats-left"><i class="fa-solid fa-location-dot"></i> Bhimavaram (Venue will be announced soon)</div>
+                    <div class="slot-card-top">
+                        <span class="slot-badge urgent"><i class="fa-solid fa-fire"></i> Only 15 Seats • High Demand</span>
+                        <h3 class="slot-day">Sunday Masterclass</h3>
+                    </div>
+
+                    <div class="slot-details-list">
+                        <div class="slot-detail-row">
+                            <div class="slot-detail-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                            <div class="slot-detail-info">
+                                <strong class="slot-detail-val">Sunday, Nov 15, 2026</strong>
+                            </div>
+                        </div>
+
+                        <div class="slot-detail-row">
+                            <div class="slot-detail-icon"><i class="fa-regular fa-clock"></i></div>
+                            <div class="slot-detail-info">
+                                <strong class="slot-detail-val">10:00 AM – 1:00 PM <span class="slot-duration-tag">3 Hours Hands-On</span></strong>
+                            </div>
+                        </div>
+
+                        <div class="slot-detail-row">
+                            <div class="slot-detail-icon"><i class="fa-solid fa-location-dot"></i></div>
+                            <div class="slot-detail-info">
+                                <strong class="slot-detail-val">Bhimavaram <span class="slot-sub-val">(Venue announced upon registration)</span></strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slot-confirm-strip">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Includes Free Tote Bag, Keepsake Dome & Materials</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -798,7 +812,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/workshop/workshop.js?v=8"></script>
+    <script src="workshop.js?v=9"></script>
     <script>
         function showHelpInfo() {
             showToast('Chocoloom Helpline: WhatsApp or Call +91 98497 83788');

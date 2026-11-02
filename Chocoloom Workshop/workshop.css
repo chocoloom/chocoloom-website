@@ -1440,135 +1440,71 @@ button {
 
 /* ==================== BATCHES & SLOT SELECTOR ==================== */
 .schedule-section {
-    margin-bottom: 64px;
-    background: linear-gradient(135deg, #fbfaff 0%, #f4f0ff 100%);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-xl);
-    padding: 48px 36px;
+    margin-bottom: 56px;
+    background: transparent;
+    border: none;
+    padding: 0;
 }
 
 .schedule-header {
     text-align: center;
-    margin-bottom: 36px;
-}
-
-.countdown-bar {
-    display: inline-flex;
-    align-items: center;
-    gap: 16px;
-    background: #ffffff;
-    padding: 10px 24px;
-    border-radius: var(--radius-full);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
-    margin-top: 16px;
-}
-
-.cd-label {
-    font-size: 12px;
-    font-weight: 800;
-    color: var(--danger);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-}
-
-.cd-units {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.cd-unit {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.cd-unit strong {
-    font-size: 16px;
-    font-weight: 900;
-    color: var(--dark);
-}
-
-.cd-unit span {
-    font-size: 9.5px;
-    color: var(--text-muted);
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-.cd-colon {
-    font-weight: 900;
-    color: var(--text-light);
-    margin-top: -6px;
+    margin-bottom: 24px;
 }
 
 .slots-grid {
     display: flex;
     justify-content: center;
-    margin-bottom: 32px;
+    margin-bottom: 8px;
 }
 
 .slot-card {
     background: #ffffff;
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
-    padding: 28px 32px;
-    text-align: center;
+    padding: 32px 36px 28px;
     cursor: pointer;
     transition: var(--transition);
     position: relative;
     user-select: none;
-    max-width: 440px;
+    max-width: 520px;
     width: 100%;
     box-shadow: 0 10px 30px rgba(124, 92, 252, 0.08);
+    box-sizing: border-box;
 }
 
 .slot-card:hover {
     transform: translateY(-3px);
-    border-color: #8b5cf6;
-    box-shadow: 0 16px 36px rgba(124, 92, 252, 0.16);
+    box-shadow: 0 16px 36px rgba(124, 92, 252, 0.12);
 }
 
 .slot-card.selected {
-    border-color: #8b5cf6;
-    background: linear-gradient(180deg, #ffffff 0%, #faf8ff 100%);
-    box-shadow: 0 16px 42px rgba(147, 51, 234, 0.16);
+    border-color: #ddd4fc;
+    background: #ffffff;
+    box-shadow: 0 12px 32px rgba(124, 92, 252, 0.08);
 }
 
-.slot-card.selected::before {
-    content: '✓ CONFIRMED SLOT';
-    position: absolute;
-    top: -11px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg, #7c5cfc, #633ef3);
-    color: #ffffff;
-    font-size: 10px;
-    font-weight: 800;
-    padding: 3px 14px;
-    border-radius: var(--radius-full);
-    letter-spacing: 0.5px;
-    box-shadow: 0 4px 12px rgba(124, 92, 252, 0.35);
-    white-space: nowrap;
+.slot-card-top {
+    text-align: center;
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .slot-badge {
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 800;
-    padding: 4px 12px;
+    padding: 5px 14px;
     border-radius: var(--radius-full);
-    margin-bottom: 12px;
-    display: inline-block;
+    margin-bottom: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .slot-badge.urgent {
     background: #fff1f2;
     color: #e11d48;
+    border: 1px solid rgba(225, 29, 72, 0.2);
 }
 
 .slot-badge.popular {
@@ -1582,62 +1518,99 @@ button {
 }
 
 .slot-day {
-    font-size: 19px;
+    font-size: 24px;
     font-weight: 800;
     color: var(--dark);
-    margin-bottom: 6px;
+    margin: 4px 0 0;
 }
 
-.slot-date-pill {
-    display: inline-flex;
+.slot-details-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 0;
+}
+
+.slot-detail-row {
+    display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 13.5px;
-    font-weight: 800;
-    color: #5130b5;
+    gap: 14px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+}
+
+.slot-detail-row:hover {
+    background: transparent;
+}
+
+.slot-detail-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     background: #f3edff;
-    padding: 5px 14px;
-    border-radius: var(--radius-full);
-    margin-bottom: 12px;
-}
-
-.slot-date-pill i {
     color: var(--primary);
-}
-
-.slot-date {
-    font-size: 12.5px;
-    color: var(--primary);
-    font-weight: 700;
-    margin-bottom: 10px;
-}
-
-.slot-time {
-    font-size: 13px;
-    font-weight: 800;
-    color: #1e1b4b;
-    background: #f5f3ff;
-    border: 1px solid #ede8fd;
-    padding: 7px 16px;
-    border-radius: var(--radius-md);
-    margin-bottom: 12px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.slot-seats-left {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-muted);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    font-size: 15px;
+    flex-shrink: 0;
+    box-shadow: none;
 }
 
-.slot-seats-left i {
-    color: var(--primary);
+.slot-detail-info {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    text-align: left;
+    flex-grow: 1;
+}
+
+.slot-detail-val {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    line-height: 1.4;
+}
+
+.slot-duration-tag {
+    font-size: 11px;
+    font-weight: 700;
+    background: #f3edff;
+    color: #633ef3;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+}
+
+.slot-sub-val {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.slot-confirm-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--success);
+    text-align: center;
+}
+
+.slot-confirm-strip i {
+    font-size: 14px;
+}
 }
 
 /* ==================== PRICING & PASSES ==================== */
@@ -1754,6 +1727,18 @@ button {
     border-radius: var(--radius-full);
 }
 
+.pass-unit-pill {
+    background: #f3f0ff;
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(124, 92, 252, 0.2);
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+
 .pass-benefits {
     list-style: none;
     display: flex;
@@ -1797,6 +1782,7 @@ button {
     color: var(--primary);
     font-weight: 800;
     font-size: 15px;
+    line-height: 1;
     text-align: center;
     transition: var(--transition);
     display: inline-flex;
@@ -1805,6 +1791,7 @@ button {
     gap: 8px;
     cursor: pointer;
     box-sizing: border-box;
+    white-space: nowrap;
 }
 
 .btn-pass-select:hover,
@@ -3053,46 +3040,29 @@ button {
         font-size: 12.5px;
         line-height: 1.4;
     }
-    .countdown-bar {
-        display: inline-flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-        padding: 10px 18px;
-        border-radius: 16px;
-        margin-top: 14px;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-    .cd-label {
-        font-size: 11px;
-        white-space: nowrap;
-    }
-    .cd-units {
-        gap: 10px;
-    }
-    .cd-unit strong {
-        font-size: 16px;
-    }
     .slots-grid {
         display: flex;
         justify-content: center;
     }
     .slot-card {
-        padding: 24px 16px;
+        padding: 24px 16px 18px;
         border-radius: 18px;
         max-width: 100%;
     }
     .slot-day {
-        font-size: 17px;
+        font-size: 19px;
     }
-    .slot-date-pill {
-        font-size: 12.5px;
-        padding: 4px 12px;
+    .slot-detail-row {
+        padding: 10px 12px;
+        gap: 10px;
     }
-    .slot-time {
-        font-size: 12px;
-        padding: 6px 12px;
+    .slot-detail-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+    .slot-detail-val {
+        font-size: 13px;
     }
     .slot-seats-left {
         font-size: 11px;
