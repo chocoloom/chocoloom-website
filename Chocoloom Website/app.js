@@ -3854,7 +3854,7 @@ function getActiveHeroBanners() {
     // Ensure Craft Your Happy Moments Creative Kit Banner is ALWAYS present and styled like Diwali
     const craftItem = {
         id: "b_craft_happy_moments",
-        tag: "CREATIVE KITS & WORKSHOP 🎨",
+        tag: "",
         tagIcon: "fa-solid fa-wand-magic-sparkles",
         title: "Craft Your Happy Moments 🎨✨",
         subtitle: "Explore our premium collection of Chocoloom canvas tote bags, chef aprons, colour paints, sculpting clays & creative essentials!",
@@ -4402,11 +4402,6 @@ function renderBanners() {
                 <div class="diwali-tag-pill">
                     <i class="fa-solid fa-sparkles"></i>
                     <span>DIWALI FESTIVE SPECIAL (NOV 7–9 ONLY)</span>
-                </div>
-                ` : (isCraft ? `
-                <div class="diwali-tag-pill craft-tag-pill">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span>CREATIVE WORKSHOP & KITS 🎨</span>
                 </div>
                 ` : (isTombola ? `
                 <div class="tombola-tag-pill">

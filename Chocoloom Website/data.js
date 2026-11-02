@@ -703,7 +703,7 @@ window.SWIGGY_DATA = {
     "banners": [
         {
             "id": "b_craft_happy_moments",
-            "tag": "CREATIVE KITS & WORKSHOP 🎨",
+            "tag": "",
             "tagIcon": "fa-solid fa-wand-magic-sparkles",
             "title": "Craft Your Happy Moments 🎨✨",
             "subtitle": "Explore our premium collection of Chocoloom canvas tote bags, chef aprons, colour paints, sculpting clays & creative essentials!",
