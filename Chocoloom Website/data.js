@@ -1007,7 +1007,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.9,
                     "reviewsCount": 410,
                     "description": "Cute aesthetic Korean Bento Box Cake! Perfect for room birthday surprises with candle & wooden spoon.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "uni_cake_2",
@@ -1024,7 +1028,11 @@ window.SWIGGY_DATA = {
                     "reviewsCount": 520,
                     "description": "Rich dark chocolate sponge layered with Belgian truffle ganache in an eco-friendly takeaway bento box.",
                     "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80",
-                    "discount_price": 349
+                    "discount_price": 349,
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "uni_cake_3",
@@ -1040,7 +1048,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.88,
                     "reviewsCount": 230,
                     "description": "Silky crimson sponge layered with cream cheese frosting. Celebrate finishing semester exams with style!",
-                    "image": "https://images.unsplash.com/photo-1616541823729-00fe0aacd32c?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1616541823729-00fe0aacd32c?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "uni_cake_4",
@@ -2006,7 +2018,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.9,
                     "reviewsCount": 283,
                     "description": "Cute couple bento cake with heart-shaped piping and love notes.",
-                    "image": "Anniversary%20Cakes/Screenshot%202026-08-15%20at%2012.13.13%E2%80%AFPM.png"
+                    "image": "Anniversary%20Cakes/Screenshot%202026-08-15%20at%2012.13.13%E2%80%AFPM.png",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_31",
@@ -2438,7 +2454,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.7,
                     "reviewsCount": 409,
                     "description": "Delectable miniature rich chocolate truffle cake styled beautifully.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_49",
@@ -2462,7 +2482,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.8,
                     "reviewsCount": 416,
                     "description": "Fluffy pink sponge cake layered with fresh strawberries and sweet cream cheese.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_50",
@@ -2486,7 +2510,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.9,
                     "reviewsCount": 423,
                     "description": "Heart-shaped Red Velvet sponge with premium cream cheese frosting border.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_51",
@@ -2510,7 +2538,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.5,
                     "reviewsCount": 80,
                     "description": "Delicate pink Bento cake with custom piped 'Happy Birthday' letters in a signature clamshell box.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_52",
@@ -2534,7 +2566,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.6,
                     "reviewsCount": 87,
                     "description": "Sky blue miniature cake with white piped frosting borders and a cheery 'Be Happy' message on top.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_53",
@@ -2558,7 +2594,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.7,
                     "reviewsCount": 94,
                     "description": "Pretty pink miniature cake with white icing swirl borders and a cursive 'Happy Day' message.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_54",
@@ -2582,7 +2622,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.8,
                     "reviewsCount": 101,
                     "description": "Rich Nutella hazelnut chocolate bento cake with roasted hazelnut crunch in a cute clamshell box.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_55",
@@ -2606,7 +2650,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.9,
                     "reviewsCount": 108,
                     "description": "Creamy Biscoff cookie butter bento cake with crunchy Biscoff crumble.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_56",
@@ -2630,7 +2678,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.5,
                     "reviewsCount": 115,
                     "description": "Middle-eastern inspired pistachio sponge bento cake infused with rose water and cardamom whip.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_57",
@@ -2654,7 +2706,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.6,
                     "reviewsCount": 122,
                     "description": "Japanese ceremonial grade matcha bento cake with light white chocolate cream frosting.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_58",
@@ -2678,7 +2734,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.7,
                     "reviewsCount": 129,
                     "description": "Classic coffee-soaked sponge layered with sweet mascarpone whip and cocoa dust.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_59",
@@ -2702,7 +2762,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.8,
                     "reviewsCount": 136,
                     "description": "Tropical fresh Alphonso mango and passionfruit curd filled mini bento cake.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_60",
@@ -2726,7 +2790,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.9,
                     "reviewsCount": 143,
                     "description": "Delicate white bento cake presented in an eco takeaway box, decorated with pink 3D butterflies, gold leaf outline, mini hearts, and gold '21' topper.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_61",
@@ -2750,7 +2818,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.5,
                     "reviewsCount": 150,
                     "description": "Delicate white bento cake in an eco clam box with hand-piped pink and white daisy flowers, gold leaf centers, and gold calligraphy 'Chapter 25' script.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_62",
@@ -2774,7 +2846,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.6,
                     "reviewsCount": 157,
                     "description": "Cute miniature bento cake layered with sweet vanilla whip and berry jam.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_63",
@@ -2798,7 +2874,11 @@ window.SWIGGY_DATA = {
                     "rating": 4.7,
                     "reviewsCount": 164,
                     "description": "Cute miniature purple bento cake filled with crushed blackcurrants and white choco pearls.",
-                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80"
+                    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=600&auto=format&fit=crop&q=80",
+                    "has_weight": false,
+                    "has_flavours": true,
+                    "has_cooling": false,
+                    "isDirectAdd": false
                 },
                 {
                     "id": "choco_sql_64",

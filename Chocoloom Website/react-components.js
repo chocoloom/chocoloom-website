@@ -27,7 +27,13 @@
         const onAdd = props.onAdd || window.confirmAddCustomizedItem;
         const onClose = props.onClose || window.closeCustomizationModal;
 
-        const [weightKey, setWeightKey] = useState(props.initialWeightKey || 'half_kg');
+        const isBento = Boolean(
+            (dish.category && dish.category.toLowerCase().includes('bento')) ||
+            (dish.name && dish.name.toLowerCase().includes('bento'))
+        );
+        const hasWeight = (dish.has_weight !== false) && !isBento;
+
+        const [weightKey, setWeightKey] = useState(props.initialWeightKey || (hasWeight ? 'half_kg' : 'standard'));
         const [isCooling, setIsCooling] = useState(Boolean(props.initialCooling));
         const [isEggless, setIsEggless] = useState(Boolean(props.initialEggless));
         const autoInitialFlavour = props.initialFlavour || ((typeof window.detectDefaultFlavour === 'function') ? window.detectDefaultFlavour(dish, !props.initialCooling) : 'Chocolate');
@@ -69,21 +75,20 @@
             { id: 'nutty_bubble', name: 'Nutty Bubble', icon: '🫧', tag: 'Special', extraPrice: 100, tier: 'Royal' }
         ];
 
-        const activeFlavoursList = isCooling ? coolingFlavoursList : normalFlavoursList;
+        const activeFlavoursList = (isBento || isCooling) ? coolingFlavoursList : normalFlavoursList;
 
         const handleToggleCooling = (newCooling) => {
             setIsCooling(newCooling);
-            const targetList = newCooling ? coolingFlavoursList : normalFlavoursList;
+            const targetList = (isBento || newCooling) ? coolingFlavoursList : normalFlavoursList;
             if (flavour && !targetList.some(f => f.name.toLowerCase() === flavour.toLowerCase())) {
                 const newDefault = (typeof window.detectDefaultFlavour === 'function') ? window.detectDefaultFlavour(dish, !newCooling) : 'Chocolate';
                 setFlavour(newDefault);
             }
         };
 
-        // Dynamic price calculation
+        // Dynamic price calculation (No kg weight multipliers for Bento cakes!)
         const basePrice = useMemo(() => {
-            const hasWeight = dish.has_weight !== false;
-            if (!hasWeight) return Number(dish.price || 499);
+            if (!hasWeight) return Number(dish.price || dish.price_half_kg || 349);
             const priceMap = {
                 'half_kg': Number(dish.price_half_kg || dish.price || 499),
                 '1kg': Number(dish.price_1kg || (dish.price ? dish.price * 1.85 : 899)),
@@ -92,18 +97,19 @@
                 '3kg': Number(dish.price_3kg || (dish.price ? dish.price * 5.0 : 2399))
             };
             return priceMap[weightKey] || 499;
-        }, [dish, weightKey]);
+        }, [dish, weightKey, hasWeight]);
 
         const coolingPrice = useMemo(() => {
             if (!isCooling || dish.has_cooling === false) return 0;
+            if (!hasWeight) return 30;
             const coolingMap = { 'half_kg': 40, '1kg': 70, '1_5kg': 90, '2kg': 120, '3kg': 160 };
             return coolingMap[weightKey] || 40;
-        }, [isCooling, dish, weightKey]);
+        }, [isCooling, dish, weightKey, hasWeight]);
 
         const flavourPrice = useMemo(() => {
             if (!flavour) return 0;
             if (typeof window.getFlavourExtraPrice === 'function') {
-                return window.getFlavourExtraPrice(dish, flavour, weightKey);
+                return window.getFlavourExtraPrice(dish, flavour, hasWeight ? weightKey : 'half_kg');
             }
             if (dish && dish.flavour_prices && typeof dish.flavour_prices === 'object') {
                 if (dish.flavour_prices[flavour] !== undefined) return Number(dish.flavour_prices[flavour]) || 0;
@@ -112,13 +118,13 @@
             }
             const activeItem = activeFlavoursList.find(f => f.name.toLowerCase() === flavour.toLowerCase());
             return (activeItem && activeItem.extraPrice) ? Number(activeItem.extraPrice) : 0;
-        }, [flavour, dish, activeFlavoursList, weightKey]);
+        }, [flavour, dish, activeFlavoursList, weightKey, hasWeight]);
 
-        const egglessPrice = isEggless ? (weightKey === 'half_kg' ? 30 : 50) : 0;
+        const egglessPrice = isEggless ? (hasWeight ? (weightKey === 'half_kg' ? 30 : 50) : 30) : 0;
 
         const totalPrice = Math.round(basePrice + coolingPrice + flavourPrice + egglessPrice);
 
-        const hasFlavours = dish.has_flavours !== false;
+        const hasFlavours = isBento || (dish.has_flavours !== false);
         const isFlavourChosen = !hasFlavours || Boolean(flavour);
 
         const handleAddToCart = () => {
@@ -135,26 +141,21 @@
             setTimeout(() => setAddedAnim(false), 1000);
 
             // Update global AppState / Customization
+            const payload = {
+                dish: dish,
+                selectedWeightKey: hasWeight ? weightKey : 'standard',
+                selectedWeight: isBento ? 'Bento Box' : 'Standard',
+                selectedFlavour: flavour,
+                isCooling: isCooling,
+                isEggless: isEggless,
+                customMessage: message,
+                unitPrice: totalPrice
+            };
+
             if (typeof window.confirmAddCustomizedItemWithDetails === 'function') {
-                window.confirmAddCustomizedItemWithDetails({
-                    dish: dish,
-                    selectedWeightKey: weightKey,
-                    selectedFlavour: flavour,
-                    isCooling: isCooling,
-                    isEggless: isEggless,
-                    customMessage: message,
-                    unitPrice: totalPrice
-                });
+                window.confirmAddCustomizedItemWithDetails(payload);
             } else if (typeof onAdd === 'function') {
-                onAdd({
-                    dish: dish,
-                    selectedWeightKey: weightKey,
-                    selectedFlavour: flavour,
-                    isCooling: isCooling,
-                    isEggless: isEggless,
-                    customMessage: message,
-                    unitPrice: totalPrice
-                });
+                onAdd(payload);
             }
         };
 
@@ -219,20 +220,24 @@
                 )
             ) : e('div', {
                 style: {
-                    background: '#f8fafc',
-                    border: '1.5px solid #e2e8f0',
-                    borderRadius: '12px',
-                    padding: '12px 14px',
+                    background: 'linear-gradient(135deg, #fdf4ff, #fae8ff)',
+                    border: '1.5px solid #f0abfc',
+                    borderRadius: '14px',
+                    padding: '12px 16px',
                     marginBottom: '18px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between'
                 }
             },
-                e('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '700', color: '#334155' } },
-                    e('span', null, '📦 Standard Unit (Fixed Size)')
+                e('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+                    e('span', { style: { fontSize: '20px' } }, isBento ? '🍱' : '📦'),
+                    e('div', null,
+                        e('div', { style: { fontSize: '13px', fontWeight: '800', color: '#701a75' } }, isBento ? 'Bento Box Cake (Single Size)' : 'Standard Unit (No Weight Selection)'),
+                        e('div', { style: { fontSize: '11px', color: '#a21caf', fontWeight: '500' } }, isBento ? 'Personal mini cake (1–2 servings) • Only choose flavours below!' : 'Fixed standard portion')
+                    )
                 ),
-                e('div', { style: { fontSize: '16px', fontWeight: '800', color: '#7c5cfc' } }, `₹${dish.price || 499}`)
+                e('div', { style: { fontSize: '16px', fontWeight: '900', color: '#a21caf' } }, `₹${basePrice}`)
             ),
 
             // Section 2: Preferences (Eggless & Cooling Cake)

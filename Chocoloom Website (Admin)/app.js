@@ -1369,6 +1369,15 @@ async function fetchLiveProductsFromNeon() {
     return null;
 }
 
+// Helper: Detect whether an item is a Bento Cake (Bento Cakes do not have KG weight options, only flavours!)
+function isBentoCake(dish) {
+    if (!dish) return false;
+    const cat = String(dish.category || '').toLowerCase();
+    const name = String(dish.name || '').toLowerCase();
+    return cat.includes('bento') || name.includes('bento');
+}
+window.isBentoCake = isBentoCake;
+
 // Map and apply all live products received directly from Neon Serverless Postgres into website catalog
 function applyNeonProductsToCatalog(liveProducts, showToastNotification = false) {
     if (!liveProducts || !Array.isArray(liveProducts) || liveProducts.length === 0) return;
@@ -1408,12 +1417,14 @@ function applyNeonProductsToCatalog(liveProducts, showToastNotification = false)
         const cooling30 = Number(r.cooling_price_3kg || 299);
 
         const category = r.category || 'Specialty Cakes';
+        const isBento = isBentoCake({ category, name });
         const isUniSpecial = Boolean(r.id && r.id.startsWith('uni_')) || 
                              Boolean(r.isUniSpecial) || 
                              ['Chocolates', 'Desserts', 'Snacks', 'Combos'].includes(category);
-        const hasWeight = r.has_weight !== undefined ? (r.has_weight === true || r.has_weight === 'true') : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(category);
-        const hasCooling = r.has_cooling !== undefined ? (r.has_cooling === true || r.has_cooling === 'true') : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(category);
-        const isDirectAdd = (!hasWeight && !hasCooling) || ['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(category);
+        const hasWeight = isBento ? false : (r.has_weight !== undefined ? (r.has_weight === true || r.has_weight === 'true') : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(category));
+        const hasCooling = isBento ? false : (r.has_cooling !== undefined ? (r.has_cooling === true || r.has_cooling === 'true') : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(category));
+        const hasFlavours = isBento ? true : (r.has_flavours !== undefined ? (r.has_flavours === true || r.has_flavours === 'true') : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(category));
+        const isDirectAdd = (!hasWeight && !hasCooling && !hasFlavours) || (!isBento && ['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(category));
 
         const finalImage = (r.image_url && r.image_url.trim()) ? r.image_url.trim() : ((existing && existing.image) ? existing.image : 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600');
 
@@ -1510,7 +1521,7 @@ window.loadCatalogFromNeon = async function(showToast = false) {
 async function fetchLiveProductsFromSupabase() {
     const CACHE_KEY = 'chocoloom_products_cache_v2';
     const CACHE_TTL_MS = 600000; // 10 minutes cache TTL
-    const PRODUCT_SELECT_COLUMNS = 'id, name, price, discount_price, price_half_kg, price_1kg, price_1_5kg, price_2kg, price_3kg, cooling_price_half_kg, cooling_price_1kg, cooling_price_1_5kg, cooling_price_2kg, cooling_price_3kg, is_available';
+    const PRODUCT_SELECT_COLUMNS = 'id, name, price, discount_price, original_price, price_half_kg, price_1kg, price_1_5kg, price_2kg, price_3kg, cooling_price_half_kg, cooling_price_1kg, cooling_price_1_5kg, cooling_price_2kg, cooling_price_3kg, is_available';
 
     // 0. Check client-side memory/session cache first (0 bytes egress!)
     try {
@@ -1560,25 +1571,6 @@ async function fetchLiveProductsFromSupabase() {
     } catch (e) {
         console.warn('Supabase REST fetch error:', e);
     }
-
-    // Direct REST API wildcard fallback
-    try {
-        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=*`, {
-            headers: {
-                'apikey': SUPABASE_CONFIG.anonKey,
-                'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
-            }
-        });
-        if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) {
-                try {
-                    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data }));
-                } catch(e) {}
-                return data;
-            }
-        }
-    } catch (e) {}
     return null;
 }
 
@@ -1749,15 +1741,16 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 };
             }
         } else if (liveItem.is_available !== false) {
-            const hasWeight = liveItem.has_weight !== undefined 
+            const isBento = isBentoCake(liveItem);
+            const hasWeight = isBento ? false : (liveItem.has_weight !== undefined 
                 ? (liveItem.has_weight === true || liveItem.has_weight === 'true' || liveItem.has_weight === 1 || liveItem.has_weight === '1') 
-                : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(liveItem.category || '');
-            const hasCooling = liveItem.has_cooling !== undefined 
+                : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(liveItem.category || ''));
+            const hasCooling = isBento ? false : (liveItem.has_cooling !== undefined 
                 ? (liveItem.has_cooling === true || liveItem.has_cooling === 'true' || liveItem.has_cooling === 1 || liveItem.has_cooling === '1') 
-                : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(liveItem.category || '');
-            const hasFlavours = liveItem.has_flavours !== undefined 
+                : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(liveItem.category || ''));
+            const hasFlavours = isBento ? true : (liveItem.has_flavours !== undefined 
                 ? (liveItem.has_flavours === true || liveItem.has_flavours === 'true' || liveItem.has_flavours === 1 || liveItem.has_flavours === '1') 
-                : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(liveItem.category || '');
+                : !['Chocolates', 'Snacks', 'Desserts', 'Combos', 'Extras'].includes(liveItem.category || ''));
             menu.push({
                 id: `choco_sql_${menu.length + 1}`,
                 sql_id: liveItem.id,
@@ -1777,7 +1770,7 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 has_weight: hasWeight,
                 has_cooling: hasCooling,
                 has_flavours: hasFlavours,
-                isDirectAdd: (!hasWeight && !hasCooling && !hasFlavours) || Boolean(liveItem.is_direct_add),
+                isDirectAdd: (!hasWeight && !hasCooling && !hasFlavours) || (!isBento && Boolean(liveItem.is_direct_add)),
                 category: liveItem.category || 'Specialty Cakes',
                 isVeg: true,
                 isBestseller: false,
@@ -1798,9 +1791,10 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
     try {
         const dbCache = JSON.parse(localStorage.getItem('chocoloom_db_catalog_cache') || '{}');
         liveProducts.forEach(lp => {
-            const hasW = lp.has_weight !== undefined ? (lp.has_weight === true || lp.has_weight === 'true' || lp.has_weight === 1 || lp.has_weight === '1') : true;
-            const hasC = lp.has_cooling !== undefined ? (lp.has_cooling === true || lp.has_cooling === 'true' || lp.has_cooling === 1 || lp.has_cooling === '1') : true;
-            const hasF = lp.has_flavours !== undefined ? (lp.has_flavours === true || lp.has_flavours === 'true' || lp.has_flavours === 1 || lp.has_flavours === '1') : true;
+            const isBento = isBentoCake(lp);
+            const hasW = isBento ? false : (lp.has_weight !== undefined ? (lp.has_weight === true || lp.has_weight === 'true' || lp.has_weight === 1 || lp.has_weight === '1') : true);
+            const hasC = isBento ? false : (lp.has_cooling !== undefined ? (lp.has_cooling === true || lp.has_cooling === 'true' || lp.has_cooling === 1 || lp.has_cooling === '1') : true);
+            const hasF = isBento ? true : (lp.has_flavours !== undefined ? (lp.has_flavours === true || lp.has_flavours === 'true' || lp.has_flavours === 1 || lp.has_flavours === '1') : true);
             const pObj = {
                 price: Number(lp.discount_price && Number(lp.discount_price) > 0 ? lp.discount_price : lp.price || 0),
                 discount_price: Number(lp.discount_price || lp.price || 0),
@@ -1829,7 +1823,7 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 has_weight: hasW,
                 has_cooling: hasC,
                 has_flavours: hasF,
-                isDirectAdd: (!hasW && !hasC && !hasF) || Boolean(lp.is_direct_add),
+                isDirectAdd: (!hasW && !hasC && !hasF) || (!isBento && Boolean(lp.is_direct_add)),
                 category: lp.category || '',
                 description: lp.description || '',
                 image: lp.image_url || '',
@@ -4421,12 +4415,13 @@ function renderBanners() {
                 <div class="diwali-tag-pill">
                     <i class="fa-solid fa-sparkles"></i>
                     <span>DIWALI FESTIVE SPECIAL (NOV 7–9 ONLY)</span>
-                </div> : ( (isTombola ? `
+                </div>
+                ` : (isTombola ? `
                 <div class="tombola-tag-pill">
                     <i class="fa-solid fa-dice"></i>
                     <span>COMMUNITY LUCKY DRAW</span>
                 </div>
-                ` : ''))}
+                ` : '')}
                 <h2 class="hero-ad-title ${isTombola ? 'tombola-ad-title' : ''}">${ban.title}</h2>
                 <p class="hero-ad-desc ${isTombola ? 'tombola-ad-desc' : ''}">${ban.subtitle}</p>
                 
@@ -5570,16 +5565,17 @@ function getAllProducts() {
                 r.menu.forEach(d => {
                     if (d && !seen.has(d.id || d.name)) {
                         seen.add(d.id || d.name);
+                        const isBento = isBentoCake(d);
                         const isNonCake = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'extras', 'dark', 'milk', 'ruby'].includes((d.category || '').toLowerCase());
-                        const itemHasWeight = d.has_weight !== undefined ? (d.has_weight === true || d.has_weight === 'true' || d.has_weight === 1 || d.has_weight === '1') : !isNonCake;
-                        const itemHasCooling = d.has_cooling !== undefined ? (d.has_cooling === true || d.has_cooling === 'true' || d.has_cooling === 1 || d.has_cooling === '1') : !isNonCake;
-                        const itemHasFlavours = d.has_flavours !== undefined ? (d.has_flavours === true || d.has_flavours === 'true' || d.has_flavours === 1 || d.has_flavours === '1') : !isNonCake;
+                        const itemHasWeight = isBento ? false : (d.has_weight !== undefined ? (d.has_weight === true || d.has_weight === 'true' || d.has_weight === 1 || d.has_weight === '1') : !isNonCake);
+                        const itemHasCooling = isBento ? false : (d.has_cooling !== undefined ? (d.has_cooling === true || d.has_cooling === 'true' || d.has_cooling === 1 || d.has_cooling === '1') : !isNonCake);
+                        const itemHasFlavours = isBento ? true : (d.has_flavours !== undefined ? (d.has_flavours === true || d.has_flavours === 'true' || d.has_flavours === 1 || d.has_flavours === '1') : !isNonCake);
                         list.push({ 
                             ...d, 
                             has_weight: itemHasWeight,
                             has_cooling: itemHasCooling,
                             has_flavours: itemHasFlavours,
-                            isDirectAdd: (!itemHasWeight && !itemHasCooling && !itemHasFlavours) || Boolean(d.isDirectAdd) || isNonCake,
+                            isDirectAdd: (!itemHasWeight && !itemHasCooling && !itemHasFlavours) || (!isBento && Boolean(d.isDirectAdd)) || isNonCake,
                             restaurantId: r.id, 
                             restaurantName: r.name 
                         });
@@ -5634,15 +5630,21 @@ function getAllProducts() {
             if (over.cooling_price_3kg !== undefined) item.cooling_price_3kg = Number(over.cooling_price_3kg);
             if (over.isVeg !== undefined) item.isVeg = Boolean(over.isVeg);
             if (over.isUniSpecial !== undefined) item.isUniSpecial = Boolean(over.isUniSpecial);
-            if (over.has_weight !== undefined) item.has_weight = (over.has_weight === true || over.has_weight === 'true' || over.has_weight === 1 || over.has_weight === '1');
-            if (over.has_cooling !== undefined) item.has_cooling = (over.has_cooling === true || over.has_cooling === 'true' || over.has_cooling === 1 || over.has_cooling === '1');
-            if (over.has_flavours !== undefined) item.has_flavours = (over.has_flavours === true || over.has_flavours === 'true' || over.has_flavours === 1 || over.has_flavours === '1');
-            if (over.flavour !== undefined) item.flavour = over.flavour;
-            if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
-            if (item.has_weight === false && item.has_cooling === false && item.has_flavours === false) {
-                item.isDirectAdd = true;
-            } else if (over.isDirectAdd !== undefined) {
-                item.isDirectAdd = Boolean(over.isDirectAdd);
+            if (isBentoCake(item)) {
+                item.has_weight = false;
+                item.has_flavours = true;
+                item.isDirectAdd = false;
+            } else {
+                if (over.has_weight !== undefined) item.has_weight = (over.has_weight === true || over.has_weight === 'true' || over.has_weight === 1 || over.has_weight === '1');
+                if (over.has_cooling !== undefined) item.has_cooling = (over.has_cooling === true || over.has_cooling === 'true' || over.has_cooling === 1 || over.has_cooling === '1');
+                if (over.has_flavours !== undefined) item.has_flavours = (over.has_flavours === true || over.has_flavours === 'true' || over.has_flavours === 1 || over.has_flavours === '1');
+                if (over.flavour !== undefined) item.flavour = over.flavour;
+                if (over.flavour_prices !== undefined) item.flavour_prices = over.flavour_prices;
+                if (item.has_weight === false && item.has_cooling === false && item.has_flavours === false) {
+                    item.isDirectAdd = true;
+                } else if (over.isDirectAdd !== undefined) {
+                    item.isDirectAdd = Boolean(over.isDirectAdd);
+                }
             }
         }
     });
@@ -6649,8 +6651,8 @@ const WEIGHT_CONFIG = [
 ];
 
 function getWeightPrice(dish, weightKey) {
-    if (dish && dish.has_weight === false) {
-        return Number(dish.price || 0);
+    if (dish && (dish.has_weight === false || isBentoCake(dish))) {
+        return Number(dish.price || dish.price_half_kg || 0);
     }
     const config = WEIGHT_CONFIG.find(w => w.key === weightKey) || WEIGHT_CONFIG[0];
     if (dish && dish[config.priceCol] !== undefined && dish[config.priceCol] !== null && Number(dish[config.priceCol]) > 0) {
@@ -6734,13 +6736,15 @@ window.openCustomizationModal = function(dishId, restaurantId) {
     const restaurant = (SWIGGY_DATA.restaurants && SWIGGY_DATA.restaurants.find(r => r.id === (restaurantId || dish.restaurantId))) || defaultRest;
 
     // Check if category indicates cooling cake default
+    const isBento = isBentoCake(dish);
+    const hasWeight = (dish.has_weight !== false) && !isBento;
     const isCoolingCategory = (dish.category || '').toLowerCase().includes('cooling') || (dish.name || '').toLowerCase().includes('cooling');
-    const initialCooling = (dish.has_cooling !== false) ? isCoolingCategory : false;
-    const defaultFlavour = (dish.has_flavours !== false) ? detectDefaultFlavour(dish, !initialCooling) : null;
+    const initialCooling = (dish.has_cooling !== false && !isBento) ? isCoolingCategory : false;
+    const defaultFlavour = (dish.has_flavours !== false || isBento) ? detectDefaultFlavour(dish, !initialCooling) : null;
     currentCustomization = {
         dish: dish,
         restaurant: restaurant,
-        selectedWeightKey: (dish.has_weight !== false) ? 'half_kg' : 'standard',
+        selectedWeightKey: hasWeight ? 'half_kg' : 'standard',
         selectedFlavour: defaultFlavour, // Automatically pre-select default flavour
         isEggless: false,
         isCooling: initialCooling,
@@ -6793,12 +6797,13 @@ function renderCustomizationModalContent() {
     if (modalFooter) modalFooter.style.display = 'flex';
 
     const dish = currentCustomization.dish;
-    const hasWeight = dish.has_weight !== false;
-    const hasCooling = dish.has_cooling !== false;
+    const isBento = isBentoCake(dish);
+    const hasWeight = (dish.has_weight !== false) && !isBento;
+    const hasCooling = (dish.has_cooling !== false) && !isBento;
     const currentWeightKey = hasWeight ? (currentCustomization.selectedWeightKey || 'half_kg') : 'standard';
     const isCooling = hasCooling ? Boolean(currentCustomization.isCooling) : false;
     const isEggless = Boolean(currentCustomization.isEggless);
-    const hasFlavours = dish.has_flavours !== false;
+    const hasFlavours = isBento || (dish.has_flavours !== false);
     const currentFlavour = currentCustomization.selectedFlavour || (hasFlavours ? detectDefaultFlavour(dish, !isCooling) : null);
     currentCustomization.selectedFlavour = currentFlavour;
     currentCustomization.selectedWeightKey = currentWeightKey;
@@ -6866,13 +6871,16 @@ function renderCustomizationModalContent() {
             </div>
         </div>
         ` : `
-        <!-- Fixed Single Unit Price Notice -->
-        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #334155;">
-                <i class="fa-solid fa-box" style="color: var(--primary);"></i>
-                <span>Standard Unit (No Weight Selection)</span>
+        <!-- Fixed Single Unit Notice (Bento Box Cake - No Weight Selection) -->
+        <div style="background: linear-gradient(135deg, #fdf4ff, #fae8ff); border: 1.5px solid #f0abfc; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #701a75;">
+                <span style="font-size: 16px;">${isBento ? '🍱' : '📦'}</span>
+                <div>
+                    <div style="font-weight: 800;">${isBento ? 'Bento Box Cake (Single Size)' : 'Standard Unit (No Weight Selection)'}</div>
+                    <div style="font-size: 11px; color: #a21caf; font-weight: 500;">${isBento ? 'Personal mini cake (1–2 servings) • Only choose flavours below!' : 'Fixed standard portion'}</div>
+                </div>
             </div>
-            <div style="font-size: 15px; font-weight: 800; color: var(--primary);">₹${dish.price}</div>
+            <div style="font-size: 16px; font-weight: 900; color: #a21caf;">₹${dish.price || dish.price_half_kg || 349}</div>
         </div>
         `}
 
@@ -7122,19 +7130,20 @@ window.confirmAddCustomizedItem = function() {
     }
 
     const restaurant = currentCustomization.restaurant;
-    const hasWeight = dish.has_weight !== false;
-    const hasCooling = dish.has_cooling !== false;
+    const isBento = isBentoCake(dish);
+    const hasWeight = (dish.has_weight !== false) && !isBento;
+    const hasCooling = (dish.has_cooling !== false) && !isBento;
     const weightKey = hasWeight ? (currentCustomization.selectedWeightKey || 'half_kg') : 'standard';
     const isCooling = hasCooling ? Boolean(currentCustomization.isCooling) : false;
     const isEggless = Boolean(currentCustomization.isEggless);
     const customMsg = (currentCustomization.customMessage || '').trim();
 
     const weightOpt = WEIGHT_CONFIG.find(w => w.key === weightKey) || WEIGHT_CONFIG[0];
-    const weightPrice = hasWeight ? getWeightPrice(dish, weightKey) : Number(dish.price || 0);
+    const weightPrice = hasWeight ? getWeightPrice(dish, weightKey) : Number(dish.price || dish.price_half_kg || 0);
     const coolingPrice = (hasCooling && isCooling) ? getCoolingCharge(dish, weightKey) : 0;
-    const egglessPrice = isEggless ? getEgglessPrice(weightKey) : 0;
-    const selectedFlavour = currentCustomization.selectedFlavour || (dish.has_flavours === false ? 'Standard' : detectDefaultFlavour(dish));
-    const flavourRate = (dish.has_flavours !== false) ? getDishFlavourPrice(dish, selectedFlavour, weightKey) : weightPrice;
+    const egglessPrice = isEggless ? (hasWeight ? getEgglessPrice(weightKey) : 30) : 0;
+    const selectedFlavour = currentCustomization.selectedFlavour || (dish.has_flavours === false && !isBento ? 'Standard' : detectDefaultFlavour(dish));
+    const flavourRate = (dish.has_flavours !== false || isBento) ? getDishFlavourPrice(dish, selectedFlavour, weightKey) : weightPrice;
     const flavourPrice = Math.max(0, flavourRate - weightPrice);
     const finalUnitPrice = flavourRate + coolingPrice + egglessPrice;
 
@@ -7149,9 +7158,9 @@ window.confirmAddCustomizedItem = function() {
         ...dish,
         price: finalUnitPrice,
         originalPrice: dish.originalPrice ? Math.round(dish.originalPrice * (hasWeight ? (weightOpt.key === 'half_kg' ? 1 : (weightOpt.key === '1kg' ? 1.5 : (weightOpt.key === '1_5kg' ? 2 : (weightOpt.key === '2kg' ? 2.5 : 3.5)))) : 1)) : finalUnitPrice,
-        selectedWeight: hasWeight ? weightOpt.weightTag : 'Standard',
+        selectedWeight: hasWeight ? weightOpt.weightTag : (isBento ? 'Bento Box' : 'Standard'),
         selectedWeightKey: hasWeight ? weightKey : 'standard',
-        selectedWeightLabel: hasWeight ? weightOpt.label : dish.name,
+        selectedWeightLabel: hasWeight ? weightOpt.label : (isBento ? 'Bento Box Cake (Single Size)' : dish.name),
         selectedFlavour: selectedFlavour,
         flavour: selectedFlavour,
         flavourPrice: flavourPrice,
@@ -7225,9 +7234,10 @@ window.addToCart = function(dishId, restaurantId) {
         return;
     }
 
-    // Direct add for items without cake weight & cooling, or non-cake categories
-    if (dish && (
-        (dish.has_weight === false && dish.has_cooling === false) ||
+    const isBento = isBentoCake(dish);
+    // Direct add for items without cake weight, cooling, and flavours, or non-cake categories (Bento cakes always open customization for flavours!)
+    if (dish && !isBento && (
+        (dish.has_weight === false && dish.has_cooling === false && dish.has_flavours === false) ||
         dish.isDirectAdd || 
         (dish.category && ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'extras', 'dark', 'milk', 'ruby'].includes(dish.category.toLowerCase()))
     )) {

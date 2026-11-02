@@ -3318,11 +3318,15 @@ window.ADMIN_FLAVOUR_KEYS = ADMIN_FLAVOUR_KEYS;
 
 window.onFlavour05Input = function(flavourId, val) {
     const p = Number(val) || 0;
+    const cat = document.getElementById("prodInputCategory") ? document.getElementById("prodInputCategory").value : "";
+    const name = document.getElementById("prodInputName") ? document.getElementById("prodInputName").value : "";
+    const isBento = ((cat || "").toLowerCase().includes("bento")) || ((name || "").toLowerCase().includes("bento"));
+
     const inp10 = document.getElementById('flavourPrice_' + flavourId + '_10');
     const inp15 = document.getElementById('flavourPrice_' + flavourId + '_15');
     const inp20 = document.getElementById('flavourPrice_' + flavourId + '_20');
 
-    if (p > 0) {
+    if (!isBento && p > 0) {
         if (inp10 && (!inp10.value || inp10.dataset.autoCalc !== 'false')) inp10.value = p + 400;
         if (inp15 && (!inp15.value || inp15.dataset.autoCalc !== 'false')) inp15.value = p + 800;
         if (inp20 && (!inp20.value || inp20.dataset.autoCalc !== 'false')) inp20.value = p + 1200;
@@ -3335,7 +3339,7 @@ window.onFlavour05Input = function(flavourId, val) {
         const mainP = document.getElementById("prodInputPrice");
         if (mainP && p > 0) {
             mainP.value = p;
-            if (typeof autoComputeWeightPrices === 'function') autoComputeWeightPrices(p, true);
+            if (!isBento && typeof autoComputeWeightPrices === 'function') autoComputeWeightPrices(p, true);
         }
     }
 };
@@ -3478,24 +3482,100 @@ window.toggleAdminFlavoursSection = function(enabled) {
     }
 };
 
+window.toggleAdminBentoFlavourMode = function(isBento) {
+    // 1. Hide/show Auto-fill All KG Weights button in the Flavour section header
+    const autoFillBtn = document.getElementById("btnAutoFillFlavourWeights") || document.querySelector("button[onclick*='autoFillAllFlavourWeights']");
+    if (autoFillBtn) autoFillBtn.style.display = isBento ? "none" : "";
+
+    // 2. Update Flavour section heading
+    const flavourHeading = document.getElementById("adminFlavourSectionHeading") || 
+        Array.from(document.querySelectorAll("#adminFlavoursContent span")).find(s => s.textContent.includes("Cake Flavour Surcharges") || s.textContent.includes("Bento Cake Flavours"));
+    if (flavourHeading) {
+        flavourHeading.textContent = isBento 
+            ? "🍱 Bento Cake Flavours (Single Size • No KG Weights)" 
+            : "Cake Flavour Surcharges & Pricing (₹)";
+    }
+
+    // 3. Update normal flavours subtitle
+    const normalSub = document.getElementById("adminSharedFlavoursSubtitle") || Array.from(document.querySelectorAll("#adminFlavoursContent span")).find(s => s.textContent.includes("Shared Flavours") || s.textContent.includes("Standard Flavours"));
+    if (normalSub) {
+        normalSub.textContent = isBento
+            ? "🍱 Bento Standard Flavours (5 Flavours)"
+            : "🎂 Normal & Cooling Shared Flavours (5 Standard Flavours)";
+    }
+
+    // 4. Update cooling flavours subtitle
+    const coolingSub = document.getElementById("adminCoolingFlavoursSubtitle") || Array.from(document.querySelectorAll("#adminFlavoursContent span")).find(s => s.textContent.includes("Cooling Cakes Exclusive") || s.textContent.includes("Additional Flavours"));
+    if (coolingSub) {
+        coolingSub.textContent = isBento
+            ? "✨ Bento Additional Flavours (10 Flavours)"
+            : "❄️ Cooling Cakes Exclusive (10 Additional Flavours)";
+    }
+
+    // 5. Hide 1KG, 1.5KG, 2KG weight columns & Auto KG buttons inside each flavour card
+    if (typeof ADMIN_FLAVOUR_KEYS !== 'undefined' && Array.isArray(ADMIN_FLAVOUR_KEYS)) {
+        ADMIN_FLAVOUR_KEYS.forEach(f => {
+            const inp05 = document.getElementById('flavourPrice_' + f.id);
+            const inp10 = document.getElementById('flavourPrice_' + f.id + '_10');
+            const inp15 = document.getElementById('flavourPrice_' + f.id + '_15');
+            const inp20 = document.getElementById('flavourPrice_' + f.id + '_20');
+
+            if (inp10 && inp10.parentElement) inp10.parentElement.style.display = isBento ? "none" : "";
+            if (inp15 && inp15.parentElement) inp15.parentElement.style.display = isBento ? "none" : "";
+            if (inp20 && inp20.parentElement) inp20.parentElement.style.display = isBento ? "none" : "";
+
+            if (inp05 && inp05.parentElement) {
+                const gridContainer = inp05.parentElement.parentElement;
+                if (gridContainer) {
+                    gridContainer.style.gridTemplateColumns = isBento ? "1fr" : "repeat(4, 1fr)";
+                }
+                const label05 = inp05.parentElement.querySelector("span");
+                if (label05) {
+                    label05.textContent = isBento ? "Flavour Price / Surcharge (₹)" : "0.5KG";
+                }
+            }
+
+            const card = inp05 ? inp05.closest(".form-group") : null;
+            if (card) {
+                const autoKgBtn = card.querySelector("button[onclick*='autoCalcSingleFlavourWeights']");
+                if (autoKgBtn) autoKgBtn.style.display = isBento ? "none" : "";
+            }
+        });
+    }
+
+    // 6. If Bento, also disable/hide weight options section
+    if (isBento) {
+        window.toggleAdminWeightSection(false);
+    }
+};
+
 window.handleAdminCategoryChange = function(category) {
     const cat = (category || "").toLowerCase();
+    const isBento = cat.includes("bento");
     const nonCakeCategories = [
         "chocolates", "snacks", "desserts", "shakes", 
         "brownies", "combos", "extras", "dark", "milk", "ruby", "drinks"
     ];
 
     const isNonCake = nonCakeCategories.some(nc => cat.includes(nc));
-    if (isNonCake) {
+    if (isBento) {
+        // Bento Cakes: Single size only, NO KG weight options, NO cooling temp, ONLY FLAVOURS!
+        window.toggleAdminWeightSection(false);
+        window.toggleAdminCoolingSection(false);
+        if (window.toggleAdminFlavoursSection) window.toggleAdminFlavoursSection(true);
+        if (window.toggleAdminBentoFlavourMode) window.toggleAdminBentoFlavourMode(true);
+    } else if (isNonCake) {
         // Automatically default to NO cake weight, NO cooling temperature, and NO flavours
         window.toggleAdminWeightSection(false);
         window.toggleAdminCoolingSection(false);
         if (window.toggleAdminFlavoursSection) window.toggleAdminFlavoursSection(false);
+        if (window.toggleAdminBentoFlavourMode) window.toggleAdminBentoFlavourMode(false);
     } else {
-        // Standard Cakes, Theme Cakes, Celebration Cakes, Bento Cakes, etc.
+        // Standard Cakes, Theme Cakes, Celebration Cakes, etc.
         window.toggleAdminWeightSection(true);
         window.toggleAdminCoolingSection(true);
         if (window.toggleAdminFlavoursSection) window.toggleAdminFlavoursSection(true);
+        if (window.toggleAdminBentoFlavourMode) window.toggleAdminBentoFlavourMode(false);
     }
 };
 
@@ -3602,6 +3682,20 @@ window.openAddProductModal = function() {
     document.getElementById("prodInputInStock").checked = true;
     document.getElementById("prodInputIsVeg").checked = true;
 
+    // Attach dynamic listener for product name to detect Bento
+    const prodNameElAdd = document.getElementById("prodInputName");
+    if (prodNameElAdd && !prodNameElAdd.dataset.bentoListener) {
+        prodNameElAdd.dataset.bentoListener = "true";
+        prodNameElAdd.addEventListener("input", function() {
+            const cat = document.getElementById("prodInputCategory") ? document.getElementById("prodInputCategory").value : "";
+            const isBento = ((cat || "").toLowerCase().includes("bento")) || (this.value.toLowerCase().includes("bento"));
+            if (isBento) {
+                window.toggleAdminWeightSection(false);
+                window.toggleAdminBentoFlavourMode(true);
+            }
+        });
+    }
+
     // Initialize weight & cooling toggle states based on initial category
     const initialCat = document.getElementById("prodInputCategory") ? document.getElementById("prodInputCategory").value : "Specialty Cakes";
     window.handleAdminCategoryChange(initialCat);
@@ -3676,26 +3770,36 @@ window.openEditProductModal = function(productId) {
         window.clearProductUploadedImage();
     }
 
-    // Weight & Cooling toggles: check product properties or infer from category / isDirectAdd
+    // Weight & Cooling toggles: check product properties or infer from category / isDirectAdd / Bento
+    const catLower = (prod.category || "").toLowerCase();
+    const nameLower = (prod.name || "").toLowerCase();
+    const isBento = catLower.includes("bento") || nameLower.includes("bento");
+
     const nonCakeCategories = ["chocolates", "snacks", "desserts", "shakes", "brownies", "combos", "extras", "dark", "milk", "ruby", "drinks"];
-    const isCatNonCake = nonCakeCategories.some(nc => (prod.category || "").toLowerCase().includes(nc));
+    const isCatNonCake = nonCakeCategories.some(nc => catLower.includes(nc));
     
     let hasWeight = true;
-    if (prod.has_weight !== undefined) {
+    if (isBento) {
+        hasWeight = false;
+    } else if (prod.has_weight !== undefined) {
         hasWeight = Boolean(prod.has_weight);
     } else if (prod.isDirectAdd || isCatNonCake) {
         hasWeight = false;
     }
 
     let hasCooling = true;
-    if (prod.has_cooling !== undefined) {
+    if (isBento) {
+        hasCooling = false;
+    } else if (prod.has_cooling !== undefined) {
         hasCooling = Boolean(prod.has_cooling);
     } else if (prod.isDirectAdd || isCatNonCake) {
         hasCooling = false;
     }
 
     let hasFlavours = true;
-    if (prod.has_flavours !== undefined) {
+    if (isBento) {
+        hasFlavours = true;
+    } else if (prod.has_flavours !== undefined) {
         hasFlavours = Boolean(prod.has_flavours);
     } else if (prod.isDirectAdd || isCatNonCake) {
         hasFlavours = false;
@@ -3704,6 +3808,21 @@ window.openEditProductModal = function(productId) {
     window.toggleAdminWeightSection(hasWeight);
     window.toggleAdminCoolingSection(hasCooling);
     if (window.toggleAdminFlavoursSection) window.toggleAdminFlavoursSection(hasFlavours);
+    if (window.toggleAdminBentoFlavourMode) window.toggleAdminBentoFlavourMode(isBento);
+
+    // Attach dynamic listener for product name to detect Bento
+    const prodNameElEdit = document.getElementById("prodInputName");
+    if (prodNameElEdit && !prodNameElEdit.dataset.bentoListener) {
+        prodNameElEdit.dataset.bentoListener = "true";
+        prodNameElEdit.addEventListener("input", function() {
+            const cat = document.getElementById("prodInputCategory") ? document.getElementById("prodInputCategory").value : "";
+            const isBentoNow = ((cat || "").toLowerCase().includes("bento")) || (this.value.toLowerCase().includes("bento"));
+            if (isBentoNow) {
+                window.toggleAdminWeightSection(false);
+                window.toggleAdminBentoFlavourMode(true);
+            }
+        });
+    }
     if (document.getElementById("prodInputFlavour")) {
         document.getElementById("prodInputFlavour").value = prod.flavour || prod.selected_flavour || "";
     }
@@ -3806,10 +3925,21 @@ window.handleProductFormSubmit = async function(e) {
         const isUni = document.getElementById("prodInputIsUni").checked;
         const inStock = document.getElementById("prodInputInStock").checked;
 
+        // Detect Bento cake
+        const catLower = (category || "").toLowerCase();
+        const nameLower = (name || "").toLowerCase();
+        const isBento = catLower.includes("bento") || nameLower.includes("bento");
+
         // Read weight, cooling, and flavours toggles
-        const hasWeight = document.getElementById("prodInputHasWeight") ? document.getElementById("prodInputHasWeight").checked : true;
-        const hasCooling = document.getElementById("prodInputHasCooling") ? document.getElementById("prodInputHasCooling").checked : true;
-        const hasFlavours = document.getElementById("prodInputHasFlavours") ? document.getElementById("prodInputHasFlavours").checked : true;
+        let hasWeight = document.getElementById("prodInputHasWeight") ? document.getElementById("prodInputHasWeight").checked : true;
+        let hasCooling = document.getElementById("prodInputHasCooling") ? document.getElementById("prodInputHasCooling").checked : true;
+        let hasFlavours = document.getElementById("prodInputHasFlavours") ? document.getElementById("prodInputHasFlavours").checked : true;
+
+        if (isBento) {
+            hasWeight = false;
+            hasCooling = false;
+            hasFlavours = true;
+        }
         const isDirectAdd = (!hasWeight && !hasCooling && !hasFlavours);
 
         const priceFlavourEl = document.getElementById("prodInputPriceFlavour");
@@ -3831,14 +3961,14 @@ window.handleProductFormSubmit = async function(e) {
             if (f.altId) flavourPrices[f.altId] = val05;
 
             flavourPrices[f.id + '_05'] = val05;
-            flavourPrices[f.id + '_10'] = val10;
-            flavourPrices[f.id + '_15'] = val15;
-            flavourPrices[f.id + '_20'] = val20;
+            flavourPrices[f.id + '_10'] = isBento ? val05 : val10;
+            flavourPrices[f.id + '_15'] = isBento ? val05 : val15;
+            flavourPrices[f.id + '_20'] = isBento ? val05 : val20;
 
             flavourPrices[f.name + '_05'] = val05;
-            flavourPrices[f.name + '_10'] = val10;
-            flavourPrices[f.name + '_15'] = val15;
-            flavourPrices[f.name + '_20'] = val20;
+            flavourPrices[f.name + '_10'] = isBento ? val05 : val10;
+            flavourPrices[f.name + '_15'] = isBento ? val05 : val15;
+            flavourPrices[f.name + '_20'] = isBento ? val05 : val20;
         });
         if (flavour) {
             flavourPrices[flavour] = price;
