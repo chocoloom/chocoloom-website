@@ -574,44 +574,75 @@
             <button class="modal-close-btn" onclick="closePaymentModal()"><i class="fa-solid fa-xmark"></i></button>
 
             <div class="modal-head">
-                <span class="modal-badge"><i class="fa-solid fa-shield-halved"></i> Secure Checkout</span>
-                <h3 class="modal-title">Complete Payment</h3>
-                <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Choose your payment method to confirm your workshop seat.</p>
+                <span class="modal-badge"><i class="fa-solid fa-shield-halved"></i> Verified UPI Checkout</span>
+                <h3 class="modal-title">Pay via Paytm / UPI QR</h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Scan the QR code with any UPI app to confirm your workshop seat.</p>
             </div>
 
             <div class="payment-amount-display">
-                <span class="pad-label">Amount Payable</span>
+                <span class="pad-label">Total Payable</span>
                 <span class="pad-amount" id="payModalAmount">₹499</span>
             </div>
 
+            <!-- Payment Method Tabs -->
             <div class="payment-methods-list">
-                <label class="pay-method-opt selected">
+                <label class="pay-method-opt selected" onclick="selectPaymentMethodTab('upi')">
                     <input type="radio" name="payMethod" value="upi" checked>
                     <div class="pmo-content">
-                        <div class="pmo-title"><i class="fa-solid fa-mobile-screen-button"></i> UPI (Google Pay / PhonePe / Paytm / BHIM)</div>
-                        <div class="pmo-desc">Instant online confirmation with zero convenience fees</div>
+                        <div class="pmo-title"><i class="fa-solid fa-qrcode" style="color: #00baf2;"></i> Paytm / UPI QR (Recommended)</div>
+                        <div class="pmo-desc">GPay, PhonePe, Paytm, BHIM or any UPI app</div>
                     </div>
                 </label>
 
-                <label class="pay-method-opt">
-                    <input type="radio" name="payMethod" value="card">
-                    <div class="pmo-content">
-                        <div class="pmo-title"><i class="fa-regular fa-credit-card"></i> Credit / Debit Card & Net Banking</div>
-                        <div class="pmo-desc">All Visa, Mastercard, RuPay & net banking options</div>
-                    </div>
-                </label>
-
-                <label class="pay-method-opt">
+                <label class="pay-method-opt" onclick="selectPaymentMethodTab('counter')">
                     <input type="radio" name="payMethod" value="counter">
                     <div class="pmo-content">
-                        <div class="pmo-title"><i class="fa-solid fa-store"></i> Pay at Chocoloom Studio Counter</div>
-                        <div class="pmo-desc">Pay upon arrival on Sunday, Nov 15 via cash or card</div>
+                        <div class="pmo-title"><i class="fa-solid fa-store" style="color: var(--primary);"></i> Pay at Studio Counter</div>
+                        <div class="pmo-desc">Pay cash or card upon arrival on Sunday, Nov 15</div>
                     </div>
                 </label>
             </div>
 
-            <button type="button" class="btn-confirm-reg" onclick="completePaymentAndGetTicket()">
-                <span>Pay & Confirm Booking 🎟️✨</span>
+            <!-- UPI QR Block -->
+            <div id="upiPaymentSection" class="upi-pay-section">
+                <div class="upi-qr-card">
+                    <div class="upi-qr-frame">
+                        <img src="assets/payment_qr.jpg" alt="Chocoloom Official Paytm UPI QR Code" class="upi-qr-img" id="paytmQrImg">
+                    </div>
+
+                    <div class="upi-id-pill" onclick="copyUpiId('paytm.s2spcov@pty')" title="Click to copy UPI ID">
+                        <span class="uip-label">UPI ID:</span>
+                        <strong class="uip-val">paytm.s2spcov@pty</strong>
+                        <i class="fa-regular fa-copy uip-icon" id="copyUpiIcon"></i>
+                    </div>
+
+                    <!-- Direct One-Tap Mobile Payment Intent -->
+                    <a id="btnPayUpiDirect" href="upi://pay?pa=paytm.s2spcov@pty&pn=Chocoloom%20Workshop&mc=5462&cu=INR" class="btn-upi-mobile">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Tap to Pay on UPI App (Mobile)</span>
+                    </a>
+
+                    <!-- UTR / Reference Number Input -->
+                    <div class="utr-input-group">
+                        <label for="upiUtrInput" class="utr-label">
+                            <span>UPI Reference / UTR Number</span>
+                            <small>(Optional, 12 digits from receipt)</small>
+                        </label>
+                        <input type="text" id="upiUtrInput" class="form-input utr-field" placeholder="e.g. 431289567812" maxlength="20">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Counter Note Block -->
+            <div id="counterPaymentSection" class="counter-pay-section" style="display: none;">
+                <div class="counter-note-box">
+                    <i class="fa-solid fa-circle-info" style="color: var(--primary); font-size: 20px; margin-top: 2px;"></i>
+                    <p>Your seat will be held under your registered name. You can complete payment via Cash, UPI or Card at our reception desk in Bhimavaram on Sunday, Nov 15 before the session starts.</p>
+                </div>
+            </div>
+
+            <button type="button" class="btn-confirm-reg" id="btnCompletePayment" onclick="completePaymentAndGetTicket()">
+                <span>I Have Paid • Confirm Booking 🎟️✨</span>
             </button>
         </div>
     </div>

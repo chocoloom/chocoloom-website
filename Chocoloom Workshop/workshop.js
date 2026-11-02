@@ -248,6 +248,11 @@
 
         const payModalAmount = document.getElementById('payModalAmount');
         if (payModalAmount) payModalAmount.textContent = `₹${total}`;
+
+        const btnUpiDirect = document.getElementById('btnPayUpiDirect');
+        if (btnUpiDirect) {
+            btnUpiDirect.href = `upi://pay?pa=paytm.s2spcov@pty&pn=Chocoloom%20Workshop&mc=5462&am=${total}&cu=INR&tn=Workshop%20Pass%20Booking`;
+        }
     }
 
     // 7. Handle Registration Submit -> Proceed to Payment
@@ -309,10 +314,63 @@
                 payOpts.forEach(o => o.classList.remove('selected'));
                 opt.classList.add('selected');
                 const radio = opt.querySelector('input[type="radio"]');
-                if (radio) radio.checked = true;
+                if (radio) {
+                    radio.checked = true;
+                    if (typeof selectPaymentMethodTab === 'function') {
+                        selectPaymentMethodTab(radio.value);
+                    }
+                }
             });
         });
     }
+
+    window.selectPaymentMethodTab = function (method) {
+        const upiSec = document.getElementById('upiPaymentSection');
+        const counterSec = document.getElementById('counterPaymentSection');
+        const btnPay = document.getElementById('btnCompletePayment');
+
+        if (method === 'upi') {
+            if (upiSec) upiSec.style.display = 'block';
+            if (counterSec) counterSec.style.display = 'none';
+            if (btnPay) btnPay.innerHTML = '<span>I Have Paid • Confirm Booking 🎟️✨</span>';
+        } else {
+            if (upiSec) upiSec.style.display = 'none';
+            if (counterSec) counterSec.style.display = 'block';
+            if (btnPay) btnPay.innerHTML = '<span>Reserve Seat • Pay at Counter 🎟️✨</span>';
+        }
+    };
+
+    window.copyUpiId = function (upiId) {
+        const text = upiId || 'paytm.s2spcov@pty';
+        const fallbackCopy = (val) => {
+            const temp = document.createElement('textarea');
+            temp.value = val;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast(`UPI ID copied: ${val} 📋`);
+        };
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`UPI ID copied: ${text} 📋`);
+                const icon = document.getElementById('copyUpiIcon');
+                if (icon) {
+                    icon.className = 'fa-solid fa-check uip-icon';
+                    icon.style.color = '#10b981';
+                    setTimeout(() => {
+                        icon.className = 'fa-regular fa-copy uip-icon';
+                        icon.style.color = '';
+                    }, 2000);
+                }
+            }).catch(() => {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+    };
 
     window.openPaymentModal = function () {
         updateModalSummary();
@@ -333,6 +391,14 @@
 
     // 9. Complete Payment & Generate Workshop Pass
     window.completePaymentAndGetTicket = function () {
+        const utrInput = document.getElementById('upiUtrInput');
+        const utrVal = utrInput ? utrInput.value.trim() : '';
+        const payMethod = document.querySelector('input[name="payMethod"]:checked')?.value || 'upi';
+        WorkshopState.payment = {
+            method: payMethod,
+            utr: utrVal,
+            amount: WorkshopState.totalPrice || 499
+        };
         const isDuo = (WorkshopState.selectedPass.id === 'duo');
         let attendeeDisplay = WorkshopState.attendee.name || 'Creative Creator';
         if (isDuo && WorkshopState.attendee.name2) {

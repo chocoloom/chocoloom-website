@@ -2398,6 +2398,157 @@ button {
     line-height: 1.4;
 }
 
+/* ==================== UPI QR CODE & PAYMENT STYLES ==================== */
+.upi-pay-section {
+    margin: 16px 0 20px;
+}
+
+.upi-qr-card {
+    background: #faf8ff;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px 18px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 18px rgba(124, 92, 252, 0.06);
+}
+
+.upi-qr-frame {
+    background: #ffffff;
+    padding: 10px;
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    display: inline-block;
+    margin-bottom: 14px;
+    border: 1px solid var(--border-subtle);
+}
+
+.upi-qr-img {
+    width: 210px;
+    height: auto;
+    max-width: 100%;
+    display: block;
+    border-radius: 8px;
+    object-fit: contain;
+}
+
+.upi-id-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1.5px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: var(--radius-full);
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--dark);
+    cursor: pointer;
+    transition: var(--transition);
+    user-select: none;
+    margin-bottom: 12px;
+}
+
+.upi-id-pill:hover {
+    border-color: var(--primary);
+    background: #f4efff;
+    transform: translateY(-1px);
+}
+
+.uip-label {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.uip-val {
+    color: var(--primary);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13.5px;
+    letter-spacing: 0.2px;
+}
+
+.uip-icon {
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.btn-upi-mobile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 320px;
+    padding: 11px 18px;
+    background: #00baf2;
+    color: #ffffff !important;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 800;
+    border-radius: var(--radius-full);
+    box-shadow: 0 4px 14px rgba(0, 186, 242, 0.3);
+    transition: var(--transition);
+    box-sizing: border-box;
+    margin-bottom: 12px;
+}
+
+.btn-upi-mobile:hover {
+    background: #0099cc;
+    transform: translateY(-1px);
+}
+
+.utr-input-group {
+    width: 100%;
+    text-align: left;
+    margin-top: 4px;
+}
+
+.utr-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 6px;
+}
+
+.utr-label small {
+    font-size: 11px;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.utr-field {
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+
+.counter-pay-section {
+    margin: 16px 0 20px;
+}
+
+.counter-note-box {
+    background: #faf8ff;
+    border: 1.5px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 18px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    text-align: left;
+}
+
+.counter-note-box p {
+    font-size: 13px;
+    color: var(--text-main);
+    line-height: 1.5;
+    margin: 0;
+}
+
 .order-summary-box {
     background: #faf8ff;
     border: 1px dashed #dcd2fc;
