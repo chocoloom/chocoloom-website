@@ -16915,14 +16915,7 @@ img.emoji {
 
 /* ==================== CRAFT YOUR HAPPY MOMENTS HERO SLIDE (DIWALI-STYLE) ==================== */
 .craft-tag-pill {
-    background: rgba(236, 72, 153, 0.22) !important;
-    border: 1.5px solid rgba(244, 114, 182, 0.65) !important;
-    color: #f472b6 !important;
-    box-shadow: 0 2px 10px rgba(236, 72, 153, 0.25) !important;
-}
-
-.craft-tag-pill i {
-    color: #ec4899 !important;
+    display: none !important;
 }
 
 .craft-discount-tag {

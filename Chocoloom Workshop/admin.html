@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Chocoloom Workshop Admin - Registration Tickets & Attendees</title>
+    <link rel="icon" type="image/png" href="assets/logo.png">
+
+    <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome 6.5.1 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+    <!-- Admin Stylesheet -->
+    <link rel="stylesheet" href="admin.css?v=1">
+</head>
+<body>
+
+    <!-- ==================== SECURITY PIN LOCK SCREEN ==================== -->
+    <div class="auth-overlay" id="adminAuthOverlay">
+        <div class="auth-card" id="authCard">
+            <div class="auth-logo-badge">
+                <img src="assets/logo.png" alt="Chocoloom Logo" class="auth-logo-img">
+            </div>
+            <h2 class="auth-title">Workshop Staff Access</h2>
+            <p class="auth-subtitle">Enter your 4-digit security PIN to view registration tickets</p>
+
+            <div class="pin-inputs-wrap">
+                <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox1" autofocus autocomplete="off">
+                <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox2" autocomplete="off">
+                <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox3" autocomplete="off">
+                <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox4" autocomplete="off">
+            </div>
+
+            <div class="auth-error-msg" id="authErrorMsg"></div>
+
+            <!-- Numeric Keypad -->
+            <div class="pin-keypad">
+                <button type="button" class="keypad-btn" onclick="enterPinDigit('1')">1</button>
+                <button type="button" class="keypad-btn" onclick="enterPinDigit('2')">2</button>
+                <button type="button" class="keypad-btn" onclick="enterPinDigit('3')">3</button>
+                <button type="button" class="keypad-btn" onclick="enterPinDigit('4')">4</button>
+                <button type="button" class="keypad-btn" onclick="enterPinDigit('5')">5</button>
+                <button type="button" class="keypad-btn" onclick="enterPinDigit('6')">6</button>
+                <button type="button" class="keypad-btn" onclick="enterPinDigit('7')">7</button>
+                <button type="button" class="keypad-btn" onclick="enterPinDigit('8')">8</button>
+                <button type="button" class="keypad-btn" onclick="enterPinDigit('9')">9</button>
+                <button type="button" class="keypad-btn action-key" onclick="clearPin()">Clear</button>
+                <button type="button" class="keypad-btn" onclick="enterPinDigit('0')">0</button>
+                <button type="button" class="keypad-btn action-key" onclick="backspacePin()" title="Backspace"><i class="fa-solid fa-delete-left"></i></button>
+            </div>
+
+            <div class="auth-remember-row">
+                <label class="auth-remember-label">
+                    <input type="checkbox" id="authRememberCheckbox" checked>
+                    <span>Keep me signed in on this device</span>
+                </label>
+            </div>
+
+            <div class="auth-hint">
+                <i class="fa-solid fa-key" style="color: #a855f7;"></i>
+                <span>Chocoloom Staff Master PIN: <strong>2026</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN ADMIN APPLICATION ==================== -->
+    <div class="admin-app" id="adminApp">
+        <!-- Top Navigation Header -->
+        <header class="admin-header">
+            <div class="header-inner">
+                <div class="header-left">
+                    <a href="index.html" class="header-logo-wrap" title="View Workshop Website">
+                        <img src="assets/logo.png" alt="Chocoloom Logo" class="admin-logo">
+                        <div class="brand-titles">
+                            <h1>CHOCOLOOM</h1>
+                            <span>Workshop Tickets Admin</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="header-center">
+                    <div class="live-status-pill">
+                        <span class="live-dot"></span>
+                        <span id="liveClockText">Live IST</span>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <button class="btn-action secondary" onclick="exportTicketsCsv()" title="Download CSV roster for event reception">
+                        <i class="fa-solid fa-file-arrow-down"></i>
+                        <span>Export CSV</span>
+                    </button>
+                    <button class="btn-action secondary" onclick="printRoster()" title="Print attendee roster">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Print</span>
+                    </button>
+                    <button class="btn-action primary" onclick="openManualRegModal()">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>+ New Pass</span>
+                    </button>
+                    <a href="index.html" class="btn-action ghost" title="Go to Workshop Storefront">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span class="hide-mobile">Storefront</span>
+                    </a>
+                    <button class="btn-action ghost" onclick="lockAdmin()" title="Lock Admin Panel">
+                        <i class="fa-solid fa-lock"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            <div class="container">
+
+                <!-- 1. METRICS KPI CARDS -->
+                <section class="kpi-grid">
+                    <!-- Total Passes Card -->
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap purple">
+                            <i class="fa-solid fa-ticket"></i>
+                        </div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Confirmed Passes</span>
+                            <div class="kpi-value" id="kpiTotalPasses">0</div>
+                            <div class="kpi-sub" id="kpiPassesBreakdown">0 Solo • 0 Duo</div>
+                        </div>
+                    </div>
+
+                    <!-- Total Creators Card -->
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap amber">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <div class="kpi-info">
+                            <div class="kpi-header-row">
+                                <span class="kpi-label">Attendees Booked</span>
+                                <span class="kpi-capacity-tag" id="kpiCapacityTag">0 / 15 Seats</span>
+                            </div>
+                            <div class="kpi-value" id="kpiTotalAttendees">0 <small style="font-size: 14px; font-weight: 600; color: var(--text-muted);">/ 15 Creators</small></div>
+                            <div class="capacity-bar-wrap">
+                                <div class="capacity-bar" id="kpiCapacityBar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Revenue Card -->
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap emerald">
+                            <i class="fa-solid fa-indian-rupee-sign"></i>
+                        </div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Total Revenue</span>
+                            <div class="kpi-value" id="kpiTotalRevenue">₹0</div>
+                            <div class="kpi-sub" id="kpiRevenueBreakdown">₹0 UPI • ₹0 Counter</div>
+                        </div>
+                    </div>
+
+                    <!-- Tote Bags Claimed Card -->
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap rose">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                        </div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">FREE Tote Bags Reserved</span>
+                            <div class="kpi-value" id="kpiTotalTotes">0</div>
+                            <div class="kpi-sub">Heavy-duty 340 GSM Canvas</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. CONTROLS, SEARCH & FILTER BAR -->
+                <section class="controls-card">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="adminSearchInput" class="search-field" placeholder="Search attendee name, WhatsApp phone, ticket code, UTR or email..." oninput="handleSearch()">
+                        <button type="button" class="btn-clear-search" id="btnClearSearch" onclick="clearSearch()" style="display: none;">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <!-- Filter Tabs -->
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all" onclick="setFilter('all', this)">
+                            <span>All Tickets</span>
+                            <span class="tab-badge" id="badgeAllCount">0</span>
+                        </button>
+                        <button class="filter-tab" data-filter="solo" onclick="setFilter('solo', this)">
+                            <span>Solo Passes</span>
+                            <span class="tab-badge" id="badgeSoloCount">0</span>
+                        </button>
+                        <button class="filter-tab" data-filter="duo" onclick="setFilter('duo', this)">
+                            <span>Duo Passes</span>
+                            <span class="tab-badge" id="badgeDuoCount">0</span>
+                        </button>
+                        <button class="filter-tab" data-filter="paid" onclick="setFilter('paid', this)">
+                            <span>UPI Paid</span>
+                            <span class="tab-badge green" id="badgePaidCount">0</span>
+                        </button>
+                        <button class="filter-tab" data-filter="counter" onclick="setFilter('counter', this)">
+                            <span>Pay at Counter</span>
+                            <span class="tab-badge amber" id="badgeCounterCount">0</span>
+                        </button>
+                        <button class="filter-tab" data-filter="attended" onclick="setFilter('attended', this)">
+                            <span>Checked-In</span>
+                            <span class="tab-badge purple" id="badgeAttendedCount">0</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 3. REGISTRATION TICKETS TABLE / CARD VIEW -->
+                <section class="tickets-table-card">
+                    <div class="table-header-bar">
+                        <div class="th-left">
+                            <h3 class="table-title">Workshop Ticket Roster</h3>
+                            <span class="table-subtitle" id="tableRecordsCount">Showing 0 registrations</span>
+                        </div>
+                        <div class="th-right">
+                            <button class="btn-sm-action" onclick="refreshTickets()">
+                                <i class="fa-solid fa-arrows-rotate" id="refreshIcon"></i>
+                                <span>Sync</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Responsive Tickets Table -->
+                    <div class="table-responsive">
+                        <table class="tickets-table" id="ticketsTable">
+                            <thead>
+                                <tr>
+                                    <th>Ticket Code</th>
+                                    <th>Attendee Contact</th>
+                                    <th>Pass Tier</th>
+                                    <th>Workshop Slot</th>
+                                    <th>Amount & Method</th>
+                                    <th>Payment Status</th>
+                                    <th>Check-in / Tote</th>
+                                    <th style="text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ticketsTbody">
+                                <!-- Populated dynamically by admin.js -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State View -->
+                    <div class="empty-state" id="emptyStateBox" style="display: none;">
+                        <div class="empty-icon"><i class="fa-solid fa-ticket-simple"></i></div>
+                        <h4>No Registration Tickets Found</h4>
+                        <p id="emptyStateDesc">No attendee registrations match your current search or filter criteria.</p>
+                        <button class="btn-action primary" onclick="openManualRegModal()" style="margin-top: 14px;">
+                            <i class="fa-solid fa-plus"></i> Add Walk-In Pass
+                        </button>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== DIGITAL TICKET PREVIEW MODAL ==================== -->
+    <div class="modal-backdrop" id="adminTicketModal" onclick="if(event.target===this) closeAdminTicketModal()">
+        <div class="pass-ticket-modal-card">
+            <button class="modal-close-btn" onclick="closeAdminTicketModal()" aria-label="Close Modal"><i class="fa-solid fa-xmark"></i></button>
+
+            <!-- Digital Pass Card Layout -->
+            <div class="ticket-wrapper" id="ticketToPrint">
+                <div class="ticket-top">
+                    <div class="ticket-logo-text">CHOCOLOOM WORKSHOP</div>
+                    <span class="ticket-vip-tag" id="modalTicketBadge">OFFICIAL PASS</span>
+                </div>
+
+                <div class="ticket-body">
+                    <div class="tb-left">
+                        <div class="tb-item">
+                            <span class="tb-label">Attendee Name(s)</span>
+                            <div class="tb-val" id="modalAttendeeName">Mohith Kumar</div>
+                        </div>
+
+                        <div class="tb-item">
+                            <span class="tb-label">Pass Tier</span>
+                            <div class="tb-val" id="modalPassType">Duo Creative Pass (2 Persons)</div>
+                        </div>
+
+                        <div class="tb-item">
+                            <span class="tb-label">Date & Timing</span>
+                            <div class="tb-val" id="modalDateInfo">Sunday, Nov 15, 2026</div>
+                            <div style="font-size: 13px; color: #cbd5e1;" id="modalBatchInfo">Exclusive Sunday Masterclass • 10:00 AM – 1:00 PM</div>
+                        </div>
+
+                        <div class="tb-item" style="margin-bottom: 0;">
+                            <span class="tb-label">Venue</span>
+                            <div class="tb-val" style="font-size: 13px;">Bhimavaram (Venue to be announced soon • WhatsApp: +91 98497 83788)</div>
+                        </div>
+                    </div>
+
+                    <div class="tb-right">
+                        <div class="ticket-qr-area">
+                            <div class="ticket-qr-code" id="modalQrCodeBox"></div>
+                            <span class="ticket-code-id" id="modalTicketCode">CL-WRK-2026-8942</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ticket-tote-claimed-strip">
+                    <i class="fa-solid fa-circle-check" style="font-size: 16px;"></i>
+                    <span id="modalToteText">2x FREE Chocoloom Canvas Tote Bags Reserved</span>
+                </div>
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div class="ticket-actions-group">
+                <button class="btn-ticket-download" onclick="window.print()">
+                    <i class="fa-solid fa-print"></i>
+                    <span>Print Ticket</span>
+                </button>
+                <button class="btn-ticket-share" id="modalBtnWhatsAppShare">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <span>Send to WhatsApp</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MANUAL REGISTRATION MODAL (+ PASS) ==================== -->
+    <div class="modal-backdrop" id="manualRegModal" onclick="if(event.target===this) closeManualRegModal()">
+        <div class="modal-card">
+            <button class="modal-close-btn" onclick="closeManualRegModal()"><i class="fa-solid fa-xmark"></i></button>
+
+            <div class="modal-head">
+                <span class="modal-badge"><i class="fa-solid fa-user-plus"></i> Staff Desk</span>
+                <h3 class="modal-title">Add Offline Registration</h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Record a phone booking, walk-in or manual registration pass.</p>
+            </div>
+
+            <form onsubmit="handleManualRegistration(event)">
+                <div class="form-group">
+                    <label class="form-label" for="manualPassTier">Select Pass Tier *</label>
+                    <select id="manualPassTier" class="form-select" onchange="toggleManualPassFields(this.value)">
+                        <option value="solo">Solo Creator Pass (₹499 • 1 Person + 1 Tote)</option>
+                        <option value="duo">Duo Creative Pass (₹899 • 2 Persons + 2 Totes)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="manualName1">Person 1 Full Name *</label>
+                    <input type="text" id="manualName1" class="form-input" placeholder="e.g. Mohith Kumar" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="manualPhone1">Person 1 WhatsApp Number *</label>
+                    <input type="tel" id="manualPhone1" class="form-input" placeholder="e.g. 98497 83788" required>
+                </div>
+
+                <!-- Duo Additional Fields -->
+                <div id="manualDuoFields" style="display: none;">
+                    <div class="duo-divider">
+                        <i class="fa-solid fa-user-group"></i>
+                        <span>Person 2 Details (Duo Pass)</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="manualName2">Person 2 Full Name *</label>
+                        <input type="text" id="manualName2" class="form-input" placeholder="e.g. Friend / Partner Full Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="manualPhone2">Person 2 WhatsApp Number *</label>
+                        <input type="tel" id="manualPhone2" class="form-input" placeholder="e.g. 98497 83789">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="manualEmail">Email Address (Optional)</label>
+                    <input type="email" id="manualEmail" class="form-input" placeholder="e.g. attendee@gmail.com">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="manualPayMethod">Payment Method *</label>
+                        <select id="manualPayMethod" class="form-select">
+                            <option value="upi">Paytm / UPI QR (Paid)</option>
+                            <option value="counter">Pay at Counter (Cash/Card upon arrival)</option>
+                            <option value="card">Card / POS Swiped</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="manualUtr">UPI Ref / UTR / Note</label>
+                        <input type="text" id="manualUtr" class="form-input" placeholder="Optional 12-digit UTR">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-confirm-reg" style="margin-top: 10px;">
+                    <span>Issue Workshop Pass 🎟️✨</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin JS Script -->
+    <script src="admin.js?v=1"></script>
+</body>
+</html>

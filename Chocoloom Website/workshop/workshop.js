@@ -423,6 +423,47 @@
         if (tId) tId.textContent = ticketId;
         if (tTote) tTote.textContent = `${WorkshopState.selectedPass.toteBags}x FREE Chocoloom Canvas Tote Bags Reserved`;
 
+        // Save registration to Admin Panel Roster
+        try {
+            const STORAGE_KEY = 'chocoloom_workshop_registrations';
+            let roster = [];
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                try { roster = JSON.parse(raw); } catch (e) { roster = []; }
+            }
+            if (!Array.isArray(roster)) roster = [];
+
+            const newRegistration = {
+                id: ticketId,
+                createdAt: new Date().toISOString(),
+                passTier: WorkshopState.selectedPass.id,
+                passName: WorkshopState.selectedPass.name,
+                attendeesCount: WorkshopState.selectedPass.attendees,
+                toteBags: WorkshopState.selectedPass.toteBags,
+                name1: WorkshopState.attendee.name || 'Creative Creator',
+                phone1: WorkshopState.attendee.phone || '',
+                name2: isDuo ? (WorkshopState.attendee.name2 || '') : '',
+                phone2: isDuo ? (WorkshopState.attendee.phone2 || '') : '',
+                attendeeDisplay: attendeeDisplay,
+                email: WorkshopState.attendee.email || '',
+                slotDay: WorkshopState.selectedSlot.day,
+                slotDate: WorkshopState.selectedSlot.date,
+                slotTime: WorkshopState.selectedSlot.time,
+                batch: WorkshopState.selectedSlot.batch,
+                amount: WorkshopState.totalPrice || WorkshopState.selectedPass.basePrice,
+                payMethod: payMethod,
+                paymentStatus: (payMethod === 'counter') ? 'counter' : 'paid',
+                utr: utrVal,
+                checkedIn: false,
+                toteGiven: false
+            };
+
+            roster.unshift(newRegistration);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(roster));
+        } catch (saveErr) {
+            console.warn('Could not persist registration to admin roster:', saveErr);
+        }
+
         // Close payment modal and open ticket pass
         closePaymentModal();
 
