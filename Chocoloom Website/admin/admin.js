@@ -981,7 +981,19 @@ async function loadAllOrders(isUserInitiated = false) {
     AdminState.orders = (AdminState.orders || []).filter(o => o && o.customer_name !== 'Aarav Sharma' && !String(o.order_number || '').endsWith('-2489'));
 
     if (supabaseReachable) {
-        AdminState.orders = dedupedBatch.map(normalizeOrderData);
+        const fetchedOrders = dedupedBatch.map(normalizeOrderData);
+        const fetchedKeys = new Set(fetchedOrders.map(o => o.order_number || o.id));
+
+        // Preserve recently created local orders (e.g. manual orders created within the last 15 minutes) not yet returned by cloud query
+        const recentLocalOrders = (AdminState.orders || []).filter(o => {
+            if (!o) return false;
+            const key = o.order_number || o.id;
+            if (fetchedKeys.has(key)) return false;
+            const ageMs = Date.now() - new Date(o.created_at || 0).getTime();
+            return ageMs < 15 * 60 * 1000;
+        });
+
+        AdminState.orders = [...recentLocalOrders, ...fetchedOrders];
         AdminState.orders.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
     } else if (dedupedBatch.length > 0) {
         mergeOrdersIntoState(dedupedBatch, isInitialOrderLoadDone);
@@ -1355,73 +1367,225 @@ window.fillSampleManualOrder = function() {
 window.handleManualOrderSubmit = async function(e) {
     if (e && e.preventDefault) e.preventDefault();
 
-    const name = (document.getElementById('manualCustName')?.value || '').trim();
-    const phone = (document.getElementById('manualCustPhone')?.value || '').trim();
-    const address = (document.getElementById('manualCustAddress')?.value || '').trim();
-    const prodSelectVal = document.getElementById('manualProductSelect')?.value;
-    const customName = (document.getElementById('manualCustomName')?.value || '').trim();
-    const note = (document.getElementById('manualCakeNote')?.value || '').trim();
-    const weight = document.getElementById('manualWeightSelect')?.value || "1.0 KG";
-    const paymentMethod = document.getElementById('manualPaymentMethod')?.value || "Cash on Delivery";
-    const paymentStatus = document.getElementById('manualPaymentStatus')?.value || "completed";
-    const orderStatus = document.getElementById('manualOrderStatus')?.value || "Confirmed";
-
-    let cakeName = prodSelectVal;
-    if (prodSelectVal === 'custom') {
-        cakeName = customName;
+    const submitBtn = document.getElementById('manualOrderSubmitBtn');
+    const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving Order...';
     }
 
-    if (!cakeName) {
-        showToast('Please select or enter a cake name', true);
-        return;
-    }
+    try {
+        const name = (document.getElementById('manualCustName')?.value || '').trim();
+        const phone = (document.getElementById('manualCustPhone')?.value || '').trim();
+        const address = (document.getElementById('manualCustAddress')?.value || '').trim();
+        const prodSelectVal = document.getElementById('manualProductSelect')?.value;
+        const customName = (document.getElementById('manualCustomName')?.value || '').trim();
+        const note = (document.getElementById('manualCakeNote')?.value || '').trim();
+        const weight = document.getElementById('manualWeightSelect')?.value || "1.0 KG";
+        const paymentMethod = document.getElementById('manualPaymentMethod')?.value || "Cash on Delivery";
+        const paymentStatus = document.getElementById('manualPaymentStatus')?.value || "completed";
+        const orderStatus = document.getElementById('manualOrderStatus')?.value || "Confirmed";
 
-    const calc = window.recalcManualOrderTotal();
-    const randNum = Math.floor(1000 + Math.random() * 9000);
-    const orderNum = `CL-${Date.now().toString().slice(-6)}-${randNum}`;
+        let cakeName = prodSelectVal;
+        if (prodSelectVal === 'custom') {
+            cakeName = customName;
+        }
 
-    const newOrder = {
-        order_number: orderNum,
-        customer_name: name,
-        customer_phone: phone,
-        delivery_address: address,
-        delivery_notes: note ? `Custom message on cake: "${note}"` : `Manual Order Entry (Placed by Admin)`,
-        items: [
-            {
-                name: cakeName,
-                quantity: calc.qty,
-                price: calc.price,
-                selected_weight: weight,
-                weight: weight,
-                is_cooling: calc.isCooling,
-                cooling_option: calc.isCooling ? "Chilled Cooling Cake (+₹50)" : "Normal Cake",
-                cooling_price: calc.coolingPrice,
-                custom_message: note || "",
-                options_summary: `${weight} | ${calc.isCooling ? 'Cooling (+₹50)' : 'Normal'}${note ? ' | "' + note + '"' : ''}`
+        if (!cakeName) {
+            showToast('Please select or enter a cake name', true);
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origBtnHtml;
             }
-        ],
-        item_total: calc.itemTotal,
-        delivery_fee: calc.deliveryFee,
-        platform_fee: calc.platformFee,
-        gst_and_charges: calc.gstFee,
-        tip_amount: 0,
-        final_total: calc.finalTotal,
-        total: calc.finalTotal,
-        payment_method: paymentMethod,
-        payment_status: paymentStatus,
-        status: orderStatus,
-        created_at: new Date().toISOString()
-    };
+            return;
+        }
 
-    handleIncomingOrder(newOrder, true);
-    await window.saveOrderToDatabasesAndBus(newOrder);
+        const calc = window.recalcManualOrderTotal();
+        const randNum = Math.floor(1000 + Math.random() * 9000);
+        const orderNum = `CL-${Date.now().toString().slice(-6)}-${randNum}`;
 
-    closeAdminModal('manualOrderModal');
-    showToast(`✅ Manual Order #${orderNum} created successfully!`);
+        const newOrder = {
+            order_number: orderNum,
+            order_ref: orderNum,
+            customer_name: name || 'Guest Customer',
+            customer_phone: phone,
+            delivery_address: address,
+            delivery_notes: note ? `Custom message on cake: "${note}"` : `Manual Order Entry (Placed by Admin)`,
+            note: note || '',
+            restaurant_id: 'rest_chocoloom_flagship',
+            restaurant_name: 'Chocoloom Flagship Bakery & Confectionery',
+            items: [
+                {
+                    name: cakeName,
+                    quantity: calc.qty,
+                    price: calc.price,
+                    selected_weight: weight,
+                    weight: weight,
+                    is_cooling: calc.isCooling,
+                    cooling_option: calc.isCooling ? "Chilled Cooling Cake (+₹50)" : "Normal Cake",
+                    cooling_price: calc.coolingPrice,
+                    custom_message: note || "",
+                    options_summary: `${weight} | ${calc.isCooling ? 'Cooling (+₹50)' : 'Normal'}${note ? ' | "' + note + '"' : ''}`
+                }
+            ],
+            total_items: calc.qty || 1,
+            item_total: calc.itemTotal,
+            subtotal: calc.itemTotal,
+            delivery_fee: calc.deliveryFee,
+            platform_fee: calc.platformFee,
+            gst_and_charges: calc.gstFee,
+            tip_amount: 0,
+            discount_amount: 0,
+            final_total: calc.finalTotal,
+            total: calc.finalTotal,
+            payment_method: paymentMethod,
+            payment_status: paymentStatus,
+            status: orderStatus,
+            created_at: new Date().toISOString()
+        };
+
+        handleIncomingOrder(newOrder, true);
+        await window.saveOrderToDatabasesAndBus(newOrder);
+
+        // Reset manual order form
+        const form = document.getElementById('manualOrderForm');
+        if (form) form.reset();
+        const customGroup = document.getElementById('manualCustomNameGroup');
+        if (customGroup) customGroup.style.display = 'none';
+
+        closeAdminModal('manualOrderModal');
+        showToast(`✅ Manual Order #${orderNum} created successfully!`, 'fa-solid fa-circle-check', '#10b981');
+    } catch (err) {
+        console.error('Error submitting manual order:', err);
+        showToast('Error creating order: ' + (err.message || err), 'fa-solid fa-triangle-exclamation', '#ef4444');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = origBtnHtml;
+        }
+    }
 };
 
+// Sanitizes payload to match Supabase 'orders' schema strictly
+function sanitizeSupabaseOrderPayload(raw) {
+    if (!raw || typeof raw !== 'object') return {};
+    const orderNum = String(raw.order_number || raw.order_ref || ('CL-' + Date.now()));
+    const allowed = [
+        'order_ref', 'order_number', 'customer_name', 'customer_phone', 'customer_email',
+        'delivery_address', 'city', 'zip_code', 'delivery_location', 'delivery_notes',
+        'note', 'restaurant_id', 'restaurant_name', 'items', 'total_items', 'item_total',
+        'subtotal', 'delivery_fee', 'platform_fee', 'gst_and_charges', 'tip_amount',
+        'discount_amount', 'coupon_code', 'final_total', 'total', 'payment_method',
+        'payment_status', 'status', 'scheduled_time', 'created_at', 'updated_at'
+    ];
+    const clean = {};
+    for (const key of allowed) {
+        if (raw[key] !== undefined && raw[key] !== null) {
+            clean[key] = raw[key];
+        }
+    }
+    // Guarantee required fields without passing invalid 'id' or non-existent 'phone' column
+    clean.order_ref = clean.order_ref || orderNum;
+    clean.order_number = clean.order_number || orderNum;
+    clean.customer_name = clean.customer_name || 'Guest Customer';
+    clean.customer_phone = clean.customer_phone || '';
+    clean.customer_email = clean.customer_email || '';
+    clean.delivery_address = clean.delivery_address || 'Bhimavaram, India';
+    clean.status = clean.status || 'Confirmed';
+    clean.created_at = clean.created_at || new Date().toISOString();
+    clean.updated_at = new Date().toISOString();
+    clean.items = (clean.items !== undefined && clean.items !== null) ? clean.items : [];
+    clean.total_items = Number(clean.total_items || (Array.isArray(clean.items) ? clean.items.length : 1));
+    clean.item_total = Number(clean.item_total || 0);
+    clean.subtotal = Number(clean.subtotal || clean.item_total || 0);
+    clean.delivery_fee = Number(clean.delivery_fee || 0);
+    clean.platform_fee = Number(clean.platform_fee || 0);
+    clean.gst_and_charges = Number(clean.gst_and_charges || 0);
+    clean.tip_amount = Number(clean.tip_amount || 0);
+    clean.discount_amount = Number(clean.discount_amount || 0);
+    clean.final_total = Number(clean.final_total || clean.total || 0);
+    clean.total = Number(clean.final_total || clean.total || 0);
+    clean.payment_method = clean.payment_method || 'Cash on Delivery';
+    clean.payment_status = clean.payment_status || 'completed';
+    return clean;
+}
+
 window.saveOrderToDatabasesAndBus = async function(order) {
-    // 1. Also save to Neon Postgres if connected
+    let supabaseSaved = false;
+
+    // 1. Save to Supabase (Primary Cloud Live Database)
+    const cleanPayload = sanitizeSupabaseOrderPayload(order);
+
+    if (supabaseClient) {
+        try {
+            // Check if order already exists in Supabase
+            const { data: existing, error: checkErr } = await supabaseClient
+                .from('orders')
+                .select('id, order_number')
+                .eq('order_number', cleanPayload.order_number)
+                .limit(1);
+
+            if (!checkErr && existing && existing.length > 0) {
+                // Update existing record
+                const { data, error } = await supabaseClient
+                    .from('orders')
+                    .update(cleanPayload)
+                    .eq('order_number', cleanPayload.order_number)
+                    .select();
+
+                if (!error && data && data.length > 0) {
+                    supabaseSaved = true;
+                    console.log('✅ Order updated in Supabase:', cleanPayload.order_number);
+                } else if (error) {
+                    console.warn('Supabase JS client update warning:', error.message || error);
+                }
+            } else {
+                // Insert brand new order (do not pass non-UUID id so PostgreSQL auto-generates gen_random_uuid())
+                const { data, error } = await supabaseClient
+                    .from('orders')
+                    .insert([cleanPayload])
+                    .select();
+
+                if (!error && data && data.length > 0) {
+                    supabaseSaved = true;
+                    console.log('✅ Order created in Supabase (via JS client):', data[0]);
+                } else if (error) {
+                    console.warn('Supabase JS client insert error:', error.message || error);
+                }
+            }
+        } catch(sbErr) {
+            console.warn('Supabase order save exception:', sbErr);
+        }
+    }
+
+    // Direct REST API fallback if JS client failed or wasn't connected
+    if (!supabaseSaved) {
+        try {
+            const restRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/orders`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_CONFIG.anonKey,
+                    'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
+                },
+                body: JSON.stringify([cleanPayload])
+            });
+
+            if (restRes.ok) {
+                const restData = await restRes.json();
+                supabaseSaved = true;
+                console.log('✅ Order saved to Supabase (via REST fallback):', restData);
+            } else {
+                const errText = await restRes.text();
+                console.warn('Supabase REST fallback response:', restRes.status, errText);
+            }
+        } catch (restErr) {
+            console.warn('Supabase REST fallback exception:', restErr);
+        }
+    }
+
+    // 2. Also save to Neon Postgres if connected
     try {
         const neonSql = await getNeonClient();
         if (neonSql) {
@@ -1433,13 +1597,13 @@ window.saveOrderToDatabasesAndBus = async function(order) {
                     platform_fee, gst_and_charges, tip_amount, final_total, total,
                     payment_method, payment_status, status, created_at, updated_at
                 ) VALUES (
-                    ${order.order_number}, ${order.order_number}, ${order.customer_name},
-                    ${order.customer_phone}, ${order.customer_phone}, ${order.delivery_address},
-                    ${order.delivery_notes}, ${JSON.stringify(order.items)}::jsonb,
-                    ${order.items.length}, ${order.item_total}, ${order.item_total},
-                    ${order.delivery_fee}, ${order.platform_fee}, ${order.gst_and_charges},
-                    ${order.tip_amount || 0}, ${order.final_total}, ${order.final_total},
-                    ${order.payment_method}, ${order.payment_status}, ${order.status},
+                    ${order.order_number}, ${order.order_number}, ${cleanPayload.customer_name},
+                    ${cleanPayload.customer_phone}, ${cleanPayload.customer_phone}, ${cleanPayload.delivery_address},
+                    ${cleanPayload.delivery_notes}, ${JSON.stringify(cleanPayload.items)}::jsonb,
+                    ${cleanPayload.total_items}, ${cleanPayload.item_total}, ${cleanPayload.subtotal},
+                    ${cleanPayload.delivery_fee}, ${cleanPayload.platform_fee}, ${cleanPayload.gst_and_charges},
+                    ${cleanPayload.tip_amount}, ${cleanPayload.final_total}, ${cleanPayload.total},
+                    ${cleanPayload.payment_method}, ${cleanPayload.payment_status}, ${cleanPayload.status},
                     NOW(), NOW()
                 )
                 ON CONFLICT (order_number) DO UPDATE SET updated_at = NOW();
@@ -1450,38 +1614,6 @@ window.saveOrderToDatabasesAndBus = async function(order) {
         console.warn('Neon order save warning:', neonErr);
     }
 
-    // 2. Also save to Supabase if connected
-    try {
-        if (supabaseClient) {
-            await supabaseClient.from('orders').upsert([{
-                id: order.order_number,
-                order_number: order.order_number,
-                customer_name: order.customer_name,
-                customer_phone: order.customer_phone,
-                phone: order.customer_phone,
-                delivery_address: order.delivery_address,
-                delivery_notes: order.delivery_notes,
-                items: order.items,
-                total_items: order.items.length,
-                item_total: order.item_total,
-                subtotal: order.item_total,
-                delivery_fee: order.delivery_fee,
-                platform_fee: order.platform_fee,
-                gst_and_charges: order.gst_and_charges,
-                tip_amount: order.tip_amount || 0,
-                final_total: order.final_total,
-                total: order.final_total,
-                payment_method: order.payment_method,
-                payment_status: order.payment_status,
-                status: order.status,
-                created_at: order.created_at || new Date().toISOString()
-            }], { onConflict: 'order_number' });
-            console.log('✅ Order saved to Supabase');
-        }
-    } catch(sbErr) {
-        console.warn('Supabase order save warning:', sbErr);
-    }
-
     // 3. Broadcast to bus so any other opened tabs see it
     try {
         if ('BroadcastChannel' in window) {
@@ -1490,6 +1622,8 @@ window.saveOrderToDatabasesAndBus = async function(order) {
             setTimeout(() => { try { ch.close(); } catch(e){} }, 500);
         }
     } catch(e) {}
+
+    return supabaseSaved;
 };
 
 // Backward-compatible alias for simulateIncomingOrder
