@@ -250,9 +250,30 @@
         const payModalAmount = document.getElementById('payModalAmount');
         if (payModalAmount) payModalAmount.textContent = `₹${total}`;
 
+        const qrDynamicAmount = document.getElementById('qrDynamicAmount');
+        if (qrDynamicAmount) qrDynamicAmount.textContent = `₹${total}`;
+
+        // Construct standard dynamic UPI Intent String with exact amount pre-filled
+        const upiString = `upi://pay?pa=paytm.s2spcov@pty&pn=Chocoloom%20Workshop&mc=5462&am=${total}&cu=INR&tn=Chocoloom%20Workshop%20Pass`;
+
         const btnUpiDirect = document.getElementById('btnPayUpiDirect');
         if (btnUpiDirect) {
-            btnUpiDirect.href = `upi://pay?pa=paytm.s2spcov@pty&pn=Chocoloom%20Workshop&mc=5462&am=${total}&cu=INR&tn=Workshop%20Pass%20Booking`;
+            btnUpiDirect.href = upiString;
+        }
+
+        // Dynamically update QR code image with auto-filled amount
+        const qrImg = document.getElementById('paytmQrImg');
+        if (qrImg) {
+            const dynamicQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent(upiString)}`;
+            qrImg.src = dynamicQrUrl;
+            qrImg.alt = `Pay ₹${total} via UPI QR Code`;
+            qrImg.onerror = function () {
+                this.onerror = function () {
+                    this.onerror = null;
+                    this.src = 'assets/payment_qr.jpg';
+                };
+                this.src = `https://quickchart.io/qr?size=260&margin=2&text=${encodeURIComponent(upiString)}`;
+            };
         }
     }
 

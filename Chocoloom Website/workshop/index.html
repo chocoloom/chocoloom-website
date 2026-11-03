@@ -663,8 +663,23 @@
             <!-- UPI QR Block -->
             <div id="upiPaymentSection" class="upi-pay-section">
                 <div class="upi-qr-card">
+                    <div class="qr-auto-amount-banner">
+                        <i class="fa-solid fa-qrcode" style="color: var(--primary);"></i>
+                        <span>Scan & Pay: <strong id="qrDynamicAmount">₹499</strong></span>
+                        <span class="qr-auto-tag"><i class="fa-solid fa-bolt"></i> Auto-filled</span>
+                    </div>
+
                     <div class="upi-qr-frame">
-                        <img src="assets/payment_qr.jpg" alt="Chocoloom Official Paytm UPI QR Code" class="upi-qr-img" id="paytmQrImg">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=upi%3A%2F%2Fpay%3Fpa%3Dpaytm.s2spcov%40pty%26pn%3DChocoloom%2520Workshop%26mc%3D5462%26am%3D499%26cu%3DINR%26tn%3DChocoloom%2520Workshop%2520Pass" alt="Chocoloom Official Paytm UPI QR Code" class="upi-qr-img" id="paytmQrImg">
+                    </div>
+
+                    <div class="upi-apps-row">
+                        <span>Works with:</span>
+                        <strong style="color: #4285f4;"><i class="fa-brands fa-google-pay"></i> GPay</strong>
+                        <strong style="color: #5f259f;">PhonePe</strong>
+                        <strong style="color: #00baf2;">Paytm</strong>
+                        <strong style="color: #f37021;">BHIM</strong>
+                        <span>& all UPI apps</span>
                     </div>
 
                     <div class="upi-id-pill" onclick="copyUpiId('paytm.s2spcov@pty')" title="Click to copy UPI ID">
