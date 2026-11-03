@@ -352,12 +352,23 @@
                                 <option value="Chocolates">Chocolates</option>
                                 <option value="Desserts">Desserts</option>
                                 <option value="Specialty Cakes">Specialty Cakes</option>
-                                <option value="Cartoon Cakes">Cartoon Cakes</option>
+                                <option value="Cartoon Cakes">Cartoon Cakes / Cartoons / Kids</option>
                                 <option value="Wedding Cakes">Wedding Cakes</option>
                                 <option value="Cooling Cakes">Cooling Cakes</option>
                                 <option value="Snacks & Munchies">Snacks & Munchies</option>
                                 <option value="Bachelorette Cakes">Bachelorette Cakes</option>
                                 <option value="Half Birthday Cakes">Half Birthday Cakes</option>
+                                <option value="Truffle Cakes">Truffle Cakes</option>
+                                <option value="Combos">Combos & Gift Hampers</option>
+                                <option value="Diwali Hampers">Diwali Hampers</option>
+                                <option value="Mango Cakes">Mango Cakes</option>
+                                <option value="Black Currant Cakes">Black Currant Cakes</option>
+                                <option value="Square Cakes">Square Cakes</option>
+                                <option value="Muffin Cakes">Muffin Cakes</option>
+                                <option value="Shakes">Shakes</option>
+                                <option value="Brownies">Brownies</option>
+                                <option value="Creative Kits">Creative Kits</option>
+                                <option value="Extras">Extras</option>
                             </select>
 
                             <!-- Availability Filter -->
@@ -855,6 +866,8 @@
             <div class="modal-body">
                 <form id="productForm" onsubmit="handleProductFormSubmit(event)" class="prod-form-grid">
                     <input type="hidden" id="prodFormId">
+                    <input type="hidden" id="prodFormSqlId">
+                    <input type="hidden" id="prodFormOriginalName">
 
                     <!-- Name & Category -->
                     <div class="form-row-2">
@@ -865,9 +878,9 @@
                         <div class="form-group">
                             <label>Category *</label>
                             <select id="prodInputCategory" required onchange="window.handleAdminCategoryChange(this.value)">
+                                <option value="Specialty Cakes">Specialty Cakes</option>
                                 <option value="Anniversary Cakes">Anniversary Cakes</option>
                                 <option value="Bento Cakes">Bento Cakes</option>
-                                <option value="Specialty Cakes">Specialty Cakes</option>
                                 <option value="Chocolates">Chocolates</option>
                                 <option value="Desserts">Desserts</option>
                                 <option value="Wedding Cakes">Wedding Cakes</option>
@@ -876,6 +889,17 @@
                                 <option value="Snacks & Munchies">Snacks & Munchies</option>
                                 <option value="Bachelorette Cakes">Bachelorette Cakes</option>
                                 <option value="Half Birthday Cakes">Half Birthday Cakes</option>
+                                <option value="Truffle Cakes">Truffle Cakes</option>
+                                <option value="Combos">Combos & Gift Hampers</option>
+                                <option value="Diwali Hampers">Diwali Hampers</option>
+                                <option value="Mango Cakes">Mango Cakes</option>
+                                <option value="Black Currant Cakes">Black Currant Cakes</option>
+                                <option value="Square Cakes">Square Cakes</option>
+                                <option value="Muffin Cakes">Muffin Cakes</option>
+                                <option value="Shakes">Shakes</option>
+                                <option value="Brownies">Brownies</option>
+                                <option value="Creative Kits">Creative Kits</option>
+                                <option value="Extras">Extras</option>
                             </select>
                         </div>
                     </div>
@@ -1147,10 +1171,10 @@
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
                                     <div style="display: flex; align-items: center; gap: 6px;">
                                         <i class="fa-solid fa-tags" style="color: #db2777;"></i>
-                                        <span style="font-size: 12px; font-weight: 800; color: #9d174d;">Cake Flavour Surcharges & Pricing (₹)</span>
+                                        <span id="adminFlavourSectionHeading" style="font-size: 12px; font-weight: 800; color: #9d174d;">Cake Flavour Surcharges & Pricing (₹)</span>
                                     </div>
                                     <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                                        <button type="button" onclick="window.autoFillAllFlavourWeights()" style="background: #eff6ff; border: 1.5px solid #3b82f6; color: #1d4ed8; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">⚡ Auto-Fill All KG Weights (+₹400 / +₹800 / +₹1200)</button>
+                                        <button id="btnAutoFillFlavourWeights" type="button" onclick="window.autoFillAllFlavourWeights()" style="background: #eff6ff; border: 1.5px solid #3b82f6; color: #1d4ed8; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">⚡ Auto-Fill All KG Weights (+₹400 / +₹800 / +₹1200)</button>
                                         <button type="button" onclick="window.setAllFlavourPrices(0)" style="background: #ffffff; border: 1.5px solid #f472b6; color: #db2777; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">All ₹0 (Free)</button>
                                         <button type="button" onclick="window.resetDefaultFlavourPrices()" style="background: #fdf2f8; border: 1.5px solid #db2777; color: #9d174d; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">Standard Pricing</button>
                                     </div>
@@ -1158,7 +1182,7 @@
 
                                 <!-- Normal Cake Flavours (Available for Normal & Cooling) -->
                                 <div style="font-size: 11px; font-weight: 800; color: #be185d; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
-                                    <span>🎂 Normal & Cooling Shared Flavours (5 Standard Flavours)</span>
+                                    <span id="adminSharedFlavoursSubtitle">🎂 Normal & Cooling Shared Flavours (5 Standard Flavours)</span>
                                 </div>
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 14px;">
                                     <div class="form-group" style="background: #fff; border: 1.5px solid #fbcfe8; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
@@ -1290,7 +1314,7 @@
 
                                 <!-- Cooling-Exclusive Flavours -->
                                 <div style="font-size: 11px; font-weight: 800; color: #0284c7; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
-                                    <span>❄️ Cooling Cakes Exclusive (10 Additional Flavours)</span>
+                                    <span id="adminCoolingFlavoursSubtitle">❄️ Cooling Cakes Exclusive (10 Additional Flavours)</span>
                                 </div>
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
                                     <div class="form-group" style="background: #fff; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 8px 10px; margin-bottom: 0;">
@@ -2010,7 +2034,7 @@
     </div>
 
     <!-- Core Admin Controller -->
-    <script src="admin.js?v=5.5"></script>
+    <script src="admin.js?v=5.7"></script>
     <script src="pwa.js" defer></script>
 
     <!-- Physical VIP Card Embossing Preview & Courier Shipping Label Modal -->

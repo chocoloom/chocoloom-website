@@ -65,6 +65,20 @@ if (!savedSupabaseKey || savedSupabaseKey.length < 20) {
 }
 const savedNeonUrl = localStorage.getItem('chocoloom_neon_url');
 
+// Immediately purge legacy fake demo orders from localStorage so state is always 100% authentic
+try {
+    const rawLocalOrders = localStorage.getItem('chocoloom_orders');
+    if (rawLocalOrders) {
+        const parsed = JSON.parse(rawLocalOrders);
+        if (Array.isArray(parsed)) {
+            const clean = parsed.filter(o => o && o.customer_name !== 'Aarav Sharma' && !String(o.order_number || '').endsWith('-2489'));
+            if (clean.length !== parsed.length) {
+                localStorage.setItem('chocoloom_orders', JSON.stringify(clean));
+            }
+        }
+    }
+} catch(e) {}
+
 const SUPABASE_CONFIG = {
     url: savedSupabaseUrl.trim().replace(/\/$/, ''),
     anonKey: savedSupabaseKey.trim()
@@ -833,7 +847,7 @@ async function loadAllOrders(isUserInitiated = false) {
     let supabaseReachable = false;
     const incomingBatch = [];
 
-    const ORDER_COLUMNS = 'id, order_number, customer_name, customer_phone, delivery_address, items, final_total, payment_method, payment_status, status, created_at, updated_at, total_items, delivery_notes, is_prebooking, prebook_slot';
+    const ORDER_COLUMNS = '*';
 
     // 0. EGRESS OPTIMIZATION: If Supabase Realtime WebSocket is connected and this is passive polling,
     // do a tiny 1-row delta check before downloading full order history.
@@ -848,6 +862,8 @@ async function loadAllOrders(isUserInitiated = false) {
             const newestInDb = latestCheck?.[0];
             const newestInMemory = AdminState.orders?.[0];
             if (newestInDb && newestInMemory && 
+                newestInMemory.customer_name !== 'Aarav Sharma' &&
+                !String(newestInMemory.order_number || '').endsWith('-2489') &&
                 newestInDb.order_number === newestInMemory.order_number && 
                 newestInDb.updated_at === newestInMemory.updated_at) {
                 // Zero new orders or changes: exit immediately, saving 100% of payload egress!
@@ -856,14 +872,14 @@ async function loadAllOrders(isUserInitiated = false) {
         } catch (deltaErr) {}
     }
 
-    // 1. Try Supabase JS Client
+    // 1. Try Supabase JS Client (Primary Cloud Live Database)
     if (supabaseClient) {
         try {
             const { data, error } = await supabaseClient
                 .from('orders')
                 .select(ORDER_COLUMNS)
                 .order('created_at', { ascending: false })
-                .limit(50);
+                .limit(100);
 
             if (error) {
                 console.warn('Supabase order fetch error:', error.message || error);
@@ -886,7 +902,7 @@ async function loadAllOrders(isUserInitiated = false) {
     // Direct REST API fallback if JS client did not succeed
     if (!loadedFromSupabase) {
         try {
-            const res = await fetch(SUPABASE_CONFIG.url + '/rest/v1/orders?select=' + encodeURIComponent(ORDER_COLUMNS) + '&order=created_at.desc&limit=50', {
+            const res = await fetch(SUPABASE_CONFIG.url + '/rest/v1/orders?select=*&order=created_at.desc&limit=100', {
                 headers: {
                     'apikey': SUPABASE_CONFIG.anonKey,
                     'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
@@ -905,7 +921,6 @@ async function loadAllOrders(isUserInitiated = false) {
                         console.log('Supabase REST reachable (0 orders found)');
                     }
                 } else {
-                    // Non-array response = RLS blocked or table missing
                     console.warn('Supabase REST returned non-array (check RLS / table):', JSON.stringify(data).slice(0, 200));
                 }
             } else {
@@ -941,8 +956,9 @@ async function loadAllOrders(isUserInitiated = false) {
             if (localRaw) {
                 const localOrders = JSON.parse(localRaw);
                 if (Array.isArray(localOrders) && localOrders.length > 0) {
-                    incomingBatch.push(...localOrders);
-                    console.log('Loaded ' + localOrders.length + ' orders from localStorage (offline fallback)');
+                    const cleanLocal = localOrders.filter(o => o && o.customer_name !== 'Aarav Sharma' && !String(o.order_number || '').endsWith('-2489'));
+                    incomingBatch.push(...cleanLocal);
+                    console.log('Loaded ' + cleanLocal.length + ' orders from localStorage (offline fallback)');
                 }
             }
         } catch (e) {
@@ -961,18 +977,12 @@ async function loadAllOrders(isUserInitiated = false) {
         dedupedBatch.push(_ord);
     }
 
-    // If Supabase is reachable but returned 0 orders, clear stale/demo-only local state
-    if (supabaseReachable && dedupedBatch.length === 0 && AdminState.orders.length > 0) {
-        const allDemo = AdminState.orders.every(o => o.id && String(o.id).startsWith('local_'));
-        if (allDemo) {
-            AdminState.orders = [];
-            console.log('Cleared demo orders — Supabase confirmed 0 real orders in DB');
-        }
-    }
+    // Always purge any fake demo orders so real dashboard remains authentic
+    AdminState.orders = (AdminState.orders || []).filter(o => o && o.customer_name !== 'Aarav Sharma' && !String(o.order_number || '').endsWith('-2489'));
 
-    // Seed demo only on fresh install when Supabase is also unreachable
-    if (AdminState.orders.length === 0 && dedupedBatch.length === 0 && !supabaseReachable) {
-        seedInitialDemoOrders();
+    if (supabaseReachable) {
+        AdminState.orders = dedupedBatch.map(normalizeOrderData);
+        AdminState.orders.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
     } else if (dedupedBatch.length > 0) {
         mergeOrdersIntoState(dedupedBatch, isInitialOrderLoadDone);
     }
@@ -998,6 +1008,7 @@ function mergeOrdersIntoState(newOrders, triggerAlertForNew = false) {
     
     newOrders.forEach(raw => {
         const item = normalizeOrderData(raw);
+        if (!item || item.customer_name === 'Aarav Sharma' || String(item.order_number || '').endsWith('-2489')) return;
         const orderKey = item.order_number || item.id;
         const idx = AdminState.orders.findIndex(o => 
             (item.order_number && o.order_number === item.order_number) || 
@@ -1028,52 +1039,14 @@ function mergeOrdersIntoState(newOrders, triggerAlertForNew = false) {
 
 function persistOrdersLocally() {
     try {
-        localStorage.setItem('chocoloom_orders', JSON.stringify(AdminState.orders.slice(0, 100)));
+        const cleanOrders = (AdminState.orders || []).filter(o => o && o.customer_name !== 'Aarav Sharma' && !String(o.order_number || '').endsWith('-2489'));
+        localStorage.setItem('chocoloom_orders', JSON.stringify(cleanOrders.slice(0, 100)));
     } catch (e) {}
 }
 
-// Initial demonstration orders so dashboard looks vibrant immediately
+// Initial demonstration orders disabled - real dashboard shows authentic orders only
 function seedInitialDemoOrders() {
-    const demoOrder = {
-        order_number: `CL-${Date.now().toString().slice(-6)}-2489`,
-        customer_name: "Aarav Sharma",
-        customer_phone: "+91 98450 12345",
-        delivery_address: "Flat 402, Magnolia Towers, 100ft Rd, Indiranagar, Bengaluru - 560038",
-        delivery_notes: "Please pack with extra birthday candles! Call on arrival.",
-        items: [
-            {
-                name: "Midnight Belgian Truffle Celebration Cake",
-                quantity: 1,
-                price: 849,
-                selected_weight: "1.0 KG",
-                is_cooling: true,
-                cooling_option: "Chilled Cooling Cake (+₹50)",
-                cooling_price: 50,
-                custom_message: "Happy 25th Birthday Rhea! ❤️",
-                options_summary: "1.0 KG | Chilled Cooling Cake | Note: Happy 25th Birthday Rhea!"
-            },
-            {
-                name: "Artisan Belgian Dark Chocolate Mousse Cup",
-                quantity: 2,
-                price: 180,
-                selected_weight: "Standard",
-                is_cooling: false
-            }
-        ],
-        item_total: 1259,
-        delivery_fee: 35,
-        platform_fee: 6,
-        gst_and_charges: 15,
-        tip_amount: 30,
-        final_total: 1345,
-        total: 1345,
-        payment_method: "UPI / Razorpay",
-        payment_status: "completed",
-        status: "Confirmed",
-        created_at: new Date(Date.now() - 4 * 60 * 1000).toISOString() // 4 minutes ago
-    };
-
-    AdminState.orders.push(normalizeOrderData(demoOrder));
+    // Purposely disabled: Never seed fake orders in production
 }
 
 // ==================== WORKFLOW STATUS UPDATES ====================
@@ -2491,9 +2464,11 @@ window.loadAllProducts = async function() {
             try {
                 const customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
                 customs.forEach(c => {
-                    const exists = mappedProds.some(p => p.id === c.id || (p.sql_id && p.sql_id === c.sql_id) || (p.name && c.name && p.name.toLowerCase().trim() === c.name.toLowerCase().trim()));
-                    if (!exists) {
+                    const exIdx = mappedProds.findIndex(p => p.id === c.id || (p.sql_id && p.sql_id === c.sql_id) || (p.name && c.name && p.name.toLowerCase().trim() === c.name.toLowerCase().trim()));
+                    if (exIdx === -1) {
                         mappedProds.unshift(c);
+                    } else {
+                        mappedProds[exIdx] = { ...mappedProds[exIdx], ...c };
                     }
                 });
             } catch(e) {}
@@ -2565,7 +2540,7 @@ window.loadAllProducts = async function() {
         if (sql) {
             const neonProds = await sql`SELECT * FROM products ORDER BY category, name ASC`;
             if (Array.isArray(neonProds) && neonProds.length > 0) {
-                AdminState.products = neonProds.map(r => ({
+                let mappedNeon = neonProds.map(r => ({
                     id: r.id,
                     sql_id: r.id,
                     name: r.name,
@@ -2594,6 +2569,43 @@ window.loadAllProducts = async function() {
                     flavour: r.flavour || "",
                     flavour_prices: (typeof r.flavour_prices === 'object' && r.flavour_prices !== null) ? r.flavour_prices : {}
                 }));
+
+                // Merge custom products
+                try {
+                    const customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
+                    customs.forEach(c => {
+                        const exIdx = mappedNeon.findIndex(p => p.id === c.id || (p.sql_id && p.sql_id === c.sql_id) || (p.name && c.name && p.name.toLowerCase().trim() === c.name.toLowerCase().trim()));
+                        if (exIdx === -1) mappedNeon.unshift(c);
+                        else mappedNeon[exIdx] = { ...mappedNeon[exIdx], ...c };
+                    });
+                } catch(e) {}
+
+                // Apply price & detail overrides
+                try {
+                    const overrides = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
+                    mappedNeon.forEach(p => {
+                        const key = p.sql_id || p.id;
+                        const normName = p.name ? p.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+                        const over = overrides[key] || overrides[p.id] || (normName ? overrides[normName] : null) || (p.name ? overrides[p.name.toLowerCase().trim()] : null);
+                        if (over) {
+                            if (over.price !== undefined) p.price = Number(over.price);
+                            if (over.is_available !== undefined) p.is_available = (over.is_available === true || over.is_available === 'true' || over.is_available === 1 || over.is_available === '1');
+                            if (over.name) p.name = over.name;
+                            if (over.category) p.category = over.category;
+                            if (over.image) { p.image = over.image; p.image_url = over.image; }
+                        }
+                    });
+                } catch(e) {}
+
+                // Filter deleted items
+                try {
+                    const dels = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
+                    if (dels.length > 0) {
+                        mappedNeon = mappedNeon.filter(p => !dels.includes(p.id) && (!p.sql_id || !dels.includes(p.sql_id)));
+                    }
+                } catch(e) {}
+
+                AdminState.products = mappedNeon;
                 AdminState.neonConnected = true;
                 updateCloudStatusBadges();
                 renderProductsStats();
@@ -2822,9 +2834,21 @@ function renderProducts() {
     let filtered = AdminState.products.filter(prod => {
         // Category filter
         if (AdminState.productsCategoryFilter && AdminState.productsCategoryFilter !== "ALL") {
-            if (!prod.category || prod.category.toLowerCase().trim() !== AdminState.productsCategoryFilter.toLowerCase().trim()) {
-                return false;
+            const filterCat = AdminState.productsCategoryFilter.toLowerCase().trim();
+            const prodCat = (prod.category || "").toLowerCase().trim();
+            let matches = (prodCat === filterCat);
+            if (!matches) {
+                const cleanF = filterCat.replace(/cakes?/g, '').trim().replace(/\s+/g, '');
+                const cleanP = prodCat.replace(/cakes?/g, '').trim().replace(/\s+/g, '');
+                if (cleanF && cleanP && cleanF === cleanP) matches = true;
+                if ((filterCat.includes('cartoon') || filterCat.includes('kid')) && (prodCat.includes('cartoon') || prodCat.includes('kid'))) matches = true;
+                if (filterCat.includes('snack') && prodCat.includes('snack')) matches = true;
+                if (filterCat.includes('bachelor') && prodCat.includes('bachelor')) matches = true;
+                if (filterCat.includes('dessert') && prodCat.includes('dessert')) matches = true;
+                if (filterCat.includes('combo') && (prodCat.includes('combo') || prodCat.includes('hamper'))) matches = true;
+                if (filterCat.includes('diwali') && (prodCat.includes('diwali') || prodCat.includes('hamper'))) matches = true;
             }
+            if (!matches) return false;
         }
         // Stock filter
         if (AdminState.productsStockFilter === "IN_STOCK" && prod.is_available === false) return false;
@@ -3705,6 +3729,8 @@ window.openAddProductModal = function() {
 
     form.reset();
     document.getElementById("prodFormId").value = "";
+    if (document.getElementById("prodFormSqlId")) document.getElementById("prodFormSqlId").value = "";
+    if (document.getElementById("prodFormOriginalName")) document.getElementById("prodFormOriginalName").value = "";
     if (document.getElementById("prodInputFlavour")) document.getElementById("prodInputFlavour").value = "";
     if (document.getElementById("prodInputPriceFlavour")) document.getElementById("prodInputPriceFlavour").value = "Chocolate";
     if (window.resetDefaultFlavourPrices) window.resetDefaultFlavourPrices();
@@ -3750,6 +3776,8 @@ window.openEditProductModal = function(productId) {
     if (!modal) return;
 
     document.getElementById("prodFormId").value = prod.id || prod.sql_id || "";
+    if (document.getElementById("prodFormSqlId")) document.getElementById("prodFormSqlId").value = prod.sql_id || "";
+    if (document.getElementById("prodFormOriginalName")) document.getElementById("prodFormOriginalName").value = prod.name || "";
     if (title) title.textContent = "Edit Product: " + (prod.name || "Item");
 
     // Basic product details
@@ -3945,6 +3973,8 @@ window.handleProductFormSubmit = async function(e) {
 
     try {
         const formId = document.getElementById("prodFormId").value.trim();
+        const originalName = document.getElementById("prodFormOriginalName") ? document.getElementById("prodFormOriginalName").value.trim() : "";
+        const sqlId = document.getElementById("prodFormSqlId") ? document.getElementById("prodFormSqlId").value.trim() : "";
         const name = document.getElementById("prodInputName").value.trim();
         const category = document.getElementById("prodInputCategory").value;
         const price = Number(document.getElementById("prodInputPrice").value);
@@ -4031,11 +4061,23 @@ window.handleProductFormSubmit = async function(e) {
 
         if (formId) {
             // Edit existing product in memory
-            const idx = AdminState.products.findIndex(p => p.id === formId || p.sql_id === formId || String(p.id) === String(formId) || String(p.sql_id) === String(formId));
+            const idx = AdminState.products.findIndex(p => 
+                p.id === formId || 
+                p.sql_id === formId || 
+                String(p.id) === String(formId) || 
+                String(p.sql_id) === String(formId) ||
+                (sqlId && (p.sql_id === sqlId || p.id === sqlId)) ||
+                (originalName && p.name && p.name.toLowerCase().trim() === originalName.toLowerCase().trim())
+            );
+            const targetSqlId = sqlId || (idx !== -1 ? AdminState.products[idx].sql_id : null) || null;
+
             if (idx !== -1) {
                 AdminState.products[idx] = {
                     ...AdminState.products[idx],
+                    id: formId,
+                    sql_id: targetSqlId,
                     name,
+                    _originalName: originalName,
                     category,
                     price,
                     discount_price: price,
@@ -4066,6 +4108,8 @@ window.handleProductFormSubmit = async function(e) {
             } else {
                 updatedProduct = {
                     id: formId,
+                    sql_id: targetSqlId,
+                    _originalName: originalName,
                     name, category, price, discount_price: price, originalPrice: origPrice, original_price: origPrice,
                     image, image_url: image, description: desc,
                     price_half_kg: price05, price_1kg: price10, price_1_5kg: price15, price_2kg: price20, price_3kg: price30,
@@ -4076,6 +4120,8 @@ window.handleProductFormSubmit = async function(e) {
 
             // Persist overrides locally in localStorage under chocoloom_price_overrides
             savePriceOverrideLocally(formId, {
+                sql_id: targetSqlId,
+                _originalName: originalName,
                 price,
                 discount_price: price,
                 originalPrice: origPrice,
@@ -4110,7 +4156,12 @@ window.handleProductFormSubmit = async function(e) {
             // Also update in chocoloom_custom_products if was custom and un-delete
             try {
                 let customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
-                const cIdx = customs.findIndex(c => c.id === formId || (c.sql_id && c.sql_id === formId));
+                const cIdx = customs.findIndex(c => 
+                    c.id === formId || 
+                    (c.sql_id && c.sql_id === formId) ||
+                    (targetSqlId && (c.sql_id === targetSqlId || c.id === targetSqlId)) ||
+                    (originalName && c.name && c.name.toLowerCase().trim() === originalName.toLowerCase().trim())
+                );
                 if (cIdx !== -1) {
                     customs[cIdx] = { ...customs[cIdx], ...updatedProduct };
                     localStorage.setItem("chocoloom_custom_products", JSON.stringify(customs));
@@ -4127,6 +4178,7 @@ window.handleProductFormSubmit = async function(e) {
             updatedProduct = {
                 id: newId,
                 sql_id: null,
+                isCustom: true,
                 name, category, price, discount_price: price, originalPrice: origPrice, original_price: origPrice,
                 image: image || "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600",
                 image_url: image || "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600",
@@ -4375,12 +4427,41 @@ window.deleteProductItem = async function(productId) {
 function saveCustomProductLocally(prod) {
     try {
         let customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
-        const idx = customs.findIndex(c => c.id === prod.id);
-        if (idx !== -1) customs[idx] = prod;
+        const orig = prod._originalName || prod.originalName || "";
+        const idx = customs.findIndex(c => 
+            c.id === prod.id || 
+            (prod.sql_id && c.sql_id === prod.sql_id) || 
+            (orig && c.name && c.name.toLowerCase().trim() === orig.toLowerCase().trim()) ||
+            (c.name && prod.name && c.name.toLowerCase().trim() === prod.name.toLowerCase().trim())
+        );
+        if (idx !== -1) customs[idx] = { ...customs[idx], ...prod };
         else customs.unshift(prod);
         localStorage.setItem("chocoloom_custom_products", JSON.stringify(customs));
+
+        // ALSO save to chocoloom_price_overrides so price/stock overrides find it instantly
+        let overrides = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
+        if (prod.id) overrides[prod.id] = { ...(overrides[prod.id] || {}), ...prod };
+        if (prod.sql_id) overrides[prod.sql_id] = { ...(overrides[prod.sql_id] || {}), ...prod };
+        if (prod.name) {
+            overrides[prod.name.toLowerCase().trim()] = { ...(overrides[prod.name.toLowerCase().trim()] || {}), ...prod };
+            overrides[prod.name.toLowerCase().replace(/[^a-z0-9]/g, '')] = { ...(overrides[prod.name.toLowerCase().replace(/[^a-z0-9]/g, '')] || {}), ...prod };
+        }
+        if (orig) {
+            overrides[orig.toLowerCase().trim()] = { ...(overrides[orig.toLowerCase().trim()] || {}), ...prod };
+        }
+        localStorage.setItem("chocoloom_price_overrides", JSON.stringify(overrides));
+        try { sessionStorage.removeItem('chocoloom_products_cache_v2'); } catch(e) {}
     } catch(e) {}
+
     syncCatalogToServer();
+    sendCrossOriginSync({
+        action: "SAVE",
+        product: prod,
+        originalName: prod._originalName || prod.originalName || "",
+        overrides: JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}"),
+        customProducts: JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]"),
+        deletedProducts: JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]")
+    });
 }
 
 // Cross-Origin / Cross-Port Realtime Sync Bridge
@@ -4459,6 +4540,10 @@ function savePriceOverrideLocally(id, data) {
             overrides[data.name.toLowerCase().trim()] = enriched;
             overrides[data.name.toLowerCase().replace(/[^a-z0-9]/g, '')] = enriched;
         }
+        if (data && data._originalName) {
+            overrides[data._originalName.toLowerCase().trim()] = enriched;
+            overrides[data._originalName.toLowerCase().replace(/[^a-z0-9]/g, '')] = enriched;
+        }
         localStorage.setItem("chocoloom_price_overrides", JSON.stringify(overrides));
 
         try {
@@ -4469,14 +4554,24 @@ function savePriceOverrideLocally(id, data) {
                 dbC[data.name.toLowerCase().trim()] = { ...(dbC[data.name.toLowerCase().trim()] || {}), ...enriched };
                 dbC[data.name.toLowerCase().replace(/[^a-z0-9]/g, '')] = { ...(dbC[data.name.toLowerCase().replace(/[^a-z0-9]/g, '')] || {}), ...enriched };
             }
+            if (data && data._originalName) {
+                dbC[data._originalName.toLowerCase().trim()] = { ...(dbC[data._originalName.toLowerCase().trim()] || {}), ...enriched };
+            }
             localStorage.setItem("chocoloom_db_catalog_cache", JSON.stringify(dbC));
         } catch(e) {}
+        try { sessionStorage.removeItem('chocoloom_products_cache_v2'); } catch(e) {}
     } catch(e) {}
 
     // Find full product details from memory to guarantee complete attributes sync to database
     let prodToSync = null;
     if (typeof AdminState !== "undefined" && Array.isArray(AdminState.products)) {
-        prodToSync = AdminState.products.find(p => p.id === id || p.sql_id === id || (data && data.name && p.name && p.name.toLowerCase().trim() === data.name.toLowerCase().trim()));
+        prodToSync = AdminState.products.find(p => 
+            p.id === id || 
+            p.sql_id === id || 
+            (data && data.sql_id && p.sql_id === data.sql_id) ||
+            (data && data.name && p.name && p.name.toLowerCase().trim() === data.name.toLowerCase().trim()) ||
+            (data && data._originalName && p.name && p.name.toLowerCase().trim() === data._originalName.toLowerCase().trim())
+        );
     }
     const mergedProd = { ...(prodToSync || {}), id: id, ...enriched };
 
@@ -4493,6 +4588,8 @@ function savePriceOverrideLocally(id, data) {
     syncCatalogToServer();
     sendCrossOriginSync({
         action: "PRICE",
+        product: mergedProd,
+        originalName: data?._originalName || "",
         overrides: JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}"),
         customProducts: JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]"),
         deletedProducts: JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]")
@@ -4733,13 +4830,28 @@ async function syncProductToSupabase(prod) {
 
         // 1. Resolve Target Supabase UUID
         let targetId = null;
-        if (prod.sql_id && !String(prod.sql_id).startsWith('choco_') && !String(prod.sql_id).startsWith('uni_')) {
+        if (prod.sql_id && !String(prod.sql_id).startsWith('choco_custom_')) {
             targetId = prod.sql_id;
-        } else if (prod.id && !String(prod.id).startsWith('choco_') && !String(prod.id).startsWith('uni_')) {
+        } else if (prod.id && !String(prod.id).startsWith('choco_custom_') && !String(prod.id).startsWith('choco_sql_')) {
             targetId = prod.id;
         }
 
-        // Search by exact name in Supabase if targetId not found
+        const origName = String(prod._originalName || prod.originalName || '').trim();
+
+        // 1.1 Search by original name in Supabase first (if renaming)
+        if (!targetId && origName) {
+            try {
+                const findResOrig = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=id&name=eq.${encodeURIComponent(origName)}&limit=1`, {
+                    headers: { 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}` }
+                });
+                if (findResOrig.ok) {
+                    const items = await findResOrig.json();
+                    if (Array.isArray(items) && items.length > 0) targetId = items[0].id;
+                }
+            } catch(e) {}
+        }
+
+        // 1.2 Search by current name in Supabase if targetId still not found
         if (!targetId && prod.name) {
             try {
                 const findRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=id&name=eq.${encodeURIComponent(prod.name.trim())}&limit=1`, {
@@ -4752,10 +4864,11 @@ async function syncProductToSupabase(prod) {
             } catch(e) {}
         }
 
-        // Search by wildcard name if still not found
-        if (!targetId && prod.name) {
+        // 1.3 Search by wildcard name if still not found
+        if (!targetId && (origName || prod.name)) {
+            const queryName = origName || prod.name;
             try {
-                const findRes2 = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=id&name=ilike.*${encodeURIComponent(prod.name.trim())}*&limit=1`, {
+                const findRes2 = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?select=id&name=ilike.*${encodeURIComponent(queryName.trim())}*&limit=1`, {
                     headers: { 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}` }
                 });
                 if (findRes2.ok) {
@@ -5074,12 +5187,18 @@ async function syncProductToNeon(prod) {
         const flavour = String(prod.flavour || '');
         const flavourPrices = prod.flavour_prices || {};
 
-        // Check if row already exists in Neon by ID, sql_id, or Name
+        const origName = String(prod._originalName || prod.originalName || '').trim();
+
+        // Check if row already exists in Neon by ID, sql_id, Name, or originalName
         let existingId = null;
         try {
             const existingRows = await sql`
                 SELECT id FROM products 
-                WHERE id = ${id} OR id = ${String(prod.id || '')} OR id = ${String(prod.sql_id || '')} OR LOWER(TRIM(name)) = LOWER(TRIM(${name}))
+                WHERE id = ${id} 
+                   OR id = ${String(prod.id || '')} 
+                   OR id = ${String(prod.sql_id || '')} 
+                   OR LOWER(TRIM(name)) = LOWER(TRIM(${name}))
+                   OR (${origName !== ''} AND LOWER(TRIM(name)) = LOWER(TRIM(${origName})))
                 LIMIT 1;
             `;
             if (Array.isArray(existingRows) && existingRows.length > 0 && existingRows[0]?.id) {
@@ -5238,6 +5357,7 @@ function broadcastProductUpdate(action, prod) {
             type: "PRODUCTS_UPDATED",
             action: action,
             product: prod,
+            originalName: prod?._originalName || prod?.originalName || "",
             overrides: overrides,
             customProducts: customProducts,
             deletedProducts: deletedProducts,
@@ -5269,6 +5389,7 @@ function broadcastProductUpdate(action, prod) {
                         id: prod?.sql_id || prod?.id,
                         sql_id: prod?.sql_id,
                         name: prod?.name,
+                        originalName: prod?._originalName || prod?.originalName || "",
                         is_available: prod ? (prod.is_available !== false) : true,
                         price: prod?.price,
                         has_weight: prod ? (prod.has_weight !== false) : true,

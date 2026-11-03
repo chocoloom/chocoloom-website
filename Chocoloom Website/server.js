@@ -83,24 +83,30 @@ async function syncCatalogOverridesToNeon(payload) {
     let syncedCount = 0;
 
     for (const [key, item] of Object.entries(overrides)) {
-        if (!item || (!item.price && item.is_available === undefined)) continue;
+        if (!item || (!item.price && item.is_available === undefined && !item.name)) continue;
         const name = (item.name || key).trim();
+        const origName = (item._originalName || item.originalName || '').trim();
         const price = Number(item.price || 0);
         const discPrice = Number(item.discount_price || price);
         const origPrice = Number(item.originalPrice || item.original_price || Math.round(price * 1.3));
         const id = item.sql_id || item.id || key;
 
         try {
-            const findSql = `SELECT id FROM products WHERE id = ${sqlEscape(id)} OR LOWER(TRIM(name)) = LOWER(TRIM(${sqlEscape(name)})) LIMIT 1;`;
+            const findSql = `SELECT id FROM products WHERE id = ${sqlEscape(id)} OR LOWER(TRIM(name)) = LOWER(TRIM(${sqlEscape(name)}))` + 
+                (origName ? ` OR LOWER(TRIM(name)) = LOWER(TRIM(${sqlEscape(origName)}))` : '') + ` LIMIT 1;`;
             const findRes = await executeNeonQuery(findSql);
             if (findRes && findRes.rows && findRes.rows.length > 0) {
                 const targetId = findRes.rows[0].id;
                 let updateParts = [
+                    `name = ${sqlEscape(name)}`,
                     `price = ${sqlEscape(price)}`,
                     `discount_price = ${sqlEscape(discPrice)}`,
                     `original_price = ${sqlEscape(origPrice)}`,
                     `updated_at = NOW()`
                 ];
+                if (item.category) updateParts.push(`category = ${sqlEscape(item.category)}`);
+                if (item.image_url || item.image) updateParts.push(`image_url = ${sqlEscape(item.image_url || item.image)}`);
+                if (item.description !== undefined) updateParts.push(`description = ${sqlEscape(item.description)}`);
                 if (item.is_available !== undefined) updateParts.push(`is_available = ${sqlEscape(Boolean(item.is_available))}`);
                 if (item.price_half_kg !== undefined) updateParts.push(`price_half_kg = ${sqlEscape(item.price_half_kg)}`);
                 if (item.price_1kg !== undefined) updateParts.push(`price_1kg = ${sqlEscape(item.price_1kg)}`);
@@ -287,10 +293,21 @@ const server = http.createServer((req, res) => {
                         if (fs.existsSync(targetFile)) {
                             try { existing = JSON.parse(fs.readFileSync(targetFile, 'utf8')); } catch(e) {}
                         }
+
+                        const existingCustoms = Array.isArray(existing.customProducts) ? existing.customProducts : [];
+                        const incomingCustoms = Array.isArray(payload.customProducts) ? payload.customProducts : [];
+                        let mergedCustoms = existingCustoms;
+                        if (incomingCustoms.length > 0) {
+                            const map = new Map();
+                            existingCustoms.forEach(p => { if (p && (p.id || p.sql_id)) map.set(p.id || p.sql_id, p); });
+                            incomingCustoms.forEach(p => { if (p && (p.id || p.sql_id)) map.set(p.id || p.sql_id, p); });
+                            mergedCustoms = Array.from(map.values());
+                        }
+
                         const merged = {
                             updated_at: payload.updated_at,
                             overrides: { ...(existing.overrides || {}), ...(payload.overrides || {}) },
-                            customProducts: payload.customProducts || existing.customProducts || [],
+                            customProducts: mergedCustoms,
                             deletedProducts: Array.from(new Set([...(existing.deletedProducts || []), ...(payload.deletedProducts || [])])),
                             banners: payload.banners || existing.banners || [],
                             store_status: payload.store_status || existing.store_status || 'open'

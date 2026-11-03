@@ -367,10 +367,30 @@ function chocoloom_ajax_save_catalog() {
     $existing = get_option('chocoloom_catalog_overrides');
     if (!is_array($existing)) $existing = array();
 
+    $merged_custom = isset($existing['customProducts']) && is_array($existing['customProducts']) ? $existing['customProducts'] : array();
+    if (isset($payload['customProducts']) && is_array($payload['customProducts'])) {
+        foreach ($payload['customProducts'] as $new_prod) {
+            if (!is_array($new_prod)) continue;
+            $found = false;
+            foreach ($merged_custom as $k => $c) {
+                if ((isset($c['id']) && isset($new_prod['id']) && $c['id'] === $new_prod['id']) ||
+                    (isset($c['sql_id']) && isset($new_prod['sql_id']) && $c['sql_id'] === $new_prod['sql_id']) ||
+                    (isset($c['name']) && isset($new_prod['name']) && strtolower(trim($c['name'])) === strtolower(trim($new_prod['name'])))) {
+                    $merged_custom[$k] = array_merge($c, $new_prod);
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $merged_custom[] = $new_prod;
+            }
+        }
+    }
+
     $merged = array(
         'updated_at'      => current_time('c'),
         'overrides'       => array_merge($existing['overrides'] ?? array(), $payload['overrides'] ?? array()),
-        'customProducts'  => $payload['customProducts'] ?? ($existing['customProducts'] ?? array()),
+        'customProducts'  => $merged_custom,
         'deletedProducts' => array_values(array_unique(array_merge($existing['deletedProducts'] ?? array(), $payload['deletedProducts'] ?? array()))),
         'banners'         => $payload['banners'] ?? ($existing['banners'] ?? array()),
         'store_status'    => $payload['store_status'] ?? ($existing['store_status'] ?? 'open')

@@ -127,10 +127,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $existing = json_decode(file_get_contents($dataFile), true) ?: [];
     }
 
+    $existingCustoms = is_array($existing['customProducts'] ?? null) ? $existing['customProducts'] : [];
+    $incomingCustoms = is_array($payload['customProducts'] ?? null) ? $payload['customProducts'] : [];
+    $mergedCustoms = $existingCustoms;
+    if (!empty($incomingCustoms)) {
+        $map = [];
+        foreach ($existingCustoms as $p) {
+            $k = $p['id'] ?? ($p['sql_id'] ?? '');
+            if ($k) $map[$k] = $p;
+        }
+        foreach ($incomingCustoms as $p) {
+            $k = $p['id'] ?? ($p['sql_id'] ?? '');
+            if ($k) $map[$k] = $p;
+        }
+        $mergedCustoms = array_values($map);
+    }
+
     $merged = [
         'updated_at' => date('c'),
         'overrides' => array_merge($existing['overrides'] ?? [], $payload['overrides'] ?? []),
-        'customProducts' => $payload['customProducts'] ?? ($existing['customProducts'] ?? []),
+        'customProducts' => $mergedCustoms,
         'deletedProducts' => array_values(array_unique(array_merge($existing['deletedProducts'] ?? [], $payload['deletedProducts'] ?? []))),
         'banners' => isset($payload['banners']) ? $payload['banners'] : ($existing['banners'] ?? []),
         'store_status' => isset($payload['store_status']) ? $payload['store_status'] : ($existing['store_status'] ?? 'open')

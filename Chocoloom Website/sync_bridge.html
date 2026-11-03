@@ -51,6 +51,7 @@
                     type: "PRODUCTS_UPDATED",
                     action: data.action || "PRICE",
                     product: data.product,
+                    originalName: data.originalName || (data.product && (data.product._originalName || data.product.originalName)) || "",
                     overrides: data.overrides,
                     customProducts: data.customProducts,
                     deletedProducts: data.deletedProducts,

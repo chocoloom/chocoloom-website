@@ -330,15 +330,9 @@
         const counterSec = document.getElementById('counterPaymentSection');
         const btnPay = document.getElementById('btnCompletePayment');
 
-        if (method === 'upi') {
-            if (upiSec) upiSec.style.display = 'block';
-            if (counterSec) counterSec.style.display = 'none';
-            if (btnPay) btnPay.innerHTML = '<span>I Have Paid • Confirm Booking 🎟️✨</span>';
-        } else {
-            if (upiSec) upiSec.style.display = 'none';
-            if (counterSec) counterSec.style.display = 'block';
-            if (btnPay) btnPay.innerHTML = '<span>Reserve Seat • Pay at Counter 🎟️✨</span>';
-        }
+        if (upiSec) upiSec.style.display = 'block';
+        if (counterSec) counterSec.style.display = 'none';
+        if (btnPay) btnPay.innerHTML = '<span>I Have Paid • Confirm Booking 🎟️✨</span>';
     };
 
     window.copyUpiId = function (upiId) {

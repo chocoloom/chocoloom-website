@@ -115,10 +115,21 @@ const server = http.createServer((req, res) => {
                     } catch(e) {}
                 }
 
+                // Merge custom products by unique ID / name so existing custom items are never wiped
+                const mergedCustom = Array.isArray(existing.customProducts) ? [...existing.customProducts] : [];
+                if (Array.isArray(payload.customProducts)) {
+                    payload.customProducts.forEach(newP => {
+                        if (!newP) return;
+                        const idx = mergedCustom.findIndex(p => p.id === newP.id || (p.sql_id && newP.sql_id && p.sql_id === newP.sql_id) || (p.name && newP.name && p.name.toLowerCase().trim() === newP.name.toLowerCase().trim()));
+                        if (idx !== -1) mergedCustom[idx] = { ...mergedCustom[idx], ...newP };
+                        else mergedCustom.push(newP);
+                    });
+                }
+
                 const merged = {
                     updated_at: new Date().toISOString(),
                     overrides: { ...(existing.overrides || {}), ...(payload.overrides || {}) },
-                    customProducts: payload.customProducts || existing.customProducts || [],
+                    customProducts: mergedCustom,
                     deletedProducts: Array.from(new Set([...(existing.deletedProducts || []), ...(payload.deletedProducts || [])])),
                     banners: payload.banners !== undefined ? payload.banners : (existing.banners || [])
                 };

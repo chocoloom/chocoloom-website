@@ -649,23 +649,15 @@
                 <span class="pad-amount" id="payModalAmount">₹499</span>
             </div>
 
-            <!-- Payment Method Tabs -->
+            <!-- Payment Method Selection -->
             <div class="payment-methods-list">
-                <label class="pay-method-opt selected" onclick="selectPaymentMethodTab('upi')">
-                    <input type="radio" name="payMethod" value="upi" checked>
+                <div class="pay-method-opt selected" style="cursor: default;">
+                    <input type="radio" name="payMethod" value="upi" checked style="accent-color: var(--primary); pointer-events: none;">
                     <div class="pmo-content">
-                        <div class="pmo-title"><i class="fa-solid fa-qrcode" style="color: #00baf2;"></i> Paytm / UPI QR (Recommended)</div>
+                        <div class="pmo-title"><i class="fa-solid fa-qrcode" style="color: #00baf2;"></i> Paytm / UPI QR</div>
                         <div class="pmo-desc">GPay, PhonePe, Paytm, BHIM or any UPI app</div>
                     </div>
-                </label>
-
-                <label class="pay-method-opt" onclick="selectPaymentMethodTab('counter')">
-                    <input type="radio" name="payMethod" value="counter">
-                    <div class="pmo-content">
-                        <div class="pmo-title"><i class="fa-solid fa-store" style="color: var(--primary);"></i> Pay at Studio Counter</div>
-                        <div class="pmo-desc">Pay cash or card upon arrival on Sunday, Nov 15</div>
-                    </div>
-                </label>
+                </div>
             </div>
 
             <!-- UPI QR Block -->
@@ -717,17 +709,34 @@
                 </div>
             </div>
 
-            <!-- Counter Note Block -->
-            <div id="counterPaymentSection" class="counter-pay-section" style="display: none;">
-                <div class="counter-note-box">
-                    <i class="fa-solid fa-circle-info" style="color: var(--primary); font-size: 20px; margin-top: 2px;"></i>
-                    <p>Your seat will be held under your registered name. You can complete payment via Cash, UPI or Card at our reception desk in Bhimavaram on Sunday, Nov 15 before the session starts.</p>
+            <!-- Customer Care Note Block -->
+            <div class="payment-care-note-box">
+                <div class="pcn-icon"><i class="fa-solid fa-headset"></i></div>
+                <div class="pcn-content">
+                    <div class="pcn-title">Need Help with Payment?</div>
+                    <p class="pcn-desc"><strong>Note:</strong> If in case you have any problem, please contact Customer Care:</p>
+                    <div class="pcn-actions">
+                        <a href="https://wa.me/919849783788?text=Hi%20Chocoloom%2C%20I%20have%20an%20issue%20with%20workshop%20payment" target="_blank" class="pcn-btn pcn-btn-wa">
+                            <i class="fa-brands fa-whatsapp"></i>
+                            <span>WhatsApp: +91 98497 83788</span>
+                        </a>
+                        <a href="tel:+919849783788" class="pcn-btn pcn-btn-call">
+                            <i class="fa-solid fa-phone"></i>
+                            <span>Call: 98497 83788</span>
+                        </a>
+                    </div>
                 </div>
             </div>
 
             <button type="button" class="btn-confirm-reg" id="btnCompletePayment" onclick="completePaymentAndGetTicket()">
                 <span>I Have Paid • Confirm Booking 🎟️✨</span>
             </button>
+
+            <!-- Reassurance footer under button -->
+            <p class="pay-care-footer-note">
+                <i class="fa-solid fa-circle-question"></i>
+                <span><strong>Note:</strong> If in case you have any problem, please <a href="https://wa.me/919849783788?text=Hi%20Chocoloom%2C%20I%20have%20an%20issue%20with%20workshop%20payment" target="_blank">Contact Customer Care</a> (+91 98497 83788)</span>
+            </p>
         </div>
     </div>
 

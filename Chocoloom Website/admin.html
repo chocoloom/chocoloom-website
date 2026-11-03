@@ -352,12 +352,23 @@
                                 <option value="Chocolates">Chocolates</option>
                                 <option value="Desserts">Desserts</option>
                                 <option value="Specialty Cakes">Specialty Cakes</option>
-                                <option value="Cartoon Cakes">Cartoon Cakes</option>
+                                <option value="Cartoon Cakes">Cartoon Cakes / Cartoons / Kids</option>
                                 <option value="Wedding Cakes">Wedding Cakes</option>
                                 <option value="Cooling Cakes">Cooling Cakes</option>
                                 <option value="Snacks & Munchies">Snacks & Munchies</option>
                                 <option value="Bachelorette Cakes">Bachelorette Cakes</option>
                                 <option value="Half Birthday Cakes">Half Birthday Cakes</option>
+                                <option value="Truffle Cakes">Truffle Cakes</option>
+                                <option value="Combos">Combos & Gift Hampers</option>
+                                <option value="Diwali Hampers">Diwali Hampers</option>
+                                <option value="Mango Cakes">Mango Cakes</option>
+                                <option value="Black Currant Cakes">Black Currant Cakes</option>
+                                <option value="Square Cakes">Square Cakes</option>
+                                <option value="Muffin Cakes">Muffin Cakes</option>
+                                <option value="Shakes">Shakes</option>
+                                <option value="Brownies">Brownies</option>
+                                <option value="Creative Kits">Creative Kits</option>
+                                <option value="Extras">Extras</option>
                             </select>
 
                             <!-- Availability Filter -->
@@ -855,6 +866,8 @@
             <div class="modal-body">
                 <form id="productForm" onsubmit="handleProductFormSubmit(event)" class="prod-form-grid">
                     <input type="hidden" id="prodFormId">
+                    <input type="hidden" id="prodFormSqlId">
+                    <input type="hidden" id="prodFormOriginalName">
 
                     <!-- Name & Category -->
                     <div class="form-row-2">
@@ -865,9 +878,9 @@
                         <div class="form-group">
                             <label>Category *</label>
                             <select id="prodInputCategory" required onchange="window.handleAdminCategoryChange(this.value)">
+                                <option value="Specialty Cakes">Specialty Cakes</option>
                                 <option value="Anniversary Cakes">Anniversary Cakes</option>
                                 <option value="Bento Cakes">Bento Cakes</option>
-                                <option value="Specialty Cakes">Specialty Cakes</option>
                                 <option value="Chocolates">Chocolates</option>
                                 <option value="Desserts">Desserts</option>
                                 <option value="Wedding Cakes">Wedding Cakes</option>
@@ -876,6 +889,17 @@
                                 <option value="Snacks & Munchies">Snacks & Munchies</option>
                                 <option value="Bachelorette Cakes">Bachelorette Cakes</option>
                                 <option value="Half Birthday Cakes">Half Birthday Cakes</option>
+                                <option value="Truffle Cakes">Truffle Cakes</option>
+                                <option value="Combos">Combos & Gift Hampers</option>
+                                <option value="Diwali Hampers">Diwali Hampers</option>
+                                <option value="Mango Cakes">Mango Cakes</option>
+                                <option value="Black Currant Cakes">Black Currant Cakes</option>
+                                <option value="Square Cakes">Square Cakes</option>
+                                <option value="Muffin Cakes">Muffin Cakes</option>
+                                <option value="Shakes">Shakes</option>
+                                <option value="Brownies">Brownies</option>
+                                <option value="Creative Kits">Creative Kits</option>
+                                <option value="Extras">Extras</option>
                             </select>
                         </div>
                     </div>
