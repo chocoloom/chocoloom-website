@@ -17,6 +17,7 @@
     const INITIAL_ROSTER = [
         {
             id: 'CL-WRK-2026-8942',
+            isSample: true,
             createdAt: '2026-11-01T10:15:00.000Z',
             passTier: 'duo',
             passName: 'Duo Creative Pass (2 Persons)',
@@ -41,6 +42,7 @@
         },
         {
             id: 'CL-WRK-2026-7214',
+            isSample: true,
             createdAt: '2026-11-01T14:30:00.000Z',
             passTier: 'duo',
             passName: 'Duo Creative Pass (2 Persons)',
@@ -65,6 +67,7 @@
         },
         {
             id: 'CL-WRK-2026-3829',
+            isSample: true,
             createdAt: '2026-11-02T09:45:00.000Z',
             passTier: 'solo',
             passName: 'Solo Creator Pass',
@@ -89,6 +92,7 @@
         },
         {
             id: 'CL-WRK-2026-5190',
+            isSample: true,
             createdAt: '2026-11-02T11:20:00.000Z',
             passTier: 'solo',
             passName: 'Solo Creator Pass',
@@ -385,12 +389,44 @@
         startLiveClock();
         renderAll();
 
-        // Listen for updates from other tabs or the workshop checkout
+        // 1. Setup real-time BroadcastChannel for instant inter-tab communication with workshop registration
+        try {
+            const bc = new BroadcastChannel('chocoloom_workshop_bus');
+            bc.onmessage = (e) => {
+                if (e.data && e.data.type === 'WORKSHOP_REGISTRATION') {
+                    const reg = e.data.registration;
+                    if (reg && reg.id) {
+                        const roster = getRegistrations();
+                        const idx = roster.findIndex(r => r.id === reg.id);
+                        if (idx >= 0) {
+                            roster[idx] = { ...roster[idx], ...reg };
+                        } else {
+                            roster.unshift(reg);
+                        }
+                        saveRegistrations(roster);
+                        renderAll();
+                        showToast(`New workshop registration: ${reg.attendeeDisplay || reg.name1}! 🎟️✨`);
+                    }
+                }
+            };
+        } catch(e) {}
+
+        // 2. Listen for storage event (from other tabs on same origin)
         window.addEventListener('storage', (e) => {
             if (e.key === STORAGE_KEY) {
                 renderAll();
             }
         });
+
+        // 3. Fast auto-poll check (every 2.5s) to guarantee the dashboard stays in sync
+        let lastRaw = localStorage.getItem(STORAGE_KEY);
+        setInterval(() => {
+            const currentRaw = localStorage.getItem(STORAGE_KEY);
+            if (currentRaw !== lastRaw) {
+                lastRaw = currentRaw;
+                renderAll();
+            }
+        }, 2500);
     }
 
     function startLiveClock() {
@@ -484,12 +520,13 @@
     }
 
     function updateFilterBadges(roster) {
-        let solo = 0, duo = 0, paid = 0, counter = 0, attended = 0;
+        let solo = 0, duo = 0, paid = 0, pending = 0, counter = 0, attended = 0;
 
         roster.forEach(r => {
             if (r.passTier === 'solo') solo++;
             if (r.passTier === 'duo') duo++;
             if (r.paymentStatus === 'paid') paid++;
+            if (r.paymentStatus === 'pending') pending++;
             if (r.paymentStatus === 'counter') counter++;
             if (r.checkedIn) attended++;
         });
@@ -503,6 +540,7 @@
         setVal('badgeSoloCount', solo);
         setVal('badgeDuoCount', duo);
         setVal('badgePaidCount', paid);
+        setVal('badgePendingCount', pending);
         setVal('badgeCounterCount', counter);
         setVal('badgeAttendedCount', attended);
     }
@@ -563,6 +601,7 @@
             if (currentFilter === 'solo' && item.passTier !== 'solo') return false;
             if (currentFilter === 'duo' && item.passTier !== 'duo') return false;
             if (currentFilter === 'paid' && item.paymentStatus !== 'paid') return false;
+            if (currentFilter === 'pending' && item.paymentStatus !== 'pending') return false;
             if (currentFilter === 'counter' && item.paymentStatus !== 'counter') return false;
             if (currentFilter === 'attended' && !item.checkedIn) return false;
 
@@ -604,8 +643,10 @@
             const isDuo = item.passTier === 'duo';
             const attendeesCount = item.attendeesCount || (isDuo ? 2 : 1);
             const isPaid = item.paymentStatus === 'paid';
+            const isPending = item.paymentStatus === 'pending';
             const isCheckedIn = !!item.checkedIn;
             const amount = Number(item.amount) || (isDuo ? 899 : 499);
+            const isSample = !!item.isSample || ['CL-WRK-2026-8942', 'CL-WRK-2026-7214', 'CL-WRK-2026-3829', 'CL-WRK-2026-5190'].includes(item.id);
             const formattedDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-IN', {
                 month: 'short',
                 day: 'numeric',
@@ -621,9 +662,12 @@
                 <tr>
                     <!-- Ticket Code -->
                     <td>
-                        <div class="ticket-id-pill" onclick="copyTicketCode('${item.id}')" title="Click to copy ticket ID">
-                            <span>${item.id}</span>
-                            <i class="fa-regular fa-copy" style="font-size: 11px; opacity: 0.7;"></i>
+                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                            <div class="ticket-id-pill" onclick="copyTicketCode('${item.id}')" title="Click to copy ticket ID">
+                                <span>${item.id}</span>
+                                <i class="fa-regular fa-copy" style="font-size: 11px; opacity: 0.7;"></i>
+                            </div>
+                            ${!isSample ? `<span style="font-size: 10px; font-weight: 800; background: #ec4899; color: white; padding: 2px 7px; border-radius: 999px; letter-spacing: 0.5px;">LIVE</span>` : `<span style="font-size: 9px; font-weight: 700; background: rgba(0,0,0,0.06); color: var(--text-muted); padding: 2px 5px; border-radius: 4px;">DEMO</span>`}
                         </div>
                         <div class="ticket-time-meta">${formattedDate}</div>
                     </td>
@@ -691,28 +735,30 @@
                     <td>
                         <div class="amount-val">₹${amount}</div>
                         <div class="pay-method-tag">
-                            <i class="fa-solid ${item.payMethod === 'upi' ? 'fa-qrcode' : 'fa-cash-register'}"></i>
-                            <span>${item.payMethod === 'upi' ? 'Paytm UPI' : 'Counter'}</span>
+                            <i class="fa-solid ${item.payMethod === 'upi' ? 'fa-qrcode' : (isPending ? 'fa-hourglass-half' : 'fa-cash-register')}"></i>
+                            <span>${item.payMethod === 'upi' ? 'Paytm UPI' : (isPending ? 'UPI Pending' : 'Counter')}</span>
                         </div>
                         ${item.paymentScreenshot ? `
                             <button type="button" class="screenshot-thumb-btn" onclick="openScreenshotModal('${item.id}')" title="Click to view payment receipt screenshot">
                                 <img src="${item.paymentScreenshot}" alt="Screenshot">
                                 <span><i class="fa-solid fa-image"></i> Screenshot</span>
                             </button>
-                        ` : (item.paymentStatus === 'paid' ? `
+                        ` : (isPaid ? `
                             <span class="no-screenshot-tag"><i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b;"></i> No screenshot</span>
+                        ` : (isPending ? `
+                            <span class="no-screenshot-tag" style="color: #d97706;"><i class="fa-solid fa-clock"></i> Awaiting receipt</span>
                         ` : `
                             <span class="no-screenshot-tag">Pay at Counter</span>
-                        `)}
+                        `))}
                     </td>
 
                     <!-- Payment Status (Toggleable Pill) -->
                     <td>
-                        <button class="status-btn ${isPaid ? 'paid' : 'counter'}" 
+                        <button class="status-btn ${isPaid ? 'paid' : (isPending ? 'pending' : 'counter')}" 
                                 onclick="togglePaymentStatus('${item.id}')" 
-                                title="Click to toggle Payment Status between Paid & Counter">
-                            <i class="fa-solid ${isPaid ? 'fa-circle-check' : 'fa-clock'}"></i>
-                            <span>${isPaid ? 'UPI Paid' : 'Pay at Counter'}</span>
+                                title="Click to toggle Payment Status between Paid & Pending">
+                            <i class="fa-solid ${isPaid ? 'fa-circle-check' : (isPending ? 'fa-clock' : 'fa-clock')}"></i>
+                            <span>${isPaid ? 'UPI Paid' : (isPending ? 'Payment Pending' : 'Pay at Counter')}</span>
                         </button>
                     </td>
 
@@ -755,9 +801,8 @@
         if (!ticket) return;
 
         if (ticket.paymentStatus === 'paid') {
-            ticket.paymentStatus = 'counter';
-            ticket.payMethod = 'counter';
-            showToast(`Ticket ${ticketId} marked as Pay at Counter ⏳`);
+            ticket.paymentStatus = 'pending';
+            showToast(`Ticket ${ticketId} marked as Payment Pending ⏳`);
         } else {
             ticket.paymentStatus = 'paid';
             ticket.payMethod = 'upi';
@@ -766,6 +811,19 @@
 
         saveRegistrations(roster);
         renderAll();
+    };
+
+    // Clear all demo/sample registrations to show only real live ones
+    window.clearSampleRegistrations = function () {
+        if (!confirm('Clear sample demo registrations to view only real live workshop bookings?')) {
+            return;
+        }
+        const sampleIds = ['CL-WRK-2026-8942', 'CL-WRK-2026-7214', 'CL-WRK-2026-3829', 'CL-WRK-2026-5190'];
+        const roster = getRegistrations();
+        const liveOnly = roster.filter(r => !r.isSample && !sampleIds.includes(r.id));
+        saveRegistrations(liveOnly);
+        renderAll();
+        showToast('Demo records cleared! Showing real live registrations. 🎯');
     };
 
     // Toggle Check-in & Tote Bag
@@ -849,7 +907,18 @@
         if (mBatch) mBatch.textContent = 'Exclusive Sunday Masterclass • 10:00 AM – 1:00 PM';
         if (mCode) mCode.textContent = ticket.id;
         if (mTote) mTote.textContent = `${attendeesCount}x FREE Chocoloom Canvas Tote Bags Reserved`;
-        if (mBadge) mBadge.textContent = ticket.paymentStatus === 'paid' ? 'CONFIRMED PASS (PAID)' : 'RESERVED PASS (PAY AT COUNTER)';
+        if (mBadge) {
+            if (ticket.paymentStatus === 'paid') {
+                mBadge.textContent = 'CONFIRMED PASS (PAID)';
+                mBadge.style.background = '#059669';
+            } else if (ticket.paymentStatus === 'pending') {
+                mBadge.textContent = 'AWAITING PAYMENT CONFIRMATION';
+                mBadge.style.background = '#d97706';
+            } else {
+                mBadge.textContent = 'RESERVED PASS (PAY AT COUNTER)';
+                mBadge.style.background = '#6b7280';
+            }
+        }
 
         // Render QR Code SVG
         if (mQr) {
@@ -1005,7 +1074,7 @@
                `⏰ *Time:* 10:00 AM – 1:00 PM\n` +
                `📍 *Venue:* Bhimavaram (Official venue coordinates announced shortly via WhatsApp)\n` +
                `🎒 *Perk:* ${attendeesCount}x FREE Chocoloom Heavy-Duty Canvas Tote Bag reserved for you!\n` +
-               `💳 *Payment Status:* ${ticket.paymentStatus === 'paid' ? 'PAID (UPI)' : 'PAY AT COUNTER UPON ARRIVAL'}\n\n` +
+               `💳 *Payment Status:* ${ticket.paymentStatus === 'paid' ? 'PAID (UPI)' : (ticket.paymentStatus === 'pending' ? 'PAYMENT PENDING (UPI)' : 'PAY AT COUNTER UPON ARRIVAL')}\n\n` +
                `Please show this Ticket Code (${ticket.id}) at the reception desk on Sunday morning.\n\n` +
                `Need help? Chocoloom Helpline: +91 98497 83788\n` +
                `See you at the workshop! 🍰✨`;

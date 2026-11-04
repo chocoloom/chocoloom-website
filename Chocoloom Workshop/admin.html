@@ -203,6 +203,10 @@
                             <span>UPI Paid</span>
                             <span class="tab-badge green" id="badgePaidCount">0</span>
                         </button>
+                        <button class="filter-tab" data-filter="pending" onclick="setFilter('pending', this)">
+                            <span>Payment Pending</span>
+                            <span class="tab-badge amber" id="badgePendingCount">0</span>
+                        </button>
                         <button class="filter-tab" data-filter="counter" onclick="setFilter('counter', this)">
                             <span>Pay at Counter</span>
                             <span class="tab-badge amber" id="badgeCounterCount">0</span>
@@ -221,10 +225,14 @@
                             <h3 class="table-title">Workshop Ticket Roster</h3>
                             <span class="table-subtitle" id="tableRecordsCount">Showing 0 registrations</span>
                         </div>
-                        <div class="th-right">
+                        <div class="th-right" style="display: flex; align-items: center; gap: 8px;">
                             <button class="btn-sm-action" onclick="refreshTickets()">
                                 <i class="fa-solid fa-arrows-rotate" id="refreshIcon"></i>
                                 <span>Sync</span>
+                            </button>
+                            <button class="btn-sm-action" onclick="clearSampleRegistrations()" title="Clear sample demo registrations" style="background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.2); color: #dc2626;">
+                                <i class="fa-solid fa-trash-can" style="font-size: 11px;"></i>
+                                <span>Clear Demo Data</span>
                             </button>
                         </div>
                     </div>

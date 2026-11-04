@@ -323,6 +323,46 @@
             email: emailInput.value.trim()
         };
 
+        let attendeeDisplay = WorkshopState.attendee.name || 'Creative Creator';
+        if (isDuo && WorkshopState.attendee.name2) {
+            attendeeDisplay = `${WorkshopState.attendee.name} & ${WorkshopState.attendee.name2}`;
+        }
+
+        // Generate persistent ticket code for this registration session
+        if (!WorkshopState.currentTicketId) {
+            const randomCode = Math.floor(1000 + Math.random() * 9000);
+            WorkshopState.currentTicketId = `CL-WRK-2026-${randomCode}`;
+        }
+        const ticketId = WorkshopState.currentTicketId;
+
+        // Immediately record registration as Pending so it shows up in Admin Panel
+        const pendingRegistration = {
+            id: ticketId,
+            createdAt: new Date().toISOString(),
+            passTier: WorkshopState.selectedPass.id,
+            passName: WorkshopState.selectedPass.name,
+            attendeesCount: WorkshopState.selectedPass.attendees,
+            toteBags: WorkshopState.selectedPass.toteBags,
+            name1: WorkshopState.attendee.name,
+            phone1: WorkshopState.attendee.phone,
+            name2: isDuo ? (WorkshopState.attendee.name2 || '') : '',
+            phone2: isDuo ? (WorkshopState.attendee.phone2 || '') : '',
+            attendeeDisplay: attendeeDisplay,
+            email: WorkshopState.attendee.email || '',
+            slotDay: WorkshopState.selectedSlot.day,
+            slotDate: WorkshopState.selectedSlot.date,
+            slotTime: WorkshopState.selectedSlot.time,
+            batch: WorkshopState.selectedSlot.batch,
+            amount: WorkshopState.totalPrice || WorkshopState.selectedPass.basePrice,
+            payMethod: 'upi',
+            paymentStatus: 'pending',
+            paymentScreenshot: null,
+            checkedIn: false,
+            toteGiven: false
+        };
+
+        saveWorkshopRegistrationLocally(pendingRegistration, false);
+
         // Close registration form modal & open secure payment modal
         closeRegistrationModal();
         openPaymentModal();
@@ -502,8 +542,7 @@
             attendeeDisplay = `${WorkshopState.attendee.name} & ${WorkshopState.attendee.name2}`;
         }
 
-        const randomCode = Math.floor(1000 + Math.random() * 9000);
-        const ticketId = `CL-WRK-2026-${randomCode}`;
+        const ticketId = WorkshopState.currentTicketId || `CL-WRK-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
         // Populate Digital Pass
         const tAttendee = document.getElementById('ticketAttendeeName');
@@ -520,46 +559,33 @@
         if (tId) tId.textContent = ticketId;
         if (tTote) tTote.textContent = `${WorkshopState.selectedPass.toteBags}x FREE Chocoloom Canvas Tote Bags Reserved`;
 
-        // Save registration to Admin Panel Roster
-        try {
-            const STORAGE_KEY = 'chocoloom_workshop_registrations';
-            let roster = [];
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                try { roster = JSON.parse(raw); } catch (e) { roster = []; }
-            }
-            if (!Array.isArray(roster)) roster = [];
+        // Save confirmed paid registration to Local Storage & Cloud Database
+        const confirmedRegistration = {
+            id: ticketId,
+            createdAt: new Date().toISOString(),
+            passTier: WorkshopState.selectedPass.id,
+            passName: WorkshopState.selectedPass.name,
+            attendeesCount: WorkshopState.selectedPass.attendees,
+            toteBags: WorkshopState.selectedPass.toteBags,
+            name1: WorkshopState.attendee.name || 'Creative Creator',
+            phone1: WorkshopState.attendee.phone || '',
+            name2: isDuo ? (WorkshopState.attendee.name2 || '') : '',
+            phone2: isDuo ? (WorkshopState.attendee.phone2 || '') : '',
+            attendeeDisplay: attendeeDisplay,
+            email: WorkshopState.attendee.email || '',
+            slotDay: WorkshopState.selectedSlot.day,
+            slotDate: WorkshopState.selectedSlot.date,
+            slotTime: WorkshopState.selectedSlot.time,
+            batch: WorkshopState.selectedSlot.batch,
+            amount: WorkshopState.totalPrice || WorkshopState.selectedPass.basePrice,
+            payMethod: payMethod,
+            paymentStatus: 'paid',
+            paymentScreenshot: WorkshopState.paymentScreenshot || null,
+            checkedIn: false,
+            toteGiven: false
+        };
 
-            const newRegistration = {
-                id: ticketId,
-                createdAt: new Date().toISOString(),
-                passTier: WorkshopState.selectedPass.id,
-                passName: WorkshopState.selectedPass.name,
-                attendeesCount: WorkshopState.selectedPass.attendees,
-                toteBags: WorkshopState.selectedPass.toteBags,
-                name1: WorkshopState.attendee.name || 'Creative Creator',
-                phone1: WorkshopState.attendee.phone || '',
-                name2: isDuo ? (WorkshopState.attendee.name2 || '') : '',
-                phone2: isDuo ? (WorkshopState.attendee.phone2 || '') : '',
-                attendeeDisplay: attendeeDisplay,
-                email: WorkshopState.attendee.email || '',
-                slotDay: WorkshopState.selectedSlot.day,
-                slotDate: WorkshopState.selectedSlot.date,
-                slotTime: WorkshopState.selectedSlot.time,
-                batch: WorkshopState.selectedSlot.batch,
-                amount: WorkshopState.totalPrice || WorkshopState.selectedPass.basePrice,
-                payMethod: payMethod,
-                paymentStatus: (payMethod === 'counter') ? 'counter' : 'paid',
-                paymentScreenshot: WorkshopState.paymentScreenshot || null,
-                checkedIn: false,
-                toteGiven: false
-            };
-
-            roster.unshift(newRegistration);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(roster));
-        } catch (saveErr) {
-            console.warn('Could not persist registration to admin roster:', saveErr);
-        }
+        saveWorkshopRegistrationLocally(confirmedRegistration, true);
 
         // Close payment modal and open ticket pass
         closePaymentModal();
@@ -574,6 +600,43 @@
         triggerConfetti();
         showToast('Payment Successful & Pass Confirmed! 🎟️✨');
     };
+
+    // Save registration locally to localStorage and broadcast to Workshop Admin Portal
+    function saveWorkshopRegistrationLocally(reg, isUpdate) {
+        // 1. LocalStorage under dedicated workshop key
+        try {
+            const STORAGE_KEY = 'chocoloom_workshop_registrations';
+            let roster = [];
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                try { roster = JSON.parse(raw); } catch (e) { roster = []; }
+            }
+            if (!Array.isArray(roster)) roster = [];
+
+            const idx = roster.findIndex(r => r.id === reg.id);
+            if (idx >= 0) {
+                roster[idx] = { ...roster[idx], ...reg };
+            } else {
+                roster.unshift(reg);
+            }
+
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(roster));
+            } catch (quotaErr) {
+                // If quota exceeded (e.g. from screenshot image), save with lightweight thumbnail/flag
+                const sanitized = roster.map(r => ({ ...r, paymentScreenshot: r.paymentScreenshot ? '[Attached]' : null }));
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+            }
+        } catch (err) {
+            console.warn('Workshop registration LocalStorage save error:', err);
+        }
+
+        // 2. BroadcastChannel for instant real-time sync with Workshop Admin Portal
+        try {
+            const bc = new BroadcastChannel('chocoloom_workshop_bus');
+            bc.postMessage({ type: 'WORKSHOP_REGISTRATION', registration: reg, isUpdate: !!isUpdate });
+        } catch (e) {}
+    }
 
     window.closePassModal = function () {
         const passModal = document.getElementById('passModal');

@@ -871,6 +871,124 @@ body {
     color: #b45309;
 }
 
+/* Payment Status Toggle Buttons */
+.status-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: var(--radius-full);
+    font-size: 11.5px;
+    font-weight: 800;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.status-btn.paid {
+    background: #ecfdf5;
+    color: #065f46;
+    border-color: #a7f3d0;
+}
+
+.status-btn.paid:hover {
+    background: #d1fae5;
+    transform: translateY(-1px);
+}
+
+.status-btn.pending {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
+.status-btn.pending:hover {
+    background: #fde68a;
+    transform: translateY(-1px);
+}
+
+.status-btn.counter {
+    background: #fff7ed;
+    color: #9a3412;
+    border-color: #fed7aa;
+}
+
+.status-btn.counter:hover {
+    background: #ffedd5;
+    transform: translateY(-1px);
+}
+
+/* Check-In Toggle Button */
+.checkin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: var(--radius-full);
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background: #ffffff;
+    color: var(--text-muted);
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.checkin-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.checkin-btn.checked-in {
+    background: #f3e8ff;
+    border-color: #d8b4fe;
+    color: #7e22ce;
+    font-weight: 800;
+}
+
+.table-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.action-icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: #ffffff;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.action-icon-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+.action-icon-btn.whatsapp:hover {
+    border-color: #10b981;
+    color: #10b981;
+    background: #ecfdf5;
+}
+
+.action-icon-btn.delete:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: #fee2e2;
+}
+
 /* Check-In Attendance Button */
 .btn-checkin-toggle {
     display: inline-flex;
@@ -1289,6 +1407,7 @@ body {
 }
 
 /* Toast Notification */
+.admin-toast,
 .toast-msg {
     position: fixed;
     bottom: 30px;
@@ -1310,6 +1429,7 @@ body {
     pointer-events: none;
 }
 
+.admin-toast.visible,
 .toast-msg.show {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
