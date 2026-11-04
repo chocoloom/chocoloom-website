@@ -14,6 +14,18 @@ window.SWIGGY_DATA = {
     },
     "locations": [
         {
+            "id": "loc_bvrm_home",
+            "tag": "HOME",
+            "name": "HOME",
+            "address": "20-1-6, Gandhi Nagar",
+            "city": "Bhimavaram",
+            "state": "Andhra Pradesh",
+            "landmark": "20-1-6, Gandhi Nagar, Near Sivalayam",
+            "pincode": "534202",
+            "lat": 16.5412,
+            "lng": 81.5234
+        },
+        {
             "id": "loc_bvrm_1",
             "name": "S.R.K.R. Engineering College / Chinna Amiram",
             "city": "Bhimavaram",

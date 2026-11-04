@@ -3,7 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <base href="/">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <!-- Progressive Web App & Chrome Mobile App Installability -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#7c5cfc">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Chocoloom">
+    <meta name="application-name" content="Chocoloom">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="assets/icons/icon-512x512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512x512.png">
     <title>Uni Chocoloom - College Student Store | Chocolates, Cakes & Snacks</title>
     <meta name="description" content="Order handcrafted artisan chocolates, bento birthday cakes, gooey desserts, and midnight snacks with Flat 25% Student Discount on Uni Chocoloom.">
     <link rel="icon" type="image/png" href="assets/logo.png">
@@ -11,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=9.3">
+    <link rel="stylesheet" href="styles.css?v=17.0">
     <script>
         // Flag this page as the dedicated Uni Chocoloom store
         window.IS_UNI_CHOCOLOOM_PAGE = true;
@@ -68,90 +81,132 @@
 
 
     <!-- Navigation Header -->
-    <header class="navbar" id="catalogNavbar">
-        <div class="container nav-inner">
-            <div class="nav-left">
-                <a href="./" class="brand-logo" id="brandLogoBtn" title="Back to Chocoloom Home">
-                    <img src="assets/logo.png" alt="Chocoloom Logo" class="brand-logo-img">
-                </a>
+    <header class="navbar blinkit-navbar" id="catalogNavbar">
+        <!-- Festive Golden Fairy Lights String Overlay -->
+        <div class="blinkit-fairy-lights" aria-hidden="true">
+            <svg viewBox="0 0 600 38" preserveAspectRatio="none" fill="none" class="fairy-svg">
+                <!-- String 1 -->
+                <path d="M-10 4 Q75 22 160 4 Q245 22 330 4 Q415 22 500 4 Q550 20 610 4" stroke="rgba(251, 191, 36, 0.45)" stroke-width="1.2"/>
+                <!-- String 2 -->
+                <path d="M-10 1 Q90 14 190 1 Q290 14 390 1 Q490 14 610 1" stroke="rgba(251, 191, 36, 0.3)" stroke-width="0.8"/>
+                <!-- Glowing Bulbs on String 1 -->
+                <circle cx="35" cy="12" r="2.5" fill="#fef08a" filter="drop-shadow(0 0 4px #fde047)"/>
+                <circle cx="75" cy="20" r="2.8" fill="#fde047" filter="drop-shadow(0 0 5px #fde047)"/>
+                <circle cx="115" cy="14" r="2.2" fill="#fef08a" filter="drop-shadow(0 0 4px #fde047)"/>
+                <circle cx="205" cy="13" r="2.5" fill="#fef08a" filter="drop-shadow(0 0 4px #fde047)"/>
+                <circle cx="245" cy="21" r="2.8" fill="#fde047" filter="drop-shadow(0 0 5px #fde047)"/>
+                <circle cx="285" cy="14" r="2.2" fill="#fef08a" filter="drop-shadow(0 0 4px #fde047)"/>
+                <circle cx="375" cy="13" r="2.5" fill="#fef08a" filter="drop-shadow(0 0 4px #fde047)"/>
+                <circle cx="415" cy="21" r="2.8" fill="#fde047" filter="drop-shadow(0 0 5px #fde047)"/>
+                <circle cx="455" cy="14" r="2.2" fill="#fef08a" filter="drop-shadow(0 0 4px #fde047)"/>
+                <circle cx="545" cy="14" r="2.5" fill="#fde047" filter="drop-shadow(0 0 5px #fde047)"/>
+                <!-- Diamond Sparkle Stars -->
+                <polygon points="160,8 162,11 165,11 163,13 164,16 160,14 156,16 157,13 155,11 158,11" fill="#fff" opacity="0.85"/>
+                <polygon points="330,8 332,11 335,11 333,13 334,16 330,14 326,16 327,13 325,11 328,11" fill="#fff" opacity="0.85"/>
+                <polygon points="500,8 502,11 505,11 503,13 504,16 500,14 496,16 497,13 495,11 498,11" fill="#fff" opacity="0.85"/>
+            </svg>
+        </div>
 
-                <div class="location-picker" id="locationPickerBtn" title="Delivering to SRKR Engineering College, Bhimavaram">
-                    <div class="loc-icon-pill" style="background: rgba(22, 163, 74, 0.12); color: #16a34a;">
-                        <i class="fa-solid fa-graduation-cap"></i>
+        <div class="container blinkit-header-inner">
+            <!-- Row 1: Delivery Status, Location & Actions -->
+            <div class="blinkit-row-top">
+                <!-- Left: Status & Location -->
+                <div class="blinkit-status-col">
+                    <div class="blinkit-tagline">Campus Express Delivery</div>
+                    <div class="blinkit-main-title">
+                        <span>Delivery in 20 mins</span>
+                        <span class="blinkit-trend-badge"><i class="fa-solid fa-arrow-trend-up"></i></span>
                     </div>
-                    <div class="loc-text-group">
-                        <div class="loc-header-line">
-                            <span class="loc-type" id="currentLocType">SRKR College</span>
-                            <i class="fa-solid fa-chevron-down loc-arrow"></i>
+                    <div class="blinkit-loc-row" id="locationPickerBtn" title="Delivering to SRKR Engineering College, Bhimavaram" role="button" tabindex="0">
+                        <span class="blinkit-loc-tag" id="currentLocType">CAMPUS</span>
+                        <span class="blinkit-loc-sep">-</span>
+                        <span class="blinkit-loc-name" id="currentLocName">SRKR Engineering College</span>
+                        <i class="fa-solid fa-caret-down blinkit-loc-caret"></i>
+                    </div>
+                </div>
+
+                <!-- Right: Wallet Box & Profile Avatar -->
+                <div class="blinkit-actions-col">
+                    <!-- Wallet Badge with ₹0 -->
+                    <a href="chocowallet" class="blinkit-wallet-card" title="Chocowallet Balance & VIP Card">
+                        <div class="blinkit-wallet-icon-wrap">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+                                <rect x="2" y="7" width="20" height="13" rx="4" fill="#a16207"/>
+                                <rect x="2" y="9" width="20" height="11" rx="3" fill="#ca8a04"/>
+                                <path d="M5 4C5 2.89543 5.89543 2 7 2H17C18.1046 2 19 2.89543 19 4V7H5V4Z" fill="#16a34a"/>
+                                <circle cx="12" cy="4.5" r="1.2" fill="#22c55e"/>
+                                <circle cx="17.5" cy="14.5" r="2.2" fill="#fef08a"/>
+                                <text x="12" y="15" fill="#fef08a" font-size="7" font-weight="900" text-anchor="middle">₹</text>
+                            </svg>
                         </div>
-                        <span class="loc-name" id="currentLocName">Bhimavaram</span>
-                    </div>
-                </div>
-            </div>
+                        <div class="blinkit-wallet-val">₹0</div>
+                    </a>
 
-            <div class="nav-right">
-                <div class="nav-item" id="navSearchTrigger" title="Search cakes, chocolates, desserts (⌘K)">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <span class="nav-text">Search</span>
-                    <kbd class="search-kbd-hint">⌘K</kbd>
-                </div>
-                <div class="nav-item nav-item-uni" id="navOffersTrigger" title="Uni Chocoloom Campus Store" style="background: rgba(22, 163, 74, 0.08); border-color: rgba(22, 163, 74, 0.4);">
-                    <div class="uni-nav-glow-wrap">
-                        <i class="fa-solid fa-graduation-cap uni-nav-icon" style="color: #16a34a;"></i>
-                    </div>
-                    <span class="nav-text" style="color: #16a34a; font-weight: 800;">Uni Chocoloom</span>
-                    <span class="nav-uni-badge" style="background: #16a34a; color: #fff;">25% OFF ACTIVE</span>
-                </div>
-                <a href="./" class="nav-item" title="Browse full bakery catalog" style="text-decoration: none; color: inherit;">
-                    <i class="fa-solid fa-store" style="color: var(--primary);"></i>
-                    <span class="nav-text">Full Store Menu</span>
-                </a>
-
-                <div class="nav-item" id="navHelpTrigger">
-                    <i class="fa-regular fa-circle-question"></i>
-                    <span class="nav-text">Help</span>
-                </div>
-
-                <!-- User Sign In / Profile Navigation Trigger -->
-                <a href="login?redirect=uni-chocoloom" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;">
-                    <i class="fa-regular fa-user"></i>
-                    <span class="nav-text">Sign In</span>
-                </a>
-
-                <!-- Logged In User Pill & Profile Dropdown -->
-                <div class="nav-user-container" id="navUserContainer" style="display: none;">
-                    <div class="nav-user-pill" id="navUserPill" onclick="toggleUserProfileDropdown(event)">
-                        <div class="user-avatar-circle" id="userAvatarCircle">M</div>
-                        <div class="user-pill-text">
-                            <span class="user-pill-greeting"><strong id="userPillName">User</strong></span>
-                        </div>
-                        <i class="fa-solid fa-chevron-down user-pill-chevron"></i>
-                    </div>
-
-                    <div class="user-profile-dropdown" id="userProfileDropdown">
-                        <div class="user-dropdown-header">
-                            <div class="dropdown-avatar" id="dropdownAvatar">M</div>
-                            <div class="dropdown-info">
-                                <div class="dropdown-name" id="dropdownName">Mohith Kumar</div>
-                                <div class="dropdown-sub" id="dropdownSub">student@srkr.edu.in</div>
-                                <span class="dropdown-badge" id="dropdownBadge"><i class="fa-solid fa-graduation-cap"></i> SRKR Student • 25% OFF</span>
+                    <!-- Profile Avatar & Dropdown -->
+                    <div class="blinkit-profile-wrap">
+                        <div class="blinkit-profile-btn" id="navUserPill" onclick="toggleUserProfileDropdown(event)" title="My Account Profile" role="button" tabindex="0">
+                            <div class="blinkit-avatar-circle" id="userAvatarCircle">
+                                <i class="fa-solid fa-user"></i>
                             </div>
                         </div>
-                        <div class="user-dropdown-divider"></div>
-                        <div class="user-dropdown-menu">
-                            <a href="chocowallet" class="user-menu-item" style="text-decoration: none; color: inherit; background: linear-gradient(135deg, #fdf4ff, #fae8ff); border: 1px solid #f0abfc; margin-bottom: 6px; border-radius: 10px;">
-                                <i class="fa-solid fa-credit-card" style="color: #9333ea;"></i>
-                                <span style="font-weight: 800; color: #581c87;">Chocowallet VIP Card</span>
-                                <span class="menu-badge" id="dropdownWalletBadge" style="background: #f59e0b; color: #ffffff; font-weight: 800;">Coming Soon</span>
-                            </a>
-                            <button class="user-menu-item" onclick="openOrdersModal()"><i class="fa-solid fa-receipt"></i> <span>My Orders</span> <span class="menu-badge" id="myOrdersCountBadge">0</span></button>
-                            <button class="user-menu-item" onclick="openAccountDetailsModal()"><i class="fa-solid fa-user-gear"></i> <span>Account Details</span></button>
+
+                        <!-- User Profile Dropdown Menu (Existing) -->
+                        <div class="user-profile-dropdown" id="userProfileDropdown">
+                            <div class="user-dropdown-header">
+                                <div class="dropdown-avatar" id="dropdownAvatar">M</div>
+                                <div class="dropdown-info">
+                                    <div class="dropdown-name" id="dropdownName">Mohith Kumar</div>
+                                    <div class="dropdown-sub" id="dropdownSub">student@srkr.edu.in</div>
+                                    <span class="dropdown-badge" id="dropdownBadge"><i class="fa-solid fa-graduation-cap"></i> SRKR Student • 25% OFF</span>
+                                </div>
+                            </div>
                             <div class="user-dropdown-divider"></div>
-                            <button class="user-menu-item logout" onclick="handleUserLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Sign Out</span></button>
+                            <div class="user-dropdown-menu">
+                                <a href="chocowallet" class="user-menu-item" style="text-decoration: none; color: inherit; background: linear-gradient(135deg, #fdf4ff, #fae8ff); border: 1px solid #f0abfc; margin-bottom: 6px; border-radius: 10px;">
+                                    <i class="fa-solid fa-credit-card" style="color: #9333ea;"></i>
+                                    <span style="font-weight: 800; color: #581c87;">Chocowallet VIP Card</span>
+                                    <span class="menu-badge" id="dropdownWalletBadge" style="background: #f59e0b; color: #ffffff; font-weight: 800;">Coming Soon</span>
+                                </a>
+                                <button class="user-menu-item" onclick="openOrdersModal()"><i class="fa-solid fa-receipt"></i> <span>My Orders</span> <span class="menu-badge" id="myOrdersCountBadge">0</span></button>
+                                <button class="user-menu-item" onclick="openAccountDetailsModal()"><i class="fa-solid fa-user-gear"></i> <span>Account Details</span></button>
+                                <div class="user-dropdown-divider"></div>
+                                <button class="user-menu-item logout" onclick="handleUserLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Sign Out</span></button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Row 2: Search Pill & Voice Soundwave Button -->
+            <div class="blinkit-row-search">
+                <!-- Search Pill (Soft Sky Blue) -->
+                <div class="blinkit-search-pill" id="navSearchTrigger" title="Search cakes, chocolates, desserts" role="button" tabindex="0">
+                    <i class="fa-solid fa-magnifying-glass blinkit-search-icon"></i>
+                    <div class="blinkit-search-label">
+                        <span class="blinkit-search-prefix">Search</span>
+                        <span class="blinkit-search-kw" id="zomatoSearchDynamic">"chocolate cake"</span>
+                    </div>
+                </div>
+
+                <!-- Voice Equalizer Soundwave Button -->
+                <button class="blinkit-wave-btn" id="zomatoVoiceSearchBtn" type="button" title="Voice Search (Speak now)" aria-label="Voice Search">
+                    <span class="wave-bar bar-1"></span>
+                    <span class="wave-bar bar-2"></span>
+                    <span class="wave-bar bar-3"></span>
+                    <span class="wave-bar bar-4"></span>
+                    <span class="wave-bar bar-5"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Hidden hooks for backwards compatibility -->
+        <div style="display: none;" aria-hidden="true">
+            <a href="./" class="brand-logo" id="brandLogoBtn"><img src="assets/logo.png" alt="Chocoloom Logo" class="brand-logo-img"></a>
+            <a href="uni-chocoloom" id="navOffersTrigger"></a>
+            <div id="navHelpTrigger"></div>
+            <a href="login?redirect=uni-chocoloom" id="navAuthBtn"></a>
+            <div id="navUserContainer"></div>
+            <span id="userPillName"></span>
         </div>
     </header>
 
@@ -1063,32 +1118,130 @@
         </div>
     </footer>
 
-    <!-- Mobile App Bottom Navigation Bar -->
-    <nav class="mobile-bottom-nav">
-        <button class="mobile-nav-item" id="mobileNavFood">
-            <i class="fa-solid fa-utensils"></i>
-            <span>Food</span>
+    <!-- Floating Glassmorphism Bottom Dock (Zomato Style) -->
+    <div class="chocoloom-bottom-dock" id="chocoloomBottomDock" role="navigation" aria-label="Bottom Navigation Dock">
+        <!-- 1. Center Pill (Delivery + History) -->
+        <nav class="dock-main-pill" aria-label="Primary Navigation">
+            <!-- Delivery -->
+            <button class="dock-tab-btn" id="dockNavDelivery" type="button" onclick="window.location.href='order'" aria-label="Delivery">
+                <span class="dock-tab-icon">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="houseGradUni" x1="4" y1="3" x2="20" y2="21" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#ff758f"/>
+                                <stop offset="45%" stop-color="#ff4d6d"/>
+                                <stop offset="100%" stop-color="#c9184a"/>
+                            </linearGradient>
+                            <linearGradient id="roofHighlightUni" x1="12" y1="3" x2="6" y2="10" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
+                                <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M4 10.5L11.2 3.8C11.66 3.37 12.34 3.37 12.8 3.8L20 10.5C20.4 10.88 20.6 11.4 20.6 11.95V19.5C20.6 20.33 19.93 21 19.1 21H4.9C4.07 21 3.4 20.33 3.4 19.5V11.95C3.4 11.4 3.6 10.88 4 10.5Z" fill="url(#houseGradUni)"/>
+                        <path d="M5.5 10.5L12 4.5L13.5 5.8L7.5 11.8H5.5V10.5Z" fill="url(#roofHighlightUni)"/>
+                        <path d="M9.8 21V14.5C9.8 13.67 10.47 13 11.3 13H12.7C13.53 13 14.2 13.67 14.2 14.5V21" fill="#590d22"/>
+                    </svg>
+                </span>
+                <span>Delivery</span>
+            </button>
+
+            <!-- History -->
+            <button class="dock-tab-btn" id="dockNavHistory" type="button" onclick="openOrdersModal()" aria-label="History">
+                <span class="dock-tab-icon">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.5 5L7 3H17L18.5 5L20 20C20 20.55 19.55 21 19 21H5C4.45 21 4 20.55 4 20L5.5 5Z" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+                        <line x1="5.5" y1="5" x2="18.5" y2="5" stroke="#ffffff" stroke-width="1.8"/>
+                        <line x1="10" y1="12" x2="14" y2="12" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>History</span>
+            </button>
+        </nav>
+
+        <!-- 2. Right Pill (One / Uni Chocoloom - Active) -->
+        <button class="dock-dining-pill dock-uni-pill active" id="dockNavUni" type="button" title="Uni Chocoloom" aria-label="Uni Chocoloom">
+            <img src="assets/one-logo.png" alt="One" class="dock-one-logo" width="61" height="28" style="height: 28px !important; width: 61px !important; max-width: 61px !important; max-height: 28px !important; object-fit: contain !important; display: block !important;">
         </button>
-        <button class="mobile-nav-item" id="mobileNavInstamart">
-            <i class="fa-solid fa-gamepad"></i>
-            <span>Game Zone</span>
-        </button>
-        <button class="mobile-nav-item" id="mobileNavSearch">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <span>Search</span>
-        </button>
-        <button class="mobile-nav-item active" id="mobileNavOffers" title="Uni Chocoloom Campus Store">
-            <i class="fa-solid fa-graduation-cap"></i>
-            <span>Uni Chocoloom</span>
-        </button>
-        <button class="mobile-nav-item" id="mobileNavCart" onclick="openCart()">
-            <div style="position: relative; display: inline-block;">
-                <i class="fa-solid fa-bag-shopping"></i>
-                <span class="mobile-cart-badge" id="mobileCartBadge">0</span>
+    </div>
+
+    <!-- Chocoloom AI Cake Finder Modal -->
+    <div class="modal-backdrop" id="chocoloomAiModal" onclick="if(event.target === this) closeChocoloomAiModal()">
+        <div class="modal-card ai-modal-card" style="max-width: 440px; text-align: center; padding: 28px 22px; border-radius: 24px; background: #18181b; color: #fff; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);">
+            <button class="modal-close" onclick="closeChocoloomAiModal()" style="position: absolute; top: 16px; right: 16px; color: #94a3b8;"><i class="fa-solid fa-xmark"></i></button>
+            <div style="width: 58px; height: 58px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fb7185 0%, #f43f5e 40%, #8b5cf6 85%, #6366f1 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 0 24px rgba(244, 63, 94, 0.45);">
+                <svg viewBox="0 0 28 28" width="24" height="24" fill="none">
+                    <circle cx="14" cy="14" r="1.3" fill="#ffffff"/>
+                    <circle cx="14" cy="11.5" r="1.2" fill="#ffffff"/>
+                    <circle cx="14" cy="16.5" r="1.2" fill="#ffffff"/>
+                    <circle cx="11.5" cy="14" r="1.2" fill="#ffffff"/>
+                    <circle cx="16.5" cy="14" r="1.2" fill="#ffffff"/>
+                    <circle cx="14" cy="9" r="1.1" fill="#ffffff"/>
+                    <circle cx="14" cy="19" r="1.1" fill="#ffffff"/>
+                    <circle cx="9" cy="14" r="1.1" fill="#ffffff"/>
+                    <circle cx="19" cy="14" r="1.1" fill="#ffffff"/>
+                    <circle cx="14" cy="6.5" r="1.0" fill="#ffffff"/>
+                    <circle cx="14" cy="21.5" r="1.0" fill="#ffffff"/>
+                    <circle cx="6.5" cy="14" r="1.0" fill="#ffffff"/>
+                    <circle cx="21.5" cy="14" r="1.0" fill="#ffffff"/>
+                    <circle cx="12" cy="12" r="1.0" fill="#ffffff"/>
+                    <circle cx="16" cy="12" r="1.0" fill="#ffffff"/>
+                    <circle cx="12" cy="16" r="1.0" fill="#ffffff"/>
+                    <circle cx="16" cy="16" r="1.0" fill="#ffffff"/>
+                </svg>
             </div>
-            <span>Cart</span>
-        </button>
-    </nav>
+            <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 8px; color: #ffffff;">Chocoloom AI Cake Finder</h3>
+            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 20px; line-height: 1.5;">Tell AI what you're celebrating and get the perfect cake recommendation instantly!</p>
+            
+            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                <input type="text" id="aiCakePromptInput" placeholder="e.g. Belgian chocolate cake for 5 people..." style="flex: 1; padding: 12px 16px; border-radius: 12px; background: #27272a; border: 1px solid #3f3f46; color: #fff; font-size: 13px; outline: none;">
+                <button type="button" class="btn btn-primary" onclick="handleAiCakeSearch()" style="padding: 12px 18px; border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, #f43f5e, #8b5cf6); border: none;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </button>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;">
+                <span class="ai-quick-chip" onclick="applyAiQuickPrompt('Best chocolate cake')">🍫 Chocolate Cake</span>
+                <span class="ai-quick-chip" onclick="applyAiQuickPrompt('Eggless birthday cake')">🎂 Eggless Birthday</span>
+                <span class="ai-quick-chip" onclick="applyAiQuickPrompt('Anniversary photo cake')">❤️ Anniversary Cake</span>
+                <span class="ai-quick-chip" onclick="applyAiQuickPrompt('Mini desserts under ₹299')">✨ Under ₹299</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chocoloom Dining & Workshop Modal -->
+    <div class="modal-backdrop" id="chocoloomDiningModal" onclick="if(event.target === this) closeChocoloomDiningModal()">
+        <div class="modal-card dining-modal-card" style="max-width: 440px; text-align: center; padding: 28px 22px; border-radius: 24px; background: #18181b; color: #fff; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);">
+            <button class="modal-close" onclick="closeChocoloomDiningModal()" style="position: absolute; top: 16px; right: 16px; color: #94a3b8;"><i class="fa-solid fa-xmark"></i></button>
+            <div style="width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg, #a855f7, #6b21a8); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 0 24px rgba(168, 85, 247, 0.4);">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
+                    <circle cx="12" cy="5" r="2.2" stroke="#d8b4fe" stroke-width="1.6" fill="none"/>
+                    <path d="M3.5 16C3.5 10.5 7.3 6.5 12 6.5C16.7 6.5 20.5 10.5 20.5 16H3.5Z" fill="#c084fc"/>
+                    <rect x="2" y="16.5" width="20" height="2.5" rx="1.25" fill="#e9d5ff"/>
+                </svg>
+            </div>
+            <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 8px; color: #ffffff;">Bakery Dining & Workshop</h3>
+            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 22px; line-height: 1.5;">Dine-in at our Bhimavaram Bakery Counter or book an exclusive Chocolate Making Workshop experience!</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <a href="workshop/" class="btn btn-primary" style="width: 100%; justify-content: center; gap: 8px; padding: 12px 18px; border-radius: 14px; font-weight: 700; background: linear-gradient(135deg, #a855f7, #7c3aed); border: none; text-decoration: none; color: #fff;">
+                    <i class="fa-solid fa-graduation-cap"></i> Book Workshop Experience
+                </a>
+                <a href="https://wa.me/918886361234?text=Hi%20Chocoloom,%20I%20would%20like%20to%20reserve%20a%20table%20or%20dine-in%20at%20the%20bakery!" target="_blank" rel="noopener" class="btn btn-outline" style="width: 100%; justify-content: center; gap: 8px; color: #22c55e; border-color: #22c55e; padding: 12px 18px; border-radius: 14px; font-weight: 700; text-decoration: none;">
+                    <i class="fa-brands fa-whatsapp" style="font-size: 16px;"></i> Dine-in / Table Reservation
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden compatibility markers for legacy scripts -->
+    <div style="display: none;" aria-hidden="true">
+        <button id="mobileNavFood"></button>
+        <button id="mobileNavInstamart"></button>
+        <button id="mobileNavSearch"></button>
+        <a id="mobileNavOffers"></a>
+        <button id="mobileNavCart"></button>
+        <span id="mobileCartBadge">0</span>
+    </div>
 
     <!-- Razorpay Checkout, Supabase SDK & React 18 Suite -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -1098,5 +1251,6 @@
     <script src="data.js?v=6.6"></script>
     <script src="react-components.js?v=2.0"></script>
     <script src="app.js?v=9.3"></script>
+    <script src="pwa.js" defer></script>
 </body>
 </html>

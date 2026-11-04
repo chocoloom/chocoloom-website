@@ -95,15 +95,17 @@ let initialSelectedLoc = SWIGGY_DATA.locations[0];
 if (savedLocationData) {
     try {
         const parsedLoc = JSON.parse(savedLocationData);
-        // If parsed location is an old dummy non-Bhimavaram city, reset it to Bhimavaram
+        // If parsed location is an old dummy non-Bhimavaram city or old SRKR default, reset it to HOME - 20-1-6, Gandhi Nagar
         const nonBvrmCities = ['bengaluru', 'bangalore', 'mumbai', 'delhi', 'hyderabad', 'pune', 'chennai'];
         const isOldDummy = parsedLoc && parsedLoc.city && nonBvrmCities.some(c => parsedLoc.city.toLowerCase().includes(c));
-        if (parsedLoc && parsedLoc.name && !isOldDummy) {
+        const isOldSrkrDefault = parsedLoc && (parsedLoc.id === 'loc_bvrm_1' || parsedLoc.name === 'S.R.K.R. Engineering College / Chinna Amiram');
+        if (parsedLoc && (parsedLoc.address || parsedLoc.name) && !isOldDummy && !isOldSrkrDefault) {
             initialSelectedLoc = parsedLoc;
-            if (!SWIGGY_DATA.locations.some(l => l.name === parsedLoc.name && l.city === parsedLoc.city)) {
+            if (!SWIGGY_DATA.locations.some(l => l.id === parsedLoc.id || (l.name === parsedLoc.name && l.city === parsedLoc.city))) {
                 SWIGGY_DATA.locations.unshift(parsedLoc);
             }
         } else {
+            initialSelectedLoc = SWIGGY_DATA.locations[0];
             localStorage.setItem('chocoloom_location', JSON.stringify(SWIGGY_DATA.locations[0]));
         }
     } catch (e) {}
@@ -8706,6 +8708,8 @@ function renderLocationsList(query = '') {
 
     DOM.locationsList.innerHTML = filtered.map(loc => {
         const isCurrent = AppState.selectedLocation && AppState.selectedLocation.id === loc.id;
+        const tag = (loc.tag || (loc.name && loc.name.toUpperCase().includes('HOME') ? 'HOME' : (loc.name && loc.name.toUpperCase().includes('CAMPUS') ? 'CAMPUS' : 'LOCATION'))).toUpperCase();
+        const displayName = loc.address ? `${tag} - ${loc.address}` : loc.name;
         return `
             <div style="padding: 12px 14px; border-radius: var(--radius-sm); border: 1.5px solid ${isCurrent ? 'var(--primary)' : 'var(--border-color)'}; background: ${isCurrent ? 'rgba(124, 58, 237, 0.04)' : '#fff'}; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='${isCurrent ? 'rgba(124, 58, 237, 0.04)' : '#fff'}'" onclick="selectLocation('${loc.id}')">
                 <div style="width: 36px; height: 36px; border-radius: 10px; background: ${isCurrent ? 'var(--primary)' : '#f3e8ff'}; color: ${isCurrent ? '#fff' : 'var(--primary)'}; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;">
@@ -8713,7 +8717,7 @@ function renderLocationsList(query = '') {
                 </div>
                 <div style="flex: 1; min-width: 0;">
                     <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                        <span style="font-weight: 800; font-size: 13.5px; color: var(--dark);">${escapeHtml(loc.name)}</span>
+                        <span style="font-weight: 800; font-size: 13.5px; color: var(--dark);">${escapeHtml(displayName)}</span>
                         ${isCurrent ? '<span style="background: #ecfdf5; color: #047857; font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 999px;">ACTIVE</span>' : ''}
                     </div>
                     <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
@@ -9230,14 +9234,18 @@ window.selectLocation = function(locId) {
 function updateLocationDisplay() {
     if (window.IS_UNI_CHOCOLOOM_PAGE) {
         const col = AppState.selectedCollege || (SWIGGY_DATA.colleges || []).find(c => c.id === 'col_srkr') || SWIGGY_DATA.colleges[0];
-        if (DOM.currentLocType) DOM.currentLocType.textContent = col ? (col.shortName || col.name) : 'SRKR College';
-        if (DOM.currentLocName) DOM.currentLocName.textContent = col ? (col.isAvailable ? `${col.city} (Active)` : `${col.city} (Coming Soon)`) : 'Bhimavaram';
+        if (DOM.currentLocType) DOM.currentLocType.textContent = 'CAMPUS';
+        if (DOM.currentLocName) DOM.currentLocName.textContent = col ? (col.shortName || col.name) : 'SRKR College';
         updateCampusAvailabilityBanner();
         return;
     }
 
-    if (DOM.currentLocType) DOM.currentLocType.textContent = AppState.selectedLocation.name;
-    if (DOM.currentLocName) DOM.currentLocName.textContent = `${AppState.selectedLocation.city}, ${AppState.selectedLocation.state}`;
+    const loc = AppState.selectedLocation || SWIGGY_DATA.locations[0];
+    const tag = (loc.tag || (loc.name && loc.name.toUpperCase().includes('HOME') ? 'HOME' : (loc.name && loc.name.toUpperCase().includes('CAMPUS') ? 'CAMPUS' : 'HOME'))).toUpperCase();
+    const address = loc.address || loc.landmark || (loc.name && loc.name !== 'HOME' ? loc.name : '20-1-6, Gandhi Nagar');
+
+    if (DOM.currentLocType) DOM.currentLocType.textContent = tag;
+    if (DOM.currentLocName) DOM.currentLocName.textContent = address;
 }
 
 // Campus Availability Banner Controller for Uni Chocoloom
@@ -10740,7 +10748,96 @@ function bindEvents() {
         });
     }
 
-    // Mobile Bottom App Bar Navigation Triggers
+    // ==================== Zomato Style Floating Bottom Dock Handlers ====================
+    window.openChocoloomAiModal = function() {
+        const modal = document.getElementById('chocoloomAiModal');
+        if (modal) modal.classList.add('open');
+    };
+
+    window.closeChocoloomAiModal = function() {
+        const modal = document.getElementById('chocoloomAiModal');
+        if (modal) modal.classList.remove('open');
+    };
+
+    window.openChocoloomDiningModal = function() {
+        const modal = document.getElementById('chocoloomDiningModal');
+        if (modal) modal.classList.add('open');
+    };
+
+    window.closeChocoloomDiningModal = function() {
+        const modal = document.getElementById('chocoloomDiningModal');
+        if (modal) modal.classList.remove('open');
+    };
+
+    window.handleAiCakeSearch = function() {
+        const input = document.getElementById('aiCakePromptInput');
+        const query = input ? input.value.trim() : '';
+        if (query) {
+            window.closeChocoloomAiModal();
+            if (typeof window.openSearchPage === 'function') {
+                window.openSearchPage();
+                const searchInput = document.getElementById('searchPageInput');
+                if (searchInput) {
+                    searchInput.value = query;
+                    searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+        }
+    };
+
+    window.applyAiQuickPrompt = function(promptText) {
+        const input = document.getElementById('aiCakePromptInput');
+        if (input) input.value = promptText;
+        window.handleAiCakeSearch();
+    };
+
+    const dockDelivery = document.getElementById('dockNavDelivery');
+    if (dockDelivery) {
+        dockDelivery.addEventListener('click', () => {
+            document.querySelectorAll('.dock-tab-btn, .dock-dining-pill').forEach(b => b.classList.remove('active'));
+            dockDelivery.classList.add('active');
+            if (window.IS_UNI_CHOCOLOOM_PAGE) {
+                window.location.href = window.getAppUrl ? window.getAppUrl('order') : 'order';
+                return;
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    const dockHistory = document.getElementById('dockNavHistory');
+    if (dockHistory) {
+        dockHistory.addEventListener('click', () => {
+            document.querySelectorAll('.dock-tab-btn, .dock-dining-pill').forEach(b => b.classList.remove('active'));
+            dockHistory.classList.add('active');
+            if (typeof window.openOrdersModal === 'function') {
+                window.openOrdersModal();
+            }
+        });
+    }
+
+    const dockUni = document.getElementById('dockNavUni') || document.getElementById('dockNavDining');
+    if (dockUni) {
+        dockUni.addEventListener('click', (e) => {
+            document.querySelectorAll('.dock-tab-btn, .dock-dining-pill, .dock-uni-pill').forEach(b => b.classList.remove('active'));
+            dockUni.classList.add('active');
+            if (dockUni.tagName.toLowerCase() !== 'a' && !window.IS_UNI_CHOCOLOOM_PAGE) {
+                window.location.href = window.getAppUrl ? window.getAppUrl('uni-chocoloom') : 'uni-chocoloom';
+            }
+        });
+    }
+
+    // Auto-sync Delivery active state when user scrolls to top
+    window.addEventListener('scroll', () => {
+        if (window.scrollY < 160) {
+            const currentActive = document.querySelector('.dock-tab-btn.active');
+            if (!currentActive && !document.getElementById('chocoloomAiModal')?.classList.contains('open') && !document.getElementById('chocoloomDiningModal')?.classList.contains('open')) {
+                document.querySelectorAll('.dock-tab-btn, .dock-dining-pill').forEach(b => b.classList.remove('active'));
+                document.getElementById('dockNavDelivery')?.classList.add('active');
+            }
+        }
+    }, { passive: true });
+
+    // Mobile Bottom App Bar Navigation Triggers (Legacy Compatibility)
     const mobFood = document.getElementById('mobileNavFood');
     const mobInsta = document.getElementById('mobileNavInstamart');
     const mobSearch = document.getElementById('mobileNavSearch');
