@@ -4592,20 +4592,19 @@ body.ad-fullscreen-active {
     }
 }
 
-/* 1. Left AI Satellite Circle (Liquid Glass Orb) */
+/* 1. Left AI Satellite Circle */
 .dock-ai-circle {
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.06) 40%, rgba(12, 12, 18, 0.6) 100%),
-                rgba(20, 20, 28, 0.62);
-    -webkit-backdrop-filter: blur(32px) saturate(210%) contrast(105%);
-    backdrop-filter: blur(32px) saturate(210%) contrast(105%);
-    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(20, 20, 26, 0.96);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 
-        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.55),
-        inset 0 -1.5px 2.5px 0 rgba(0, 0, 0, 0.4),
-        0 14px 36px rgba(0, 0, 0, 0.45);
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 12px 36px -4px rgba(0, 0, 0, 0.6),
+        0 4px 12px rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4619,33 +4618,22 @@ body.ad-fullscreen-active {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Top curved liquid glass sheen */
 .dock-ai-circle::before {
-    content: '';
-    position: absolute;
-    top: 1px;
-    left: 20%;
-    right: 20%;
-    height: 40%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 100%);
-    border-radius: 50% 50% 40% 40%;
-    pointer-events: none;
-    z-index: 2;
+    display: none;
 }
 
 .dock-ai-inner {
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.45) 0%, transparent 45%),
-                radial-gradient(circle at 35% 35%, #fb7185 0%, #f43f5e 40%, #8b5cf6 85%, #6366f1 100%);
+    background: radial-gradient(circle at 35% 35%, #fb7185 0%, #f43f5e 40%, #8b5cf6 85%, #6366f1 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 
-        inset 0 1.5px 2px rgba(255, 255, 255, 0.6),
-        inset 0 -2px 3px rgba(0, 0, 0, 0.35),
-        0 0 18px rgba(244, 63, 94, 0.45);
+        inset 0 1px 2px rgba(255, 255, 255, 0.4),
+        inset 0 -1.5px 2px rgba(0, 0, 0, 0.4),
+        0 0 14px rgba(244, 63, 94, 0.4);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     z-index: 1;
 }
@@ -4653,21 +4641,20 @@ body.ad-fullscreen-active {
 .dock-ai-circle:hover .dock-ai-inner {
     transform: scale(1.06);
     box-shadow: 
-        inset 0 1.5px 2px rgba(255, 255, 255, 0.7),
-        0 0 24px rgba(244, 63, 94, 0.7);
+        inset 0 1px 2px rgba(255, 255, 255, 0.5),
+        0 0 20px rgba(244, 63, 94, 0.6);
 }
 
 .dock-ai-circle:active {
     transform: scale(0.93);
 }
 
-/* 2. Center Pill Container (Liquid Glass Capsule) */
+/* 2. Center Pill Container (Dark Charcoal Capsule) */
 .dock-main-pill {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.05) 35%, rgba(10, 10, 16, 0.55) 100%),
-                rgba(20, 20, 28, 0.62);
-    -webkit-backdrop-filter: blur(32px) saturate(210%) contrast(105%);
-    backdrop-filter: blur(32px) saturate(210%) contrast(105%);
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(20, 20, 26, 0.96);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 9999px;
     padding: 4px;
     height: 52px;
@@ -4675,28 +4662,12 @@ body.ad-fullscreen-active {
     align-items: center;
     gap: 4px;
     box-shadow: 
-        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.45),
-        inset 0 -1.5px 2.5px 0 rgba(0, 0, 0, 0.35),
-        0 16px 42px -4px rgba(0, 0, 0, 0.45),
-        0 4px 12px rgba(0, 0, 0, 0.25);
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 12px 36px -4px rgba(0, 0, 0, 0.6),
+        0 4px 12px rgba(0, 0, 0, 0.3);
     flex-shrink: 0;
     position: relative;
     overflow: hidden;
-}
-
-/* Specular glass reflection across top edge */
-.dock-main-pill::before,
-.dock-dining-pill::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 10px;
-    right: 10px;
-    height: 48%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.02) 100%);
-    border-radius: 9999px 9999px 50% 50%;
-    pointer-events: none;
-    z-index: 1;
 }
 
 /* Common Dock Item Buttons */
@@ -4711,7 +4682,7 @@ body.ad-fullscreen-active {
     border-radius: 9999px;
     cursor: pointer;
     text-decoration: none;
-    color: #ffffff;
+    color: #e2e8f0;
     font-size: 13px;
     font-weight: 600;
     letter-spacing: -0.2px;
@@ -4723,20 +4694,20 @@ body.ad-fullscreen-active {
     z-index: 2;
 }
 
+.dock-tab-btn:hover {
+    color: #ffffff;
+}
+
 .dock-tab-btn:active {
     transform: scale(0.95);
 }
 
-/* Active Highlight Bubble (Liquid Glass Active Pill) */
+/* Active Highlight Bubble (Clean Dark Pill) */
 .dock-tab-btn.active {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.12) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.32);
-    box-shadow: 
-        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.55),
-        inset 0 -1px 2px 0 rgba(0, 0, 0, 0.22),
-        0 4px 14px rgba(0, 0, 0, 0.28);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.13);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    color: #ffffff;
     font-weight: 700;
 }
 
@@ -4756,29 +4727,28 @@ body.ad-fullscreen-active {
     display: block;
 }
 
-/* 3. Right Pill Container (Liquid Glass Uni Chocoloom Capsule) */
+/* 3. Right Pill Container (Dark Charcoal Capsule) */
 .dock-dining-pill,
 .dock-uni-pill {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.05) 35%, rgba(10, 10, 16, 0.55) 100%),
-                rgba(20, 20, 28, 0.62);
-    -webkit-backdrop-filter: blur(32px) saturate(210%) contrast(105%);
-    backdrop-filter: blur(32px) saturate(210%) contrast(105%);
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(20, 20, 26, 0.96);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 9999px;
-    padding: 4px 18px;
-    height: 52px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    padding: 0 15px !important;
+    height: 52px !important;
+    min-width: 82px !important;
+    max-width: 96px !important;
+    width: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
     box-shadow: 
-        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.45),
-        inset 0 -1.5px 2.5px 0 rgba(0, 0, 0, 0.35),
-        0 16px 42px -4px rgba(0, 0, 0, 0.45),
-        0 4px 12px rgba(0, 0, 0, 0.25);
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 12px 36px -4px rgba(0, 0, 0, 0.6),
+        0 4px 12px rgba(0, 0, 0, 0.3);
     color: #ffffff;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: -0.2px;
     cursor: pointer;
     outline: none;
     flex-shrink: 0;
@@ -4792,12 +4762,11 @@ body.ad-fullscreen-active {
 
 .dock-dining-pill:hover,
 .dock-uni-pill:hover {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 35%, rgba(10, 10, 16, 0.6) 100%),
-                rgba(26, 26, 36, 0.7);
-    border-color: rgba(255, 255, 255, 0.32);
+    background: rgba(28, 28, 36, 0.98);
+    border-color: rgba(255, 255, 255, 0.2);
     box-shadow: 
-        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.6),
-        0 18px 46px -4px rgba(0, 0, 0, 0.5);
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        0 14px 40px -4px rgba(0, 0, 0, 0.7);
 }
 
 .dock-dining-pill:active,
@@ -4807,11 +4776,11 @@ body.ad-fullscreen-active {
 
 .dock-dining-pill.active,
 .dock-uni-pill.active {
-    background: linear-gradient(180deg, rgba(168, 85, 247, 0.38) 0%, rgba(124, 58, 237, 0.22) 100%);
+    background: linear-gradient(180deg, rgba(38, 26, 54, 0.96) 0%, rgba(24, 16, 36, 0.98) 100%);
     border-color: rgba(168, 85, 247, 0.45);
     box-shadow: 
-        inset 0 1.5px 2px rgba(255, 255, 255, 0.5),
-        0 2px 14px rgba(168, 85, 247, 0.35);
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 4px 16px rgba(168, 85, 247, 0.3);
     font-weight: 700;
 }
 

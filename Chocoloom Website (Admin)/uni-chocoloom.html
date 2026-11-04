@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=17.0">
+    <link rel="stylesheet" href="styles.css?v=14.2">
     <script>
         // Flag this page as the dedicated Uni Chocoloom store
         window.IS_UNI_CHOCOLOOM_PAGE = true;
@@ -81,132 +81,86 @@
 
 
     <!-- Navigation Header -->
-    <header class="navbar blinkit-navbar" id="catalogNavbar">
-        <!-- Festive Golden Fairy Lights String Overlay -->
-        <div class="blinkit-fairy-lights" aria-hidden="true">
-            <svg viewBox="0 0 600 38" preserveAspectRatio="none" fill="none" class="fairy-svg">
-                <!-- String 1 -->
-                <path d="M-10 4 Q75 22 160 4 Q245 22 330 4 Q415 22 500 4 Q550 20 610 4" stroke="rgba(251, 191, 36, 0.45)" stroke-width="1.2"/>
-                <!-- String 2 -->
-                <path d="M-10 1 Q90 14 190 1 Q290 14 390 1 Q490 14 610 1" stroke="rgba(251, 191, 36, 0.3)" stroke-width="0.8"/>
-                <!-- Glowing Bulbs on String 1 -->
-                <circle cx="35" cy="12" r="2.5" fill="#fef08a" filter="drop-shadow(0 0 4px #fde047)"/>
-                <circle cx="75" cy="20" r="2.8" fill="#fde047" filter="drop-shadow(0 0 5px #fde047)"/>
-                <circle cx="115" cy="14" r="2.2" fill="#fef08a" filter="drop-shadow(0 0 4px #fde047)"/>
-                <circle cx="205" cy="13" r="2.5" fill="#fef08a" filter="drop-shadow(0 0 4px #fde047)"/>
-                <circle cx="245" cy="21" r="2.8" fill="#fde047" filter="drop-shadow(0 0 5px #fde047)"/>
-                <circle cx="285" cy="14" r="2.2" fill="#fef08a" filter="drop-shadow(0 0 4px #fde047)"/>
-                <circle cx="375" cy="13" r="2.5" fill="#fef08a" filter="drop-shadow(0 0 4px #fde047)"/>
-                <circle cx="415" cy="21" r="2.8" fill="#fde047" filter="drop-shadow(0 0 5px #fde047)"/>
-                <circle cx="455" cy="14" r="2.2" fill="#fef08a" filter="drop-shadow(0 0 4px #fde047)"/>
-                <circle cx="545" cy="14" r="2.5" fill="#fde047" filter="drop-shadow(0 0 5px #fde047)"/>
-                <!-- Diamond Sparkle Stars -->
-                <polygon points="160,8 162,11 165,11 163,13 164,16 160,14 156,16 157,13 155,11 158,11" fill="#fff" opacity="0.85"/>
-                <polygon points="330,8 332,11 335,11 333,13 334,16 330,14 326,16 327,13 325,11 328,11" fill="#fff" opacity="0.85"/>
-                <polygon points="500,8 502,11 505,11 503,13 504,16 500,14 496,16 497,13 495,11 498,11" fill="#fff" opacity="0.85"/>
-            </svg>
-        </div>
-
-        <div class="container blinkit-header-inner">
-            <!-- Row 1: Delivery Status, Location & Actions -->
-            <div class="blinkit-row-top">
-                <!-- Left: Status & Location -->
-                <div class="blinkit-status-col">
-                    <div class="blinkit-tagline">Campus Express Delivery</div>
-                    <div class="blinkit-main-title">
-                        <span>Delivery in 20 mins</span>
-                        <span class="blinkit-trend-badge"><i class="fa-solid fa-arrow-trend-up"></i></span>
-                    </div>
-                    <div class="blinkit-loc-row" id="locationPickerBtn" title="Delivering to SRKR Engineering College, Bhimavaram" role="button" tabindex="0">
-                        <span class="blinkit-loc-tag" id="currentLocType">CAMPUS</span>
-                        <span class="blinkit-loc-sep">-</span>
-                        <span class="blinkit-loc-name" id="currentLocName">SRKR Engineering College</span>
-                        <i class="fa-solid fa-caret-down blinkit-loc-caret"></i>
-                    </div>
-                </div>
-
-                <!-- Right: Wallet Box & Profile Avatar -->
-                <div class="blinkit-actions-col">
-                    <!-- Wallet Badge with ₹0 -->
-                    <a href="chocowallet" class="blinkit-wallet-card" title="Chocowallet Balance & VIP Card">
-                        <div class="blinkit-wallet-icon-wrap">
-                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
-                                <rect x="2" y="7" width="20" height="13" rx="4" fill="#a16207"/>
-                                <rect x="2" y="9" width="20" height="11" rx="3" fill="#ca8a04"/>
-                                <path d="M5 4C5 2.89543 5.89543 2 7 2H17C18.1046 2 19 2.89543 19 4V7H5V4Z" fill="#16a34a"/>
-                                <circle cx="12" cy="4.5" r="1.2" fill="#22c55e"/>
-                                <circle cx="17.5" cy="14.5" r="2.2" fill="#fef08a"/>
-                                <text x="12" y="15" fill="#fef08a" font-size="7" font-weight="900" text-anchor="middle">₹</text>
-                            </svg>
-                        </div>
-                        <div class="blinkit-wallet-val">₹0</div>
+    <header class="navbar" id="catalogNavbar">
+        <div class="container nav-inner">
+            <div class="nav-left">
+                <div class="brand-dock-group">
+                    <a href="./" class="brand-logo" id="brandLogoBtn" title="Back to Chocoloom Home">
+                        <img src="assets/logo.png" alt="Chocoloom Logo" class="brand-logo-img">
                     </a>
 
-                    <!-- Profile Avatar & Dropdown -->
-                    <div class="blinkit-profile-wrap">
-                        <div class="blinkit-profile-btn" id="navUserPill" onclick="toggleUserProfileDropdown(event)" title="My Account Profile" role="button" tabindex="0">
-                            <div class="blinkit-avatar-circle" id="userAvatarCircle">
-                                <i class="fa-solid fa-user"></i>
+                    <div class="location-dock-btn" id="locationPickerBtn" title="Delivering to SRKR Engineering College, Bhimavaram" role="button" tabindex="0">
+                        <span class="loc-dock-tag" id="currentLocType">CAMPUS</span>
+                        <span class="loc-dock-sep">-</span>
+                        <span class="loc-dock-name" id="currentLocName">SRKR Engineering College</span>
+                        <i class="fa-solid fa-caret-down loc-dock-caret"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-right">
+                <div class="nav-item" id="navSearchTrigger" title="Search cakes, chocolates, desserts (⌘K)">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span class="nav-text">Search</span>
+                    <kbd class="search-kbd-hint">⌘K</kbd>
+                </div>
+                <div class="nav-item nav-item-uni" id="navOffersTrigger" title="Uni Chocoloom Campus Store" style="background: rgba(22, 163, 74, 0.08); border-color: rgba(22, 163, 74, 0.4);">
+                    <div class="uni-nav-glow-wrap">
+                        <i class="fa-solid fa-graduation-cap uni-nav-icon" style="color: #16a34a;"></i>
+                    </div>
+                    <span class="nav-text" style="color: #16a34a; font-weight: 800;">Uni Chocoloom</span>
+                    <span class="nav-uni-badge" style="background: #16a34a; color: #fff;">25% OFF ACTIVE</span>
+                </div>
+                <a href="./" class="nav-item" title="Browse full bakery catalog" style="text-decoration: none; color: inherit;">
+                    <i class="fa-solid fa-store" style="color: var(--primary);"></i>
+                    <span class="nav-text">Full Store Menu</span>
+                </a>
+
+                <div class="nav-item" id="navHelpTrigger">
+                    <i class="fa-regular fa-circle-question"></i>
+                    <span class="nav-text">Help</span>
+                </div>
+
+                <!-- User Sign In / Profile Navigation Trigger -->
+                <a href="login?redirect=uni-chocoloom" class="nav-item-auth" id="navAuthBtn" title="Account Login & Sign Up" style="text-decoration: none;">
+                    <i class="fa-regular fa-user"></i>
+                    <span class="nav-text">Sign In</span>
+                </a>
+
+                <!-- Logged In User Pill & Profile Dropdown -->
+                <div class="nav-user-container" id="navUserContainer" style="display: none;">
+                    <div class="nav-user-pill" id="navUserPill" onclick="toggleUserProfileDropdown(event)">
+                        <div class="user-avatar-circle" id="userAvatarCircle">M</div>
+                        <div class="user-pill-text">
+                            <span class="user-pill-greeting"><strong id="userPillName">User</strong></span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down user-pill-chevron"></i>
+                    </div>
+
+                    <div class="user-profile-dropdown" id="userProfileDropdown">
+                        <div class="user-dropdown-header">
+                            <div class="dropdown-avatar" id="dropdownAvatar">M</div>
+                            <div class="dropdown-info">
+                                <div class="dropdown-name" id="dropdownName">Mohith Kumar</div>
+                                <div class="dropdown-sub" id="dropdownSub">student@srkr.edu.in</div>
+                                <span class="dropdown-badge" id="dropdownBadge"><i class="fa-solid fa-graduation-cap"></i> SRKR Student • 25% OFF</span>
                             </div>
                         </div>
-
-                        <!-- User Profile Dropdown Menu (Existing) -->
-                        <div class="user-profile-dropdown" id="userProfileDropdown">
-                            <div class="user-dropdown-header">
-                                <div class="dropdown-avatar" id="dropdownAvatar">M</div>
-                                <div class="dropdown-info">
-                                    <div class="dropdown-name" id="dropdownName">Mohith Kumar</div>
-                                    <div class="dropdown-sub" id="dropdownSub">student@srkr.edu.in</div>
-                                    <span class="dropdown-badge" id="dropdownBadge"><i class="fa-solid fa-graduation-cap"></i> SRKR Student • 25% OFF</span>
-                                </div>
-                            </div>
+                        <div class="user-dropdown-divider"></div>
+                        <div class="user-dropdown-menu">
+                            <a href="chocowallet" class="user-menu-item" style="text-decoration: none; color: inherit; background: linear-gradient(135deg, #fdf4ff, #fae8ff); border: 1px solid #f0abfc; margin-bottom: 6px; border-radius: 10px;">
+                                <i class="fa-solid fa-credit-card" style="color: #9333ea;"></i>
+                                <span style="font-weight: 800; color: #581c87;">Chocowallet VIP Card</span>
+                                <span class="menu-badge" id="dropdownWalletBadge" style="background: #f59e0b; color: #ffffff; font-weight: 800;">Coming Soon</span>
+                            </a>
+                            <button class="user-menu-item" onclick="openOrdersModal()"><i class="fa-solid fa-receipt"></i> <span>My Orders</span> <span class="menu-badge" id="myOrdersCountBadge">0</span></button>
+                            <button class="user-menu-item" onclick="openAccountDetailsModal()"><i class="fa-solid fa-user-gear"></i> <span>Account Details</span></button>
                             <div class="user-dropdown-divider"></div>
-                            <div class="user-dropdown-menu">
-                                <a href="chocowallet" class="user-menu-item" style="text-decoration: none; color: inherit; background: linear-gradient(135deg, #fdf4ff, #fae8ff); border: 1px solid #f0abfc; margin-bottom: 6px; border-radius: 10px;">
-                                    <i class="fa-solid fa-credit-card" style="color: #9333ea;"></i>
-                                    <span style="font-weight: 800; color: #581c87;">Chocowallet VIP Card</span>
-                                    <span class="menu-badge" id="dropdownWalletBadge" style="background: #f59e0b; color: #ffffff; font-weight: 800;">Coming Soon</span>
-                                </a>
-                                <button class="user-menu-item" onclick="openOrdersModal()"><i class="fa-solid fa-receipt"></i> <span>My Orders</span> <span class="menu-badge" id="myOrdersCountBadge">0</span></button>
-                                <button class="user-menu-item" onclick="openAccountDetailsModal()"><i class="fa-solid fa-user-gear"></i> <span>Account Details</span></button>
-                                <div class="user-dropdown-divider"></div>
-                                <button class="user-menu-item logout" onclick="handleUserLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Sign Out</span></button>
-                            </div>
+                            <button class="user-menu-item logout" onclick="handleUserLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Sign Out</span></button>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Row 2: Search Pill & Voice Soundwave Button -->
-            <div class="blinkit-row-search">
-                <!-- Search Pill (Soft Sky Blue) -->
-                <div class="blinkit-search-pill" id="navSearchTrigger" title="Search cakes, chocolates, desserts" role="button" tabindex="0">
-                    <i class="fa-solid fa-magnifying-glass blinkit-search-icon"></i>
-                    <div class="blinkit-search-label">
-                        <span class="blinkit-search-prefix">Search</span>
-                        <span class="blinkit-search-kw" id="zomatoSearchDynamic">"chocolate cake"</span>
-                    </div>
-                </div>
-
-                <!-- Voice Equalizer Soundwave Button -->
-                <button class="blinkit-wave-btn" id="zomatoVoiceSearchBtn" type="button" title="Voice Search (Speak now)" aria-label="Voice Search">
-                    <span class="wave-bar bar-1"></span>
-                    <span class="wave-bar bar-2"></span>
-                    <span class="wave-bar bar-3"></span>
-                    <span class="wave-bar bar-4"></span>
-                    <span class="wave-bar bar-5"></span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Hidden hooks for backwards compatibility -->
-        <div style="display: none;" aria-hidden="true">
-            <a href="./" class="brand-logo" id="brandLogoBtn"><img src="assets/logo.png" alt="Chocoloom Logo" class="brand-logo-img"></a>
-            <a href="uni-chocoloom" id="navOffersTrigger"></a>
-            <div id="navHelpTrigger"></div>
-            <a href="login?redirect=uni-chocoloom" id="navAuthBtn"></a>
-            <div id="navUserContainer"></div>
-            <span id="userPillName"></span>
         </div>
     </header>
 

@@ -1124,352 +1124,20 @@ button {
     position: relative;
 }
 
-/* ==================== BLINKIT-STYLE MIDNIGHT NAVY TOP HEADER ==================== */
-.navbar,
-.navbar.blinkit-navbar {
+/* ==================== HEADER & NAVBAR ==================== */
+.navbar {
     position: sticky;
     top: 0;
     left: 0;
     width: 100%;
-    height: auto !important;
-    min-height: 124px;
-    background: #081d38 !important;
-    background: linear-gradient(180deg, #071930 0%, #0c2340 60%, #0d284a 100%) !important;
-    box-shadow: 0 6px 26px rgba(7, 25, 48, 0.45) !important;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
     z-index: 1000;
-    padding: 8px 16px 14px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    position: relative;
-    overflow: visible;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-}
-
-/* Festive Golden Fairy Lights String Overlay across top edge */
-.blinkit-fairy-lights {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 38px;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-}
-
-.blinkit-fairy-lights .fairy-svg {
-    width: 100%;
-    height: 100%;
-    display: block;
-}
-
-.blinkit-header-inner {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-}
-
-/* Row 1: Delivery Status, Location & Actions */
-.blinkit-row-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    width: 100%;
-}
-
-.blinkit-status-col {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    flex: 1;
-}
-
-.blinkit-tagline {
-    font-size: 11.5px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.85);
-    line-height: 1.2;
-    letter-spacing: -0.1px;
-}
-
-.blinkit-main-title {
-    font-size: 20px;
-    font-weight: 800;
-    color: #ffffff;
-    letter-spacing: -0.4px;
-    line-height: 1.22;
+    box-shadow: var(--shadow-sm);
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-top: 1px;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-}
-
-.blinkit-trend-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.18);
-    font-size: 10px;
-    color: #ffffff;
-}
-
-.blinkit-loc-row {
-    display: inline-flex;
-    align-items: center;
-    margin-top: 3px;
-    cursor: pointer;
-    text-decoration: none;
-    line-height: 1.25;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.blinkit-loc-tag {
-    font-size: 13px;
-    font-weight: 800;
-    color: #ffffff;
-    letter-spacing: 0.2px;
-}
-
-.blinkit-loc-sep {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.7);
-    margin: 0 4px;
-}
-
-.blinkit-loc-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.95);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 190px;
-}
-
-.blinkit-loc-caret {
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.85);
-    margin-left: 4px;
-    transition: transform 0.2s ease;
-}
-
-.blinkit-loc-row:hover .blinkit-loc-caret {
-    transform: translateY(2px);
-}
-
-/* Right Actions Column */
-.blinkit-actions-col {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-    margin-top: 4px;
-}
-
-/* 1. Wallet Box with ₹0 */
-.blinkit-wallet-card {
-    background: #111e30;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 13px;
-    padding: 3px 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-width: 42px;
-    cursor: pointer;
-    text-decoration: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-    transition: transform 0.18s ease, background 0.18s ease;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.blinkit-wallet-card:hover {
-    transform: scale(1.06);
-    background: #16263d;
-}
-
-.blinkit-wallet-icon-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-}
-
-.blinkit-wallet-val {
-    font-size: 11px;
-    font-weight: 800;
-    color: #ffffff;
-    line-height: 1;
-    margin-top: 2px;
-    letter-spacing: -0.2px;
-}
-
-/* 2. Profile Avatar */
-.blinkit-profile-wrap {
-    position: relative;
-}
-
-.blinkit-profile-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: #13243a;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    font-size: 15px;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-    transition: transform 0.18s ease, background 0.18s ease;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.blinkit-profile-btn:hover {
-    transform: scale(1.08);
-    background: #1a304d;
-}
-
-.blinkit-avatar-circle {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.blinkit-profile-wrap .user-profile-dropdown {
-    top: calc(100% + 8px);
-    right: 0;
-}
-
-/* Row 2: Search Pill & Voice Wave Button */
-.blinkit-row-search {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-}
-
-/* Search Pill (Soft Sky Blue) */
-.blinkit-search-pill {
-    flex: 1;
-    height: 48px;
-    border-radius: 9999px;
-    background: rgba(72, 142, 224, 0.45);
-    border: 1px solid rgba(147, 197, 253, 0.35);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    gap: 10px;
-    cursor: pointer;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
-    transition: background 0.2s ease, border-color 0.2s ease;
-    min-width: 0;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.blinkit-search-pill:hover {
-    background: rgba(72, 142, 224, 0.58);
-    border-color: rgba(147, 197, 253, 0.5);
-}
-
-.blinkit-search-icon {
-    font-size: 16px;
-    color: #0f223d;
-    flex-shrink: 0;
-}
-
-.blinkit-search-label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 14.5px;
-    font-weight: 500;
-    color: #0f223d;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.blinkit-search-prefix {
-    color: #0f223d;
-    opacity: 0.85;
-}
-
-.blinkit-search-kw {
-    color: #0f223d;
-    font-weight: 600;
-    transition: opacity 0.22s ease, transform 0.22s ease;
-}
-
-/* Voice Equalizer Soundwave Button */
-.blinkit-wave-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: rgba(72, 142, 224, 0.5);
-    border: 1px solid rgba(147, 197, 253, 0.4);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    cursor: pointer;
-    flex-shrink: 0;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
-    transition: transform 0.18s ease, background 0.18s ease;
-    outline: none;
-    border: none;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.blinkit-wave-btn:hover {
-    transform: scale(1.08);
-    background: rgba(72, 142, 224, 0.65);
-}
-
-.wave-bar {
-    width: 2.6px;
-    background: #ffffff;
-    border-radius: 999px;
-    display: block;
-}
-
-.wave-bar.bar-1 { height: 10px; }
-.wave-bar.bar-2 { height: 16px; }
-.wave-bar.bar-3 { height: 22px; }
-.wave-bar.bar-4 { height: 15px; }
-.wave-bar.bar-5 { height: 10px; }
-
-.blinkit-wave-btn.listening .wave-bar {
-    animation: waveBarPulse 0.75s ease-in-out infinite alternate;
-}
-.blinkit-wave-btn.listening .wave-bar.bar-1 { animation-delay: 0.08s; }
-.blinkit-wave-btn.listening .wave-bar.bar-2 { animation-delay: 0.22s; }
-.blinkit-wave-btn.listening .wave-bar.bar-3 { animation-delay: 0.36s; }
-.blinkit-wave-btn.listening .wave-bar.bar-4 { animation-delay: 0.22s; }
-.blinkit-wave-btn.listening .wave-bar.bar-5 { animation-delay: 0.08s; }
-
-@keyframes waveBarPulse {
-    0% { height: 6px; }
-    100% { height: 24px; }
 }
 
 .nav-inner {
@@ -4924,20 +4592,19 @@ body.ad-fullscreen-active {
     }
 }
 
-/* 1. Left AI Satellite Circle (Liquid Glass Orb) */
+/* 1. Left AI Satellite Circle */
 .dock-ai-circle {
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.06) 40%, rgba(12, 12, 18, 0.6) 100%),
-                rgba(20, 20, 28, 0.62);
-    -webkit-backdrop-filter: blur(32px) saturate(210%) contrast(105%);
-    backdrop-filter: blur(32px) saturate(210%) contrast(105%);
-    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(20, 20, 26, 0.96);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 
-        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.55),
-        inset 0 -1.5px 2.5px 0 rgba(0, 0, 0, 0.4),
-        0 14px 36px rgba(0, 0, 0, 0.45);
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 12px 36px -4px rgba(0, 0, 0, 0.6),
+        0 4px 12px rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4951,33 +4618,22 @@ body.ad-fullscreen-active {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Top curved liquid glass sheen */
 .dock-ai-circle::before {
-    content: '';
-    position: absolute;
-    top: 1px;
-    left: 20%;
-    right: 20%;
-    height: 40%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 100%);
-    border-radius: 50% 50% 40% 40%;
-    pointer-events: none;
-    z-index: 2;
+    display: none;
 }
 
 .dock-ai-inner {
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.45) 0%, transparent 45%),
-                radial-gradient(circle at 35% 35%, #fb7185 0%, #f43f5e 40%, #8b5cf6 85%, #6366f1 100%);
+    background: radial-gradient(circle at 35% 35%, #fb7185 0%, #f43f5e 40%, #8b5cf6 85%, #6366f1 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 
-        inset 0 1.5px 2px rgba(255, 255, 255, 0.6),
-        inset 0 -2px 3px rgba(0, 0, 0, 0.35),
-        0 0 18px rgba(244, 63, 94, 0.45);
+        inset 0 1px 2px rgba(255, 255, 255, 0.4),
+        inset 0 -1.5px 2px rgba(0, 0, 0, 0.4),
+        0 0 14px rgba(244, 63, 94, 0.4);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     z-index: 1;
 }
@@ -4985,21 +4641,20 @@ body.ad-fullscreen-active {
 .dock-ai-circle:hover .dock-ai-inner {
     transform: scale(1.06);
     box-shadow: 
-        inset 0 1.5px 2px rgba(255, 255, 255, 0.7),
-        0 0 24px rgba(244, 63, 94, 0.7);
+        inset 0 1px 2px rgba(255, 255, 255, 0.5),
+        0 0 20px rgba(244, 63, 94, 0.6);
 }
 
 .dock-ai-circle:active {
     transform: scale(0.93);
 }
 
-/* 2. Center Pill Container (Liquid Glass Capsule) */
+/* 2. Center Pill Container (Dark Charcoal Capsule) */
 .dock-main-pill {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.05) 35%, rgba(10, 10, 16, 0.55) 100%),
-                rgba(20, 20, 28, 0.62);
-    -webkit-backdrop-filter: blur(32px) saturate(210%) contrast(105%);
-    backdrop-filter: blur(32px) saturate(210%) contrast(105%);
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(20, 20, 26, 0.96);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 9999px;
     padding: 4px;
     height: 52px;
@@ -5007,28 +4662,12 @@ body.ad-fullscreen-active {
     align-items: center;
     gap: 4px;
     box-shadow: 
-        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.45),
-        inset 0 -1.5px 2.5px 0 rgba(0, 0, 0, 0.35),
-        0 16px 42px -4px rgba(0, 0, 0, 0.45),
-        0 4px 12px rgba(0, 0, 0, 0.25);
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 12px 36px -4px rgba(0, 0, 0, 0.6),
+        0 4px 12px rgba(0, 0, 0, 0.3);
     flex-shrink: 0;
     position: relative;
     overflow: hidden;
-}
-
-/* Specular glass reflection across top edge */
-.dock-main-pill::before,
-.dock-dining-pill::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 10px;
-    right: 10px;
-    height: 48%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.02) 100%);
-    border-radius: 9999px 9999px 50% 50%;
-    pointer-events: none;
-    z-index: 1;
 }
 
 /* Common Dock Item Buttons */
@@ -5043,7 +4682,7 @@ body.ad-fullscreen-active {
     border-radius: 9999px;
     cursor: pointer;
     text-decoration: none;
-    color: #ffffff;
+    color: #e2e8f0;
     font-size: 13px;
     font-weight: 600;
     letter-spacing: -0.2px;
@@ -5055,20 +4694,20 @@ body.ad-fullscreen-active {
     z-index: 2;
 }
 
+.dock-tab-btn:hover {
+    color: #ffffff;
+}
+
 .dock-tab-btn:active {
     transform: scale(0.95);
 }
 
-/* Active Highlight Bubble (Liquid Glass Active Pill) */
+/* Active Highlight Bubble (Clean Dark Pill) */
 .dock-tab-btn.active {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.12) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.32);
-    box-shadow: 
-        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.55),
-        inset 0 -1px 2px 0 rgba(0, 0, 0, 0.22),
-        0 4px 14px rgba(0, 0, 0, 0.28);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.13);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    color: #ffffff;
     font-weight: 700;
 }
 
@@ -5088,29 +4727,28 @@ body.ad-fullscreen-active {
     display: block;
 }
 
-/* 3. Right Pill Container (Liquid Glass Uni Chocoloom Capsule) */
+/* 3. Right Pill Container (Dark Charcoal Capsule) */
 .dock-dining-pill,
 .dock-uni-pill {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.05) 35%, rgba(10, 10, 16, 0.55) 100%),
-                rgba(20, 20, 28, 0.62);
-    -webkit-backdrop-filter: blur(32px) saturate(210%) contrast(105%);
-    backdrop-filter: blur(32px) saturate(210%) contrast(105%);
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(20, 20, 26, 0.96);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 9999px;
-    padding: 4px 18px;
-    height: 52px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    padding: 0 15px !important;
+    height: 52px !important;
+    min-width: 82px !important;
+    max-width: 96px !important;
+    width: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
     box-shadow: 
-        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.45),
-        inset 0 -1.5px 2.5px 0 rgba(0, 0, 0, 0.35),
-        0 16px 42px -4px rgba(0, 0, 0, 0.45),
-        0 4px 12px rgba(0, 0, 0, 0.25);
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 12px 36px -4px rgba(0, 0, 0, 0.6),
+        0 4px 12px rgba(0, 0, 0, 0.3);
     color: #ffffff;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: -0.2px;
     cursor: pointer;
     outline: none;
     flex-shrink: 0;
@@ -5124,12 +4762,11 @@ body.ad-fullscreen-active {
 
 .dock-dining-pill:hover,
 .dock-uni-pill:hover {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 35%, rgba(10, 10, 16, 0.6) 100%),
-                rgba(26, 26, 36, 0.7);
-    border-color: rgba(255, 255, 255, 0.32);
+    background: rgba(28, 28, 36, 0.98);
+    border-color: rgba(255, 255, 255, 0.2);
     box-shadow: 
-        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.6),
-        0 18px 46px -4px rgba(0, 0, 0, 0.5);
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        0 14px 40px -4px rgba(0, 0, 0, 0.7);
 }
 
 .dock-dining-pill:active,
@@ -5139,11 +4776,11 @@ body.ad-fullscreen-active {
 
 .dock-dining-pill.active,
 .dock-uni-pill.active {
-    background: linear-gradient(180deg, rgba(168, 85, 247, 0.38) 0%, rgba(124, 58, 237, 0.22) 100%);
+    background: linear-gradient(180deg, rgba(38, 26, 54, 0.96) 0%, rgba(24, 16, 36, 0.98) 100%);
     border-color: rgba(168, 85, 247, 0.45);
     box-shadow: 
-        inset 0 1.5px 2px rgba(255, 255, 255, 0.5),
-        0 2px 14px rgba(168, 85, 247, 0.35);
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 4px 16px rgba(168, 85, 247, 0.3);
     font-weight: 700;
 }
 
@@ -5422,17 +5059,7 @@ body.ad-fullscreen-active {
 
     /* Mobile Header */
     .navbar {
-        height: auto !important;
-        min-height: 118px !important;
-        padding: 8px 12px 12px !important;
-    }
-
-    .blinkit-loc-name {
-        max-width: 155px;
-    }
-
-    .blinkit-main-title {
-        font-size: 18px;
+        height: 64px;
     }
 
     .nav-left {
