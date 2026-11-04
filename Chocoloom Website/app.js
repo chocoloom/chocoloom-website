@@ -13487,19 +13487,19 @@ window.closeAccountDetailsModal = function() {
     if (modal) modal.classList.remove('open');
 };
 
-// User Orders History Modal & Live Tracking Hub
+// User Orders History Modal & Live Tracking Hub (Zomato Dark Theme Design)
 window.renderUserOrdersList = function(ordersToRender, isGuest = false) {
     const listBody = document.getElementById('ordersListBody');
     if (!listBody) return;
 
     if (!ordersToRender || ordersToRender.length === 0) {
         listBody.innerHTML = `
-            <div style="text-align: center; padding: 40px 20px; color: #64748b;">
-                <div style="font-size: 42px; margin-bottom: 12px;">🍰</div>
-                <h4 style="font-size: 16px; font-weight: 800; color: #1e293b; margin-bottom: 6px;">No orders placed yet</h4>
-                <p style="font-size: 13px; margin-bottom: 20px;">Explore artisan cakes, chocolates, and treats baked fresh for you!</p>
-                <button onclick="closeOrdersModal()" style="background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer;">
-                    Start Shopping
+            <div class="zomato-empty-state">
+                <div class="empty-icon">🍰</div>
+                <h4>No past orders found</h4>
+                <p>Craving handcrafted artisan cakes, chocolates, or fresh bakes? Explore our live kitchen menu!</p>
+                <button onclick="closeOrdersModal(); window.syncDockState('delivery');" class="zomato-empty-explore-btn">
+                    Explore Fresh Menu
                 </button>
             </div>
         `;
@@ -13507,12 +13507,12 @@ window.renderUserOrdersList = function(ordersToRender, isGuest = false) {
     }
 
     const guestNotice = isGuest ? `
-        <div style="background: linear-gradient(135deg, rgba(124, 92, 252, 0.08), rgba(236, 72, 153, 0.05)); border: 1px solid rgba(124, 92, 252, 0.2); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: #475569;">
-            <div>
-                <strong style="color: #0f172a;">💡 Device Order History:</strong>
-                <span style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;">Sign in with your phone to sync orders across all your devices.</span>
+        <div class="zomato-guest-banner">
+            <div class="zomato-guest-banner-text">
+                <strong>💡 Device Order History</strong>
+                <span>Sign in with your phone to sync orders across all your devices.</span>
             </div>
-            <button onclick="closeOrdersModal(); openAuthModal('passcode');" style="background: var(--primary); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer; white-space: nowrap;">
+            <button onclick="closeOrdersModal(); openAuthModal('passcode');" class="zomato-guest-signin-btn">
                 Sign In
             </button>
         </div>
@@ -13520,9 +13520,16 @@ window.renderUserOrdersList = function(ordersToRender, isGuest = false) {
 
     const ordersHtml = ordersToRender.map(ord => {
         const orderNum = ord.order_number || ord.order_ref || ord.id || 'CL-Order';
-        const formattedDate = ord.created_at ? new Date(ord.created_at).toLocaleString('en-IN', {
-            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-        }) : 'Recent';
+        
+        let formattedDate = 'Recent';
+        if (ord.created_at || ord.date) {
+            const d = new Date(ord.created_at || ord.date);
+            if (!isNaN(d.getTime())) {
+                const day = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase().replace(' ', '');
+                formattedDate = `${day}, ${time}`;
+            }
+        }
         
         let itemsList = [];
         if (Array.isArray(ord.items)) {
@@ -13531,94 +13538,234 @@ window.renderUserOrdersList = function(ordersToRender, isGuest = false) {
             try { itemsList = JSON.parse(ord.items); } catch(e) { itemsList = []; }
         }
 
-        const rawStatus = (ord.status || 'Confirmed').trim();
+        const rawStatus = (ord.status || 'Delivered').trim();
         const statusLower = rawStatus.toLowerCase();
         const isDelivered = statusLower === 'delivered';
         const isCancelled = statusLower === 'cancelled';
         const isInTransit = rawStatus === 'In Transit' || statusLower === 'out for delivery';
         const isPreparing = statusLower === 'preparing';
         const isCardOrder = Boolean(ord.is_card_order || (itemsList && itemsList.some(i => i.is_card || (i.name && i.name.includes('Chocowallet')))));
-        
-        let statusBg = '#eff6ff';
-        let statusColor = '#2563eb';
-        let statusBorder = '#bfdbfe';
-        let statusIcon = 'fa-circle-check';
-
-        if (isDelivered) {
-            statusBg = '#ecfdf5';
-            statusColor = '#059669';
-            statusBorder = '#a7f3d0';
-            statusIcon = 'fa-circle-check';
-        } else if (isInTransit) {
-            statusBg = '#fdf4ff';
-            statusColor = '#9333ea';
-            statusBorder = '#d8b4fe';
-            statusIcon = 'fa-truck-fast';
-        } else if (isPreparing) {
-            statusBg = '#fef3c7';
-            statusColor = '#d97706';
-            statusBorder = '#fde68a';
-            statusIcon = 'fa-fire-burner';
-        } else if (isCancelled) {
-            statusBg = '#fef2f2';
-            statusColor = '#dc2626';
-            statusBorder = '#fecaca';
-            statusIcon = 'fa-ban';
-        }
 
         const orderTotal = Number(ord.final_total || ord.total || ord.item_total || 0);
+        const brandName = ord.restaurant_name || ord.restaurantName || (ord.is_uni_order ? 'Uni-Chocoloom' : 'Chocoloom Bakery & Patisserie');
+        const locality = ord.locality || (ord.delivery_address ? (ord.delivery_address.split(',').slice(-2).join(', ').trim() || 'Bhimavaram Locality, Bhimavaram') : 'Bhimavaram Locality, Bhimavaram');
+
+        // Brand image
+        let brandImg = 'assets/logo-purple.png';
+        if (itemsList.length > 0 && itemsList[0].image) {
+            brandImg = itemsList[0].image;
+        } else if (isCardOrder) {
+            brandImg = 'assets/categories_backup/chocolates_box.jpg';
+        } else if (itemsList.length > 0 && itemsList[0].name && itemsList[0].name.toLowerCase().includes('bento')) {
+            brandImg = 'assets/categories_backup/curated_bento_cake.jpg';
+        }
+
+        // Render each item
+        const itemsHtml = itemsList.length > 0 ? itemsList.map(it => {
+            const isNonVeg = Boolean(it.is_veg === false || it.isVeg === false || /chicken|meat|mutton|prawn|fish|egg\b/i.test(it.name || ''));
+            const isVeg = !isNonVeg;
+            const symbolHtml = `
+                <span class="zomato-food-symbol ${isVeg ? 'veg' : 'non-veg'}">
+                    ${isVeg ? '<span class="veg-dot"></span>' : '<span class="nonveg-triangle"></span>'}
+                </span>
+            `;
+
+            const addonsList = [];
+            if (it.selected_weight || it.selectedWeight) addonsList.push(it.selected_weight || it.selectedWeight);
+            if (it.flavour && it.flavour !== 'Standard') addonsList.push(it.flavour);
+            if (it.is_card) addonsList.push('0.8mm RFID Contactless Metal');
+            if (it.cake_message) addonsList.push(`Message: "${it.cake_message}"`);
+            const addonsHtml = addonsList.length > 0 ? `<div class="zomato-item-addons">${addonsList.join(' • ')}</div>` : '';
+
+            return `
+                <div class="zomato-item-entry">
+                    <div class="zomato-item-line">
+                        ${symbolHtml}
+                        <span class="zomato-item-title">${it.quantity || 1} x ${it.name || 'Artisan Cake'}</span>
+                    </div>
+                    ${addonsHtml}
+                </div>
+            `;
+        }).join('') : `
+            <div class="zomato-item-entry">
+                <div class="zomato-item-line">
+                    <span class="zomato-food-symbol veg"><span class="veg-dot"></span></span>
+                    <span class="zomato-item-title">Artisan treats & sweets (${ord.payment_method || 'Online'})</span>
+                </div>
+            </div>
+        `;
+
+        // Status class
+        let statusDisplayClass = 'status-delivered';
+        if (isInTransit) statusDisplayClass = 'status-in-transit';
+        else if (isPreparing) statusDisplayClass = 'status-preparing';
+        else if (isCancelled) statusDisplayClass = 'status-cancelled';
+
+        // Action row (feedback & reorder)
+        let leftActionHtml = '';
+        if (isCardOrder) {
+            leftActionHtml = `
+                <div class="zomato-feedback-box">
+                    <span class="zomato-rated-text" style="color: #c084fc;"><i class="fa-solid fa-crown"></i> VIP RFID Card</span>
+                    <a class="zomato-feedback-link" style="color: #c084fc;" onclick="closeOrdersModal(); window.showCardOrderTransitModal();">BlueDart AWB: ${ord.tracking_number || 'BD88429108IN'} <i class="fa-solid fa-caret-right"></i></a>
+                </div>
+            `;
+        } else if (isInTransit || isPreparing) {
+            leftActionHtml = `
+                <div class="zomato-feedback-box">
+                    <span class="zomato-rated-text" style="color: #38bdf8;"><i class="fa-solid fa-location-crosshairs"></i> Live Tracking</span>
+                    <a class="zomato-feedback-link" style="color: #38bdf8;" onclick="window.trackSpecificOrder('${orderNum}')">Track your order <i class="fa-solid fa-caret-right"></i></a>
+                </div>
+            `;
+        } else {
+            leftActionHtml = `
+                <div class="zomato-feedback-box">
+                    <span class="zomato-rated-text">You rated 5 <span class="star-gold">★</span></span>
+                    <a class="zomato-feedback-link" onclick="window.trackSpecificOrder('${orderNum}')">View your feedback <i class="fa-solid fa-caret-right"></i></a>
+                </div>
+            `;
+        }
+
+        const reorderBtnHtml = `
+            <button class="zomato-reorder-btn" onclick="window.reorderOrder('${orderNum}')" title="Reorder these items">
+                <i class="fa-solid fa-arrow-rotate-right"></i> Reorder
+            </button>
+        `;
 
         return `
-            <div class="user-order-card ${isCardOrder ? 'vip-card-order' : ''}">
-                <div class="user-order-card-header">
-                    <div>
-                        <span class="user-order-num">Order #${orderNum}</span>
-                        ${isCardOrder ? '<span class="user-order-tag-vip"><i class="fa-solid fa-crown"></i> VIP CARD</span>' : ''}
-                        <span style="font-size: 11px; color: #64748b; margin-left: 8px;">${formattedDate}</span>
+            <div class="zomato-order-card ${isCardOrder ? 'vip-card-order' : ''}">
+                <div class="zomato-card-header">
+                    <img src="${brandImg}" class="zomato-brand-img" alt="${brandName}" onerror="this.src='assets/logo-purple.png'">
+                    <div class="zomato-brand-info">
+                        <div class="zomato-brand-title">${brandName}</div>
+                        <div class="zomato-brand-loc">${locality}</div>
+                        <a class="zomato-view-menu-btn" onclick="closeOrdersModal(); window.syncDockState('delivery');">
+                            View menu <i class="fa-solid fa-caret-right"></i>
+                        </a>
                     </div>
-                    <span class="user-order-status-pill" style="background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBorder};">
-                        <i class="fa-solid ${statusIcon}"></i> ${rawStatus}
-                    </span>
-                </div>
-
-                <div style="font-size: 12px; color: #475569; margin-bottom: 10px; line-height: 1.4;">
-                    ${itemsList.length > 0 ? itemsList.map(it => `
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                            <span>${it.quantity || 1}x ${it.name || 'Cake'} ${it.is_card ? '(0.8mm RFID Contactless Metal)' : (it.selected_weight ? `(${it.selected_weight})` : '')}</span>
-                            <span style="font-weight: 700;">₹${(Number(it.price) || 0) * (Number(it.quantity) || 1)}</span>
-                        </div>
-                    `).join('') : `<span>Artisan treats (${ord.payment_method || 'Online'})</span>`}
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px dashed #e2e8f0; font-size: 12px;">
-                    <span style="color: #64748b; max-width: 65%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${ord.delivery_address || 'Delivery Address'}"><i class="fa-solid fa-location-dot"></i> ${ord.delivery_address || 'Delivery Address'}</span>
-                    <span style="font-weight: 900; font-size: 14px; color: #0f172a;">Total: ₹${orderTotal}</span>
-                </div>
-
-                <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    ${isCardOrder ? `
-                        <span style="font-size: 11px; color: #7e22ce; font-weight: 700;">
-                            <i class="fa-solid fa-plane-departure"></i> BlueDart AWB: ${ord.tracking_number || 'BD88429108IN'}
-                        </span>
-                        <button type="button" class="track-card-transit-btn" onclick="closeOrdersModal(); window.showCardOrderTransitModal();">
-                            <i class="fa-solid fa-route"></i> Track Card Transit
+                    <div class="zomato-card-actions-menu">
+                        <button class="zomato-dots-btn" onclick="window.trackSpecificOrder('${orderNum}')" title="Order options">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
                         </button>
-                    ` : `
-                        <span style="font-size: 11px; color: #64748b;">
-                            <i class="fa-solid fa-credit-card"></i> ${ord.payment_method || 'Cash on Delivery'}
-                        </span>
-                        ${(!isDelivered && !isCancelled) ? `
-                            <button type="button" class="track-card-transit-btn" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; cursor: pointer; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;" onclick="window.trackSpecificOrder('${orderNum}')">
-                                <i class="fa-solid fa-location-crosshairs"></i> Live Track Order
-                            </button>
-                        ` : ''}
-                    `}
+                    </div>
+                </div>
+
+                <div class="zomato-items-list">
+                    ${itemsHtml}
+                </div>
+
+                <hr class="zomato-card-divider">
+
+                <div class="zomato-meta-row">
+                    <div class="zomato-meta-left">
+                        <div class="zomato-order-date">Order placed on ${formattedDate}</div>
+                        <div class="zomato-order-status ${statusDisplayClass}">
+                            ${isInTransit ? '<i class="fa-solid fa-truck-fast"></i> ' : (isDelivered ? '<i class="fa-solid fa-circle-check"></i> ' : '')}${rawStatus}
+                        </div>
+                    </div>
+                    <div class="zomato-meta-price" onclick="window.trackSpecificOrder('${orderNum}')" title="View Order Breakdown & Receipt">
+                        <span>₹${orderTotal.toFixed(2)}</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </div>
+                </div>
+
+                <div class="zomato-action-row">
+                    ${leftActionHtml}
+                    ${reorderBtnHtml}
                 </div>
             </div>
         `;
     }).join('');
 
     listBody.innerHTML = guestNotice + ordersHtml;
+};
+
+// Reorder Items from Past Order into Cart & Open Cart
+window.reorderOrder = function(orderNum) {
+    let history = [];
+    try {
+        const hist = JSON.parse(localStorage.getItem('chocoloom_orders_history') || '[]');
+        const live = JSON.parse(localStorage.getItem('chocoloom_orders') || '[]');
+        history = cleanDuplicateOrders([...hist, ...live]);
+    } catch (e) {}
+
+    const order = history.find(o => String(o.order_number || o.order_ref || o.id) === String(orderNum));
+    if (!order) {
+        if (typeof showToast === 'function') {
+            showToast('Order details not found to reorder.', 'fa-solid fa-triangle-exclamation', '#f59e0b');
+        }
+        return;
+    }
+
+    let itemsList = [];
+    if (Array.isArray(order.items)) {
+        itemsList = order.items;
+    } else if (typeof order.items === 'string') {
+        try { itemsList = JSON.parse(order.items); } catch(e) { itemsList = []; }
+    }
+
+    if (!itemsList || itemsList.length === 0) {
+        if (typeof showToast === 'function') {
+            showToast('No items found in this order to reorder.', 'fa-solid fa-circle-exclamation', '#ef4444');
+        }
+        return;
+    }
+
+    if (!Array.isArray(AppState.cart)) AppState.cart = [];
+
+    const allProds = typeof getAllProducts === 'function' ? getAllProducts() : [];
+    const defaultRest = (SWIGGY_DATA.restaurants && SWIGGY_DATA.restaurants[0]) ? SWIGGY_DATA.restaurants[0] : {
+        id: 'rest_chocoloom_flagship',
+        name: 'Chocoloom Flagship Bakery & Confectionery',
+        distance: '1.2 km'
+    };
+
+    let addedCount = 0;
+    itemsList.forEach(it => {
+        const itemName = it.name || 'Artisan Treat';
+        const itemQty = Number(it.quantity) || 1;
+        const itemPrice = Number(it.price) || 0;
+        const dishMatch = allProds.find(p => p.id === it.id || (p.name && p.name.trim().toLowerCase() === itemName.trim().toLowerCase()));
+
+        const dishObj = {
+            id: it.id || (dishMatch ? dishMatch.id : `reorder_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`),
+            name: itemName,
+            price: itemPrice || (dishMatch ? Number(dishMatch.price) : 0),
+            originalPrice: itemPrice || (dishMatch ? Number(dishMatch.originalPrice || dishMatch.price) : 0),
+            image: it.image || (dishMatch ? dishMatch.image : 'assets/logo-purple.png'),
+            category: it.category || (dishMatch ? dishMatch.category : 'Cakes'),
+            selectedWeight: it.selected_weight || it.selectedWeight || 'Standard',
+            selectedWeightKey: 'standard',
+            selectedWeightLabel: itemName,
+            weightPrice: itemPrice,
+            isEggless: it.is_eggless ?? it.isEggless ?? true,
+            flavour: it.flavour || 'Standard',
+            cakeMessage: it.cake_message || it.cakeMessage || ''
+        };
+
+        const cartItemId = `${dishObj.id}_${dishObj.selectedWeight || 'std'}_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`;
+        AppState.cart.push({
+            cartItemId: cartItemId,
+            dish: dishObj,
+            quantity: itemQty,
+            restaurant: defaultRest
+        });
+        addedCount += itemQty;
+    });
+
+    if (typeof saveCart === 'function') saveCart();
+    if (typeof updateCartUI === 'function') updateCartUI();
+
+    if (typeof closeOrdersModal === 'function') closeOrdersModal();
+    if (typeof syncDockState === 'function') syncDockState('delivery');
+
+    if (typeof showToast === 'function') {
+        showToast(`Added ${addedCount} item${addedCount > 1 ? 's' : ''} to cart! 🍰`, 'fa-solid fa-rotate-right', '#f43f5e');
+    }
+
+    if (typeof openCart === 'function') {
+        setTimeout(() => openCart(), 350);
+    }
 };
 
 // Track specific past order via tracking modal

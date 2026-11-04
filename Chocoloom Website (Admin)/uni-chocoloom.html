@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=14.4">
+    <link rel="stylesheet" href="styles.css?v=14.5">
     <script>
         // Flag this page as the dedicated Uni Chocoloom store
         window.IS_UNI_CHOCOLOOM_PAGE = true;
@@ -911,14 +911,16 @@
         </div>
     </div>
 
-    <!-- User Orders & History Modal -->
+    <!-- User Orders & History Modal (Zomato Dark Theme) -->
     <div class="modal-backdrop" id="userOrdersModalBackdrop" onclick="if(event.target === this) closeOrdersModal()">
         <div class="orders-modal-card">
             <div class="orders-modal-header">
                 <div class="orders-modal-title">
-                    <i class="fa-solid fa-receipt" style="color: var(--primary);"></i>
-                    <span>My Orders</span>
-                    <span class="menu-badge" id="ordersModalCountBadge">0 Orders</span>
+                    <button class="orders-back-nav-btn" onclick="closeOrdersModal()" title="Back to Menu">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <span>Your Orders</span>
+                    <span class="orders-modal-count-badge" id="ordersModalCountBadge">0 Orders</span>
                 </div>
                 <button class="modal-close-btn" onclick="closeOrdersModal()" title="Close">
                     <i class="fa-solid fa-xmark"></i>
@@ -1205,7 +1207,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="data.js?v=6.6"></script>
     <script src="react-components.js?v=2.0"></script>
-    <script src="app.js?v=14.0"></script>
+    <script src="app.js?v=14.1"></script>
     <script src="pwa.js" defer></script>
 </body>
 </html>
