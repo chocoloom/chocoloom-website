@@ -10791,28 +10791,210 @@ function bindEvents() {
         window.handleAiCakeSearch();
     };
 
+    // ==================== DOCK SLIDER & SWIPE CONTROLLER ====================
+    const dockMainPill = document.getElementById('dockMainPill');
+    const dockSliderThumb = document.getElementById('dockSliderThumb');
     const dockDelivery = document.getElementById('dockNavDelivery');
+    const dockHistory = document.getElementById('dockNavHistory');
+    let currentDockTab = 'delivery'; // 'delivery' | 'history'
+
+    function updateDockThumb(targetTab, immediate = false) {
+        if (!dockSliderThumb || !dockMainPill) return;
+        const targetBtn = targetTab === 'history' ? dockHistory : dockDelivery;
+        if (!targetBtn) return;
+
+        const pillRect = dockMainPill.getBoundingClientRect();
+        const btnRect = targetBtn.getBoundingClientRect();
+
+        if (btnRect.width === 0) return; // Not visible yet
+
+        const x = btnRect.left - pillRect.left;
+        const w = btnRect.width;
+
+        if (immediate) {
+            dockSliderThumb.style.transition = 'none';
+        } else {
+            dockSliderThumb.style.transition = 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), width 0.28s cubic-bezier(0.16, 1, 0.3, 1)';
+        }
+
+        dockSliderThumb.style.transform = `translateX(${x}px)`;
+        dockSliderThumb.style.width = `${w}px`;
+        dockSliderThumb.style.opacity = '1';
+        dockMainPill.classList.add('slider-ready');
+
+        // Update active class on buttons
+        [dockDelivery, dockHistory].forEach(btn => btn && btn.classList.remove('active'));
+        targetBtn.classList.add('active');
+        currentDockTab = targetTab;
+    }
+
+    window.syncDockState = function(tabName) {
+        if (tabName === 'history') {
+            updateDockThumb('history');
+        } else {
+            updateDockThumb('delivery');
+        }
+    };
+
+    // Initialize position once DOM is loaded & rendered
+    if (dockSliderThumb && dockMainPill) {
+        requestAnimationFrame(() => updateDockThumb('delivery', true));
+        window.addEventListener('resize', () => updateDockThumb(currentDockTab, true));
+        window.addEventListener('load', () => updateDockThumb(currentDockTab, true));
+    }
+
+    // Click triggers
     if (dockDelivery) {
         dockDelivery.addEventListener('click', () => {
-            document.querySelectorAll('.dock-tab-btn, .dock-dining-pill').forEach(b => b.classList.remove('active'));
-            dockDelivery.classList.add('active');
+            document.querySelectorAll('.dock-dining-pill').forEach(b => b.classList.remove('active'));
+            updateDockThumb('delivery');
             if (window.IS_UNI_CHOCOLOOM_PAGE) {
                 window.location.href = window.getAppUrl ? window.getAppUrl('order') : 'order';
                 return;
+            }
+            if (typeof window.closeOrdersModal === 'function') {
+                const modal = document.getElementById('userOrdersModalBackdrop');
+                if (modal && modal.classList.contains('open')) window.closeOrdersModal();
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
 
-    const dockHistory = document.getElementById('dockNavHistory');
     if (dockHistory) {
         dockHistory.addEventListener('click', () => {
-            document.querySelectorAll('.dock-tab-btn, .dock-dining-pill').forEach(b => b.classList.remove('active'));
-            dockHistory.classList.add('active');
+            document.querySelectorAll('.dock-dining-pill').forEach(b => b.classList.remove('active'));
+            updateDockThumb('history');
             if (typeof window.openOrdersModal === 'function') {
                 window.openOrdersModal();
             }
         });
+    }
+
+    // ==================== HOLD & SWIPE GESTURE ====================
+    if (dockMainPill && dockDelivery && dockHistory && dockSliderThumb) {
+        let isSwiping = false;
+        let startX = 0;
+        let startY = 0;
+        let startThumbX = 0;
+        let startThumbW = 0;
+        let targetThumbX = 0;
+        let targetThumbW = 0;
+        let totalTravel = 0;
+        let startTab = 'delivery';
+
+        const onPointerDown = (e) => {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+            const pillRect = dockMainPill.getBoundingClientRect();
+            const delivRect = dockDelivery.getBoundingClientRect();
+            const histRect = dockHistory.getBoundingClientRect();
+
+            const delivX = delivRect.left - pillRect.left;
+            const histX = histRect.left - pillRect.left;
+            totalTravel = histX - delivX;
+
+            startTab = currentDockTab;
+            if (startTab === 'delivery') {
+                startThumbX = delivX;
+                startThumbW = delivRect.width;
+                targetThumbX = histX;
+                targetThumbW = histRect.width;
+            } else {
+                startThumbX = histX;
+                startThumbW = histRect.width;
+                targetThumbX = delivX;
+                targetThumbW = delivRect.width;
+            }
+
+            startX = e.clientX;
+            startY = e.clientY;
+            isSwiping = true;
+
+            dockSliderThumb.style.transition = 'none';
+            dockMainPill.classList.add('is-dragging');
+        };
+
+        const onPointerMove = (e) => {
+            if (!isSwiping) return;
+            const currentX = e.clientX;
+            const currentY = e.clientY;
+            const deltaX = currentX - startX;
+            const deltaY = currentY - startY;
+
+            // If user is clearly scrolling page vertically, cancel dock swipe
+            if (Math.abs(deltaY) > 30 && Math.abs(deltaY) > Math.abs(deltaX) * 1.4) {
+                onPointerUp();
+                return;
+            }
+
+            if (Math.abs(deltaX) > 6 && e.cancelable) {
+                e.preventDefault();
+            }
+
+            let progress = 0;
+            if (startTab === 'delivery') {
+                progress = Math.max(0, Math.min(1.12, deltaX / (totalTravel || 1)));
+            } else {
+                progress = Math.max(0, Math.min(1.12, -deltaX / (totalTravel || 1)));
+            }
+
+            const currentThumbX = startThumbX + (targetThumbX - startThumbX) * Math.min(1, progress) + (progress > 1 ? (progress - 1) * 8 : 0);
+            const currentThumbW = startThumbW + (targetThumbW - startThumbW) * Math.min(1, progress);
+
+            dockSliderThumb.style.transform = `translateX(${currentThumbX}px)`;
+            dockSliderThumb.style.width = `${currentThumbW}px`;
+
+            if (progress >= 0.5) {
+                const previewTab = startTab === 'delivery' ? 'history' : 'delivery';
+                [dockDelivery, dockHistory].forEach(b => b.classList.remove('active'));
+                (previewTab === 'history' ? dockHistory : dockDelivery).classList.add('active');
+            } else {
+                [dockDelivery, dockHistory].forEach(b => b.classList.remove('active'));
+                (startTab === 'delivery' ? dockDelivery : dockHistory).classList.add('active');
+            }
+        };
+
+        const onPointerUp = (e) => {
+            if (!isSwiping) return;
+            isSwiping = false;
+            dockMainPill.classList.remove('is-dragging');
+
+            const currentX = e ? e.clientX : startX;
+            const deltaX = currentX - startX;
+
+            dockSliderThumb.style.transition = 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), width 0.28s cubic-bezier(0.16, 1, 0.3, 1)';
+
+            const threshold = Math.max(26, (totalTravel || 80) * 0.35);
+
+            if (startTab === 'delivery' && deltaX > threshold) {
+                // Swiped from Delivery to History!
+                if (navigator.vibrate) try { navigator.vibrate(15); } catch(err) {}
+                updateDockThumb('history');
+                if (typeof window.openOrdersModal === 'function') {
+                    window.openOrdersModal();
+                }
+            } else if (startTab === 'history' && deltaX < -threshold) {
+                // Swiped from History to Delivery!
+                if (navigator.vibrate) try { navigator.vibrate(15); } catch(err) {}
+                updateDockThumb('delivery');
+                if (typeof window.closeOrdersModal === 'function') {
+                    window.closeOrdersModal();
+                }
+                if (window.IS_UNI_CHOCOLOOM_PAGE) {
+                    window.location.href = window.getAppUrl ? window.getAppUrl('order') : 'order';
+                } else {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } else {
+                // Snap back to startTab
+                updateDockThumb(startTab);
+            }
+        };
+
+        dockMainPill.addEventListener('pointerdown', onPointerDown, { passive: true });
+        window.addEventListener('pointermove', onPointerMove, { passive: false });
+        window.addEventListener('pointerup', onPointerUp, { passive: true });
+        window.addEventListener('pointercancel', onPointerUp, { passive: true });
     }
 
     const dockUni = document.getElementById('dockNavUni') || document.getElementById('dockNavDining');
@@ -10830,9 +11012,13 @@ function bindEvents() {
     window.addEventListener('scroll', () => {
         if (window.scrollY < 160) {
             const currentActive = document.querySelector('.dock-tab-btn.active');
-            if (!currentActive && !document.getElementById('chocoloomAiModal')?.classList.contains('open') && !document.getElementById('chocoloomDiningModal')?.classList.contains('open')) {
-                document.querySelectorAll('.dock-tab-btn, .dock-dining-pill').forEach(b => b.classList.remove('active'));
-                document.getElementById('dockNavDelivery')?.classList.add('active');
+            if (!currentActive && !document.getElementById('chocoloomAiModal')?.classList.contains('open') && !document.getElementById('chocoloomDiningModal')?.classList.contains('open') && !document.getElementById('userOrdersModalBackdrop')?.classList.contains('open')) {
+                if (typeof window.syncDockState === 'function') {
+                    window.syncDockState('delivery');
+                } else {
+                    document.querySelectorAll('.dock-tab-btn, .dock-dining-pill').forEach(b => b.classList.remove('active'));
+                    document.getElementById('dockNavDelivery')?.classList.add('active');
+                }
             }
         }
     }, { passive: true });
@@ -13592,6 +13778,9 @@ window.openOrdersModal = async function() {
 window.closeOrdersModal = function() {
     const modal = document.getElementById('userOrdersModalBackdrop');
     if (modal) modal.classList.remove('open');
+    if (typeof window.syncDockState === 'function') {
+        window.syncDockState('delivery');
+    }
 };
 
 // Global Backdrop Click-to-Close for User Orders Modal

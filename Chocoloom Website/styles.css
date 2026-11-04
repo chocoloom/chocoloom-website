@@ -4672,6 +4672,37 @@ body.ad-fullscreen-active {
     flex-shrink: 0;
     position: relative;
     overflow: hidden;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: grab;
+}
+
+.dock-main-pill.is-dragging {
+    cursor: grabbing;
+}
+
+/* Fluid Sliding Liquid Glass Thumb */
+.dock-slider-thumb {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 0;
+    width: 0;
+    border-radius: 9999px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%),
+                rgba(50, 50, 65, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow: 
+        inset 0 1px 1.5px rgba(255, 255, 255, 0.45),
+        0 3px 10px rgba(0, 0, 0, 0.35);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    pointer-events: none;
+    z-index: 1;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), width 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    will-change: transform, width;
+    opacity: 0;
 }
 
 /* Common Dock Item Buttons */
@@ -4686,11 +4717,11 @@ body.ad-fullscreen-active {
     border-radius: 9999px;
     cursor: pointer;
     text-decoration: none;
-    color: #e2e8f0;
+    color: #cbd5e1;
     font-size: 13px;
     font-weight: 600;
     letter-spacing: -0.2px;
-    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: color 0.2s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
     outline: none;
     white-space: nowrap;
@@ -4703,11 +4734,16 @@ body.ad-fullscreen-active {
 }
 
 .dock-tab-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
 }
 
-/* Active Highlight Bubble (Liquid Glass Active Pill) */
 .dock-tab-btn.active {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+/* Fallback before slider JS initializes */
+.dock-main-pill:not(.slider-ready) .dock-tab-btn.active {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%),
                 rgba(50, 50, 65, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.26);
@@ -4716,8 +4752,6 @@ body.ad-fullscreen-active {
         0 3px 10px rgba(0, 0, 0, 0.3);
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
-    color: #ffffff;
-    font-weight: 700;
 }
 
 /* Tab Icons */
