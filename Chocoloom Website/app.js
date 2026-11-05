@@ -11044,14 +11044,17 @@ function bindEvents() {
         const themeColorMeta = document.querySelector('meta[name="theme-color"]');
         const updateNavbarScroll = () => {
             const heroAd = document.getElementById('heroAdWrapper') || document.querySelector('.hero-ad-section') || document.querySelector('.hero-section');
-            let threshold = 30;
+            let isScrolled = false;
             if (heroAd && (document.body.classList.contains('has-hero-ad') || document.querySelector('.hero-ad-section'))) {
                 const navHeight = catalogNavbar.offsetHeight || 134;
-                // Only consider scrolled once user has scrolled past the full hero ad billboard
-                threshold = Math.max(heroAd.offsetHeight - navHeight - 10, 180);
+                const heroRect = heroAd.getBoundingClientRect();
+                // Stay completely transparent as long as the hero billboard is under/behind the top dock
+                isScrolled = (heroRect.bottom <= navHeight);
+            } else {
+                isScrolled = (window.scrollY > 30);
             }
 
-            if (window.scrollY > threshold) {
+            if (isScrolled) {
                 catalogNavbar.classList.add('scrolled');
                 if (themeColorMeta) themeColorMeta.setAttribute('content', '#ffffff');
             } else {

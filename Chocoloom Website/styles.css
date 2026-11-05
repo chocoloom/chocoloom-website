@@ -1145,7 +1145,7 @@ button {
 /* Transparent Top Dock Over Hero Ad */
 body:has(.hero-ad-section) .navbar:not(.scrolled),
 body.has-hero-ad .navbar:not(.scrolled) {
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.32) 75%, transparent 100%) !important;
+    background: linear-gradient(180deg, rgba(8, 37, 78, 0.35) 0%, rgba(8, 37, 78, 0.12) 65%, transparent 100%) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     border-bottom: none !important;
@@ -1153,7 +1153,7 @@ body.has-hero-ad .navbar:not(.scrolled) {
 }
 
 .navbar.scrolled {
-    background: rgba(255, 255, 255, 0.88) !important;
+    background: rgba(255, 255, 255, 0.98) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
@@ -1164,30 +1164,30 @@ body.has-hero-ad .navbar:not(.scrolled) {
 body:has(.hero-ad-section) .navbar:not(.scrolled) .header-status-title,
 body.has-hero-ad .navbar:not(.scrolled) .header-status-title {
     color: #ffffff !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+    text-shadow: none !important;
 }
 
 body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-tag,
 body.has-hero-ad .navbar:not(.scrolled) .loc-dock-tag {
     color: #ffffff !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+    text-shadow: none !important;
 }
 
 body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-name,
 body.has-hero-ad .navbar:not(.scrolled) .loc-dock-name {
-    color: #f8fafc !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+    color: #ffffff !important;
+    text-shadow: none !important;
 }
 
 body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-sep,
 body.has-hero-ad .navbar:not(.scrolled) .loc-dock-sep {
-    color: rgba(255, 255, 255, 0.75) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
 }
 
 body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-caret,
 body.has-hero-ad .navbar:not(.scrolled) .loc-dock-caret {
     color: #ffffff !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+    text-shadow: none !important;
 }
 
 body:has(.hero-ad-section) .navbar:not(.scrolled) .nav-item,
@@ -1292,15 +1292,15 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 }
 
 .header-status-title {
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 800;
     color: #ffffff;
-    letter-spacing: -0.35px;
+    letter-spacing: -0.4px;
     line-height: 1.15;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+    text-shadow: none;
     white-space: nowrap;
     text-decoration: none;
-    margin: 0;
+    margin: 0 0 2px 0;
     padding: 0;
     display: block;
     cursor: pointer;
@@ -1347,38 +1347,38 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 
 .loc-dock-tag {
     font-weight: 800;
-    font-size: 13px;
+    font-size: 12.5px;
     letter-spacing: 0.2px;
     color: #ffffff;
     text-transform: uppercase;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+    text-shadow: none;
     transition: color 0.2s ease;
 }
 
 .loc-dock-sep {
-    font-weight: 700;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.8);
+    font-weight: 400;
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.85);
     margin: 0 2px;
 }
 
 .loc-dock-name {
-    font-weight: 500;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+    font-size: 12.5px;
+    color: #ffffff;
     max-width: 220px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+    text-shadow: none;
     transition: color 0.2s ease;
 }
 
 .loc-dock-caret {
-    font-size: 10px;
+    font-size: 11px;
     color: #ffffff;
     margin-left: 2px;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+    text-shadow: none;
     transition: transform 0.2s ease, color 0.2s ease;
 }
 
@@ -1439,14 +1439,14 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
     display: flex;
     align-items: center;
     gap: 10px;
-    height: 44px;
+    height: 46px;
     padding: 0 16px;
     border-radius: 9999px;
-    background: rgba(147, 197, 253, 0.42);
+    background: rgba(180, 218, 255, 0.42);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.4);
     cursor: pointer;
     user-select: none;
     transition: all 0.22s ease;
@@ -1454,10 +1454,10 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 }
 
 .header-search-pill:hover {
-    background: rgba(147, 197, 253, 0.52);
-    border-color: rgba(255, 255, 255, 0.65);
+    background: rgba(180, 218, 255, 0.52);
+    border-color: rgba(255, 255, 255, 0.7);
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
 }
 
 .search-pill-icon {
@@ -1504,18 +1504,18 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 
 /* 2. Waveform Voice Search Button (Right) */
 .header-voice-btn {
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(147, 197, 253, 0.42);
+    background: rgba(180, 218, 255, 0.42);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.4);
     cursor: pointer;
     transition: all 0.22s ease;
     color: #ffffff;
@@ -1524,8 +1524,8 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 }
 
 .header-voice-btn:hover {
-    background: rgba(147, 197, 253, 0.52);
-    border-color: rgba(255, 255, 255, 0.65);
+    background: rgba(180, 218, 255, 0.52);
+    border-color: rgba(255, 255, 255, 0.7);
     transform: scale(1.05);
 }
 
@@ -1568,6 +1568,55 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 @keyframes waveBounce {
     0% { transform: scaleY(0.4); }
     100% { transform: scaleY(1.3); }
+}
+
+/* ==================== SWIGGY-STYLE ORDER ADVANCE PREPARATION NOTICE PILL ==================== */
+.header-order-notice-pill {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #461707;
+    border-radius: 18px;
+    padding: 8px 14px;
+    box-sizing: border-box;
+    transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    user-select: none;
+}
+
+.notice-pill-icon-wrap {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notice-pill-scooter-img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.notice-pill-text {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff7f2;
+    line-height: 1.35;
+    letter-spacing: -0.2px;
+}
+
+@media (min-width: 769px) {
+    .header-order-notice-pill {
+        display: inline-flex;
+        max-width: 380px;
+        margin-left: 14px;
+        padding: 6px 14px;
+    }
 }
 
 /* ==================== SCROLLED NAVBAR STYLES (Solid White State) ==================== */
@@ -2223,7 +2272,8 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
     width: 100%;
     max-width: 100vw;
     padding: 0 !important;
-    margin: 0 !important;
+    margin-top: -80px !important;
+    margin-bottom: 0 !important;
     overflow: hidden;
 }
 
@@ -5418,11 +5468,15 @@ body.ad-fullscreen-active {
     /* Mobile Header - Notch Safe Area Aware */
     .navbar {
         height: auto !important;
-        min-height: calc(134px + env(safe-area-inset-top, 0px)) !important;
-        padding-top: calc(14px + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(188px + env(safe-area-inset-top, 0px)) !important;
+        padding-top: calc(10px + env(safe-area-inset-top, 0px)) !important;
         box-sizing: border-box !important;
         border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
         box-shadow: none !important;
+    }
+
+    .navbar.scrolled {
+        min-height: calc(134px + env(safe-area-inset-top, 0px)) !important;
     }
 
     .navbar .nav-inner {
@@ -5430,7 +5484,7 @@ body.ad-fullscreen-active {
         min-height: 120px !important;
         flex-wrap: wrap !important;
         align-content: flex-start !important;
-        padding: 8px 16px 10px 16px !important;
+        padding: 6px 16px 10px 16px !important;
         box-sizing: border-box !important;
     }
 
@@ -5453,25 +5507,44 @@ body.ad-fullscreen-active {
     .header-search-row {
         order: 3 !important;
         width: 100% !important;
-        margin-top: 10px !important;
+        margin-top: 8px !important;
+    }
+
+    .header-order-notice-pill {
+        order: 4 !important;
+        width: 100% !important;
+        margin-top: 8px !important;
+        padding: 9px 14px !important;
+    }
+
+    .navbar.scrolled .header-order-notice-pill {
+        max-height: 0 !important;
+        opacity: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+        border: none !important;
     }
 
     .header-search-pill {
-        height: 42px !important;
+        height: 44px !important;
         padding: 0 14px !important;
+        border-radius: 9999px !important;
     }
 
     .header-voice-btn {
-        width: 42px !important;
-        height: 42px !important;
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 50% !important;
     }
 
     .search-pill-prefix {
-        font-size: 13.5px !important;
+        font-size: 14px !important;
     }
 
     .search-pill-keyword {
-        font-size: 13.5px !important;
+        font-size: 14px !important;
     }
 
     .brand-logo-img {
@@ -5617,7 +5690,7 @@ body.ad-fullscreen-active {
     body:has(.hero-ad-section) .hero-ad-section.full-bleed,
     body.has-hero-ad .hero-ad-section.full-bleed,
     .hero-ad-section.full-bleed {
-        margin-top: calc(-134px - env(safe-area-inset-top, 0px)) !important;
+        margin-top: calc(-188px - env(safe-area-inset-top, 0px)) !important;
         padding-top: 0 !important;
     }
 
@@ -5625,7 +5698,7 @@ body.ad-fullscreen-active {
     .hero-ad-section.full-bleed .hero-ad-billboard {
         border-radius: 0 !important;
         box-shadow: none !important;
-        min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(100vw + 60px + env(safe-area-inset-top, 0px)) !important;
         height: auto !important;
         background: #11071f !important;
     }
@@ -5641,8 +5714,8 @@ body.ad-fullscreen-active {
         flex-direction: row !important;
         align-items: center !important;
         justify-content: flex-start !important;
-        padding: calc(142px + env(safe-area-inset-top, 0px)) 16px 22px !important;
-        min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
+        padding: calc(196px + env(safe-area-inset-top, 0px)) 16px 22px !important;
+        min-height: calc(100vw + 60px + env(safe-area-inset-top, 0px)) !important;
         height: auto !important;
         gap: 10px !important;
         box-sizing: border-box !important;
