@@ -4649,7 +4649,7 @@ body.ad-fullscreen-active {
 
 .chocoloom-bottom-dock {
     position: fixed;
-    bottom: 12px;
+    bottom: 18px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -4663,10 +4663,10 @@ body.ad-fullscreen-active {
     filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.22));
 }
 
-/* Grounded floating position close to bottom */
+/* Grounded floating position with comfortable bottom spacing */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
     .chocoloom-bottom-dock {
-        bottom: 8px;
+        bottom: 18px;
     }
 }
 
@@ -5319,7 +5319,7 @@ body.ad-fullscreen-active {
     }
 
     .chocoloom-bottom-dock {
-        bottom: 8px !important;
+        bottom: 18px !important;
     }
 
     /* Hero Advertisement Showcase on Mobile - Full Bleed Under Notch */
@@ -5902,7 +5902,7 @@ body.ad-fullscreen-active {
 
     /* Floating Cart Bar on Mobile - smoothly floats above the glassmorphic dock */
     .floating-cart-bar {
-        bottom: 68px !important;
+        bottom: 78px !important;
         z-index: 2200;
         width: calc(100% - 28px);
         max-width: 440px;
