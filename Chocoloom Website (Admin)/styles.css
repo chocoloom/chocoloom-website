@@ -12417,6 +12417,19 @@ body.category-view-active .products-catalog-section {
     background: #0871dc !important;
     background-color: #0871dc !important;
     cursor: pointer !important;
+    position: relative !important;
+}
+
+.hero-ad-slide.hero-ad-craft-slide .hero-ad-content,
+.hero-ad-slide.hero-ad-craft-slide .craft-hero-ad-content {
+    position: absolute !important;
+    bottom: 24px !important;
+    left: clamp(24px, 6vw, 64px) !important;
+    top: auto !important;
+    margin: 0 !important;
+    z-index: 10 !important;
+    display: flex !important;
+    align-items: center !important;
 }
 
 .hero-ad-slide.hero-ad-craft-slide .ad-media-overlay,
@@ -12743,12 +12756,9 @@ body.category-view-active .products-catalog-section {
 
     /* Mobile Dedicated 1:1 Square Billboard for Craft Workshop Poster */
     .hero-ad-slide.hero-ad-craft-slide {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        justify-content: flex-start !important;
+        display: block !important;
         position: relative !important;
-        padding: calc(76px + env(safe-area-inset-top, 0px)) 16px 20px !important;
+        padding: 0 !important;
         min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
         height: auto !important;
         background-color: #0871dc !important;
@@ -12758,12 +12768,16 @@ body.category-view-active .products-catalog-section {
 
     .hero-ad-slide.hero-ad-craft-slide .hero-ad-content,
     .hero-ad-slide.hero-ad-craft-slide .craft-hero-ad-content {
-        margin-top: 14px !important;
-        max-width: 100% !important;
+        position: absolute !important;
+        bottom: 14px !important;
+        left: 16px !important;
+        top: auto !important;
+        margin: 0 !important;
+        max-width: calc(100% - 32px) !important;
         width: auto !important;
         z-index: 10 !important;
-        align-items: flex-start !important;
         display: flex !important;
+        align-items: center !important;
     }
 
     .hero-ad-slide.hero-ad-craft-slide .ad-bg-photo {
