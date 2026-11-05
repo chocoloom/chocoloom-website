@@ -3750,6 +3750,7 @@ function initApp() {
     try { initAuthSystem(); } catch(e) {}
     try { updateCartUI(); } catch(e) {}
     try { bindEvents(); } catch(e) {}
+    try { initSearchPillRotator(); } catch(e) {}
     try {
         if (typeof window.parseAppleEmojis === 'function') {
             window.parseAppleEmojis(document.body);
@@ -11463,6 +11464,93 @@ window.scrollToOrderingCatalog = function() {
     }
 };
 
+// ==================== SWIGGY SEARCH PILL ROTATOR & VOICE SEARCH ====================
+function initSearchPillRotator() {
+    const keywordEl = document.getElementById('searchPillKeyword');
+    if (!keywordEl || keywordEl.dataset.rotatorStarted) return;
+    keywordEl.dataset.rotatorStarted = 'true';
+
+    const keywords = [
+        '"diwali cleaning"',
+        '"cakes"',
+        '"chocolate truffles"',
+        '"bento cakes"',
+        '"gift hampers"',
+        '"pastries"',
+        '"brownies"',
+        '"cupcakes"'
+    ];
+
+    let currentIdx = 0;
+    setInterval(() => {
+        currentIdx = (currentIdx + 1) % keywords.length;
+        keywordEl.classList.add('anim-out');
+        setTimeout(() => {
+            keywordEl.textContent = keywords[currentIdx];
+            keywordEl.classList.remove('anim-out');
+            keywordEl.classList.add('anim-in');
+            setTimeout(() => {
+                keywordEl.classList.remove('anim-in');
+            }, 220);
+        }, 220);
+    }, 2800);
+}
+
+window.handleVoiceSearchClick = function(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const voiceBtn = document.getElementById('headerVoiceBtn');
+
+    if (!SpeechRecognition) {
+        if (typeof window.openSearchPage === 'function') window.openSearchPage();
+        return;
+    }
+
+    try {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-IN';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        if (voiceBtn) voiceBtn.classList.add('listening');
+
+        if (typeof showToast === 'function') {
+            showToast('Listening... Speak now 🎙️', 'info');
+        }
+
+        recognition.onresult = function(event) {
+            if (voiceBtn) voiceBtn.classList.remove('listening');
+            const transcript = event.results[0][0].transcript;
+            if (typeof window.openSearchPage === 'function') {
+                window.openSearchPage(transcript);
+                const searchInput = document.getElementById('searchPageInput');
+                if (searchInput) {
+                    searchInput.value = transcript;
+                    searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+        };
+
+        recognition.onerror = function() {
+            if (voiceBtn) voiceBtn.classList.remove('listening');
+            if (typeof window.openSearchPage === 'function') window.openSearchPage();
+        };
+
+        recognition.onend = function() {
+            if (voiceBtn) voiceBtn.classList.remove('listening');
+        };
+
+        recognition.start();
+    } catch (err) {
+        if (voiceBtn) voiceBtn.classList.remove('listening');
+        if (typeof window.openSearchPage === 'function') window.openSearchPage();
+    }
+};
+
 // ==================== DEDICATED SEARCH PAGE OVERLAY LOGIC ====================
 const SearchState = {
     vegOnly: false,
@@ -14635,14 +14723,19 @@ function ensureReelsModalContainer() {
 
 // Start application on DOM Ready or immediately if document is already parsed
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
+    document.addEventListener('DOMContentLoaded', () => {
+        initApp();
+        try { initSearchPillRotator(); } catch(e) {}
+    });
 } else {
     initApp();
+    try { initSearchPillRotator(); } catch(e) {}
 }
 
 // Fallback safeguard to dismiss splash once all resources load
 window.addEventListener('load', () => {
     setTimeout(hideSiteLoadingSplash, 250);
+    try { initSearchPillRotator(); } catch(e) {}
 });
 
 // Live Cross-Tab Synchronization with Chocoloom Admin Panel

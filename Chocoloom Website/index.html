@@ -50,7 +50,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=15.7">
+    <link rel="stylesheet" href="styles.css?v=15.8">
     <!-- Instant Centered Plain Logo Splash Preloader CSS (Zero-delay, Plain logo, no box) -->
     <style>
         #siteLoadingSplash {
@@ -117,6 +117,26 @@
                         <i class="fa-solid fa-caret-down loc-dock-caret"></i>
                     </div>
                 </div>
+            </div>
+
+            <!-- Swiggy-Style Search Bar Row (Pill + Waveform Voice Button) -->
+            <div class="header-search-row" id="headerSearchRow">
+                <div class="header-search-pill" id="headerSearchPill" onclick="openSearchPage()" role="search" tabindex="0" title="Search cakes, desserts, chocolates...">
+                    <i class="fa-solid fa-magnifying-glass search-pill-icon"></i>
+                    <div class="search-pill-content">
+                        <span class="search-pill-prefix">Search</span>
+                        <span class="search-pill-keyword" id="searchPillKeyword">"diwali cleaning"</span>
+                    </div>
+                </div>
+                <button class="header-voice-btn" id="headerVoiceBtn" onclick="handleVoiceSearchClick(event)" type="button" aria-label="Voice Search" title="Search with your voice">
+                    <svg class="voice-waveform-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect class="v-bar v-bar-1" x="2.5" y="8" width="2.5" height="8" rx="1.25" fill="currentColor"/>
+                        <rect class="v-bar v-bar-2" x="7" y="4.5" width="2.5" height="15" rx="1.25" fill="currentColor"/>
+                        <rect class="v-bar v-bar-3" x="11.5" y="2" width="2.5" height="20" rx="1.25" fill="currentColor"/>
+                        <rect class="v-bar v-bar-4" x="16" y="4.5" width="2.5" height="15" rx="1.25" fill="currentColor"/>
+                        <rect class="v-bar v-bar-5" x="20.5" y="8" width="2.5" height="8" rx="1.25" fill="currentColor"/>
+                    </svg>
+                </button>
             </div>
 
             <div class="nav-right">
@@ -1662,7 +1682,7 @@
     <script src="data.js?v=13.4"></script>
     <script src="react-components.js?v=2.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
-    <script src="app.js?v=14.7"></script>
+    <script src="app.js?v=14.8"></script>
     <script src="pwa.js?v=2.0" defer></script>
 </body>
 </html>
