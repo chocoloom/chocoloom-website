@@ -10663,12 +10663,19 @@ function bindEvents() {
 
     // Location Modal
     const locPicker = document.getElementById('locationPickerBtn') || DOM.locationPickerBtn;
+    const brandDockGroup = document.getElementById('brandDockGroup');
     const locBackdrop = document.getElementById('locationModalBackdrop') || DOM.locationModalBackdrop;
     const closeLocBtn = document.getElementById('closeLocationModalBtn') || DOM.closeLocationModalBtn;
     const locSearchInput = document.getElementById('locationSearchInput') || DOM.locationSearchInput;
 
     if (locPicker && locBackdrop) {
         locPicker.addEventListener('click', () => {
+            locBackdrop.classList.add('open');
+        });
+    }
+
+    if (brandDockGroup && locBackdrop) {
+        brandDockGroup.addEventListener('click', () => {
             locBackdrop.classList.add('open');
         });
     }

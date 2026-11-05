@@ -1161,6 +1161,12 @@ body.has-hero-ad .navbar:not(.scrolled) {
 }
 
 /* Navbar text/items contrast when transparent over hero ad */
+body:has(.hero-ad-section) .navbar:not(.scrolled) .header-status-title,
+body.has-hero-ad .navbar:not(.scrolled) .header-status-title {
+    color: #ffffff !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
 body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-tag,
 body.has-hero-ad .navbar:not(.scrolled) .loc-dock-tag {
     color: #ffffff !important;
@@ -1273,7 +1279,7 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
     margin-left: 2px;
 }
 
-/* Brand Logo & Below-Logo Location Dock */
+/* Swiggy-Style Status Title & Below Location Dock */
 .brand-dock-group {
     display: flex;
     flex-direction: column;
@@ -1282,34 +1288,43 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
     gap: 2px;
     user-select: none;
     text-decoration: none;
+    cursor: pointer;
 }
 
-.brand-dock-group .brand-logo {
-    display: inline-flex;
-    align-items: center;
-    line-height: 1;
+.header-status-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.35px;
+    line-height: 1.15;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+    white-space: nowrap;
+    text-decoration: none;
     margin: 0;
     padding: 0;
+    display: block;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.15s ease;
 }
 
-.brand-dock-group .brand-logo-img {
-    height: 38px;
-    width: auto;
-    max-width: 155px;
-    object-fit: contain;
-    filter: drop-shadow(0 2px 8px rgba(124, 92, 252, 0.25));
-    transition: transform 0.2s ease, filter 0.2s ease;
+.brand-dock-group:hover .header-status-title {
+    color: #ffffff;
+    transform: translateY(-0.5px);
 }
 
-.brand-dock-group .brand-logo:hover .brand-logo-img {
-    transform: scale(1.03);
-    filter: drop-shadow(0 4px 14px rgba(124, 92, 252, 0.45));
+.navbar.scrolled .header-status-title {
+    color: #0f172a !important;
+    text-shadow: none !important;
+}
+
+.navbar.scrolled .brand-dock-group:hover .header-status-title {
+    color: var(--primary) !important;
 }
 
 .location-dock-btn {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
+    gap: 3px !important;
     cursor: pointer !important;
     background: transparent !important;
     background-color: transparent !important;
@@ -1330,48 +1345,71 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
     border: none !important;
 }
 
-.location-dock-btn:hover .loc-dock-tag,
-.location-dock-btn:hover .loc-dock-name {
-    color: var(--primary) !important;
-}
-
-.location-dock-btn:hover .loc-dock-caret {
-    color: var(--primary) !important;
-    transform: translateY(2px);
-}
-
 .loc-dock-tag {
     font-weight: 800;
     font-size: 13px;
     letter-spacing: 0.2px;
-    color: #0f172a;
+    color: #ffffff;
     text-transform: uppercase;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
     transition: color 0.2s ease;
 }
 
 .loc-dock-sep {
     font-weight: 700;
     font-size: 13px;
-    color: #64748b;
-    margin: 0 1px;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0 2px;
 }
 
 .loc-dock-name {
-    font-weight: 600;
+    font-weight: 500;
     font-size: 13px;
-    color: #334155;
+    color: rgba(255, 255, 255, 0.95);
     max-width: 220px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
     transition: color 0.2s ease;
 }
 
 .loc-dock-caret {
     font-size: 10px;
-    color: #64748b;
+    color: #ffffff;
     margin-left: 2px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
     transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.brand-dock-group:hover .loc-dock-caret {
+    transform: translateY(2px);
+}
+
+/* Scrolled state for location dock */
+.navbar.scrolled .loc-dock-tag {
+    color: #0f172a !important;
+    text-shadow: none !important;
+}
+
+.navbar.scrolled .loc-dock-sep {
+    color: #64748b !important;
+}
+
+.navbar.scrolled .loc-dock-name {
+    color: #334155 !important;
+    text-shadow: none !important;
+}
+
+.navbar.scrolled .loc-dock-caret {
+    color: #64748b !important;
+    text-shadow: none !important;
+}
+
+.navbar.scrolled .brand-dock-group:hover .loc-dock-tag,
+.navbar.scrolled .brand-dock-group:hover .loc-dock-name,
+.navbar.scrolled .brand-dock-group:hover .loc-dock-caret {
+    color: var(--primary) !important;
 }
 
 .location-picker {
@@ -5224,12 +5262,15 @@ body.ad-fullscreen-active {
     }
 
     .brand-dock-group {
-        gap: 1px;
+        gap: 1.5px;
+        cursor: pointer;
     }
 
-    .brand-dock-group .brand-logo-img {
-        height: 32px;
-        max-width: 125px;
+    .header-status-title {
+        font-size: 17px !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.3px !important;
+        line-height: 1.15 !important;
     }
 
     .location-dock-btn {
@@ -5237,23 +5278,28 @@ body.ad-fullscreen-active {
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
+        gap: 2.5px !important;
     }
 
     .loc-dock-tag {
-        font-size: 11px;
+        font-size: 12px !important;
+        font-weight: 800 !important;
     }
 
     .loc-dock-sep {
-        font-size: 10.5px;
+        font-size: 11.5px !important;
+        margin: 0 1.5px !important;
     }
 
     .loc-dock-name {
-        font-size: 11px;
-        max-width: 130px;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        max-width: 170px !important;
     }
 
     .loc-dock-caret {
-        font-size: 9px;
+        font-size: 9.5px !important;
+        margin-left: 2px !important;
     }
 
     .location-picker {
