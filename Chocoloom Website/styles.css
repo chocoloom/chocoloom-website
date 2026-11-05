@@ -4875,7 +4875,7 @@ body.ad-fullscreen-active {
 
 .chocoloom-bottom-dock {
     position: fixed;
-    bottom: 18px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -4892,7 +4892,7 @@ body.ad-fullscreen-active {
 /* Grounded floating position with comfortable bottom spacing */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
     .chocoloom-bottom-dock {
-        bottom: 18px;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -5593,7 +5593,18 @@ body.ad-fullscreen-active {
     }
 
     .chocoloom-bottom-dock {
-        bottom: 18px !important;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* Native Android App bottom spacing to stay above 3-button system navigation */
+    html.capacitor-native-app .chocoloom-bottom-dock,
+    body.capacitor-native-app .chocoloom-bottom-dock {
+        bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    html.capacitor-native-app body,
+    body.capacitor-native-app {
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     /* Hero Advertisement Showcase on Mobile - Full Bleed Under Notch */
