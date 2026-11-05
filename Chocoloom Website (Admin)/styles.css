@@ -2004,7 +2004,7 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 .hero-ad-section.full-bleed .hero-ad-billboard {
     border-radius: 0 !important;
     box-shadow: none !important;
-    min-height: clamp(244px, 23.83vw, 360px);
+    min-height: clamp(320px, 32vw, 440px);
     background: #ffd735;
 }
 
@@ -2028,8 +2028,8 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 
 
 .hero-ad-section.full-bleed .hero-ad-slide {
-    padding: clamp(28px, 4vw, 48px) clamp(24px, 8vw, 120px);
-    min-height: clamp(244px, 23.83vw, 360px);
+    padding: clamp(32px, 4vw, 54px) clamp(24px, 8vw, 120px);
+    min-height: clamp(320px, 32vw, 440px);
 }
 
 .hero-ad-section.full-bleed .hero-ad-title {
@@ -5328,7 +5328,7 @@ body.ad-fullscreen-active {
     .hero-ad-section.full-bleed .hero-ad-billboard {
         border-radius: 0 !important;
         box-shadow: none !important;
-        min-height: auto !important;
+        min-height: 315px !important;
         height: auto !important;
         background: #11071f !important;
     }
@@ -5344,8 +5344,8 @@ body.ad-fullscreen-active {
         flex-direction: row !important;
         align-items: center !important;
         justify-content: flex-start !important;
-        padding: 68px 16px 18px !important;
-        min-height: 240px !important;
+        padding: 72px 16px 22px !important;
+        min-height: 315px !important;
         height: auto !important;
         gap: 10px !important;
         box-sizing: border-box !important;
@@ -12550,8 +12550,8 @@ body.category-view-active .products-catalog-section {
         flex-direction: row !important;
         align-items: center !important;
         justify-content: flex-start !important;
-        padding: 16px 14px !important;
-        min-height: 200px !important;
+        padding: 72px 16px 22px !important;
+        min-height: 315px !important;
         height: auto !important;
         background-color: #ffd735 !important;
         position: relative !important;
