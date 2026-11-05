@@ -11023,14 +11023,17 @@ function bindEvents() {
         }
     }, { passive: true });
 
-    // Navbar transparent over hero ad on scroll
+    // Navbar transparent over hero ad on scroll & dynamic theme-color notch sync
     const catalogNavbar = document.getElementById('catalogNavbar');
     if (catalogNavbar) {
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
         const updateNavbarScroll = () => {
             if (window.scrollY > 30) {
                 catalogNavbar.classList.add('scrolled');
+                if (themeColorMeta) themeColorMeta.setAttribute('content', '#ffffff');
             } else {
                 catalogNavbar.classList.remove('scrolled');
+                if (themeColorMeta) themeColorMeta.setAttribute('content', '#11071f');
             }
         };
         window.addEventListener('scroll', updateNavbarScroll, { passive: true });

@@ -7,7 +7,7 @@
 (function () {
     'use strict';
 
-    // 1. Double check and enforce zoomability programmatically
+    // 1. Double check and enforce zoomability & notch edge-to-edge programmatically
     function ensureZoomEnabled() {
         let metaViewport = document.querySelector('meta[name="viewport"]');
         if (!metaViewport) {
@@ -15,7 +15,7 @@
             metaViewport.name = 'viewport';
             document.head.appendChild(metaViewport);
         }
-        metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes');
+        metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover');
     }
 
     if (document.readyState === 'loading') {
