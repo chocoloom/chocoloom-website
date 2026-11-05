@@ -3857,7 +3857,7 @@ function getActiveHeroBanners() {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed) && parsed.length > 0) {
                 const storedCraft = parsed.find(b => b && b.id === 'b_craft_happy_moments');
-                if (storedCraft && storedCraft.isGraphicBanner === true && storedCraft.bgColor === '#0871dc') {
+                if (storedCraft && storedCraft.cta === 'Register Now' && !storedCraft.title) {
                     savedBanners = parsed;
                 } else {
                     localStorage.removeItem("chocoloom_banners");
@@ -3916,28 +3916,28 @@ function getActiveHeroBanners() {
         needsCacheUpdate = true;
     }
 
-    // Ensure Craft Your Happy Moments Creative Kit Banner is ALWAYS present and styled like Diwali
+    // Ensure Craft Your Happy Moments Creative Kit Banner is ALWAYS present and styled cleanly
     const craftItem = {
         id: "b_craft_happy_moments",
         tag: "",
-        tagIcon: "fa-solid fa-wand-magic-sparkles",
-        title: "Craft Your Happy Moments 🎨✨",
-        subtitle: "Explore our premium collection of Chocoloom canvas tote bags, chef aprons, colour paints, sculpting clays & creative essentials!",
-        discountText: "FREE TOTE BAG 🎒",
+        tagIcon: "",
+        title: "",
+        subtitle: "",
+        discountText: "",
         code: "CRAFTFUN",
         image: "assets/craft_happy_moments.jpg",
         fallbackImage: "assets/craft_happy_moments.jpg",
         mobileImage: "assets/craft_happy_moments.jpg",
-        overlayGradient: "linear-gradient(90deg, rgba(8, 113, 220, 0.96) 0%, rgba(9, 101, 178, 0.88) 45%, rgba(8, 113, 220, 0.35) 85%, transparent 100%)",
+        overlayGradient: "none",
         bgColor: "#0871dc",
-        badge: "STUDIO SPECIAL 🎨",
+        badge: "",
         rating: "4.98",
         ratingLabel: "Studio Choice",
-        cta: "Explore Workshop & Kits",
+        cta: "Register Now",
         ctaAction: "redirect_url",
         redirectUrl: "http://127.0.0.1:5501/",
         category: "Creative Kits",
-        isGraphicBanner: true,
+        isGraphicBanner: false,
         isActive: true
     };
 
@@ -4451,18 +4451,18 @@ function renderBanners() {
                     ${stdMob ? `<source media="(max-width: 768px)" srcset="${stdMob}">` : ''}
                     <img src="${stdImg}" alt="${ban.title}" class="ad-bg-photo ${isTombola ? 'tombola-ad-photo' : ''}" loading="${index === 0 ? 'eager' : 'lazy'}" onerror="this.onerror=null;this.src='${stdFallback}';">
                 </picture>
-                <div class="ad-media-overlay ${isTombola ? 'tombola-media-overlay' : ''}" style="background: ${overlayGradient};"></div>
+                <div class="ad-media-overlay ${isTombola ? 'tombola-media-overlay' : ''} ${isCraft ? 'craft-media-overlay' : ''}" style="background: ${isCraft ? 'none' : overlayGradient}; ${isCraft ? 'display: none !important;' : ''}"></div>
             </div>
 
             <!-- Floating Top-Right Discount Ribbon -->
-            ${ban.discountText ? `
+            ${(!isCraft && ban.discountText) ? `
             <div class="hero-ad-discount-tag ${isCraft ? 'craft-discount-tag' : ''}">
                 <i class="${isCraft ? 'fa-solid fa-gift' : 'fa-solid fa-fire'}"></i>
                 <span>${ban.discountText}</span>
             </div>` : ''}
 
             <!-- Banner Content over Full Photo Background -->
-            <div class="hero-ad-content">
+            <div class="hero-ad-content ${isCraft ? 'craft-hero-ad-content' : ''}">
                 ${isDiwali ? `
                 <div class="diwali-tag-pill">
                     <i class="fa-solid fa-sparkles"></i>
@@ -4474,14 +4474,18 @@ function renderBanners() {
                     <span>COMMUNITY LUCKY DRAW</span>
                 </div>
                 ` : '')}
+                ${(!isCraft && ban.title) ? `
                 <h2 class="hero-ad-title ${isTombola ? 'tombola-ad-title' : ''}">${ban.title}</h2>
+                ` : ''}
+                ${(!isCraft && ban.subtitle) ? `
                 <p class="hero-ad-desc ${isTombola ? 'tombola-ad-desc' : ''}">${ban.subtitle}</p>
+                ` : ''}
                 
-                <div class="hero-ad-actions">
-                    <button class="hero-ad-cta-btn ${isTombola ? 'tombola-cta-btn' : ''} ${isCraft ? 'craft-cta-btn' : ''}" onclick="handleBannerClick('${ban.id}', event)" style="${isDiwali ? 'background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45); border: none;' : (isCraft ? 'background: linear-gradient(135deg, #7c5cfc, #ec4899); color: #fff; box-shadow: 0 4px 14px rgba(124, 92, 252, 0.45); border: none;' : '')}">
-                        ${isTombola ? '<i class="fa-solid fa-hourglass-start" style="color: #ffffff; font-size: 15px;"></i>' : (isDiwali ? '<i class="fa-solid fa-gift" style="color: #ffffff; margin-right: 4px;"></i>' : (isCraft ? '<i class="fa-solid fa-palette" style="color: #ffffff; margin-right: 4px;"></i>' : ''))}
-                        <span>${isTombola ? 'COMING SOON' : (ban.cta || 'ORDER NOW')}</span>
-                        <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-arrow-right'}"></i>
+                <div class="hero-ad-actions ${isCraft ? 'craft-hero-ad-actions' : ''}">
+                    <button class="hero-ad-cta-btn ${isTombola ? 'tombola-cta-btn' : ''} ${isCraft ? 'craft-cta-btn' : ''}" onclick="handleBannerClick('${ban.id}', event)" style="${isDiwali ? 'background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45); border: none;' : (isCraft ? 'background: #ffffff !important; color: #0871dc !important; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28) !important; border: 1.5px solid rgba(255, 255, 255, 0.8) !important; font-weight: 800 !important;' : '')}">
+                        ${isTombola ? '<i class="fa-solid fa-hourglass-start" style="color: #ffffff; font-size: 15px;"></i>' : (isDiwali ? '<i class="fa-solid fa-gift" style="color: #ffffff; margin-right: 4px;"></i>' : (isCraft ? '<i class="fa-solid fa-ticket" style="color: #0871dc; margin-right: 6px;"></i>' : ''))}
+                        <span>${isTombola ? 'COMING SOON' : (isCraft ? (ban.cta || 'Register Now') : (ban.cta || 'ORDER NOW'))}</span>
+                        <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-arrow-right'}" style="${isCraft ? 'color: #0871dc; margin-left: 6px;' : ''}"></i>
                     </button>
                 </div>
 

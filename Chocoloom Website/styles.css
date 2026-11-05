@@ -12412,20 +12412,49 @@ body.category-view-active .products-catalog-section {
     transform: scale(1.025);
 }
 
-/* Dedicated Desktop Styling for Craft Workshop Square Poster Slide */
+/* Dedicated Styling for Craft Workshop Square Poster Slide */
 .hero-ad-slide.hero-ad-craft-slide {
     background: #0871dc !important;
     background-color: #0871dc !important;
+    cursor: pointer !important;
 }
 
-.hero-ad-slide.hero-ad-craft-slide .graphic-ad-bg-media {
-    background: #0871dc !important;
-    background-color: #0871dc !important;
+.hero-ad-slide.hero-ad-craft-slide .ad-media-overlay,
+.craft-media-overlay {
+    display: none !important;
+    background: none !important;
 }
 
-.hero-ad-slide.hero-ad-craft-slide .graphic-ad-photo {
+.hero-ad-slide.hero-ad-craft-slide .ad-bg-photo {
     object-fit: contain !important;
     object-position: center center !important;
+}
+
+/* White Registration Link Button for Craft Workshop Ad */
+.hero-ad-cta-btn.craft-cta-btn,
+.hero-ad-craft-slide .craft-cta-btn {
+    background: #ffffff !important;
+    color: #0871dc !important;
+    border: none !important;
+    border-radius: 999px !important;
+    padding: 10px 22px !important;
+    font-size: 13.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.3px !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28), 0 0 0 1.5px rgba(255, 255, 255, 0.8) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.hero-ad-cta-btn.craft-cta-btn:hover,
+.hero-ad-craft-slide .craft-cta-btn:hover {
+    transform: translateY(-2px) scale(1.03) !important;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35) !important;
+    background: #ffffff !important;
+    color: #075cb2 !important;
 }
 
 /* Floating interactive action bar on Tombola graphic ad */
@@ -12716,10 +12745,10 @@ body.category-view-active .products-catalog-section {
     .hero-ad-slide.hero-ad-craft-slide {
         display: flex !important;
         flex-direction: column !important;
-        align-items: stretch !important;
+        align-items: flex-start !important;
         justify-content: flex-start !important;
         position: relative !important;
-        padding: 0 !important;
+        padding: calc(76px + env(safe-area-inset-top, 0px)) 16px 20px !important;
         min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
         height: auto !important;
         background-color: #0871dc !important;
@@ -12727,23 +12756,17 @@ body.category-view-active .products-catalog-section {
         overflow: hidden !important;
     }
 
-    .hero-ad-slide.hero-ad-craft-slide .graphic-ad-bg-media {
-        position: absolute !important;
-        inset: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
-        aspect-ratio: 1 / 1 !important;
+    .hero-ad-slide.hero-ad-craft-slide .hero-ad-content,
+    .hero-ad-slide.hero-ad-craft-slide .craft-hero-ad-content {
+        margin-top: 14px !important;
+        max-width: 100% !important;
+        width: auto !important;
+        z-index: 10 !important;
+        align-items: flex-start !important;
         display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background-color: #0871dc !important;
-        overflow: hidden !important;
-        margin: 0 !important;
-        padding: 0 !important;
     }
 
-    .hero-ad-slide.hero-ad-craft-slide .graphic-ad-photo {
+    .hero-ad-slide.hero-ad-craft-slide .ad-bg-photo {
         width: 100% !important;
         height: 100% !important;
         object-fit: cover !important;
