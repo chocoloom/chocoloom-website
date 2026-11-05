@@ -2004,8 +2004,8 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 .hero-ad-section.full-bleed .hero-ad-billboard {
     border-radius: 0 !important;
     box-shadow: none !important;
-    min-height: clamp(320px, 32vw, 440px);
-    background: #ffd735;
+    min-height: clamp(380px, 36vw, 500px);
+    background: #0871dc;
 }
 
 /* Zero gap between ad billboard and main content on all viewports */
@@ -2029,7 +2029,7 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 
 .hero-ad-section.full-bleed .hero-ad-slide {
     padding: clamp(32px, 4vw, 54px) clamp(24px, 8vw, 120px);
-    min-height: clamp(320px, 32vw, 440px);
+    min-height: clamp(380px, 36vw, 500px);
 }
 
 .hero-ad-section.full-bleed .hero-ad-title {
@@ -5340,7 +5340,7 @@ body.ad-fullscreen-active {
     .hero-ad-section.full-bleed .hero-ad-billboard {
         border-radius: 0 !important;
         box-shadow: none !important;
-        min-height: calc(320px + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
         height: auto !important;
         background: #11071f !important;
     }
@@ -5357,7 +5357,7 @@ body.ad-fullscreen-active {
         align-items: center !important;
         justify-content: flex-start !important;
         padding: calc(72px + env(safe-area-inset-top, 0px)) 16px 22px !important;
-        min-height: calc(320px + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
         height: auto !important;
         gap: 10px !important;
         box-sizing: border-box !important;
@@ -12412,6 +12412,22 @@ body.category-view-active .products-catalog-section {
     transform: scale(1.025);
 }
 
+/* Dedicated Desktop Styling for Craft Workshop Square Poster Slide */
+.hero-ad-slide.hero-ad-craft-slide {
+    background: #0871dc !important;
+    background-color: #0871dc !important;
+}
+
+.hero-ad-slide.hero-ad-craft-slide .graphic-ad-bg-media {
+    background: #0871dc !important;
+    background-color: #0871dc !important;
+}
+
+.hero-ad-slide.hero-ad-craft-slide .graphic-ad-photo {
+    object-fit: contain !important;
+    object-position: center center !important;
+}
+
 /* Floating interactive action bar on Tombola graphic ad */
 .hero-graphic-cta-container {
     position: absolute;
@@ -12563,7 +12579,7 @@ body.category-view-active .products-catalog-section {
         align-items: center !important;
         justify-content: flex-start !important;
         padding: calc(72px + env(safe-area-inset-top, 0px)) 16px 22px !important;
-        min-height: calc(320px + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
         height: auto !important;
         background-color: #ffd735 !important;
         position: relative !important;
@@ -12693,6 +12709,45 @@ body.category-view-active .products-catalog-section {
         height: 100% !important;
         object-fit: fill !important;
         object-position: center !important;
+        display: block !important;
+    }
+
+    /* Mobile Dedicated 1:1 Square Billboard for Craft Workshop Poster */
+    .hero-ad-slide.hero-ad-craft-slide {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        position: relative !important;
+        padding: 0 !important;
+        min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
+        height: auto !important;
+        background-color: #0871dc !important;
+        background: #0871dc !important;
+        overflow: hidden !important;
+    }
+
+    .hero-ad-slide.hero-ad-craft-slide .graphic-ad-bg-media {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
+        aspect-ratio: 1 / 1 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background-color: #0871dc !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .hero-ad-slide.hero-ad-craft-slide .graphic-ad-photo {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: center center !important;
         display: block !important;
     }
 

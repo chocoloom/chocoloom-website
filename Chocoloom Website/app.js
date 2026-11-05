@@ -3857,7 +3857,7 @@ function getActiveHeroBanners() {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed) && parsed.length > 0) {
                 const storedCraft = parsed.find(b => b && b.id === 'b_craft_happy_moments');
-                if (storedCraft && storedCraft.isGraphicBanner === false && storedCraft.discountText === 'FREE TOTE BAG 🎒') {
+                if (storedCraft && storedCraft.isGraphicBanner === true && storedCraft.bgColor === '#0871dc') {
                     savedBanners = parsed;
                 } else {
                     localStorage.removeItem("chocoloom_banners");
@@ -3928,8 +3928,8 @@ function getActiveHeroBanners() {
         image: "assets/craft_happy_moments.jpg",
         fallbackImage: "assets/craft_happy_moments.jpg",
         mobileImage: "assets/craft_happy_moments.jpg",
-        overlayGradient: "linear-gradient(90deg, rgba(26, 8, 38, 0.96) 0%, rgba(38, 12, 58, 0.88) 45%, rgba(68, 20, 95, 0.35) 85%, rgba(20, 5, 28, 0.15) 100%)",
-        bgColor: "#1a0826",
+        overlayGradient: "linear-gradient(90deg, rgba(8, 113, 220, 0.96) 0%, rgba(9, 101, 178, 0.88) 45%, rgba(8, 113, 220, 0.35) 85%, transparent 100%)",
+        bgColor: "#0871dc",
         badge: "STUDIO SPECIAL 🎨",
         rating: "4.98",
         ratingLabel: "Studio Choice",
@@ -3937,7 +3937,7 @@ function getActiveHeroBanners() {
         ctaAction: "redirect_url",
         redirectUrl: "http://127.0.0.1:5501/",
         category: "Creative Kits",
-        isGraphicBanner: false,
+        isGraphicBanner: true,
         isActive: true
     };
 
@@ -4391,7 +4391,7 @@ function renderBanners() {
                 ? (window.getThemeAssetUrl ? window.getThemeAssetUrl(ban.mobileImage.trim()) : ban.mobileImage.trim()) 
                 : '';
             const fallbackSrc = isCraft ? 'assets/craft_happy_moments.jpg' : (window.getThemeAssetUrl ? window.getThemeAssetUrl('assets/tombola-banner.png?v=3') : 'assets/tombola-banner.png?v=3');
-            const slideBg = ban.bgColor || (isCraft ? '#240b36' : '#ffd735');
+            const slideBg = ban.bgColor || (isCraft ? '#0871dc' : '#ffd735');
 
             return `
         <div class="hero-ad-slide hero-ad-graphic-slide ${isCraft ? 'hero-ad-craft-slide' : ''}" data-slide-index="${index}" data-slide-id="${ban.id}" onclick="handleBannerClick('${ban.id}', event)" style="background-color: ${slideBg} !important; cursor: pointer;">

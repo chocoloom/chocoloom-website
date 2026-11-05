@@ -724,8 +724,8 @@ window.SWIGGY_DATA = {
             "image": "assets/craft_happy_moments.jpg",
             "mobileImage": "assets/craft_happy_moments.jpg",
             "fallbackImage": "assets/craft_happy_moments.jpg",
-            "overlayGradient": "linear-gradient(90deg, rgba(26, 8, 38, 0.96) 0%, rgba(38, 12, 58, 0.88) 45%, rgba(68, 20, 95, 0.35) 85%, rgba(20, 5, 28, 0.15) 100%)",
-            "bgColor": "#1a0826",
+            "overlayGradient": "linear-gradient(90deg, rgba(8, 113, 220, 0.96) 0%, rgba(9, 101, 178, 0.88) 45%, rgba(8, 113, 220, 0.35) 85%, transparent 100%)",
+            "bgColor": "#0871dc",
             "badge": "STUDIO SPECIAL 🎨",
             "rating": "4.98",
             "ratingLabel": "Studio Choice",
@@ -733,7 +733,7 @@ window.SWIGGY_DATA = {
             "ctaAction": "redirect_url",
             "redirectUrl": "http://127.0.0.1:5501/",
             "category": "Creative Kits",
-            "isGraphicBanner": false,
+            "isGraphicBanner": true,
             "isActive": true
         },
         {
