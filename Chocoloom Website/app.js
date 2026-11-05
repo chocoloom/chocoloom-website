@@ -11043,12 +11043,23 @@ function bindEvents() {
     if (catalogNavbar) {
         const themeColorMeta = document.querySelector('meta[name="theme-color"]');
         const updateNavbarScroll = () => {
-            if (window.scrollY > 30) {
+            const heroAd = document.getElementById('heroAdWrapper') || document.querySelector('.hero-ad-section') || document.querySelector('.hero-section');
+            let threshold = 30;
+            if (heroAd && (document.body.classList.contains('has-hero-ad') || document.querySelector('.hero-ad-section'))) {
+                const navHeight = catalogNavbar.offsetHeight || 118;
+                // Only consider scrolled once user has scrolled past the full hero ad billboard
+                threshold = Math.max(heroAd.offsetHeight - navHeight - 10, 180);
+            }
+
+            if (window.scrollY > threshold) {
                 catalogNavbar.classList.add('scrolled');
                 if (themeColorMeta) themeColorMeta.setAttribute('content', '#ffffff');
             } else {
                 catalogNavbar.classList.remove('scrolled');
-                if (themeColorMeta) themeColorMeta.setAttribute('content', '#11071f');
+                if (themeColorMeta) {
+                    const activeCraft = document.querySelector('.hero-ad-slide.active.hero-ad-craft-slide');
+                    themeColorMeta.setAttribute('content', activeCraft ? '#0871dc' : '#11071f');
+                }
             }
         };
         window.addEventListener('scroll', updateNavbarScroll, { passive: true });
