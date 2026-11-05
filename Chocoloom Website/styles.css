@@ -5418,8 +5418,8 @@ body.ad-fullscreen-active {
     /* Mobile Header - Notch Safe Area Aware */
     .navbar {
         height: auto !important;
-        min-height: calc(118px + env(safe-area-inset-top, 0px)) !important;
-        padding-top: env(safe-area-inset-top, 0px) !important;
+        min-height: calc(134px + env(safe-area-inset-top, 0px)) !important;
+        padding-top: calc(14px + env(safe-area-inset-top, 0px)) !important;
         box-sizing: border-box !important;
         border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
         box-shadow: none !important;
@@ -5427,10 +5427,10 @@ body.ad-fullscreen-active {
 
     .navbar .nav-inner {
         height: auto !important;
-        min-height: 118px !important;
+        min-height: 120px !important;
         flex-wrap: wrap !important;
         align-content: flex-start !important;
-        padding: 6px 16px 10px 16px !important;
+        padding: 8px 16px 10px 16px !important;
         box-sizing: border-box !important;
     }
 
@@ -5617,7 +5617,7 @@ body.ad-fullscreen-active {
     body:has(.hero-ad-section) .hero-ad-section.full-bleed,
     body.has-hero-ad .hero-ad-section.full-bleed,
     .hero-ad-section.full-bleed {
-        margin-top: calc(-118px - env(safe-area-inset-top, 0px)) !important;
+        margin-top: calc(-134px - env(safe-area-inset-top, 0px)) !important;
         padding-top: 0 !important;
     }
 
@@ -5641,7 +5641,7 @@ body.ad-fullscreen-active {
         flex-direction: row !important;
         align-items: center !important;
         justify-content: flex-start !important;
-        padding: calc(126px + env(safe-area-inset-top, 0px)) 16px 22px !important;
+        padding: calc(142px + env(safe-area-inset-top, 0px)) 16px 22px !important;
         min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
         height: auto !important;
         gap: 10px !important;

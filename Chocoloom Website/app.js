@@ -11046,7 +11046,7 @@ function bindEvents() {
             const heroAd = document.getElementById('heroAdWrapper') || document.querySelector('.hero-ad-section') || document.querySelector('.hero-section');
             let threshold = 30;
             if (heroAd && (document.body.classList.contains('has-hero-ad') || document.querySelector('.hero-ad-section'))) {
-                const navHeight = catalogNavbar.offsetHeight || 118;
+                const navHeight = catalogNavbar.offsetHeight || 134;
                 // Only consider scrolled once user has scrolled past the full hero ad billboard
                 threshold = Math.max(heroAd.offsetHeight - navHeight - 10, 180);
             }
