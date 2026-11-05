@@ -1133,11 +1133,87 @@ button {
     height: 80px;
     background: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border-color);
     z-index: 1000;
     box-shadow: var(--shadow-sm);
     display: flex;
     align-items: center;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+/* Transparent Top Dock Over Hero Ad */
+body:has(.hero-ad-section) .navbar:not(.scrolled),
+body.has-hero-ad .navbar:not(.scrolled) {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0.15) 60%, transparent 100%) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+}
+
+.navbar.scrolled {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Navbar text/items contrast when transparent over hero ad */
+body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-tag,
+body.has-hero-ad .navbar:not(.scrolled) .loc-dock-tag {
+    color: #ffffff !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-name,
+body.has-hero-ad .navbar:not(.scrolled) .loc-dock-name {
+    color: #f8fafc !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-sep,
+body.has-hero-ad .navbar:not(.scrolled) .loc-dock-sep {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-caret,
+body.has-hero-ad .navbar:not(.scrolled) .loc-dock-caret {
+    color: #ffffff !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+body:has(.hero-ad-section) .navbar:not(.scrolled) .nav-item,
+body.has-hero-ad .navbar:not(.scrolled) .nav-item {
+    color: #ffffff !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+body:has(.hero-ad-section) .navbar:not(.scrolled) .nav-item-auth,
+body.has-hero-ad .navbar:not(.scrolled) .nav-item-auth {
+    background: rgba(255, 255, 255, 0.22) !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+body:has(.hero-ad-section) .navbar:not(.scrolled) .brand-logo-img,
+body.has-hero-ad .navbar:not(.scrolled) .brand-logo-img {
+    filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.55));
+}
+
+/* Pull Hero Ad Section up under the transparent navbar */
+body:has(.hero-ad-section) .hero-ad-section.full-bleed,
+body.has-hero-ad .hero-ad-section.full-bleed {
+    margin-top: -80px !important;
+    padding-top: 0 !important;
+}
+
+body:has(.hero-ad-section) .hero-ad-section.full-bleed .hero-ad-slide,
+body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
+    padding-top: calc(clamp(28px, 4vw, 48px) + 50px) !important;
 }
 
 .nav-inner {
@@ -1930,8 +2006,6 @@ button {
     box-shadow: none !important;
     min-height: clamp(244px, 23.83vw, 360px);
     background: #ffd735;
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 6px, #000 20px);
-    mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 6px, #000 20px);
 }
 
 /* Zero gap between ad billboard and main content on all viewports */
@@ -5257,8 +5331,6 @@ body.ad-fullscreen-active {
         min-height: auto !important;
         height: auto !important;
         background: #11071f !important;
-        -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 6px, #000 20px) !important;
-        mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 6px, #000 20px) !important;
     }
 
     .hero-ad-fullscreen-btn {
@@ -5272,8 +5344,8 @@ body.ad-fullscreen-active {
         flex-direction: row !important;
         align-items: center !important;
         justify-content: flex-start !important;
-        padding: 18px 16px !important;
-        min-height: 200px !important;
+        padding: 68px 16px 18px !important;
+        min-height: 240px !important;
         height: auto !important;
         gap: 10px !important;
         box-sizing: border-box !important;

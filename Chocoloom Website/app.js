@@ -11023,6 +11023,20 @@ function bindEvents() {
         }
     }, { passive: true });
 
+    // Navbar transparent over hero ad on scroll
+    const catalogNavbar = document.getElementById('catalogNavbar');
+    if (catalogNavbar) {
+        const updateNavbarScroll = () => {
+            if (window.scrollY > 30) {
+                catalogNavbar.classList.add('scrolled');
+            } else {
+                catalogNavbar.classList.remove('scrolled');
+            }
+        };
+        window.addEventListener('scroll', updateNavbarScroll, { passive: true });
+        updateNavbarScroll();
+    }
+
     // Mobile Bottom App Bar Navigation Triggers (Legacy Compatibility)
     const mobFood = document.getElementById('mobileNavFood');
     const mobInsta = document.getElementById('mobileNavInstamart');
