@@ -254,7 +254,7 @@
         if (qrDynamicAmount) qrDynamicAmount.textContent = `₹${total}`;
 
         // Construct standard dynamic UPI Intent String with exact amount pre-filled
-        const upiString = `upi://pay?pa=paytm.s2spcov@pty&pn=Chocoloom%20Workshop&mc=5462&am=${total}&cu=INR&tn=Chocoloom%20Workshop%20Pass`;
+        const upiString = `upi://pay?pa=9494768069@axl&pn=BAGGU%20MOHITH%20KUMAR&mc=0000&mode=02&purpose=00&am=${total}&cu=INR&tn=Chocoloom%20Workshop%20Pass`;
 
         const btnUpiDirect = document.getElementById('btnPayUpiDirect');
         if (btnUpiDirect) {
@@ -397,7 +397,7 @@
     };
 
     window.copyUpiId = function (upiId) {
-        const text = upiId || 'paytm.s2spcov@pty';
+        const text = upiId || '9494768069@axl';
         const fallbackCopy = (val) => {
             const temp = document.createElement('textarea');
             temp.value = val;

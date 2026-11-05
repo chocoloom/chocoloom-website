@@ -640,7 +640,7 @@
 
             <div class="modal-head">
                 <span class="modal-badge"><i class="fa-solid fa-shield-halved"></i> Verified UPI Checkout</span>
-                <h3 class="modal-title">Pay via Paytm / UPI QR</h3>
+                <h3 class="modal-title">Pay via PhonePe / UPI QR</h3>
                 <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Scan the QR code with any UPI app to confirm your workshop seat.</p>
             </div>
 
@@ -654,8 +654,8 @@
                 <div class="pay-method-opt selected" style="cursor: default;">
                     <input type="radio" name="payMethod" value="upi" checked style="accent-color: var(--primary); pointer-events: none;">
                     <div class="pmo-content">
-                        <div class="pmo-title"><i class="fa-solid fa-qrcode" style="color: #00baf2;"></i> Paytm / UPI QR</div>
-                        <div class="pmo-desc">GPay, PhonePe, Paytm, BHIM or any UPI app</div>
+                        <div class="pmo-title"><i class="fa-solid fa-qrcode" style="color: #5f259f;"></i> PhonePe / UPI QR</div>
+                        <div class="pmo-desc">PhonePe, GPay, Paytm, BHIM or any UPI app</div>
                     </div>
                 </div>
             </div>
@@ -670,26 +670,29 @@
                     </div>
 
                     <div class="upi-qr-frame">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=upi%3A%2F%2Fpay%3Fpa%3Dpaytm.s2spcov%40pty%26pn%3DChocoloom%2520Workshop%26mc%3D5462%26am%3D499%26cu%3DINR%26tn%3DChocoloom%2520Workshop%2520Pass" alt="Chocoloom Official Paytm UPI QR Code" class="upi-qr-img" id="paytmQrImg">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=upi%3A%2F%2Fpay%3Fpa%3D9494768069%40axl%26pn%3DBAGGU%2520MOHITH%2520KUMAR%26mc%3D0000%26mode%3D02%26purpose%3D00%26am%3D499%26cu%3DINR%26tn%3DChocoloom%2520Workshop%2520Pass" alt="Chocoloom Official PhonePe UPI QR Code" class="upi-qr-img" id="paytmQrImg">
                     </div>
 
                     <div class="upi-apps-row">
                         <span>Works with:</span>
+                        <strong style="color: #5f259f;"><i class="fa-solid fa-mobile-screen"></i> PhonePe</strong>
                         <strong style="color: #4285f4;"><i class="fa-brands fa-google-pay"></i> GPay</strong>
-                        <strong style="color: #5f259f;">PhonePe</strong>
                         <strong style="color: #00baf2;">Paytm</strong>
                         <strong style="color: #f37021;">BHIM</strong>
                         <span>& all UPI apps</span>
                     </div>
 
-                    <div class="upi-id-pill" onclick="copyUpiId('paytm.s2spcov@pty')" title="Click to copy UPI ID">
+                    <div class="upi-id-pill" onclick="copyUpiId('9494768069@axl')" title="Click to copy UPI ID">
                         <span class="uip-label">UPI ID:</span>
-                        <strong class="uip-val">paytm.s2spcov@pty</strong>
+                        <strong class="uip-val">9494768069@axl</strong>
                         <i class="fa-regular fa-copy uip-icon" id="copyUpiIcon"></i>
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--text-muted); text-align: center; margin-top: -8px; margin-bottom: 12px;">
+                        <span>Verified Payee: <strong>BAGGU MOHITH KUMAR</strong></span>
                     </div>
 
                     <!-- Direct One-Tap Mobile Payment Intent -->
-                    <a id="btnPayUpiDirect" href="upi://pay?pa=paytm.s2spcov@pty&pn=Chocoloom%20Workshop&mc=5462&cu=INR" class="btn-upi-mobile">
+                    <a id="btnPayUpiDirect" href="upi://pay?pa=9494768069@axl&pn=BAGGU%20MOHITH%20KUMAR&mc=0000&mode=02&purpose=00&am=499&cu=INR&tn=Chocoloom%20Workshop%20Pass" class="btn-upi-mobile">
                         <i class="fa-solid fa-bolt"></i>
                         <span>Tap to Pay on UPI App (Mobile)</span>
                     </a>

@@ -736,7 +736,7 @@
                         <div class="amount-val">₹${amount}</div>
                         <div class="pay-method-tag">
                             <i class="fa-solid ${item.payMethod === 'upi' ? 'fa-qrcode' : (isPending ? 'fa-hourglass-half' : 'fa-cash-register')}"></i>
-                            <span>${item.payMethod === 'upi' ? 'Paytm UPI' : (isPending ? 'UPI Pending' : 'Counter')}</span>
+                            <span>${item.payMethod === 'upi' ? 'PhonePe UPI' : (isPending ? 'UPI Pending' : 'Counter')}</span>
                         </div>
                         ${item.paymentScreenshot ? `
                             <button type="button" class="screenshot-thumb-btn" onclick="openScreenshotModal('${item.id}')" title="Click to view payment receipt screenshot">
