@@ -4482,11 +4482,20 @@ function renderBanners() {
                 ` : ''}
                 
                 <div class="hero-ad-actions ${isCraft ? 'craft-hero-ad-actions' : ''}">
-                    <button class="hero-ad-cta-btn ${isTombola ? 'tombola-cta-btn' : ''} ${isCraft ? 'craft-cta-btn' : ''}" onclick="handleBannerClick('${ban.id}', event)" style="${isDiwali ? 'background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45); border: none;' : (isCraft ? 'background: #ffffff !important; color: #0871dc !important; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28) !important; border: 1.5px solid rgba(255, 255, 255, 0.8) !important; font-weight: 800 !important;' : '')}">
-                        ${isTombola ? '<i class="fa-solid fa-hourglass-start" style="color: #ffffff; font-size: 15px;"></i>' : (isDiwali ? '<i class="fa-solid fa-gift" style="color: #ffffff; margin-right: 4px;"></i>' : (isCraft ? '<i class="fa-solid fa-ticket" style="color: #0871dc; margin-right: 6px;"></i>' : ''))}
-                        <span>${isTombola ? 'COMING SOON' : (isCraft ? (ban.cta || 'Register Now') : (ban.cta || 'ORDER NOW'))}</span>
-                        <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-arrow-right'}" style="${isCraft ? 'color: #0871dc; margin-left: 6px;' : ''}"></i>
+                    ${isCraft ? `
+                    <button class="hero-ad-cta-btn craft-cta-btn" onclick="handleBannerClick('${ban.id}', event)">
+                        <span class="craft-cta-text">${ban.cta || 'Register Now'}</span>
+                        <span class="craft-cta-bubble">
+                            <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-arrow-right'}"></i>
+                        </span>
                     </button>
+                    ` : `
+                    <button class="hero-ad-cta-btn ${isTombola ? 'tombola-cta-btn' : ''}" onclick="handleBannerClick('${ban.id}', event)" style="${isDiwali ? 'background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45); border: none;' : ''}">
+                        ${isTombola ? '<i class="fa-solid fa-hourglass-start" style="color: #ffffff; font-size: 15px;"></i>' : (isDiwali ? '<i class="fa-solid fa-gift" style="color: #ffffff; margin-right: 4px;"></i>' : '')}
+                        <span>${isTombola ? 'COMING SOON' : (ban.cta || 'ORDER NOW')}</span>
+                        <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-arrow-right'}"></i>
+                    </button>
+                    `}
                 </div>
 
                 ${isDiwali ? `
@@ -4495,13 +4504,7 @@ function renderBanners() {
                     <div class="hero-ad-perk"><i class="fa-solid fa-truck-fast" style="color: #38bdf8;"></i> 25 Min Delivery</div>
                     <div class="hero-ad-perk"><i class="fa-solid fa-sparkles" style="color: #fbbf24;"></i> Handcrafted Hampers & Sweets</div>
                 </div>
-                ` : (isCraft ? `
-                <div class="hero-ad-perks craft-ad-perks">
-                    <div class="hero-ad-perk"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> 4.98 (Studio Choice)</div>
-                    <div class="hero-ad-perk"><i class="fa-solid fa-gift" style="color: #ec4899;"></i> Free Canvas Tote Bag</div>
-                    <div class="hero-ad-perk"><i class="fa-solid fa-wand-magic-sparkles" style="color: #38bdf8;"></i> All Materials Included</div>
-                </div>
-                ` : (isTombola ? `
+                ` : (isCraft ? '' : (isTombola ? `
                 <div class="hero-ad-perks tombola-ad-perks">
                     <div class="hero-ad-perk"><i class="fa-solid fa-star" style="color: #ffd735;"></i> ${ban.rating || '5.0'} (${ban.ratingLabel || 'Community Favorite'})</div>
                     <div class="hero-ad-perk"><i class="fa-solid fa-gift" style="color: #f43f5e;"></i> Every Ticket Wins</div>

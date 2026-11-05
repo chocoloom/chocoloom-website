@@ -12443,31 +12443,115 @@ body.category-view-active .products-catalog-section {
     object-position: center center !important;
 }
 
-/* White Registration Link Button for Craft Workshop Ad */
+/* White Micro-Capsule Action Badge for Craft Workshop Ad */
+.hero-ad-slide.hero-ad-craft-slide .hero-ad-perks,
+.hero-ad-slide.hero-ad-craft-slide .craft-ad-perks {
+    display: none !important;
+}
+
 .hero-ad-cta-btn.craft-cta-btn,
-.hero-ad-craft-slide .craft-cta-btn {
+.hero-ad-craft-slide .craft-cta-btn,
+.craft-cta-btn {
     background: #ffffff !important;
     color: #0871dc !important;
-    border: none !important;
-    border-radius: 999px !important;
-    padding: 10px 22px !important;
-    font-size: 13.5px !important;
+    border: 1px solid rgba(255, 255, 255, 0.95) !important;
+    border-radius: 9999px !important;
+    padding: 3.5px 4.5px 3.5px 12px !important;
+    font-size: 11px !important;
     font-weight: 800 !important;
-    letter-spacing: 0.3px !important;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28), 0 0 0 1.5px rgba(255, 255, 255, 0.8) !important;
+    letter-spacing: 0.35px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22), 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 1.5px rgba(255, 255, 255, 0.9) !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
     cursor: pointer !important;
-    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    line-height: 1 !important;
+    text-transform: capitalize !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    min-height: auto !important;
+    height: 28px !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.hero-ad-cta-btn.craft-cta-btn::before,
+.hero-ad-craft-slide .craft-cta-btn::before,
+.craft-cta-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -75%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+    transform: skewX(-20deg);
+    animation: craftCtaShimmer 3.5s infinite ease-in-out;
+    pointer-events: none;
+}
+
+@keyframes craftCtaShimmer {
+    0%, 65% {
+        left: -75%;
+    }
+    100% {
+        left: 140%;
+    }
 }
 
 .hero-ad-cta-btn.craft-cta-btn:hover,
-.hero-ad-craft-slide .craft-cta-btn:hover {
-    transform: translateY(-2px) scale(1.03) !important;
-    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35) !important;
+.hero-ad-craft-slide .craft-cta-btn:hover,
+.craft-cta-btn:hover {
+    transform: translateY(-1.5px) scale(1.025) !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28), 0 0 0 2px rgba(255, 255, 255, 1) !important;
     background: #ffffff !important;
-    color: #075cb2 !important;
+    color: #065ec0 !important;
+}
+
+.hero-ad-cta-btn.craft-cta-btn:active,
+.hero-ad-craft-slide .craft-cta-btn:active,
+.craft-cta-btn:active {
+    transform: translateY(0) scale(0.98) !important;
+}
+
+.craft-cta-btn .craft-cta-text {
+    color: #0871dc !important;
+    font-weight: 800 !important;
+    font-size: 11px !important;
+    letter-spacing: 0.35px !important;
+    line-height: 1 !important;
+}
+
+.craft-cta-btn .craft-cta-bubble {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    background: #0871dc !important;
+    color: #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 8.5px !important;
+    box-shadow: 0 2px 6px rgba(8, 113, 220, 0.35) !important;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+}
+
+.craft-cta-btn .craft-cta-bubble i {
+    color: #ffffff !important;
+    font-size: 8.5px !important;
+    margin: 0 !important;
+}
+
+.hero-ad-cta-btn.craft-cta-btn:hover .craft-cta-bubble,
+.hero-ad-craft-slide .craft-cta-btn:hover .craft-cta-bubble,
+.craft-cta-btn:hover .craft-cta-bubble {
+    transform: translateX(1.5px) !important;
+    background: #065ec0 !important;
 }
 
 /* Floating interactive action bar on Tombola graphic ad */
@@ -12778,6 +12862,27 @@ body.category-view-active .products-catalog-section {
         z-index: 10 !important;
         display: flex !important;
         align-items: center !important;
+    }
+
+    .hero-ad-slide.hero-ad-craft-slide .craft-cta-btn {
+        height: 26px !important;
+        padding: 3px 4px 3px 10px !important;
+        font-size: 10.5px !important;
+        gap: 5px !important;
+    }
+
+    .hero-ad-slide.hero-ad-craft-slide .craft-cta-btn .craft-cta-text {
+        font-size: 10.5px !important;
+    }
+
+    .hero-ad-slide.hero-ad-craft-slide .craft-cta-btn .craft-cta-bubble {
+        width: 18px !important;
+        height: 18px !important;
+        font-size: 8px !important;
+    }
+
+    .hero-ad-slide.hero-ad-craft-slide .craft-cta-btn .craft-cta-bubble i {
+        font-size: 8px !important;
     }
 
     .hero-ad-slide.hero-ad-craft-slide .ad-bg-photo {
@@ -18510,30 +18615,9 @@ img.emoji {
 }
 
 
-/* ==================== CRAFT YOUR HAPPY MOMENTS HERO SLIDE (DIWALI-STYLE) ==================== */
-.craft-tag-pill {
+/* ==================== CRAFT WORKSHOP SQUARE BANNER CTA OVERRIDES ==================== */
+.craft-tag-pill,
+.craft-discount-tag,
+.craft-ad-perks {
     display: none !important;
-}
-
-.craft-discount-tag {
-    background: linear-gradient(135deg, #ec4899, #8b5cf6) !important;
-    box-shadow: 0 4px 14px rgba(236, 72, 153, 0.45) !important;
-}
-
-.craft-cta-btn {
-    background: linear-gradient(135deg, #7c5cfc, #ec4899) !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 16px rgba(124, 92, 252, 0.45) !important;
-    border: none !important;
-}
-
-.craft-cta-btn:hover {
-    background: linear-gradient(135deg, #6d44f7, #db2777) !important;
-    color: #ffffff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(236, 72, 153, 0.5) !important;
-}
-
-.craft-ad-perks .hero-ad-perk i.fa-bag-shopping {
-    color: #f472b6;
 }
