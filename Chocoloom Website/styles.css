@@ -1623,18 +1623,17 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
     }
 }
 
-/* Small Thin Glass Line Below Order Before Box */
+/* Thin Full-Width Glass Line Below Order Before Box */
 .header-glass-divider {
     display: block;
-    width: 68px;
-    height: 2.5px;
+    width: 100%;
+    height: 1px;
     border-radius: 99px;
-    background: rgba(255, 255, 255, 0.45);
-    border: 0.5px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.45) 15%, rgba(255, 255, 255, 0.45) 85%, rgba(255, 255, 255, 0.1) 100%);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    margin: 8px auto 2px auto;
+    margin: 10px 0 2px 0;
     transition: all 0.25s ease;
 }
 
@@ -5574,15 +5573,15 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
 
     .header-glass-divider {
         order: 5 !important;
-        width: 68px !important;
-        height: 2.5px !important;
+        width: 100% !important;
+        height: 1px !important;
         border-radius: 99px !important;
-        background: rgba(255, 255, 255, 0.45) !important;
-        border: 0.5px solid rgba(255, 255, 255, 0.6) !important;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.45) 15%, rgba(255, 255, 255, 0.45) 85%, rgba(255, 255, 255, 0.1) 100%) !important;
+        border: none !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
         backdrop-filter: blur(8px) !important;
         -webkit-backdrop-filter: blur(8px) !important;
-        margin: 8px auto 2px auto !important;
+        margin: 10px 0 2px 0 !important;
         display: block !important;
         flex-shrink: 0 !important;
     }
