@@ -13672,7 +13672,7 @@ window.closeAccountDetailsModal = function() {
     if (modal) modal.classList.remove('open');
 };
 
-// User Orders History Modal & Live Tracking Hub (Zomato Dark Theme Design)
+// User Orders History Modal & Live Tracking Hub (Zomato White Theme Design)
 window.renderUserOrdersList = function(ordersToRender, isGuest = false) {
     const listBody = document.getElementById('ordersListBody');
     if (!listBody) return;
@@ -13791,15 +13791,15 @@ window.renderUserOrdersList = function(ordersToRender, isGuest = false) {
         if (isCardOrder) {
             leftActionHtml = `
                 <div class="zomato-feedback-box">
-                    <span class="zomato-rated-text" style="color: #c084fc;"><i class="fa-solid fa-crown"></i> VIP RFID Card</span>
-                    <a class="zomato-feedback-link" style="color: #c084fc;" onclick="closeOrdersModal(); window.showCardOrderTransitModal();">BlueDart AWB: ${ord.tracking_number || 'BD88429108IN'} <i class="fa-solid fa-caret-right"></i></a>
+                    <span class="zomato-rated-text" style="color: #7c3aed;"><i class="fa-solid fa-crown"></i> VIP RFID Card</span>
+                    <a class="zomato-feedback-link" style="color: #7c3aed;" onclick="closeOrdersModal(); window.showCardOrderTransitModal();">BlueDart AWB: ${ord.tracking_number || 'BD88429108IN'} <i class="fa-solid fa-caret-right"></i></a>
                 </div>
             `;
         } else if (isInTransit || isPreparing) {
             leftActionHtml = `
                 <div class="zomato-feedback-box">
-                    <span class="zomato-rated-text" style="color: #38bdf8;"><i class="fa-solid fa-location-crosshairs"></i> Live Tracking</span>
-                    <a class="zomato-feedback-link" style="color: #38bdf8;" onclick="window.trackSpecificOrder('${orderNum}')">Track your order <i class="fa-solid fa-caret-right"></i></a>
+                    <span class="zomato-rated-text" style="color: #0284c7;"><i class="fa-solid fa-location-crosshairs"></i> Live Tracking</span>
+                    <a class="zomato-feedback-link" style="color: #0284c7;" onclick="window.trackSpecificOrder('${orderNum}')">Track your order <i class="fa-solid fa-caret-right"></i></a>
                 </div>
             `;
         } else {

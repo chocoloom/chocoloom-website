@@ -9387,23 +9387,23 @@ body.category-view-active .products-catalog-section {
     border-color: #86efac;
 }
 
-/* ==================== ZOMATO DARK THEME ORDER HISTORY ==================== */
+/* ==================== ZOMATO WHITE THEME ORDER HISTORY ==================== */
 #userOrdersModalBackdrop {
-    background: rgba(12, 12, 18, 0.78) !important;
-    backdrop-filter: blur(14px) !important;
-    -webkit-backdrop-filter: blur(14px) !important;
+    background: rgba(15, 23, 42, 0.45) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
     z-index: 100000 !important;
 }
 
 #userOrdersModalBackdrop .orders-modal-card {
-    background: #14141d !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 24px;
     width: 95%;
     max-width: 580px;
     max-height: 88vh;
-    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 25px 70px rgba(15, 23, 42, 0.16) !important;
     overflow: hidden;
     position: relative;
     display: flex;
@@ -9411,8 +9411,8 @@ body.category-view-active .products-catalog-section {
 }
 
 #userOrdersModalBackdrop .orders-modal-header {
-    background: #1a1a26;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: #ffffff !important;
+    border-bottom: 1px solid #f1f5f9 !important;
     padding: 16px 20px;
     display: flex;
     align-items: center;
@@ -9423,7 +9423,7 @@ body.category-view-active .products-catalog-section {
 }
 
 #userOrdersModalBackdrop .orders-modal-title {
-    color: #ffffff;
+    color: #0f172a !important;
     font-size: 18px;
     font-weight: 800;
     letter-spacing: -0.3px;
@@ -9433,27 +9433,29 @@ body.category-view-active .products-catalog-section {
 }
 
 #userOrdersModalBackdrop .orders-back-nav-btn {
-    background: transparent;
-    border: none;
-    color: #ffffff;
-    font-size: 17px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #0f172a !important;
+    font-size: 15px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
-    border-radius: 6px;
-    transition: background 0.15s ease;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: all 0.15s ease;
 }
 
 #userOrdersModalBackdrop .orders-back-nav-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: #f1f5f9;
+    color: #f43f5e !important;
 }
 
 #userOrdersModalBackdrop .orders-modal-count-badge {
-    background: rgba(255, 255, 255, 0.08);
-    color: #94a3b8;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
     font-size: 11px;
     font-weight: 700;
     padding: 3px 9px;
@@ -9461,9 +9463,9 @@ body.category-view-active .products-catalog-section {
 }
 
 #userOrdersModalBackdrop .modal-close-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #cbd5e1;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -9476,13 +9478,13 @@ body.category-view-active .products-catalog-section {
 }
 
 #userOrdersModalBackdrop .modal-close-btn:hover {
-    background: rgba(244, 63, 94, 0.2);
-    border-color: #f43f5e;
-    color: #ffffff;
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    color: #ef4444 !important;
 }
 
 #userOrdersModalBackdrop .orders-list-body {
-    background: #14141d;
+    background: #f8fafc !important;
     padding: 16px 16px 125px; /* Clear floating dock */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -9503,27 +9505,30 @@ body.category-view-active .products-catalog-section {
         max-height: 100vh !important;
         border-radius: 0 !important;
         border: none !important;
+        background: #ffffff !important;
     }
     #userOrdersModalBackdrop .orders-list-body {
         padding: 14px 14px 135px;
+        background: #f8fafc !important;
     }
 }
 
-/* Zomato Dark Card */
+/* Zomato Order Card - Clean White Theme */
 .zomato-order-card {
-    background: #1e1e2b;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 18px;
     padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    transition: transform 0.2s ease, border-color 0.2s ease;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
 }
 
 .zomato-order-card:hover {
-    border-color: rgba(255, 255, 255, 0.14);
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08) !important;
 }
 
 /* Header */
@@ -9539,8 +9544,8 @@ body.category-view-active .products-catalog-section {
     height: 48px;
     border-radius: 12px;
     object-fit: cover;
-    background: #252532;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
     flex-shrink: 0;
 }
 
@@ -9552,7 +9557,7 @@ body.category-view-active .products-catalog-section {
 .zomato-brand-title {
     font-size: 15.5px;
     font-weight: 700;
-    color: #ffffff;
+    color: #0f172a !important;
     line-height: 1.25;
     white-space: nowrap;
     overflow: hidden;
@@ -9561,7 +9566,7 @@ body.category-view-active .products-catalog-section {
 
 .zomato-brand-loc {
     font-size: 13px;
-    color: #94a3b8;
+    color: #64748b !important;
     margin-top: 2px;
     font-weight: 400;
     white-space: nowrap;
@@ -9574,8 +9579,8 @@ body.category-view-active .products-catalog-section {
     align-items: center;
     gap: 4px;
     font-size: 13px;
-    font-weight: 600;
-    color: #f43f5e;
+    font-weight: 700;
+    color: #f43f5e !important;
     margin-top: 4px;
     cursor: pointer;
     text-decoration: none;
@@ -9583,13 +9588,13 @@ body.category-view-active .products-catalog-section {
 }
 
 .zomato-view-menu-btn:hover {
-    color: #fb7185;
+    color: #e11d48 !important;
 }
 
 .zomato-dots-btn {
     background: transparent;
     border: none;
-    color: #94a3b8;
+    color: #94a3b8 !important;
     font-size: 17px;
     cursor: pointer;
     padding: 4px 6px;
@@ -9599,8 +9604,8 @@ body.category-view-active .products-catalog-section {
 }
 
 .zomato-dots-btn:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.08);
+    color: #0f172a !important;
+    background: #f1f5f9 !important;
 }
 
 /* Items List */
@@ -9637,18 +9642,18 @@ body.category-view-active .products-catalog-section {
 }
 
 .zomato-food-symbol.veg {
-    border: 1.5px solid #22c55e;
+    border: 1.5px solid #16a34a !important;
 }
 
 .zomato-food-symbol.veg .veg-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #22c55e;
+    background: #16a34a !important;
 }
 
 .zomato-food-symbol.non-veg {
-    border: 1.5px solid #ef4444;
+    border: 1.5px solid #dc2626 !important;
 }
 
 .zomato-food-symbol.non-veg .nonveg-triangle {
@@ -9656,19 +9661,19 @@ body.category-view-active .products-catalog-section {
     height: 0;
     border-left: 3.5px solid transparent;
     border-right: 3.5px solid transparent;
-    border-bottom: 7px solid #ef4444;
+    border-bottom: 7px solid #dc2626 !important;
 }
 
 .zomato-item-title {
     font-size: 14px;
     font-weight: 600;
-    color: #f1f5f9;
+    color: #1e293b !important;
     letter-spacing: -0.1px;
 }
 
 .zomato-item-addons {
     font-size: 12px;
-    color: #94a3b8;
+    color: #64748b !important;
     margin-left: 23px;
     line-height: 1.3;
 }
@@ -9676,7 +9681,7 @@ body.category-view-active .products-catalog-section {
 /* Dashed Divider */
 .zomato-card-divider {
     border: none;
-    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    border-top: 1px dashed #e2e8f0 !important;
     margin: 4px 0 2px;
 }
 
@@ -9695,55 +9700,55 @@ body.category-view-active .products-catalog-section {
 
 .zomato-order-date {
     font-size: 12.5px;
-    color: #94a3b8;
+    color: #64748b !important;
     font-weight: 400;
 }
 
 .zomato-order-status {
     font-size: 13.5px;
-    font-weight: 600;
-    color: #f1f5f9;
+    font-weight: 700;
+    color: #1e293b !important;
     display: flex;
     align-items: center;
     gap: 5px;
 }
 
 .zomato-order-status.status-delivered {
-    color: #e2e8f0;
+    color: #16a34a !important;
 }
 
 .zomato-order-status.status-in-transit,
 .zomato-order-status.status-out-for-delivery {
-    color: #38bdf8;
+    color: #0284c7 !important;
 }
 
 .zomato-order-status.status-preparing {
-    color: #f59e0b;
+    color: #d97706 !important;
 }
 
 .zomato-order-status.status-cancelled {
-    color: #f87171;
+    color: #dc2626 !important;
 }
 
 .zomato-meta-price {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 15.5px;
-    font-weight: 700;
-    color: #ffffff;
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a !important;
     cursor: pointer;
     transition: color 0.15s ease;
     user-select: none;
 }
 
 .zomato-meta-price:hover {
-    color: #f43f5e;
+    color: #f43f5e !important;
 }
 
 .zomato-meta-price i {
     font-size: 12px;
-    color: #94a3b8;
+    color: #94a3b8 !important;
 }
 
 /* Action Row (Bottom) */
@@ -9752,7 +9757,7 @@ body.category-view-active .products-catalog-section {
     justify-content: space-between;
     align-items: center;
     padding-top: 8px;
-    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    border-top: 1px dashed #e2e8f0 !important;
 }
 
 .zomato-feedback-box {
@@ -9764,17 +9769,17 @@ body.category-view-active .products-catalog-section {
 .zomato-rated-text {
     font-size: 13px;
     font-weight: 600;
-    color: #f1f5f9;
+    color: #334155 !important;
 }
 
 .zomato-rated-text .star-gold {
-    color: #f59e0b;
+    color: #f59e0b !important;
 }
 
 .zomato-feedback-link {
     font-size: 12.5px;
-    font-weight: 600;
-    color: #f43f5e;
+    font-weight: 700;
+    color: #f43f5e !important;
     display: inline-flex;
     align-items: center;
     gap: 3px;
@@ -9784,12 +9789,12 @@ body.category-view-active .products-catalog-section {
 }
 
 .zomato-feedback-link:hover {
-    color: #fb7185;
+    color: #e11d48 !important;
 }
 
 .zomato-reorder-btn {
-    background: #f43f5e;
-    color: #ffffff;
+    background: #f43f5e !important;
+    color: #ffffff !important;
     border: none;
     border-radius: 10px;
     padding: 9px 20px;
@@ -9799,15 +9804,15 @@ body.category-view-active .products-catalog-section {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    box-shadow: 0 4px 14px rgba(244, 63, 94, 0.35);
+    box-shadow: 0 4px 14px rgba(244, 63, 94, 0.25) !important;
     transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
     margin-left: auto;
 }
 
 .zomato-reorder-btn:hover {
-    background: #e11d48;
+    background: #e11d48 !important;
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(244, 63, 94, 0.45);
+    box-shadow: 0 6px 18px rgba(244, 63, 94, 0.35) !important;
 }
 
 .zomato-reorder-btn:active {
@@ -9815,8 +9820,8 @@ body.category-view-active .products-catalog-section {
 }
 
 .zomato-closed-pill {
-    background: #2a2a36;
-    color: #94a3b8;
+    background: #f1f5f9 !important;
+    color: #64748b !important;
     font-size: 12px;
     font-weight: 600;
     padding: 8px 14px;
@@ -9826,10 +9831,10 @@ body.category-view-active .products-catalog-section {
     margin-left: auto;
 }
 
-/* Guest Device Sync Chip in Dark Mode */
+/* Guest Device Sync Chip in White Mode */
 .zomato-guest-banner {
-    background: linear-gradient(135deg, rgba(124, 92, 252, 0.15), rgba(244, 63, 94, 0.12));
-    border: 1px solid rgba(124, 92, 252, 0.3);
+    background: linear-gradient(135deg, #fff1f2 0%, #faf5ff 100%) !important;
+    border: 1px solid #fecdd3 !important;
     border-radius: 14px;
     padding: 12px 16px;
     margin-bottom: 6px;
@@ -9837,61 +9842,65 @@ body.category-view-active .products-catalog-section {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    box-shadow: 0 2px 8px rgba(244, 63, 94, 0.05);
 }
 
 .zomato-guest-banner-text strong {
-    color: #ffffff;
-    font-size: 12.5px;
+    color: #9f1239 !important;
+    font-size: 13px;
     display: block;
+    font-weight: 700;
 }
 
 .zomato-guest-banner-text span {
-    color: #94a3b8;
-    font-size: 11.5px;
+    color: #475569 !important;
+    font-size: 12px;
     margin-top: 2px;
     display: block;
 }
 
 .zomato-guest-signin-btn {
-    background: #f43f5e;
-    color: #ffffff;
+    background: #f43f5e !important;
+    color: #ffffff !important;
     border: none;
-    padding: 7px 14px;
+    padding: 8px 16px;
     border-radius: 8px;
     font-weight: 700;
     font-size: 12px;
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.15s ease;
+    box-shadow: 0 2px 8px rgba(244, 63, 94, 0.25);
+    transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .zomato-guest-signin-btn:hover {
-    background: #e11d48;
+    background: #e11d48 !important;
+    transform: translateY(-1px);
 }
 
-/* Empty State Dark */
+/* Empty State White */
 .zomato-empty-state {
     text-align: center;
     padding: 60px 20px 40px;
-    color: #94a3b8;
+    color: #64748b !important;
 }
 
 .zomato-empty-state .empty-icon {
     font-size: 48px;
     margin-bottom: 14px;
-    filter: drop-shadow(0 4px 12px rgba(244, 63, 94, 0.3));
+    filter: drop-shadow(0 4px 12px rgba(244, 63, 94, 0.2));
 }
 
 .zomato-empty-state h4 {
     font-size: 18px;
     font-weight: 800;
-    color: #ffffff;
+    color: #0f172a !important;
     margin-bottom: 8px;
 }
 
 .zomato-empty-state p {
     font-size: 13.5px;
-    color: #94a3b8;
+    color: #64748b !important;
     margin-bottom: 22px;
     max-width: 320px;
     margin-left: auto;
@@ -9900,20 +9909,20 @@ body.category-view-active .products-catalog-section {
 }
 
 .zomato-empty-explore-btn {
-    background: #f43f5e;
-    color: #ffffff;
+    background: #f43f5e !important;
+    color: #ffffff !important;
     border: none;
     padding: 12px 26px;
     border-radius: 12px;
     font-weight: 700;
     font-size: 14px;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(244, 63, 94, 0.4);
+    box-shadow: 0 4px 16px rgba(244, 63, 94, 0.25);
     transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .zomato-empty-explore-btn:hover {
-    background: #e11d48;
+    background: #e11d48 !important;
     transform: translateY(-1px);
 }
 
