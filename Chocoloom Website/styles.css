@@ -5522,8 +5522,8 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
     /* Mobile Header - Notch Safe Area Aware */
     .navbar {
         height: auto !important;
-        min-height: calc(188px + env(safe-area-inset-top, 0px)) !important;
-        padding-top: calc(10px + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(198px + env(safe-area-inset-top, 0px)) !important;
+        padding-top: calc(20px + env(safe-area-inset-top, 0px)) !important;
         box-sizing: border-box !important;
         border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
         box-shadow: none !important;
@@ -5546,14 +5546,16 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
         order: 1 !important;
         gap: 12px !important;
         flex: 1 !important;
-        height: 48px !important;
+        height: auto !important;
+        min-height: 44px !important;
         align-items: center !important;
-        overflow: hidden !important;
+        overflow: visible !important;
     }
 
     .nav-right {
         order: 2 !important;
-        height: 48px !important;
+        height: auto !important;
+        min-height: 44px !important;
         align-items: center !important;
         gap: 10px !important;
     }
@@ -5772,7 +5774,7 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
     body:has(.hero-ad-section) .hero-ad-section.full-bleed,
     body.has-hero-ad .hero-ad-section.full-bleed,
     .hero-ad-section.full-bleed {
-        margin-top: calc(-188px - env(safe-area-inset-top, 0px)) !important;
+        margin-top: calc(-198px - env(safe-area-inset-top, 0px)) !important;
         padding-top: 0 !important;
     }
 
@@ -5796,7 +5798,7 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
         flex-direction: row !important;
         align-items: center !important;
         justify-content: flex-start !important;
-        padding: calc(196px + env(safe-area-inset-top, 0px)) 16px 22px !important;
+        padding: calc(206px + env(safe-area-inset-top, 0px)) 16px 22px !important;
         min-height: calc(100vw + 60px + env(safe-area-inset-top, 0px)) !important;
         height: auto !important;
         gap: 10px !important;
@@ -5895,9 +5897,9 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
     }
 
     .hero-ad-discount-tag {
-        top: calc(72px + env(safe-area-inset-top, 0px)) !important;
-        right: 12px !important;
-        padding: 2.5px 7px !important;
+        top: calc(206px + env(safe-area-inset-top, 0px)) !important;
+        right: 14px !important;
+        padding: 3px 8px !important;
         font-size: 8.5px !important;
         font-weight: 800 !important;
         z-index: 10 !important;
@@ -14342,10 +14344,10 @@ body.category-view-active .products-catalog-section {
     }
 
     .hero-ad-discount-tag {
-        top: 6px !important;
-        right: 8px !important;
-        padding: 2px 6px !important;
-        font-size: 7.8px !important;
+        top: calc(206px + env(safe-area-inset-top, 0px)) !important;
+        right: 12px !important;
+        padding: 3px 7px !important;
+        font-size: 8px !important;
     }
 }
 

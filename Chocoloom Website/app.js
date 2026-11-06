@@ -11098,7 +11098,7 @@ function bindEvents() {
             const heroAd = document.getElementById('heroAdWrapper') || document.querySelector('.hero-ad-section') || document.querySelector('.hero-section');
             let isScrolled = false;
             if (heroAd && (document.body.classList.contains('has-hero-ad') || document.querySelector('.hero-ad-section'))) {
-                const navHeight = catalogNavbar.offsetHeight || 134;
+                const navHeight = catalogNavbar.offsetHeight || 198;
                 const heroRect = heroAd.getBoundingClientRect();
                 // Stay completely transparent as long as the hero billboard is under/behind the top dock
                 isScrolled = (heroRect.bottom <= navHeight);
