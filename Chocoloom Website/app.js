@@ -3859,7 +3859,7 @@ function getActiveHeroBanners() {
             if (Array.isArray(parsed) && parsed.length > 0) {
                 const storedCraft = parsed.find(b => b && b.id === 'b_craft_happy_moments');
                 const storedDiwali = parsed.find(b => b && b.id === 'b_diwali');
-                if (storedCraft && storedCraft.cta === 'Register Now' && !storedCraft.title && storedDiwali && storedDiwali.image === 'assets/diwali_poster_banner.jpg') {
+                if (storedCraft && storedCraft.cta === 'Register Now' && !storedCraft.title && storedDiwali && storedDiwali.image === 'assets/diwali_poster_banner.jpg?v=2') {
                     savedBanners = parsed;
                 } else {
                     localStorage.removeItem("chocoloom_banners");
@@ -3881,9 +3881,9 @@ function getActiveHeroBanners() {
         subtitle: "",
         discountText: "FLAT 40% OFF (NOV 7–9)",
         code: "DIWALI40",
-        image: "assets/diwali_poster_banner.jpg",
-        fallbackImage: "assets/diwali_poster_banner.jpg",
-        mobileImage: "assets/diwali_poster_banner.jpg",
+        image: "assets/diwali_poster_banner.jpg?v=2",
+        fallbackImage: "assets/diwali_poster_banner.jpg?v=2",
+        mobileImage: "assets/diwali_poster_banner.jpg?v=2",
         overlayGradient: "none",
         bgColor: "#fadf84",
         badge: "VALID NOV 7–9 ONLY 🪔",
@@ -3950,16 +3950,16 @@ function getActiveHeroBanners() {
             ban.tag = 'DIWALI SPECIAL (NOV 7–9 ONLY)';
             ban.title = '';
             ban.subtitle = '';
-            ban.image = 'assets/diwali_poster_banner.jpg';
-            ban.fallbackImage = 'assets/diwali_poster_banner.jpg';
-            ban.mobileImage = 'assets/diwali_poster_banner.jpg';
+            ban.image = 'assets/diwali_poster_banner.jpg?v=2';
+            ban.fallbackImage = 'assets/diwali_poster_banner.jpg?v=2';
+            ban.mobileImage = 'assets/diwali_poster_banner.jpg?v=2';
             ban.overlayGradient = 'none';
             ban.bgColor = '#fadf84';
             ban.cta = 'Claim 40% OFF';
             ban.code = 'DIWALI40';
             ban.ctaAction = 'copy_coupon';
             ban.isGraphicBanner = false;
-            img = 'assets/diwali_poster_banner.jpg';
+            img = 'assets/diwali_poster_banner.jpg?v=2';
             needsCacheUpdate = true;
         }
         const discountText = (ban.discountText && ban.discountText.includes('COMING SOON')) ? '' : (ban.discountText || '');
