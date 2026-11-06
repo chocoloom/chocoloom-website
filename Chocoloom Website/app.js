@@ -9308,16 +9308,16 @@ window.updateCampusAvailabilityBanner = function() {
 };
 
 // ==================== CHOCOLOOM STORE OPERATING HOURS & 24/7 PRE-BOOKING SYSTEM ====================
-// Regular Orders: 9:00 AM – 8:30 PM (Asia/Kolkata / IST)
+// Regular Orders: 9:00 AM – 8:00 PM (Asia/Kolkata / IST)
 // Pre-Booking: Available 24 Hours / 7 Days!
 window.getStoreOperatingStatus = function() {
     // Check cloud / admin store status or testing override
     const override = localStorage.getItem('chocoloom_store_status_override') || localStorage.getItem('chocoloom_store_status');
     if (override === 'open') {
-        return { isOpen: true, openTime: '9:00 AM', closeTime: '8:30 PM', isOverridden: true, prebookingOnly: false, prebookingAvailable24h: true, statusText: 'Open (9:00 AM – 8:30 PM)' };
+        return { isOpen: true, openTime: '9:00 AM', closeTime: '8:00 PM', isOverridden: true, prebookingOnly: false, prebookingAvailable24h: true, statusText: 'Accepting Orders', statusTitle: 'Accepting Orders' };
     }
     if (override === 'closed') {
-        return { isOpen: false, openTime: '9:00 AM', closeTime: '8:30 PM', isOverridden: true, prebookingOnly: true, prebookingAvailable24h: true, statusText: 'Instant Orders Closed (24/7 Pre-Booking Active)' };
+        return { isOpen: false, openTime: '9:00 AM', closeTime: '8:00 PM', isOverridden: true, prebookingOnly: true, prebookingAvailable24h: true, statusText: 'Currently unavailable', statusTitle: 'Currently unavailable' };
     }
 
     try {
@@ -9334,29 +9334,39 @@ window.getStoreOperatingStatus = function() {
         const minute = parseInt(parts.find(p => p.type === 'minute').value, 10);
         const currentTotalMinutes = hour * 60 + minute;
 
-        // Opens at 9:00 AM (540 mins), Closes at 8:30 PM (1230 mins)
+        // Opens at 9:00 AM (540 mins), Closes at 8:00 PM (1200 mins) IST
         const openMinutes = 9 * 60;
-        const closeMinutes = 20 * 60 + 30;
+        const closeMinutes = 20 * 60;
 
         const isOpen = currentTotalMinutes >= openMinutes && currentTotalMinutes < closeMinutes;
 
         return {
             isOpen: isOpen,
             openTime: '9:00 AM',
-            closeTime: '8:30 PM',
+            closeTime: '8:00 PM',
             hour: hour,
             minute: minute,
             isOverridden: false,
             prebookingOnly: !isOpen,
             prebookingAvailable24h: true,
-            statusText: isOpen ? 'Open (Till 8:30 PM)' : 'Instant Orders Closed (24/7 Pre-Booking Active)'
+            statusText: isOpen ? 'Accepting Orders' : 'Currently unavailable',
+            statusTitle: isOpen ? 'Accepting Orders' : 'Currently unavailable'
         };
     } catch (e) {
         console.warn('getStoreOperatingStatus error:', e);
         const d = new Date();
         const m = d.getHours() * 60 + d.getMinutes();
-        const isOpen = m >= 540 && m < 1230;
-        return { isOpen, openTime: '9:00 AM', closeTime: '8:30 PM', isOverridden: false, prebookingOnly: !isOpen, prebookingAvailable24h: true };
+        const isOpen = m >= 540 && m < 1200;
+        return {
+            isOpen,
+            openTime: '9:00 AM',
+            closeTime: '8:00 PM',
+            isOverridden: false,
+            prebookingOnly: !isOpen,
+            prebookingAvailable24h: true,
+            statusText: isOpen ? 'Accepting Orders' : 'Currently unavailable',
+            statusTitle: isOpen ? 'Accepting Orders' : 'Currently unavailable'
+        };
     }
 };
 
@@ -9444,6 +9454,15 @@ window.toggleStoreHoursForTesting = function(state) {
 
 window.updateStoreOperatingStatusUI = function() {
     const status = getStoreOperatingStatus();
+
+    // 0. Update Header Status Title (Morning 9:00 AM - Evening 8:00 PM: "Accepting Orders", Otherwise: "Currently unavailable")
+    const headerStatusTitle = document.getElementById('headerStatusTitle');
+    if (headerStatusTitle) {
+        const targetTitle = status.isOpen ? 'Accepting Orders' : 'Currently unavailable';
+        if (headerStatusTitle.textContent !== targetTitle) {
+            headerStatusTitle.textContent = targetTitle;
+        }
+    }
 
     // 1. Header Status Badge
     const badge = document.getElementById('headerStoreStatusBadge');
