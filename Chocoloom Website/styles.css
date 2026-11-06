@@ -5944,9 +5944,39 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
         /* Touch swipe used on mobile */
     }
 
-    /* Remove indicator dots on mobile to eliminate any widget in between */
+    /* Mobile Indicator Dots - Sleek Glass Micro Capsule */
     .hero-ad-dots {
-        display: none !important;
+        display: flex !important;
+        position: absolute !important;
+        bottom: 10px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        gap: 6px !important;
+        padding: 4px 10px !important;
+        background: rgba(0, 0, 0, 0.42) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        border-radius: 999px !important;
+        z-index: 15 !important;
+        align-items: center !important;
+        pointer-events: auto !important;
+    }
+
+    .hero-ad-dot {
+        width: 6px !important;
+        height: 6px !important;
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.45) !important;
+        border: none !important;
+        padding: 0 !important;
+        cursor: pointer !important;
+        transition: all 0.25s ease !important;
+    }
+
+    .hero-ad-dot.active {
+        width: 16px !important;
+        border-radius: 999px !important;
+        background: #ffffff !important;
     }
 
     /* Completely eliminate any gap between hero advertisement and "What's on your mind?" */

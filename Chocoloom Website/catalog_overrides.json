@@ -28,6 +28,28 @@
       "overlayGradient": "none"
     },
     {
+      "id": "b_diwali",
+      "tag": "DIWALI SPECIAL (NOV 7–9 ONLY)",
+      "tagIcon": "fa-solid fa-sparkles",
+      "title": "",
+      "subtitle": "",
+      "discountText": "FLAT 40% OFF (NOV 7–9)",
+      "code": "DIWALI40",
+      "image": "assets/diwali_poster_banner.jpg",
+      "mobileImage": "assets/diwali_poster_banner.jpg",
+      "fallbackImage": "assets/diwali_poster_banner.jpg",
+      "bgColor": "#fadf84",
+      "badge": "VALID NOV 7–9 ONLY 🪔",
+      "rating": "4.99",
+      "ratingLabel": "Festive Choice",
+      "cta": "Claim 40% OFF",
+      "ctaAction": "copy_coupon",
+      "category": "Diwali Hampers",
+      "isGraphicBanner": false,
+      "isActive": true,
+      "overlayGradient": "none"
+    },
+    {
       "id": "b1",
       "tag": "CHOCOLOOM SIGNATURE",
       "tagIcon": "fa-solid fa-sparkles",

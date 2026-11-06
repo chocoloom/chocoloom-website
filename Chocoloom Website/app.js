@@ -4088,11 +4088,11 @@ window.goToAdSlideIndex = function(index) {
 function startAdAutoPlay() {
     stopAdAutoPlay();
     if (window.IS_UNI_CHOCOLOOM_PAGE || (window.location && window.location.pathname.includes('uni-chocoloom'))) return;
-    const count = (currentRenderedBanners && currentRenderedBanners.length) || 0;
+    const count = (currentRenderedBanners && currentRenderedBanners.length) || (document.querySelectorAll('.hero-ad-slide').length) || 0;
     if (count <= 1) return;
     adAutoPlayTimer = setInterval(() => {
         goToAdSlide(currentAdIndex + 1);
-    }, 5000);
+    }, 4000);
 }
 
 function stopAdAutoPlay() {
@@ -4380,6 +4380,9 @@ function renderBanners() {
         return;
     }
 
+    if (!DOM.bannersContainer) {
+        DOM.bannersContainer = document.getElementById('bannersContainer');
+    }
     if (!DOM.bannersContainer) return;
     
     const banners = getActiveHeroBanners();

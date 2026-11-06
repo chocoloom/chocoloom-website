@@ -31,6 +31,7 @@
             const swPath = './sw.js';
             navigator.serviceWorker.register(swPath)
                 .then((registration) => {
+                    registration.update();
                     console.log('[Chocoloom PWA] Service Worker registered with scope:', registration.scope);
                 })
                 .catch((error) => {
