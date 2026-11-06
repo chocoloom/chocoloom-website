@@ -15545,75 +15545,38 @@ body.category-view-active .products-catalog-section {
 /* ==================== BLINKIT / ZEAPTO STYLE CUSTOMISED BENTO SECTION ==================== */
 .bespoke-custom-section {
     width: 100%;
-    margin: 32px 0 40px 0;
-    padding: 30px 24px 32px;
-    background: linear-gradient(180deg, #071938 0%, #0c234b 55%, #081836 100%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 32px;
+    margin: 24px 0 32px 0;
+    padding: 8px 0 16px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
     position: relative;
-    overflow: hidden;
-    box-shadow: 0 20px 50px -10px rgba(7, 25, 56, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    box-shadow: none;
 }
 
-.bespoke-custom-section::before {
-    content: '';
-    position: absolute;
-    top: -120px;
-    left: 20%;
-    width: 360px;
-    height: 360px;
-    background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(124, 92, 252, 0.08) 50%, transparent 75%);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
+.bespoke-custom-section::before,
 .bespoke-custom-section::after {
-    content: '';
-    position: absolute;
-    bottom: -100px;
-    right: 10%;
-    width: 320px;
-    height: 320px;
-    background: radial-gradient(circle, rgba(234, 179, 8, 0.12) 0%, rgba(244, 63, 94, 0.06) 50%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
+    display: none !important;
 }
 
 .bespoke-section-header {
-    margin-bottom: 22px;
+    margin-bottom: 18px;
     position: relative;
     z-index: 2;
 }
 
-.bespoke-pill-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    background: rgba(255, 255, 255, 0.12);
-    color: #fde047;
-    border: 1px solid rgba(253, 224, 71, 0.35);
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.6px;
-    text-transform: uppercase;
-    padding: 5px 13px;
-    border-radius: 999px;
-    margin-bottom: 8px;
-    backdrop-filter: blur(8px);
-}
-
 .bespoke-section-title {
-    font-size: clamp(22px, 2.4vw, 30px);
+    font-size: clamp(20px, 2.3vw, 26px);
     font-weight: 850;
-    color: #ffffff;
+    color: #0f172a;
     margin: 0 0 6px 0;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.4px;
     line-height: 1.25;
 }
 
 .bespoke-section-subtitle {
     font-size: 13.5px;
-    color: rgba(226, 232, 240, 0.8);
+    color: #64748b;
     max-width: 680px;
     margin: 0;
     line-height: 1.5;
@@ -15785,22 +15748,101 @@ body.category-view-active .products-catalog-section {
     transform: scale(1.08);
 }
 
+/* 3. Wide Bento Card (Curated Bento Cakes spanning 2 columns) */
+.bento-wide-card {
+    grid-column: 2 / span 2;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px 12px 18px;
+    text-align: left;
+}
+
+.bento-wide-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 2;
+}
+
+.bento-wide-title {
+    font-size: 15px;
+    font-weight: 850;
+    color: #ffffff;
+    line-height: 1.25;
+    margin: 0;
+    letter-spacing: -0.2px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.bento-wide-sub {
+    font-size: 12px;
+    font-weight: 500;
+    color: #d1d5db;
+    margin-top: 1px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.bento-wide-tag {
+    display: inline-block;
+    width: fit-content;
+    margin-top: 5px;
+    background: #facc15;
+    color: #1c2118;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    letter-spacing: -0.2px;
+}
+
+.bento-wide-art {
+    width: 95px;
+    height: 95px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    border-radius: 14px;
+}
+
+.bento-wide-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 14px;
+    transition: transform 0.4s ease;
+}
+
+.custom-bento-card:hover .bento-wide-art img {
+    transform: scale(1.08);
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .bespoke-custom-section {
-        border-radius: 22px;
-        padding: 18px 12px 20px;
-        margin: 18px 0 24px 0;
+        border-radius: 0;
+        padding: 4px 0 14px;
+        margin: 14px 0 20px 0;
+        background: transparent;
+        box-shadow: none;
+        border: none;
     }
 
     .bespoke-section-title {
         font-size: 18px;
         margin-bottom: 4px;
+        color: #0f172a;
     }
 
     .bespoke-section-subtitle {
         font-size: 11.5px;
         line-height: 1.4;
+        color: #64748b;
     }
 
     .custom-bento-grid {
@@ -15868,6 +15910,36 @@ body.category-view-active .products-catalog-section {
     .bento-card-art img {
         height: 72px;
         border-radius: 0 0 16px 16px;
+    }
+
+    .bento-wide-card {
+        grid-column: 2 / span 2;
+        padding: 8px 10px;
+    }
+
+    .bento-wide-title {
+        font-size: 12px;
+        line-height: 1.2;
+    }
+
+    .bento-wide-sub {
+        font-size: 10px;
+    }
+
+    .bento-wide-tag {
+        font-size: 9.5px;
+        padding: 2px 6px;
+        border-radius: 5px;
+    }
+
+    .bento-wide-art {
+        width: 76px;
+        height: 76px;
+        border-radius: 10px;
+    }
+
+    .bento-wide-art img {
+        border-radius: 10px;
     }
 }
 
