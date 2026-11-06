@@ -5806,8 +5806,8 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
     }
 
     /* Spacious, Grand and Prominent Horizontal Banner on Mobile - Bleeds under Notch */
-    .hero-ad-slide:not(.hero-ad-graphic-slide):not(.hero-ad-craft-slide),
-    .hero-ad-section.full-bleed .hero-ad-slide:not(.hero-ad-graphic-slide):not(.hero-ad-craft-slide) {
+    .hero-ad-slide:not(.hero-ad-graphic-slide):not(.hero-ad-craft-slide):not(.hero-ad-diwali-slide),
+    .hero-ad-section.full-bleed .hero-ad-slide:not(.hero-ad-graphic-slide):not(.hero-ad-craft-slide):not(.hero-ad-diwali-slide) {
         flex-direction: row !important;
         align-items: center !important;
         justify-content: flex-start !important;
@@ -13061,6 +13061,132 @@ body.category-view-active .products-catalog-section {
     background: #065ec0 !important;
 }
 
+/* Dedicated Styling for Diwali Festival Square Poster Slide */
+.hero-ad-slide.hero-ad-diwali-slide {
+    background: #fadf84 !important;
+    background-color: #fadf84 !important;
+    cursor: pointer !important;
+    position: relative !important;
+}
+
+.hero-ad-slide.hero-ad-diwali-slide .hero-ad-content,
+.hero-ad-slide.hero-ad-diwali-slide .diwali-hero-ad-content {
+    position: absolute !important;
+    bottom: 24px !important;
+    left: clamp(24px, 6vw, 64px) !important;
+    top: auto !important;
+    margin: 0 !important;
+    z-index: 10 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.hero-ad-slide.hero-ad-diwali-slide .ad-media-overlay,
+.diwali-media-overlay {
+    display: none !important;
+    background: none !important;
+}
+
+.hero-ad-slide.hero-ad-diwali-slide .ad-bg-photo {
+    object-fit: contain !important;
+    object-position: center center !important;
+}
+
+.hero-ad-slide.hero-ad-diwali-slide .hero-ad-perks,
+.hero-ad-slide.hero-ad-diwali-slide .diwali-ad-perks {
+    display: none !important;
+}
+
+.hero-ad-cta-btn.diwali-cta-btn,
+.hero-ad-diwali-slide .diwali-cta-btn,
+.diwali-cta-btn {
+    background: #ffffff !important;
+    color: #92400e !important;
+    border: 1px solid rgba(255, 255, 255, 0.95) !important;
+    border-radius: 9999px !important;
+    padding: 3.5px 4.5px 3.5px 12px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.35px !important;
+    box-shadow: 0 4px 14px rgba(180, 83, 9, 0.28), 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 1.5px rgba(255, 255, 255, 0.9) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    cursor: pointer !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    min-height: auto !important;
+    height: 28px !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.hero-ad-cta-btn.diwali-cta-btn::before,
+.hero-ad-diwali-slide .diwali-cta-btn::before,
+.diwali-cta-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -75%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+    transform: skewX(-20deg);
+    animation: craftCtaShimmer 3.5s infinite ease-in-out;
+}
+
+.hero-ad-cta-btn.diwali-cta-btn:hover,
+.hero-ad-diwali-slide .diwali-cta-btn:hover,
+.diwali-cta-btn:hover {
+    transform: translateY(-1.5px) scale(1.025) !important;
+    box-shadow: 0 6px 18px rgba(180, 83, 9, 0.35), 0 0 0 2px rgba(255, 255, 255, 1) !important;
+    background: #ffffff !important;
+    color: #78350f !important;
+}
+
+.hero-ad-cta-btn.diwali-cta-btn:active,
+.hero-ad-diwali-slide .diwali-cta-btn:active,
+.diwali-cta-btn:active {
+    transform: translateY(0) scale(0.98) !important;
+}
+
+.diwali-cta-btn .diwali-cta-text {
+    color: #92400e !important;
+    font-weight: 800 !important;
+    font-size: 11px !important;
+    letter-spacing: 0.35px !important;
+    line-height: 1 !important;
+}
+
+.diwali-cta-btn .diwali-cta-bubble {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    transition: transform 0.25s ease, background 0.25s ease !important;
+    margin: 0 !important;
+}
+
+.diwali-cta-btn .diwali-cta-bubble i {
+    color: #ffffff !important;
+    font-size: 8.5px !important;
+    margin: 0 !important;
+}
+
+.hero-ad-cta-btn.diwali-cta-btn:hover .diwali-cta-bubble,
+.hero-ad-diwali-slide .diwali-cta-btn:hover .diwali-cta-bubble,
+.diwali-cta-btn:hover .diwali-cta-bubble {
+    transform: translateX(1.5px) !important;
+    background: #b45309 !important;
+}
+
 /* Floating interactive action bar on Tombola graphic ad */
 .hero-graphic-cta-container {
     position: absolute;
@@ -13393,6 +13519,61 @@ body.category-view-active .products-catalog-section {
     }
 
     .hero-ad-slide.hero-ad-craft-slide .ad-bg-photo {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: center center !important;
+        display: block !important;
+    }
+
+    /* Mobile Dedicated 1:1 Square Billboard for Diwali Poster */
+    .hero-ad-slide.hero-ad-diwali-slide {
+        display: block !important;
+        position: relative !important;
+        padding: 0 !important;
+        min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
+        height: auto !important;
+        background-color: #fadf84 !important;
+        background: #fadf84 !important;
+        overflow: hidden !important;
+    }
+
+    .hero-ad-slide.hero-ad-diwali-slide .hero-ad-content,
+    .hero-ad-slide.hero-ad-diwali-slide .diwali-hero-ad-content {
+        position: absolute !important;
+        bottom: 14px !important;
+        left: 16px !important;
+        top: auto !important;
+        margin: 0 !important;
+        max-width: calc(100% - 32px) !important;
+        width: auto !important;
+        z-index: 10 !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .hero-ad-slide.hero-ad-diwali-slide .diwali-cta-btn {
+        height: 26px !important;
+        padding: 3px 4px 3px 10px !important;
+        font-size: 10.5px !important;
+        gap: 5px !important;
+    }
+
+    .hero-ad-slide.hero-ad-diwali-slide .diwali-cta-btn .diwali-cta-text {
+        font-size: 10.5px !important;
+    }
+
+    .hero-ad-slide.hero-ad-diwali-slide .diwali-cta-btn .diwali-cta-bubble {
+        width: 18px !important;
+        height: 18px !important;
+        font-size: 8px !important;
+    }
+
+    .hero-ad-slide.hero-ad-diwali-slide .diwali-cta-btn .diwali-cta-bubble i {
+        font-size: 8px !important;
+    }
+
+    .hero-ad-slide.hero-ad-diwali-slide .ad-bg-photo {
         width: 100% !important;
         height: 100% !important;
         object-fit: cover !important;

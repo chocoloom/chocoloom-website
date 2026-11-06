@@ -3858,7 +3858,8 @@ function getActiveHeroBanners() {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed) && parsed.length > 0) {
                 const storedCraft = parsed.find(b => b && b.id === 'b_craft_happy_moments');
-                if (storedCraft && storedCraft.cta === 'Register Now' && !storedCraft.title) {
+                const storedDiwali = parsed.find(b => b && b.id === 'b_diwali');
+                if (storedCraft && storedCraft.cta === 'Register Now' && !storedCraft.title && storedDiwali && storedDiwali.image === 'assets/diwali_poster_banner.jpg') {
                     savedBanners = parsed;
                 } else {
                     localStorage.removeItem("chocoloom_banners");
@@ -3871,51 +3872,29 @@ function getActiveHeroBanners() {
 
     let banners = savedBanners || (window.SWIGGY_DATA ? (SWIGGY_DATA.banners || SWIGGY_DATA.heroBanners || []) : []);
 
-    // Ensure the Diwali Special Banner is ALWAYS present and pinned at position 0 (first slide)
-    const swiggyDiwaliBanner = (window.SWIGGY_DATA && SWIGGY_DATA.banners) 
-        ? SWIGGY_DATA.banners.find(b => b && (b.id === 'b_diwali' || (b.title && b.title.includes('Diwali')))) 
-        : null;
-
-    let diwaliIdx = banners.findIndex(b => b && (b.id === 'b_diwali' || (b.title && b.title.includes('Diwali'))));
-    let diwaliItem = null;
-
-    if (diwaliIdx !== -1) {
-        diwaliItem = banners.splice(diwaliIdx, 1)[0];
-    } else if (swiggyDiwaliBanner) {
-        diwaliItem = { ...swiggyDiwaliBanner };
-    } else {
-        diwaliItem = {
-            id: "b_diwali",
-            tag: "DIWALI SPECIAL (NOV 7–9 ONLY)",
-            tagIcon: "fa-solid fa-sparkles",
-            title: "Happy Diwali: Luxury Hampers & Sweets 🪔✨",
-            subtitle: "Celebrate the Festival of Lights with handcrafted Belgian pralines, golden dry-fruit cakes & festive gift hampers. Flat 40% OFF with code DIWALI40 (Valid Nov 7–9 only)!",
-            discountText: "FLAT 40% OFF (NOV 7–9)",
-            code: "DIWALI40",
-            image: "assets/categories/diwali_hampers.webp",
-            fallbackImage: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=1600&auto=format&fit=crop&q=80",
-            overlayGradient: "linear-gradient(90deg, rgba(36, 11, 54, 0.95) 0%, rgba(74, 21, 75, 0.8) 45%, rgba(124, 45, 18, 0.25) 85%, rgba(20, 5, 25, 0.1) 100%)",
-            badge: "VALID NOV 7–9 ONLY 🪔",
-            rating: "4.99",
-            ratingLabel: "Festive Choice",
-            cta: "Claim 40% OFF",
-            category: "Diwali Hampers",
-            isActive: true
-        };
-    }
-
-    if (diwaliItem) {
-        diwaliItem.isActive = true;
-        diwaliItem.discountText = 'FLAT 40% OFF (NOV 7–9)';
-        diwaliItem.code = 'DIWALI40';
-        diwaliItem.cta = 'Claim 40% OFF';
-        diwaliItem.badge = 'VALID NOV 7–9 ONLY 🪔';
-        diwaliItem.tag = 'DIWALI SPECIAL (NOV 7–9 ONLY)';
-        diwaliItem.image = diwaliItem.image || 'assets/categories/diwali_hampers.webp';
-        diwaliItem.subtitle = diwaliItem.subtitle || 'Celebrate the Festival of Lights with handcrafted Belgian pralines, golden dry-fruit cakes & festive gift hampers. Flat 40% OFF with code DIWALI40 (Valid Nov 7–9 only)!';
-        banners.unshift(diwaliItem);
-        needsCacheUpdate = true;
-    }
+    // Ensure Craft Workshop Banner (#1) and Diwali Festival Ad (#2)
+    const diwaliItem = {
+        id: "b_diwali",
+        tag: "DIWALI SPECIAL (NOV 7–9 ONLY)",
+        tagIcon: "fa-solid fa-sparkles",
+        title: "",
+        subtitle: "",
+        discountText: "FLAT 40% OFF (NOV 7–9)",
+        code: "DIWALI40",
+        image: "assets/diwali_poster_banner.jpg",
+        fallbackImage: "assets/diwali_poster_banner.jpg",
+        mobileImage: "assets/diwali_poster_banner.jpg",
+        overlayGradient: "none",
+        bgColor: "#fadf84",
+        badge: "VALID NOV 7–9 ONLY 🪔",
+        rating: "4.99",
+        ratingLabel: "Festive Choice",
+        cta: "Claim 40% OFF",
+        ctaAction: "copy_coupon",
+        category: "Diwali Hampers",
+        isGraphicBanner: false,
+        isActive: true
+    };
 
     // Ensure Craft Your Happy Moments Creative Kit Banner is ALWAYS present and styled cleanly
     const craftItem = {
@@ -3942,8 +3921,9 @@ function getActiveHeroBanners() {
         isActive: true
     };
 
-    // Filter and Pin Creative Banner as Slide #1
-    banners = banners.filter(b => b && b.id !== 'b_craft_happy_moments');
+    // Filter and Pin: Slide #1 = Workshop, Slide #2 = Diwali Poster Ad
+    banners = banners.filter(b => b && b.id !== 'b_craft_happy_moments' && b.id !== 'b_diwali');
+    banners.unshift(diwaliItem);
     banners.unshift(craftItem);
     needsCacheUpdate = true;
 
@@ -3964,11 +3944,22 @@ function getActiveHeroBanners() {
         const fallback = ban.fallbackImage ? ban.fallbackImage.trim() : img;
         const isComingSoon = ban.isComingSoon !== undefined ? Boolean(ban.isComingSoon) : false;
         const redirectUrl = (ban.redirectUrl || ban.url || ban.link || '').trim();
-        if (ban.id === 'b_diwali' && (!ban.discountText || !ban.discountText.includes('NOV 7'))) {
+        if (ban.id === 'b_diwali') {
             ban.discountText = 'FLAT 40% OFF (NOV 7–9)';
             ban.badge = 'VALID NOV 7–9 ONLY 🪔';
             ban.tag = 'DIWALI SPECIAL (NOV 7–9 ONLY)';
-            ban.subtitle = 'Celebrate the Festival of Lights with handcrafted Belgian pralines, golden dry-fruit cakes & festive gift hampers. Flat 40% OFF with code DIWALI40 (Valid Nov 7–9 only)!';
+            ban.title = '';
+            ban.subtitle = '';
+            ban.image = 'assets/diwali_poster_banner.jpg';
+            ban.fallbackImage = 'assets/diwali_poster_banner.jpg';
+            ban.mobileImage = 'assets/diwali_poster_banner.jpg';
+            ban.overlayGradient = 'none';
+            ban.bgColor = '#fadf84';
+            ban.cta = 'Claim 40% OFF';
+            ban.code = 'DIWALI40';
+            ban.ctaAction = 'copy_coupon';
+            ban.isGraphicBanner = false;
+            img = 'assets/diwali_poster_banner.jpg';
             needsCacheUpdate = true;
         }
         const discountText = (ban.discountText && ban.discountText.includes('COMING SOON')) ? '' : (ban.discountText || '');
@@ -4009,14 +4000,19 @@ function getActiveHeroBanners() {
         banners = (window.SWIGGY_DATA && SWIGGY_DATA.banners) ? SWIGGY_DATA.banners : [];
     }
 
-    // Pin Creative Kits Banner as Slide #1 in Billboard
-    const craftIdx = banners.findIndex(b => b && b.id === 'b_craft_happy_moments');
-    if (craftIdx > 0) {
-        const [cItem] = banners.splice(craftIdx, 1);
-        banners.unshift(cItem);
-    } else if (craftIdx === -1) {
-        banners.unshift(craftItem);
+    // Pin Slide #1 = Workshop (b_craft_happy_moments) and Slide #2 = Diwali Poster Ad (b_diwali)
+    const diwaliIdx = banners.findIndex(b => b && (b.id === 'b_diwali' || (b.title && b.title.includes('Diwali'))));
+    let pinnedDiwali = diwaliItem;
+    if (diwaliIdx !== -1) {
+        pinnedDiwali = banners.splice(diwaliIdx, 1)[0];
     }
+    const craftIdx = banners.findIndex(b => b && b.id === 'b_craft_happy_moments');
+    let pinnedCraft = craftItem;
+    if (craftIdx !== -1) {
+        pinnedCraft = banners.splice(craftIdx, 1)[0];
+    }
+    banners.unshift(pinnedDiwali);
+    banners.unshift(pinnedCraft);
 
     return banners;
 }
@@ -4035,6 +4031,17 @@ function goToAdSlide(index) {
     currentAdIndex = ((index % totalCount) + totalCount) % totalCount;
     DOM.bannersContainer.style.transform = `translateX(-${currentAdIndex * 100}%)`;
 
+    // Toggle active class on DOM slides
+    if (domSlides && domSlides.length > 0) {
+        domSlides.forEach((s, i) => {
+            if (i === currentAdIndex) {
+                s.classList.add('active');
+            } else {
+                s.classList.remove('active');
+            }
+        });
+    }
+
     // Update indicator dots
     const dotsContainer = document.getElementById('heroAdIndicators');
     if (dotsContainer) {
@@ -4048,11 +4055,16 @@ function goToAdSlide(index) {
         });
     }
 
-    // Dynamic background matching for hero billboard
+    // Dynamic background matching for hero billboard & mobile status bar
     const activeBanner = banners[currentAdIndex] || (domSlides[currentAdIndex] ? { bgColor: domSlides[currentAdIndex].style.backgroundColor } : null);
     const heroWrapper = document.getElementById('heroAdWrapper');
     if (heroWrapper) {
         heroWrapper.style.backgroundColor = (activeBanner && activeBanner.bgColor) ? activeBanner.bgColor : '#ffd735';
+    }
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    const catalogNavbar = document.getElementById('catalogNavbar');
+    if (themeColorMeta && (!catalogNavbar || !catalogNavbar.classList.contains('scrolled'))) {
+        themeColorMeta.setAttribute('content', (activeBanner && activeBanner.bgColor) ? activeBanner.bgColor : '#11071f');
     }
 }
 
@@ -4445,44 +4457,39 @@ function renderBanners() {
         const overlayGradient = ban.overlayGradient || defaultOverlay;
 
         return `
-        <div class="hero-ad-slide ${isTombola ? 'hero-ad-tombola-slide' : ''} ${isCraft ? 'hero-ad-craft-slide' : ''}" data-slide-index="${index}" data-slide-id="${ban.id}" style="background-color: ${ban.bgColor || (isCraft ? '#1a0826' : (isTombola ? '#ffd735' : '#110722'))};">
+        <div class="hero-ad-slide ${index === 0 ? 'active' : ''} ${isTombola ? 'hero-ad-tombola-slide' : ''} ${isCraft ? 'hero-ad-craft-slide' : ''} ${isDiwali ? 'hero-ad-diwali-slide' : ''}" data-slide-index="${index}" data-slide-id="${ban.id}" onclick="${isDiwali ? `handleBannerClick('${ban.id}', event)` : ''}" style="background-color: ${ban.bgColor || (isDiwali ? '#fadf84' : (isCraft ? '#1a0826' : (isTombola ? '#ffd735' : '#110722')))}; ${isDiwali ? 'cursor: pointer;' : ''}">
             <!-- Full-Bleed Background Photo (fills 100% of entire banner, responsive picture) -->
-            <div class="ad-bg-media" style="background-color: ${ban.bgColor || (isCraft ? '#1a0826' : (isTombola ? '#ffd735' : '#110722'))};">
+            <div class="ad-bg-media" style="background-color: ${ban.bgColor || (isDiwali ? '#fadf84' : (isCraft ? '#1a0826' : (isTombola ? '#ffd735' : '#110722')))};">
                 <picture style="width: 100%; height: 100%; position: absolute; inset: 0;">
                     ${stdMob ? `<source media="(max-width: 768px)" srcset="${stdMob}">` : ''}
-                    <img src="${stdImg}" alt="${ban.title}" class="ad-bg-photo ${isTombola ? 'tombola-ad-photo' : ''}" loading="${index === 0 ? 'eager' : 'lazy'}" onerror="this.onerror=null;this.src='${stdFallback}';">
+                    <img src="${stdImg}" alt="${ban.title || 'Diwali Special Offer'}" class="ad-bg-photo ${isTombola ? 'tombola-ad-photo' : ''}" loading="${index === 0 ? 'eager' : 'lazy'}" onerror="this.onerror=null;this.src='${stdFallback}';">
                 </picture>
-                <div class="ad-media-overlay ${isTombola ? 'tombola-media-overlay' : ''} ${isCraft ? 'craft-media-overlay' : ''}" style="background: ${isCraft ? 'none' : overlayGradient}; ${isCraft ? 'display: none !important;' : ''}"></div>
+                <div class="ad-media-overlay ${isTombola ? 'tombola-media-overlay' : ''} ${isCraft ? 'craft-media-overlay' : ''} ${isDiwali ? 'diwali-media-overlay' : ''}" style="background: ${(isCraft || isDiwali) ? 'none' : overlayGradient}; ${(isCraft || isDiwali) ? 'display: none !important;' : ''}"></div>
             </div>
 
             <!-- Floating Top-Right Discount Ribbon -->
-            ${(!isCraft && ban.discountText) ? `
+            ${(!isCraft && !isDiwali && ban.discountText) ? `
             <div class="hero-ad-discount-tag ${isCraft ? 'craft-discount-tag' : ''}">
                 <i class="${isCraft ? 'fa-solid fa-gift' : 'fa-solid fa-fire'}"></i>
                 <span>${ban.discountText}</span>
             </div>` : ''}
 
             <!-- Banner Content over Full Photo Background -->
-            <div class="hero-ad-content ${isCraft ? 'craft-hero-ad-content' : ''}">
-                ${isDiwali ? `
-                <div class="diwali-tag-pill">
-                    <i class="fa-solid fa-sparkles"></i>
-                    <span>DIWALI FESTIVE SPECIAL (NOV 7–9 ONLY)</span>
-                </div>
-                ` : (isTombola ? `
+            <div class="hero-ad-content ${isCraft ? 'craft-hero-ad-content' : ''} ${isDiwali ? 'diwali-hero-ad-content' : ''}">
+                ${isTombola ? `
                 <div class="tombola-tag-pill">
                     <i class="fa-solid fa-dice"></i>
                     <span>COMMUNITY LUCKY DRAW</span>
                 </div>
-                ` : '')}
-                ${(!isCraft && ban.title) ? `
+                ` : ''}
+                ${(!isCraft && !isDiwali && ban.title) ? `
                 <h2 class="hero-ad-title ${isTombola ? 'tombola-ad-title' : ''}">${ban.title}</h2>
                 ` : ''}
-                ${(!isCraft && ban.subtitle) ? `
+                ${(!isCraft && !isDiwali && ban.subtitle) ? `
                 <p class="hero-ad-desc ${isTombola ? 'tombola-ad-desc' : ''}">${ban.subtitle}</p>
                 ` : ''}
                 
-                <div class="hero-ad-actions ${isCraft ? 'craft-hero-ad-actions' : ''}">
+                <div class="hero-ad-actions ${isCraft ? 'craft-hero-ad-actions' : ''} ${isDiwali ? 'diwali-hero-ad-actions' : ''}">
                     ${isCraft ? `
                     <button class="hero-ad-cta-btn craft-cta-btn" onclick="handleBannerClick('${ban.id}', event)">
                         <span class="craft-cta-text">${ban.cta || 'Register Now'}</span>
@@ -4490,22 +4497,23 @@ function renderBanners() {
                             <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-arrow-right'}"></i>
                         </span>
                     </button>
+                    ` : (isDiwali ? `
+                    <button class="hero-ad-cta-btn diwali-cta-btn" onclick="handleBannerClick('${ban.id}', event)">
+                        <span class="diwali-cta-text">${ban.cta || 'Claim 40% OFF'}</span>
+                        <span class="diwali-cta-bubble">
+                            <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-sparkles'}"></i>
+                        </span>
+                    </button>
                     ` : `
-                    <button class="hero-ad-cta-btn ${isTombola ? 'tombola-cta-btn' : ''}" onclick="handleBannerClick('${ban.id}', event)" style="${isDiwali ? 'background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45); border: none;' : ''}">
-                        ${isTombola ? '<i class="fa-solid fa-hourglass-start" style="color: #ffffff; font-size: 15px;"></i>' : (isDiwali ? '<i class="fa-solid fa-gift" style="color: #ffffff; margin-right: 4px;"></i>' : '')}
+                    <button class="hero-ad-cta-btn ${isTombola ? 'tombola-cta-btn' : ''}" onclick="handleBannerClick('${ban.id}', event)">
+                        ${isTombola ? '<i class="fa-solid fa-hourglass-start" style="color: #ffffff; font-size: 15px;"></i>' : ''}
                         <span>${isTombola ? 'COMING SOON' : (ban.cta || 'ORDER NOW')}</span>
                         <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-arrow-right'}"></i>
                     </button>
-                    `}
+                    `)}
                 </div>
 
-                ${isDiwali ? `
-                <div class="hero-ad-perks diwali-ad-perks">
-                    <div class="hero-ad-perk"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> 4.99 (Festive Choice)</div>
-                    <div class="hero-ad-perk"><i class="fa-solid fa-truck-fast" style="color: #38bdf8;"></i> 25 Min Delivery</div>
-                    <div class="hero-ad-perk"><i class="fa-solid fa-sparkles" style="color: #fbbf24;"></i> Handcrafted Hampers & Sweets</div>
-                </div>
-                ` : (isCraft ? '' : (isTombola ? `
+                ${(isCraft || isDiwali) ? '' : (isTombola ? `
                 <div class="hero-ad-perks tombola-ad-perks">
                     <div class="hero-ad-perk"><i class="fa-solid fa-star" style="color: #ffd735;"></i> ${ban.rating || '5.0'} (${ban.ratingLabel || 'Community Favorite'})</div>
                     <div class="hero-ad-perk"><i class="fa-solid fa-gift" style="color: #f43f5e;"></i> Every Ticket Wins</div>
@@ -4517,7 +4525,7 @@ function renderBanners() {
                     <div class="hero-ad-perk"><i class="fa-solid fa-bolt" style="color: #38bdf8;"></i> 25 Min Delivery</div>
                     <div class="hero-ad-perk"><i class="fa-solid fa-certificate" style="color: #34d399;"></i> 100% Fresh Bakes</div>
                 </div>
-                `))}
+                `)}
             </div>
         </div>`;
     }).join('');
@@ -11113,7 +11121,8 @@ function bindEvents() {
                 catalogNavbar.classList.remove('scrolled');
                 if (themeColorMeta) {
                     const activeCraft = document.querySelector('.hero-ad-slide.active.hero-ad-craft-slide');
-                    themeColorMeta.setAttribute('content', activeCraft ? '#0871dc' : '#11071f');
+                    const activeDiwali = document.querySelector('.hero-ad-slide.active.hero-ad-diwali-slide');
+                    themeColorMeta.setAttribute('content', activeDiwali ? '#fadf84' : (activeCraft ? '#0871dc' : '#11071f'));
                 }
             }
         };
