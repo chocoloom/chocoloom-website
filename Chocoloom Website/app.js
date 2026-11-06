@@ -6487,6 +6487,9 @@ window.openCart = function() {
     const overlay = document.getElementById('cartOverlay');
     if (drawer) drawer.classList.add('open');
     if (overlay) overlay.classList.add('open');
+    document.body.classList.add('cart-open');
+    const dock = document.getElementById('chocoloomBottomDock');
+    if (dock) dock.classList.add('dock-hidden-in-cart');
     if (typeof updateCartUI === 'function') updateCartUI();
 };
 
@@ -6495,6 +6498,9 @@ window.closeCart = function() {
     const overlay = document.getElementById('cartOverlay');
     if (drawer) drawer.classList.remove('open');
     if (overlay) overlay.classList.remove('open');
+    document.body.classList.remove('cart-open');
+    const dock = document.getElementById('chocoloomBottomDock');
+    if (dock) dock.classList.remove('dock-hidden-in-cart');
 };
 
 // ==================== CAKE CUSTOMIZATION (WEIGHT & COOLING OPTIONS) ====================
@@ -10661,6 +10667,33 @@ function bindEvents() {
 
     const cartOverlay = document.getElementById('cartOverlay') || DOM.cartOverlay;
     if (cartOverlay) cartOverlay.addEventListener('click', closeCart);
+
+    // Ensure Bottom Dock is hidden whenever Cart Drawer is active
+    const cartDrawerEl = document.getElementById('cartDrawer') || DOM.cartDrawer;
+    if (cartDrawerEl) {
+        const syncCartDockVisibility = () => {
+            const isOpen = cartDrawerEl.classList.contains('open');
+            const dock = document.getElementById('chocoloomBottomDock');
+            if (isOpen) {
+                document.body.classList.add('cart-open');
+                if (dock) dock.classList.add('dock-hidden-in-cart');
+            } else {
+                document.body.classList.remove('cart-open');
+                if (dock) dock.classList.remove('dock-hidden-in-cart');
+            }
+        };
+        syncCartDockVisibility();
+        try {
+            const cartDrawerObserver = new MutationObserver((mutations) => {
+                for (const mutation of mutations) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        syncCartDockVisibility();
+                    }
+                }
+            });
+            cartDrawerObserver.observe(cartDrawerEl, { attributes: true });
+        } catch (e) {}
+    }
 
     // Menu Modal Close
     const closeMenuBtn = document.getElementById('closeMenuModalBtn') || DOM.closeMenuModalBtn;

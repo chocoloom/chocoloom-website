@@ -4939,6 +4939,21 @@ body.ad-fullscreen-active {
     filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.22));
 }
 
+/* Hide Floating Bottom Dock when Cart Drawer is open or active */
+body.cart-open .chocoloom-bottom-dock,
+body:has(#cartDrawer.open) .chocoloom-bottom-dock,
+body:has(.cart-drawer.open) .chocoloom-bottom-dock,
+#cartDrawer.open ~ .chocoloom-bottom-dock,
+.cart-drawer.open ~ .chocoloom-bottom-dock,
+.cart-drawer-overlay.open ~ .chocoloom-bottom-dock,
+.chocoloom-bottom-dock.dock-hidden-in-cart {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translate(-50%, 120px) !important;
+}
+
 /* Grounded floating position with comfortable bottom spacing */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
     .chocoloom-bottom-dock {
