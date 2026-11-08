@@ -1,5 +1,5 @@
 // Chocoloom Progressive Web App (PWA) Service Worker
-const CACHE_NAME = 'chocoloom-cache-v1.0.10';
+const CACHE_NAME = 'chocoloom-cache-v1.0.11';
 const PRECACHE_ASSETS = [
     './',
     './order.html',
