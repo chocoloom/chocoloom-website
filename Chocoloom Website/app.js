@@ -1165,6 +1165,23 @@ function getSupabaseClient() {
 // Synchronously hydrate cached cloud database prices into SWIGGY_DATA before initial UI render
 function applyCachedDbPricesToMenu() {
     try {
+        try {
+            if (localStorage.getItem('chocoloom_stock_sync_v4') !== 'true') {
+                // One-time purge of stale legacy out-of-stock flags from localStorage
+                localStorage.removeItem('chocoloom_db_catalog_cache');
+                const co = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
+                let changed = false;
+                Object.keys(co).forEach(k => {
+                    if (co[k] && co[k].is_available === false) {
+                        delete co[k].is_available;
+                        changed = true;
+                    }
+                });
+                if (changed) localStorage.setItem('chocoloom_price_overrides', JSON.stringify(co));
+                localStorage.setItem('chocoloom_stock_sync_v4', 'true');
+            }
+        } catch(e) {}
+
         let cache = {};
         try {
             const dbCache = JSON.parse(localStorage.getItem('chocoloom_db_catalog_cache') || '{}');
@@ -1532,7 +1549,7 @@ window.loadCatalogFromNeon = async function(showToast = false) {
 
 // Fetch all products directly from Supabase (Egress Optimized with Client-Side 10-min Cache)
 async function fetchLiveProductsFromSupabase() {
-    const CACHE_KEY = 'chocoloom_products_cache_v2';
+    const CACHE_KEY = 'chocoloom_products_cache_v3';
     const CACHE_TTL_MS = 600000; // 10 minutes cache TTL
     const PRODUCT_SELECT_COLUMNS = '*';
 
@@ -1851,15 +1868,13 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 cooling_price_2kg: Number(lp.cooling_price_2kg || 200),
                 cooling_price_3kg: Number(lp.cooling_price_3kg || 299),
                 is_available: (() => {
-                    const lpIsAvail = (lp.is_available !== false && lp.is_available !== 'false' && lp.is_available !== 0 && lp.is_available !== '0');
-                    if (!lpIsAvail) return false;
                     try {
                         const ao = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
                         const lpId = lp.id; const lpNorm = (lp.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
                         const ov = ao[lpId] || (lpNorm ? ao[lpNorm] : null) || (lp.name ? ao[lp.name.toLowerCase().trim()] : null);
                         if (ov && ov.is_available !== undefined) return Boolean(ov.is_available);
                     } catch(e) {}
-                    return true;
+                    return (lp.is_available !== false && lp.is_available !== 'false' && lp.is_available !== 0 && lp.is_available !== '0');
                 })(),
                 has_weight: hasW,
                 has_cooling: hasC,

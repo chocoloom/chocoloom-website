@@ -67,6 +67,20 @@ const savedNeonUrl = localStorage.getItem('chocoloom_neon_url');
 
 // Immediately purge legacy fake demo orders from localStorage so state is always 100% authentic
 try {
+    if (localStorage.getItem('chocoloom_stock_sync_v4') !== 'true') {
+        localStorage.removeItem('chocoloom_db_catalog_cache');
+        const co = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
+        let changed = false;
+        Object.keys(co).forEach(k => {
+            if (co[k] && co[k].is_available === false) {
+                delete co[k].is_available;
+                changed = true;
+            }
+        });
+        if (changed) localStorage.setItem('chocoloom_price_overrides', JSON.stringify(co));
+        localStorage.setItem('chocoloom_stock_sync_v4', 'true');
+    }
+
     const rawLocalOrders = localStorage.getItem('chocoloom_orders');
     if (rawLocalOrders) {
         const parsed = JSON.parse(rawLocalOrders);
