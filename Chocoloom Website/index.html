@@ -18,10 +18,18 @@
     <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512x512.png">
     <base href="/">
     <script>
-        // Clean URL: Strip .html extensions from address bar immediately
+        // Clean URL: Strip .html extensions from address bar only on production environments
         (function() {
             try {
                 if (window.history && window.history.replaceState && window.location) {
+                    var host = window.location.hostname || '';
+                    var isLocal = host === 'localhost' || 
+                                  host === '127.0.0.1' || 
+                                  host.endsWith('.local') || 
+                                  window.location.protocol === 'file:' || 
+                                  (window.location.port && window.location.port !== '80' && window.location.port !== '443');
+                    if (isLocal) return; // Preserve file extensions on local servers to avoid 404s
+
                     var p = window.location.pathname;
                     var changed = false;
                     if (p.endsWith('/order.html') || p === '/order.html' || p.endsWith('/index.html') || p === '/index.html') {
@@ -1671,8 +1679,7 @@
     <script src="data.js?v=14.0"></script>
     <script src="react-components.js?v=2.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
-    <script src="app.js?v=16.0"></script>
-    <script src="app.js?v=16.2"></script>
+    <script src="app.js?v=16.3"></script>
     <script src="pwa.js?v=2.1" defer></script>
 </body>
 </html>

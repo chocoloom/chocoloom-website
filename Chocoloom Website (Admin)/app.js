@@ -1,8 +1,16 @@
-// Clean URL Beautifier: Ensure the address bar never displays .html extensions
+// Clean URL Beautifier: Ensure the address bar never displays .html extensions in production environments
 (function() {
     try {
         if (typeof window !== 'undefined' && window.history && window.history.replaceState && window.location) {
             const loc = window.location;
+            const host = loc.hostname || '';
+            const isLocal = host === 'localhost' || 
+                            host === '127.0.0.1' || 
+                            host.endsWith('.local') || 
+                            loc.protocol === 'file:' || 
+                            (loc.port && loc.port !== '80' && loc.port !== '443');
+            if (isLocal) return; // Preserve file extensions on local servers (Live Server / DevTools) to avoid 404s
+
             let p = loc.pathname;
             let changed = false;
             if (p.endsWith('/index.html') || p === '/index.html' || p.endsWith('/order.html') || p === '/order.html') {
