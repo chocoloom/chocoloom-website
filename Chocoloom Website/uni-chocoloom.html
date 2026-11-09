@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=15.9">
+    <link rel="stylesheet" href="styles.css?v=19.1">
     <script>
         // Flag this page as the dedicated Uni Chocoloom store
         window.IS_UNI_CHOCOLOOM_PAGE = true;
@@ -72,7 +72,7 @@
         }
     </style>
 </head>
-<body>
+<body class="uni-chocoloom-page">
 
     <!-- Instant Centered Plain Logo Splash Screen (Plain logo only, no box) -->
     <div id="siteLoadingSplash" class="site-loading-splash">
@@ -85,10 +85,13 @@
         <div class="container nav-inner">
             <div class="nav-left">
                 <div class="brand-dock-group" id="brandDockGroup" title="Delivering to SRKR Engineering College, Bhimavaram" role="button" tabindex="0">
-                    <div class="header-status-title" id="headerStatusTitle">Accepting Orders</div>
+                    <div style="display: flex; align-items: center; gap: 7px;">
+                        <img src="assets/one-logo.png" alt="One" class="uni-header-one-badge" style="height: 22px; width: auto; max-height: 22px; object-fit: contain; display: inline-block; vertical-align: middle;">
+                        <div class="header-status-title" id="headerStatusTitle">Accepting Orders</div>
+                    </div>
 
                     <div class="location-dock-btn" id="locationPickerBtn">
-                        <span class="loc-dock-tag" id="currentLocType">CAMPUS</span>
+                        <span class="loc-dock-tag" id="currentLocType" style="color: #16a34a !important; font-weight: 800;">CAMPUS</span>
                         <span class="loc-dock-sep">-</span>
                         <span class="loc-dock-name" id="currentLocName">SRKR Engineering College</span>
                         <i class="fa-solid fa-caret-down loc-dock-caret"></i>
@@ -1198,9 +1201,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="data.js?v=6.8"></script>
-    <script src="react-components.js?v=2.0"></script>
-    <script src="app.js?v=14.9"></script>
-    <script src="pwa.js?v=2.0" defer></script>
+    <script src="data.js?v=14.0"></script>
+    <script src="react-components.js?v=2.1"></script>
+    <script src="app.js?v=16.0"></script>
+    <script src="pwa.js?v=2.1" defer></script>
 </body>
 </html>

@@ -1165,6 +1165,23 @@ function getSupabaseClient() {
 // Synchronously hydrate cached cloud database prices into SWIGGY_DATA before initial UI render
 function applyCachedDbPricesToMenu() {
     try {
+        try {
+            if (localStorage.getItem('chocoloom_stock_sync_v4') !== 'true') {
+                // One-time purge of stale legacy out-of-stock flags from localStorage
+                localStorage.removeItem('chocoloom_db_catalog_cache');
+                const co = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
+                let changed = false;
+                Object.keys(co).forEach(k => {
+                    if (co[k] && co[k].is_available === false) {
+                        delete co[k].is_available;
+                        changed = true;
+                    }
+                });
+                if (changed) localStorage.setItem('chocoloom_price_overrides', JSON.stringify(co));
+                localStorage.setItem('chocoloom_stock_sync_v4', 'true');
+            }
+        } catch(e) {}
+
         let cache = {};
         try {
             const dbCache = JSON.parse(localStorage.getItem('chocoloom_db_catalog_cache') || '{}');
@@ -1532,7 +1549,7 @@ window.loadCatalogFromNeon = async function(showToast = false) {
 
 // Fetch all products directly from Supabase (Egress Optimized with Client-Side 10-min Cache)
 async function fetchLiveProductsFromSupabase() {
-    const CACHE_KEY = 'chocoloom_products_cache_v2';
+    const CACHE_KEY = 'chocoloom_products_cache_v3';
     const CACHE_TTL_MS = 600000; // 10 minutes cache TTL
     const PRODUCT_SELECT_COLUMNS = '*';
 
@@ -1851,15 +1868,13 @@ function syncSupabaseProducts(liveProducts, showToastNotification = false) {
                 cooling_price_2kg: Number(lp.cooling_price_2kg || 200),
                 cooling_price_3kg: Number(lp.cooling_price_3kg || 299),
                 is_available: (() => {
-                    const lpIsAvail = (lp.is_available !== false && lp.is_available !== 'false' && lp.is_available !== 0 && lp.is_available !== '0');
-                    if (!lpIsAvail) return false;
                     try {
                         const ao = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
                         const lpId = lp.id; const lpNorm = (lp.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
                         const ov = ao[lpId] || (lpNorm ? ao[lpNorm] : null) || (lp.name ? ao[lp.name.toLowerCase().trim()] : null);
                         if (ov && ov.is_available !== undefined) return Boolean(ov.is_available);
                     } catch(e) {}
-                    return true;
+                    return (lp.is_available !== false && lp.is_available !== 'false' && lp.is_available !== 0 && lp.is_available !== '0');
                 })(),
                 has_weight: hasW,
                 has_cooling: hasC,
@@ -3858,7 +3873,8 @@ function getActiveHeroBanners() {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed) && parsed.length > 0) {
                 const storedCraft = parsed.find(b => b && b.id === 'b_craft_happy_moments');
-                if (storedCraft && storedCraft.cta === 'Register Now' && !storedCraft.title) {
+                const storedDiwali = parsed.find(b => b && b.id === 'b_diwali');
+                if (storedCraft && storedCraft.cta === 'Register Now' && !storedCraft.title && storedDiwali && storedDiwali.image === 'assets/diwali_poster_banner.jpg?v=2') {
                     savedBanners = parsed;
                 } else {
                     localStorage.removeItem("chocoloom_banners");
@@ -3871,51 +3887,29 @@ function getActiveHeroBanners() {
 
     let banners = savedBanners || (window.SWIGGY_DATA ? (SWIGGY_DATA.banners || SWIGGY_DATA.heroBanners || []) : []);
 
-    // Ensure the Diwali Special Banner is ALWAYS present and pinned at position 0 (first slide)
-    const swiggyDiwaliBanner = (window.SWIGGY_DATA && SWIGGY_DATA.banners) 
-        ? SWIGGY_DATA.banners.find(b => b && (b.id === 'b_diwali' || (b.title && b.title.includes('Diwali')))) 
-        : null;
-
-    let diwaliIdx = banners.findIndex(b => b && (b.id === 'b_diwali' || (b.title && b.title.includes('Diwali'))));
-    let diwaliItem = null;
-
-    if (diwaliIdx !== -1) {
-        diwaliItem = banners.splice(diwaliIdx, 1)[0];
-    } else if (swiggyDiwaliBanner) {
-        diwaliItem = { ...swiggyDiwaliBanner };
-    } else {
-        diwaliItem = {
-            id: "b_diwali",
-            tag: "DIWALI SPECIAL (NOV 7–9 ONLY)",
-            tagIcon: "fa-solid fa-sparkles",
-            title: "Happy Diwali: Luxury Hampers & Sweets 🪔✨",
-            subtitle: "Celebrate the Festival of Lights with handcrafted Belgian pralines, golden dry-fruit cakes & festive gift hampers. Flat 40% OFF with code DIWALI40 (Valid Nov 7–9 only)!",
-            discountText: "FLAT 40% OFF (NOV 7–9)",
-            code: "DIWALI40",
-            image: "assets/categories/diwali_hampers.webp",
-            fallbackImage: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=1600&auto=format&fit=crop&q=80",
-            overlayGradient: "linear-gradient(90deg, rgba(36, 11, 54, 0.95) 0%, rgba(74, 21, 75, 0.8) 45%, rgba(124, 45, 18, 0.25) 85%, rgba(20, 5, 25, 0.1) 100%)",
-            badge: "VALID NOV 7–9 ONLY 🪔",
-            rating: "4.99",
-            ratingLabel: "Festive Choice",
-            cta: "Claim 40% OFF",
-            category: "Diwali Hampers",
-            isActive: true
-        };
-    }
-
-    if (diwaliItem) {
-        diwaliItem.isActive = true;
-        diwaliItem.discountText = 'FLAT 40% OFF (NOV 7–9)';
-        diwaliItem.code = 'DIWALI40';
-        diwaliItem.cta = 'Claim 40% OFF';
-        diwaliItem.badge = 'VALID NOV 7–9 ONLY 🪔';
-        diwaliItem.tag = 'DIWALI SPECIAL (NOV 7–9 ONLY)';
-        diwaliItem.image = diwaliItem.image || 'assets/categories/diwali_hampers.webp';
-        diwaliItem.subtitle = diwaliItem.subtitle || 'Celebrate the Festival of Lights with handcrafted Belgian pralines, golden dry-fruit cakes & festive gift hampers. Flat 40% OFF with code DIWALI40 (Valid Nov 7–9 only)!';
-        banners.unshift(diwaliItem);
-        needsCacheUpdate = true;
-    }
+    // Ensure Craft Workshop Banner (#1) and Diwali Festival Ad (#2)
+    const diwaliItem = {
+        id: "b_diwali",
+        tag: "DIWALI SPECIAL (NOV 7–9 ONLY)",
+        tagIcon: "fa-solid fa-sparkles",
+        title: "",
+        subtitle: "",
+        discountText: "FLAT 40% OFF (NOV 7–9)",
+        code: "DIWALI40",
+        image: "assets/diwali_poster_banner.jpg?v=2",
+        fallbackImage: "assets/diwali_poster_banner.jpg?v=2",
+        mobileImage: "assets/diwali_poster_banner.jpg?v=2",
+        overlayGradient: "none",
+        bgColor: "#fadf84",
+        badge: "VALID NOV 7–9 ONLY 🪔",
+        rating: "4.99",
+        ratingLabel: "Festive Choice",
+        cta: "Claim 40% OFF",
+        ctaAction: "copy_coupon",
+        category: "Diwali Hampers",
+        isGraphicBanner: false,
+        isActive: true
+    };
 
     // Ensure Craft Your Happy Moments Creative Kit Banner is ALWAYS present and styled cleanly
     const craftItem = {
@@ -3942,8 +3936,9 @@ function getActiveHeroBanners() {
         isActive: true
     };
 
-    // Filter and Pin Creative Banner as Slide #1
-    banners = banners.filter(b => b && b.id !== 'b_craft_happy_moments');
+    // Filter and Pin: Slide #1 = Workshop, Slide #2 = Diwali Poster Ad
+    banners = banners.filter(b => b && b.id !== 'b_craft_happy_moments' && b.id !== 'b_diwali');
+    banners.unshift(diwaliItem);
     banners.unshift(craftItem);
     needsCacheUpdate = true;
 
@@ -3964,11 +3959,22 @@ function getActiveHeroBanners() {
         const fallback = ban.fallbackImage ? ban.fallbackImage.trim() : img;
         const isComingSoon = ban.isComingSoon !== undefined ? Boolean(ban.isComingSoon) : false;
         const redirectUrl = (ban.redirectUrl || ban.url || ban.link || '').trim();
-        if (ban.id === 'b_diwali' && (!ban.discountText || !ban.discountText.includes('NOV 7'))) {
+        if (ban.id === 'b_diwali') {
             ban.discountText = 'FLAT 40% OFF (NOV 7–9)';
             ban.badge = 'VALID NOV 7–9 ONLY 🪔';
             ban.tag = 'DIWALI SPECIAL (NOV 7–9 ONLY)';
-            ban.subtitle = 'Celebrate the Festival of Lights with handcrafted Belgian pralines, golden dry-fruit cakes & festive gift hampers. Flat 40% OFF with code DIWALI40 (Valid Nov 7–9 only)!';
+            ban.title = '';
+            ban.subtitle = '';
+            ban.image = 'assets/diwali_poster_banner.jpg?v=2';
+            ban.fallbackImage = 'assets/diwali_poster_banner.jpg?v=2';
+            ban.mobileImage = 'assets/diwali_poster_banner.jpg?v=2';
+            ban.overlayGradient = 'none';
+            ban.bgColor = '#fadf84';
+            ban.cta = 'Claim 40% OFF';
+            ban.code = 'DIWALI40';
+            ban.ctaAction = 'copy_coupon';
+            ban.isGraphicBanner = false;
+            img = 'assets/diwali_poster_banner.jpg?v=2';
             needsCacheUpdate = true;
         }
         const discountText = (ban.discountText && ban.discountText.includes('COMING SOON')) ? '' : (ban.discountText || '');
@@ -4009,14 +4015,19 @@ function getActiveHeroBanners() {
         banners = (window.SWIGGY_DATA && SWIGGY_DATA.banners) ? SWIGGY_DATA.banners : [];
     }
 
-    // Pin Creative Kits Banner as Slide #1 in Billboard
-    const craftIdx = banners.findIndex(b => b && b.id === 'b_craft_happy_moments');
-    if (craftIdx > 0) {
-        const [cItem] = banners.splice(craftIdx, 1);
-        banners.unshift(cItem);
-    } else if (craftIdx === -1) {
-        banners.unshift(craftItem);
+    // Pin Slide #1 = Workshop (b_craft_happy_moments) and Slide #2 = Diwali Poster Ad (b_diwali)
+    const diwaliIdx = banners.findIndex(b => b && (b.id === 'b_diwali' || (b.title && b.title.includes('Diwali'))));
+    let pinnedDiwali = diwaliItem;
+    if (diwaliIdx !== -1) {
+        pinnedDiwali = banners.splice(diwaliIdx, 1)[0];
     }
+    const craftIdx = banners.findIndex(b => b && b.id === 'b_craft_happy_moments');
+    let pinnedCraft = craftItem;
+    if (craftIdx !== -1) {
+        pinnedCraft = banners.splice(craftIdx, 1)[0];
+    }
+    banners.unshift(pinnedDiwali);
+    banners.unshift(pinnedCraft);
 
     return banners;
 }
@@ -4035,6 +4046,17 @@ function goToAdSlide(index) {
     currentAdIndex = ((index % totalCount) + totalCount) % totalCount;
     DOM.bannersContainer.style.transform = `translateX(-${currentAdIndex * 100}%)`;
 
+    // Toggle active class on DOM slides
+    if (domSlides && domSlides.length > 0) {
+        domSlides.forEach((s, i) => {
+            if (i === currentAdIndex) {
+                s.classList.add('active');
+            } else {
+                s.classList.remove('active');
+            }
+        });
+    }
+
     // Update indicator dots
     const dotsContainer = document.getElementById('heroAdIndicators');
     if (dotsContainer) {
@@ -4048,11 +4070,16 @@ function goToAdSlide(index) {
         });
     }
 
-    // Dynamic background matching for hero billboard
+    // Dynamic background matching for hero billboard & mobile status bar
     const activeBanner = banners[currentAdIndex] || (domSlides[currentAdIndex] ? { bgColor: domSlides[currentAdIndex].style.backgroundColor } : null);
     const heroWrapper = document.getElementById('heroAdWrapper');
     if (heroWrapper) {
         heroWrapper.style.backgroundColor = (activeBanner && activeBanner.bgColor) ? activeBanner.bgColor : '#ffd735';
+    }
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    const catalogNavbar = document.getElementById('catalogNavbar');
+    if (themeColorMeta && (!catalogNavbar || !catalogNavbar.classList.contains('scrolled'))) {
+        themeColorMeta.setAttribute('content', (activeBanner && activeBanner.bgColor) ? activeBanner.bgColor : '#11071f');
     }
 }
 
@@ -4076,11 +4103,11 @@ window.goToAdSlideIndex = function(index) {
 function startAdAutoPlay() {
     stopAdAutoPlay();
     if (window.IS_UNI_CHOCOLOOM_PAGE || (window.location && window.location.pathname.includes('uni-chocoloom'))) return;
-    const count = (currentRenderedBanners && currentRenderedBanners.length) || 0;
+    const count = (currentRenderedBanners && currentRenderedBanners.length) || (document.querySelectorAll('.hero-ad-slide').length) || 0;
     if (count <= 1) return;
     adAutoPlayTimer = setInterval(() => {
         goToAdSlide(currentAdIndex + 1);
-    }, 5000);
+    }, 4000);
 }
 
 function stopAdAutoPlay() {
@@ -4368,6 +4395,9 @@ function renderBanners() {
         return;
     }
 
+    if (!DOM.bannersContainer) {
+        DOM.bannersContainer = document.getElementById('bannersContainer');
+    }
     if (!DOM.bannersContainer) return;
     
     const banners = getActiveHeroBanners();
@@ -4445,44 +4475,39 @@ function renderBanners() {
         const overlayGradient = ban.overlayGradient || defaultOverlay;
 
         return `
-        <div class="hero-ad-slide ${isTombola ? 'hero-ad-tombola-slide' : ''} ${isCraft ? 'hero-ad-craft-slide' : ''}" data-slide-index="${index}" data-slide-id="${ban.id}" style="background-color: ${ban.bgColor || (isCraft ? '#1a0826' : (isTombola ? '#ffd735' : '#110722'))};">
+        <div class="hero-ad-slide ${index === 0 ? 'active' : ''} ${isTombola ? 'hero-ad-tombola-slide' : ''} ${isCraft ? 'hero-ad-craft-slide' : ''} ${isDiwali ? 'hero-ad-diwali-slide' : ''}" data-slide-index="${index}" data-slide-id="${ban.id}" onclick="${isDiwali ? `handleBannerClick('${ban.id}', event)` : ''}" style="background-color: ${ban.bgColor || (isDiwali ? '#fadf84' : (isCraft ? '#1a0826' : (isTombola ? '#ffd735' : '#110722')))}; ${isDiwali ? 'cursor: pointer;' : ''}">
             <!-- Full-Bleed Background Photo (fills 100% of entire banner, responsive picture) -->
-            <div class="ad-bg-media" style="background-color: ${ban.bgColor || (isCraft ? '#1a0826' : (isTombola ? '#ffd735' : '#110722'))};">
+            <div class="ad-bg-media" style="background-color: ${ban.bgColor || (isDiwali ? '#fadf84' : (isCraft ? '#1a0826' : (isTombola ? '#ffd735' : '#110722')))};">
                 <picture style="width: 100%; height: 100%; position: absolute; inset: 0;">
                     ${stdMob ? `<source media="(max-width: 768px)" srcset="${stdMob}">` : ''}
-                    <img src="${stdImg}" alt="${ban.title}" class="ad-bg-photo ${isTombola ? 'tombola-ad-photo' : ''}" loading="${index === 0 ? 'eager' : 'lazy'}" onerror="this.onerror=null;this.src='${stdFallback}';">
+                    <img src="${stdImg}" alt="${ban.title || 'Diwali Special Offer'}" class="ad-bg-photo ${isTombola ? 'tombola-ad-photo' : ''}" loading="${index === 0 ? 'eager' : 'lazy'}" onerror="this.onerror=null;this.src='${stdFallback}';">
                 </picture>
-                <div class="ad-media-overlay ${isTombola ? 'tombola-media-overlay' : ''} ${isCraft ? 'craft-media-overlay' : ''}" style="background: ${isCraft ? 'none' : overlayGradient}; ${isCraft ? 'display: none !important;' : ''}"></div>
+                <div class="ad-media-overlay ${isTombola ? 'tombola-media-overlay' : ''} ${isCraft ? 'craft-media-overlay' : ''} ${isDiwali ? 'diwali-media-overlay' : ''}" style="background: ${(isCraft || isDiwali) ? 'none' : overlayGradient}; ${(isCraft || isDiwali) ? 'display: none !important;' : ''}"></div>
             </div>
 
             <!-- Floating Top-Right Discount Ribbon -->
-            ${(!isCraft && ban.discountText) ? `
+            ${(!isCraft && !isDiwali && ban.discountText) ? `
             <div class="hero-ad-discount-tag ${isCraft ? 'craft-discount-tag' : ''}">
                 <i class="${isCraft ? 'fa-solid fa-gift' : 'fa-solid fa-fire'}"></i>
                 <span>${ban.discountText}</span>
             </div>` : ''}
 
             <!-- Banner Content over Full Photo Background -->
-            <div class="hero-ad-content ${isCraft ? 'craft-hero-ad-content' : ''}">
-                ${isDiwali ? `
-                <div class="diwali-tag-pill">
-                    <i class="fa-solid fa-sparkles"></i>
-                    <span>DIWALI FESTIVE SPECIAL (NOV 7–9 ONLY)</span>
-                </div>
-                ` : (isTombola ? `
+            <div class="hero-ad-content ${isCraft ? 'craft-hero-ad-content' : ''} ${isDiwali ? 'diwali-hero-ad-content' : ''}">
+                ${isTombola ? `
                 <div class="tombola-tag-pill">
                     <i class="fa-solid fa-dice"></i>
                     <span>COMMUNITY LUCKY DRAW</span>
                 </div>
-                ` : '')}
-                ${(!isCraft && ban.title) ? `
+                ` : ''}
+                ${(!isCraft && !isDiwali && ban.title) ? `
                 <h2 class="hero-ad-title ${isTombola ? 'tombola-ad-title' : ''}">${ban.title}</h2>
                 ` : ''}
-                ${(!isCraft && ban.subtitle) ? `
+                ${(!isCraft && !isDiwali && ban.subtitle) ? `
                 <p class="hero-ad-desc ${isTombola ? 'tombola-ad-desc' : ''}">${ban.subtitle}</p>
                 ` : ''}
                 
-                <div class="hero-ad-actions ${isCraft ? 'craft-hero-ad-actions' : ''}">
+                <div class="hero-ad-actions ${isCraft ? 'craft-hero-ad-actions' : ''} ${isDiwali ? 'diwali-hero-ad-actions' : ''}">
                     ${isCraft ? `
                     <button class="hero-ad-cta-btn craft-cta-btn" onclick="handleBannerClick('${ban.id}', event)">
                         <span class="craft-cta-text">${ban.cta || 'Register Now'}</span>
@@ -4490,22 +4515,23 @@ function renderBanners() {
                             <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-arrow-right'}"></i>
                         </span>
                     </button>
+                    ` : (isDiwali ? `
+                    <button class="hero-ad-cta-btn diwali-cta-btn" onclick="handleBannerClick('${ban.id}', event)">
+                        <span class="diwali-cta-text">${ban.cta || 'Claim 40% OFF'}</span>
+                        <span class="diwali-cta-bubble">
+                            <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-sparkles'}"></i>
+                        </span>
+                    </button>
                     ` : `
-                    <button class="hero-ad-cta-btn ${isTombola ? 'tombola-cta-btn' : ''}" onclick="handleBannerClick('${ban.id}', event)" style="${isDiwali ? 'background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45); border: none;' : ''}">
-                        ${isTombola ? '<i class="fa-solid fa-hourglass-start" style="color: #ffffff; font-size: 15px;"></i>' : (isDiwali ? '<i class="fa-solid fa-gift" style="color: #ffffff; margin-right: 4px;"></i>' : '')}
+                    <button class="hero-ad-cta-btn ${isTombola ? 'tombola-cta-btn' : ''}" onclick="handleBannerClick('${ban.id}', event)">
+                        ${isTombola ? '<i class="fa-solid fa-hourglass-start" style="color: #ffffff; font-size: 15px;"></i>' : ''}
                         <span>${isTombola ? 'COMING SOON' : (ban.cta || 'ORDER NOW')}</span>
                         <i class="${redirectUrl ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-arrow-right'}"></i>
                     </button>
-                    `}
+                    `)}
                 </div>
 
-                ${isDiwali ? `
-                <div class="hero-ad-perks diwali-ad-perks">
-                    <div class="hero-ad-perk"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> 4.99 (Festive Choice)</div>
-                    <div class="hero-ad-perk"><i class="fa-solid fa-truck-fast" style="color: #38bdf8;"></i> 25 Min Delivery</div>
-                    <div class="hero-ad-perk"><i class="fa-solid fa-sparkles" style="color: #fbbf24;"></i> Handcrafted Hampers & Sweets</div>
-                </div>
-                ` : (isCraft ? '' : (isTombola ? `
+                ${(isCraft || isDiwali) ? '' : (isTombola ? `
                 <div class="hero-ad-perks tombola-ad-perks">
                     <div class="hero-ad-perk"><i class="fa-solid fa-star" style="color: #ffd735;"></i> ${ban.rating || '5.0'} (${ban.ratingLabel || 'Community Favorite'})</div>
                     <div class="hero-ad-perk"><i class="fa-solid fa-gift" style="color: #f43f5e;"></i> Every Ticket Wins</div>
@@ -4517,7 +4543,7 @@ function renderBanners() {
                     <div class="hero-ad-perk"><i class="fa-solid fa-bolt" style="color: #38bdf8;"></i> 25 Min Delivery</div>
                     <div class="hero-ad-perk"><i class="fa-solid fa-certificate" style="color: #34d399;"></i> 100% Fresh Bakes</div>
                 </div>
-                `))}
+                `)}
             </div>
         </div>`;
     }).join('');
@@ -6487,6 +6513,9 @@ window.openCart = function() {
     const overlay = document.getElementById('cartOverlay');
     if (drawer) drawer.classList.add('open');
     if (overlay) overlay.classList.add('open');
+    document.body.classList.add('cart-open');
+    const dock = document.getElementById('chocoloomBottomDock');
+    if (dock) dock.classList.add('dock-hidden-in-cart');
     if (typeof updateCartUI === 'function') updateCartUI();
 };
 
@@ -6495,6 +6524,9 @@ window.closeCart = function() {
     const overlay = document.getElementById('cartOverlay');
     if (drawer) drawer.classList.remove('open');
     if (overlay) overlay.classList.remove('open');
+    document.body.classList.remove('cart-open');
+    const dock = document.getElementById('chocoloomBottomDock');
+    if (dock) dock.classList.remove('dock-hidden-in-cart');
 };
 
 // ==================== CAKE CUSTOMIZATION (WEIGHT & COOLING OPTIONS) ====================
@@ -9308,16 +9340,16 @@ window.updateCampusAvailabilityBanner = function() {
 };
 
 // ==================== CHOCOLOOM STORE OPERATING HOURS & 24/7 PRE-BOOKING SYSTEM ====================
-// Regular Orders: 9:00 AM – 8:30 PM (Asia/Kolkata / IST)
+// Regular Orders: 9:00 AM – 8:00 PM (Asia/Kolkata / IST)
 // Pre-Booking: Available 24 Hours / 7 Days!
 window.getStoreOperatingStatus = function() {
     // Check cloud / admin store status or testing override
     const override = localStorage.getItem('chocoloom_store_status_override') || localStorage.getItem('chocoloom_store_status');
     if (override === 'open') {
-        return { isOpen: true, openTime: '9:00 AM', closeTime: '8:30 PM', isOverridden: true, prebookingOnly: false, prebookingAvailable24h: true, statusText: 'Open (9:00 AM – 8:30 PM)' };
+        return { isOpen: true, openTime: '9:00 AM', closeTime: '8:00 PM', isOverridden: true, prebookingOnly: false, prebookingAvailable24h: true, statusText: 'Accepting Orders', statusTitle: 'Accepting Orders' };
     }
     if (override === 'closed') {
-        return { isOpen: false, openTime: '9:00 AM', closeTime: '8:30 PM', isOverridden: true, prebookingOnly: true, prebookingAvailable24h: true, statusText: 'Instant Orders Closed (24/7 Pre-Booking Active)' };
+        return { isOpen: false, openTime: '9:00 AM', closeTime: '8:00 PM', isOverridden: true, prebookingOnly: true, prebookingAvailable24h: true, statusText: 'Currently unavailable', statusTitle: 'Currently unavailable' };
     }
 
     try {
@@ -9334,29 +9366,39 @@ window.getStoreOperatingStatus = function() {
         const minute = parseInt(parts.find(p => p.type === 'minute').value, 10);
         const currentTotalMinutes = hour * 60 + minute;
 
-        // Opens at 9:00 AM (540 mins), Closes at 8:30 PM (1230 mins)
+        // Opens at 9:00 AM (540 mins), Closes at 8:00 PM (1200 mins) IST
         const openMinutes = 9 * 60;
-        const closeMinutes = 20 * 60 + 30;
+        const closeMinutes = 20 * 60;
 
         const isOpen = currentTotalMinutes >= openMinutes && currentTotalMinutes < closeMinutes;
 
         return {
             isOpen: isOpen,
             openTime: '9:00 AM',
-            closeTime: '8:30 PM',
+            closeTime: '8:00 PM',
             hour: hour,
             minute: minute,
             isOverridden: false,
             prebookingOnly: !isOpen,
             prebookingAvailable24h: true,
-            statusText: isOpen ? 'Open (Till 8:30 PM)' : 'Instant Orders Closed (24/7 Pre-Booking Active)'
+            statusText: isOpen ? 'Accepting Orders' : 'Currently unavailable',
+            statusTitle: isOpen ? 'Accepting Orders' : 'Currently unavailable'
         };
     } catch (e) {
         console.warn('getStoreOperatingStatus error:', e);
         const d = new Date();
         const m = d.getHours() * 60 + d.getMinutes();
-        const isOpen = m >= 540 && m < 1230;
-        return { isOpen, openTime: '9:00 AM', closeTime: '8:30 PM', isOverridden: false, prebookingOnly: !isOpen, prebookingAvailable24h: true };
+        const isOpen = m >= 540 && m < 1200;
+        return {
+            isOpen,
+            openTime: '9:00 AM',
+            closeTime: '8:00 PM',
+            isOverridden: false,
+            prebookingOnly: !isOpen,
+            prebookingAvailable24h: true,
+            statusText: isOpen ? 'Accepting Orders' : 'Currently unavailable',
+            statusTitle: isOpen ? 'Accepting Orders' : 'Currently unavailable'
+        };
     }
 };
 
@@ -9444,6 +9486,15 @@ window.toggleStoreHoursForTesting = function(state) {
 
 window.updateStoreOperatingStatusUI = function() {
     const status = getStoreOperatingStatus();
+
+    // 0. Update Header Status Title (Morning 9:00 AM - Evening 8:00 PM: "Accepting Orders", Otherwise: "Currently unavailable")
+    const headerStatusTitle = document.getElementById('headerStatusTitle');
+    if (headerStatusTitle) {
+        const targetTitle = status.isOpen ? 'Accepting Orders' : 'Currently unavailable';
+        if (headerStatusTitle.textContent !== targetTitle) {
+            headerStatusTitle.textContent = targetTitle;
+        }
+    }
 
     // 1. Header Status Badge
     const badge = document.getElementById('headerStoreStatusBadge');
@@ -10643,6 +10694,33 @@ function bindEvents() {
     const cartOverlay = document.getElementById('cartOverlay') || DOM.cartOverlay;
     if (cartOverlay) cartOverlay.addEventListener('click', closeCart);
 
+    // Ensure Bottom Dock is hidden whenever Cart Drawer is active
+    const cartDrawerEl = document.getElementById('cartDrawer') || DOM.cartDrawer;
+    if (cartDrawerEl) {
+        const syncCartDockVisibility = () => {
+            const isOpen = cartDrawerEl.classList.contains('open');
+            const dock = document.getElementById('chocoloomBottomDock');
+            if (isOpen) {
+                document.body.classList.add('cart-open');
+                if (dock) dock.classList.add('dock-hidden-in-cart');
+            } else {
+                document.body.classList.remove('cart-open');
+                if (dock) dock.classList.remove('dock-hidden-in-cart');
+            }
+        };
+        syncCartDockVisibility();
+        try {
+            const cartDrawerObserver = new MutationObserver((mutations) => {
+                for (const mutation of mutations) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        syncCartDockVisibility();
+                    }
+                }
+            });
+            cartDrawerObserver.observe(cartDrawerEl, { attributes: true });
+        } catch (e) {}
+    }
+
     // Menu Modal Close
     const closeMenuBtn = document.getElementById('closeMenuModalBtn') || DOM.closeMenuModalBtn;
     const menuBackdrop = document.getElementById('menuModalBackdrop') || DOM.menuModalBackdrop;
@@ -11044,21 +11122,25 @@ function bindEvents() {
         const themeColorMeta = document.querySelector('meta[name="theme-color"]');
         const updateNavbarScroll = () => {
             const heroAd = document.getElementById('heroAdWrapper') || document.querySelector('.hero-ad-section') || document.querySelector('.hero-section');
-            let threshold = 30;
+            let isScrolled = false;
             if (heroAd && (document.body.classList.contains('has-hero-ad') || document.querySelector('.hero-ad-section'))) {
-                const navHeight = catalogNavbar.offsetHeight || 118;
-                // Only consider scrolled once user has scrolled past the full hero ad billboard
-                threshold = Math.max(heroAd.offsetHeight - navHeight - 10, 180);
+                const navHeight = catalogNavbar.offsetHeight || 198;
+                const heroRect = heroAd.getBoundingClientRect();
+                // Stay completely transparent as long as the hero billboard is under/behind the top dock
+                isScrolled = (heroRect.bottom <= navHeight);
+            } else {
+                isScrolled = (window.scrollY > 30);
             }
 
-            if (window.scrollY > threshold) {
+            if (isScrolled) {
                 catalogNavbar.classList.add('scrolled');
                 if (themeColorMeta) themeColorMeta.setAttribute('content', '#ffffff');
             } else {
                 catalogNavbar.classList.remove('scrolled');
                 if (themeColorMeta) {
                     const activeCraft = document.querySelector('.hero-ad-slide.active.hero-ad-craft-slide');
-                    themeColorMeta.setAttribute('content', activeCraft ? '#0871dc' : '#11071f');
+                    const activeDiwali = document.querySelector('.hero-ad-slide.active.hero-ad-diwali-slide');
+                    themeColorMeta.setAttribute('content', activeDiwali ? '#fadf84' : (activeCraft ? '#0871dc' : '#11071f'));
                 }
             }
         };
@@ -13617,7 +13699,7 @@ window.closeAccountDetailsModal = function() {
     if (modal) modal.classList.remove('open');
 };
 
-// User Orders History Modal & Live Tracking Hub (Zomato Dark Theme Design)
+// User Orders History Modal & Live Tracking Hub (Zomato White Theme Design)
 window.renderUserOrdersList = function(ordersToRender, isGuest = false) {
     const listBody = document.getElementById('ordersListBody');
     if (!listBody) return;
@@ -13736,15 +13818,15 @@ window.renderUserOrdersList = function(ordersToRender, isGuest = false) {
         if (isCardOrder) {
             leftActionHtml = `
                 <div class="zomato-feedback-box">
-                    <span class="zomato-rated-text" style="color: #c084fc;"><i class="fa-solid fa-crown"></i> VIP RFID Card</span>
-                    <a class="zomato-feedback-link" style="color: #c084fc;" onclick="closeOrdersModal(); window.showCardOrderTransitModal();">BlueDart AWB: ${ord.tracking_number || 'BD88429108IN'} <i class="fa-solid fa-caret-right"></i></a>
+                    <span class="zomato-rated-text" style="color: #7c3aed;"><i class="fa-solid fa-crown"></i> VIP RFID Card</span>
+                    <a class="zomato-feedback-link" style="color: #7c3aed;" onclick="closeOrdersModal(); window.showCardOrderTransitModal();">BlueDart AWB: ${ord.tracking_number || 'BD88429108IN'} <i class="fa-solid fa-caret-right"></i></a>
                 </div>
             `;
         } else if (isInTransit || isPreparing) {
             leftActionHtml = `
                 <div class="zomato-feedback-box">
-                    <span class="zomato-rated-text" style="color: #38bdf8;"><i class="fa-solid fa-location-crosshairs"></i> Live Tracking</span>
-                    <a class="zomato-feedback-link" style="color: #38bdf8;" onclick="window.trackSpecificOrder('${orderNum}')">Track your order <i class="fa-solid fa-caret-right"></i></a>
+                    <span class="zomato-rated-text" style="color: #0284c7;"><i class="fa-solid fa-location-crosshairs"></i> Live Tracking</span>
+                    <a class="zomato-feedback-link" style="color: #0284c7;" onclick="window.trackSpecificOrder('${orderNum}')">Track your order <i class="fa-solid fa-caret-right"></i></a>
                 </div>
             `;
         } else {

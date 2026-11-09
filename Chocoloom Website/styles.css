@@ -1294,7 +1294,7 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 .header-status-title {
     font-size: 19px;
     font-weight: 800;
-    color: #ffffff;
+    color: #0f172a;
     letter-spacing: -0.4px;
     line-height: 1.15;
     text-shadow: none;
@@ -1308,7 +1308,7 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 }
 
 .brand-dock-group:hover .header-status-title {
-    color: #ffffff;
+    color: var(--primary);
     transform: translateY(-0.5px);
 }
 
@@ -1349,7 +1349,7 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
     font-weight: 800;
     font-size: 12.5px;
     letter-spacing: 0.2px;
-    color: #ffffff;
+    color: #0f172a;
     text-transform: uppercase;
     text-shadow: none;
     transition: color 0.2s ease;
@@ -1358,14 +1358,14 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 .loc-dock-sep {
     font-weight: 400;
     font-size: 12.5px;
-    color: rgba(255, 255, 255, 0.85);
+    color: #64748b;
     margin: 0 2px;
 }
 
 .loc-dock-name {
     font-weight: 600;
     font-size: 12.5px;
-    color: #ffffff;
+    color: #334155;
     max-width: 220px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1376,7 +1376,7 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 
 .loc-dock-caret {
     font-size: 11px;
-    color: #ffffff;
+    color: #64748b;
     margin-left: 2px;
     text-shadow: none;
     transition: transform 0.2s ease, color 0.2s ease;
@@ -1410,6 +1410,22 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 .navbar.scrolled .brand-dock-group:hover .loc-dock-name,
 .navbar.scrolled .brand-dock-group:hover .loc-dock-caret {
     color: var(--primary) !important;
+}
+
+/* Dedicated Uni Chocoloom header styles */
+body.uni-chocoloom-page .loc-dock-tag,
+body:has(#dockNavUni.active) .loc-dock-tag {
+    color: #16a34a !important;
+}
+
+body.uni-chocoloom-page .uni-header-one-badge,
+body.uni-chocoloom-page .uni-header-one-logo {
+    height: 22px;
+    width: auto;
+    max-height: 22px;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 /* ==================== SWIGGY-STYLE SEARCH BAR ROW ==================== */
@@ -1528,12 +1544,22 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 
 .voice-waveform-svg {
     display: block;
-    color: #ffffff;
+    color: #0f172a;
 }
 
 .voice-waveform-svg rect {
-    fill: #ffffff;
+    fill: #0f172a;
     transition: fill 0.2s ease;
+}
+
+body:has(.hero-ad-section) .navbar:not(.scrolled) .voice-waveform-svg,
+body.has-hero-ad .navbar:not(.scrolled) .voice-waveform-svg {
+    color: #ffffff !important;
+}
+
+body:has(.hero-ad-section) .navbar:not(.scrolled) .voice-waveform-svg rect,
+body.has-hero-ad .navbar:not(.scrolled) .voice-waveform-svg rect {
+    fill: #ffffff !important;
 }
 
 /* Active listening animation for voice */
@@ -5520,11 +5546,16 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
     /* Mobile Header - Notch Safe Area Aware */
     .navbar {
         height: auto !important;
-        min-height: calc(198px + env(safe-area-inset-top, 0px)) !important;
-        padding-top: calc(20px + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(134px + env(safe-area-inset-top, 0px)) !important;
+        padding-top: calc(16px + env(safe-area-inset-top, 0px)) !important;
         box-sizing: border-box !important;
         border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
         box-shadow: none !important;
+    }
+
+    .navbar:has(.header-order-notice-pill) {
+        min-height: calc(198px + env(safe-area-inset-top, 0px)) !important;
+        padding-top: calc(20px + env(safe-area-inset-top, 0px)) !important;
     }
 
     .navbar.scrolled {

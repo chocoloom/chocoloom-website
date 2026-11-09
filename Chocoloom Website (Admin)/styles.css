@@ -1145,7 +1145,7 @@ button {
 /* Transparent Top Dock Over Hero Ad */
 body:has(.hero-ad-section) .navbar:not(.scrolled),
 body.has-hero-ad .navbar:not(.scrolled) {
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.32) 75%, transparent 100%) !important;
+    background: linear-gradient(180deg, rgba(8, 37, 78, 0.35) 0%, rgba(8, 37, 78, 0.12) 65%, transparent 100%) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     border-bottom: none !important;
@@ -1153,7 +1153,7 @@ body.has-hero-ad .navbar:not(.scrolled) {
 }
 
 .navbar.scrolled {
-    background: rgba(255, 255, 255, 0.88) !important;
+    background: rgba(255, 255, 255, 0.98) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
@@ -1164,30 +1164,30 @@ body.has-hero-ad .navbar:not(.scrolled) {
 body:has(.hero-ad-section) .navbar:not(.scrolled) .header-status-title,
 body.has-hero-ad .navbar:not(.scrolled) .header-status-title {
     color: #ffffff !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+    text-shadow: none !important;
 }
 
 body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-tag,
 body.has-hero-ad .navbar:not(.scrolled) .loc-dock-tag {
     color: #ffffff !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+    text-shadow: none !important;
 }
 
 body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-name,
 body.has-hero-ad .navbar:not(.scrolled) .loc-dock-name {
-    color: #f8fafc !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+    color: #ffffff !important;
+    text-shadow: none !important;
 }
 
 body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-sep,
 body.has-hero-ad .navbar:not(.scrolled) .loc-dock-sep {
-    color: rgba(255, 255, 255, 0.75) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
 }
 
 body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-caret,
 body.has-hero-ad .navbar:not(.scrolled) .loc-dock-caret {
     color: #ffffff !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+    text-shadow: none !important;
 }
 
 body:has(.hero-ad-section) .navbar:not(.scrolled) .nav-item,
@@ -1292,15 +1292,15 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 }
 
 .header-status-title {
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 800;
-    color: #ffffff;
-    letter-spacing: -0.35px;
+    color: #0f172a;
+    letter-spacing: -0.4px;
     line-height: 1.15;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+    text-shadow: none;
     white-space: nowrap;
     text-decoration: none;
-    margin: 0;
+    margin: 0 0 2px 0;
     padding: 0;
     display: block;
     cursor: pointer;
@@ -1308,7 +1308,7 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 }
 
 .brand-dock-group:hover .header-status-title {
-    color: #ffffff;
+    color: var(--primary);
     transform: translateY(-0.5px);
 }
 
@@ -1347,38 +1347,38 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 
 .loc-dock-tag {
     font-weight: 800;
-    font-size: 13px;
+    font-size: 12.5px;
     letter-spacing: 0.2px;
-    color: #ffffff;
+    color: #0f172a;
     text-transform: uppercase;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+    text-shadow: none;
     transition: color 0.2s ease;
 }
 
 .loc-dock-sep {
-    font-weight: 700;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.8);
+    font-weight: 400;
+    font-size: 12.5px;
+    color: #64748b;
     margin: 0 2px;
 }
 
 .loc-dock-name {
-    font-weight: 500;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+    font-size: 12.5px;
+    color: #334155;
     max-width: 220px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+    text-shadow: none;
     transition: color 0.2s ease;
 }
 
 .loc-dock-caret {
-    font-size: 10px;
-    color: #ffffff;
+    font-size: 11px;
+    color: #64748b;
     margin-left: 2px;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+    text-shadow: none;
     transition: transform 0.2s ease, color 0.2s ease;
 }
 
@@ -1412,6 +1412,22 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
     color: var(--primary) !important;
 }
 
+/* Dedicated Uni Chocoloom header styles */
+body.uni-chocoloom-page .loc-dock-tag,
+body:has(#dockNavUni.active) .loc-dock-tag {
+    color: #16a34a !important;
+}
+
+body.uni-chocoloom-page .uni-header-one-badge,
+body.uni-chocoloom-page .uni-header-one-logo {
+    height: 22px;
+    width: auto;
+    max-height: 22px;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: middle;
+}
+
 /* ==================== SWIGGY-STYLE SEARCH BAR ROW ==================== */
 .header-search-row {
     display: flex;
@@ -1422,13 +1438,6 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 
 @media (min-width: 769px) {
     .header-search-row {
-        flex: 1;
-        max-width: 440px;
-        margin: 0 20px;
-        order: 2;
-    }
-
-    #navSearchTrigger {
         display: none !important;
     }
 }
@@ -1439,14 +1448,14 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
     display: flex;
     align-items: center;
     gap: 10px;
-    height: 44px;
+    height: 46px;
     padding: 0 16px;
     border-radius: 9999px;
-    background: rgba(147, 197, 253, 0.42);
+    background: rgba(180, 218, 255, 0.42);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.4);
     cursor: pointer;
     user-select: none;
     transition: all 0.22s ease;
@@ -1454,10 +1463,10 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 }
 
 .header-search-pill:hover {
-    background: rgba(147, 197, 253, 0.52);
-    border-color: rgba(255, 255, 255, 0.65);
+    background: rgba(180, 218, 255, 0.52);
+    border-color: rgba(255, 255, 255, 0.7);
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
 }
 
 .search-pill-icon {
@@ -1504,18 +1513,18 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 
 /* 2. Waveform Voice Search Button (Right) */
 .header-voice-btn {
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(147, 197, 253, 0.42);
+    background: rgba(180, 218, 255, 0.42);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.4);
     cursor: pointer;
     transition: all 0.22s ease;
     color: #ffffff;
@@ -1524,8 +1533,8 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 }
 
 .header-voice-btn:hover {
-    background: rgba(147, 197, 253, 0.52);
-    border-color: rgba(255, 255, 255, 0.65);
+    background: rgba(180, 218, 255, 0.52);
+    border-color: rgba(255, 255, 255, 0.7);
     transform: scale(1.05);
 }
 
@@ -1535,12 +1544,22 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 
 .voice-waveform-svg {
     display: block;
-    color: #ffffff;
+    color: #0f172a;
 }
 
 .voice-waveform-svg rect {
-    fill: #ffffff;
+    fill: #0f172a;
     transition: fill 0.2s ease;
+}
+
+body:has(.hero-ad-section) .navbar:not(.scrolled) .voice-waveform-svg,
+body.has-hero-ad .navbar:not(.scrolled) .voice-waveform-svg {
+    color: #ffffff !important;
+}
+
+body:has(.hero-ad-section) .navbar:not(.scrolled) .voice-waveform-svg rect,
+body.has-hero-ad .navbar:not(.scrolled) .voice-waveform-svg rect {
+    fill: #ffffff !important;
 }
 
 /* Active listening animation for voice */
@@ -1568,6 +1587,78 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 @keyframes waveBounce {
     0% { transform: scaleY(0.4); }
     100% { transform: scaleY(1.3); }
+}
+
+/* ==================== SWIGGY-STYLE ORDER ADVANCE PREPARATION NOTICE PILL ==================== */
+.header-order-notice-pill {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #461707;
+    border-radius: 18px;
+    padding: 8px 14px;
+    box-sizing: border-box;
+    transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    user-select: none;
+}
+
+.notice-pill-icon-wrap {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notice-pill-scooter-img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.notice-pill-text {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff7f2;
+    line-height: 1.35;
+    letter-spacing: -0.2px;
+}
+
+@media (min-width: 769px) {
+    .header-order-notice-pill {
+        display: none !important;
+    }
+
+    .header-glass-divider {
+        display: none !important;
+    }
+}
+
+/* Thin Edge-to-Edge Glass Line Below Order Before Box */
+.header-glass-divider {
+    display: block;
+    width: 100vw;
+    max-width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.38);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    margin-top: 10px;
+    margin-bottom: 2px;
+    border: none;
+    box-sizing: border-box;
+    transition: all 0.25s ease;
 }
 
 /* ==================== SCROLLED NAVBAR STYLES (Solid White State) ==================== */
@@ -2223,7 +2314,8 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
     width: 100%;
     max-width: 100vw;
     padding: 0 !important;
-    margin: 0 !important;
+    margin-top: -80px !important;
+    margin-bottom: 0 !important;
     overflow: hidden;
 }
 
@@ -4875,7 +4967,7 @@ body.ad-fullscreen-active {
 
 .chocoloom-bottom-dock {
     position: fixed;
-    bottom: 18px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -4889,10 +4981,25 @@ body.ad-fullscreen-active {
     filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.22));
 }
 
+/* Hide Floating Bottom Dock when Cart Drawer is open or active */
+body.cart-open .chocoloom-bottom-dock,
+body:has(#cartDrawer.open) .chocoloom-bottom-dock,
+body:has(.cart-drawer.open) .chocoloom-bottom-dock,
+#cartDrawer.open ~ .chocoloom-bottom-dock,
+.cart-drawer.open ~ .chocoloom-bottom-dock,
+.cart-drawer-overlay.open ~ .chocoloom-bottom-dock,
+.chocoloom-bottom-dock.dock-hidden-in-cart {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translate(-50%, 120px) !important;
+}
+
 /* Grounded floating position with comfortable bottom spacing */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
     .chocoloom-bottom-dock {
-        bottom: 18px;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -5302,7 +5409,28 @@ body.ad-fullscreen-active {
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 900px) {
     .nav-right .nav-text {
-        display: none;
+        display: none !important;
+    }
+
+    .nav-item-auth {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+        padding: 0 !important;
+        border-radius: 50% !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 16px !important;
+        flex-shrink: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .nav-item-auth i {
+        font-size: 16px !important;
+        margin: 0 !important;
+        line-height: 1 !important;
     }
 
     .footer-grid {
@@ -5418,16 +5546,25 @@ body.ad-fullscreen-active {
     /* Mobile Header - Notch Safe Area Aware */
     .navbar {
         height: auto !important;
-        min-height: calc(118px + env(safe-area-inset-top, 0px)) !important;
-        padding-top: env(safe-area-inset-top, 0px) !important;
+        min-height: calc(134px + env(safe-area-inset-top, 0px)) !important;
+        padding-top: calc(16px + env(safe-area-inset-top, 0px)) !important;
         box-sizing: border-box !important;
         border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
         box-shadow: none !important;
     }
 
+    .navbar:has(.header-order-notice-pill) {
+        min-height: calc(198px + env(safe-area-inset-top, 0px)) !important;
+        padding-top: calc(20px + env(safe-area-inset-top, 0px)) !important;
+    }
+
+    .navbar.scrolled {
+        min-height: calc(134px + env(safe-area-inset-top, 0px)) !important;
+    }
+
     .navbar .nav-inner {
         height: auto !important;
-        min-height: 118px !important;
+        min-height: 120px !important;
         flex-wrap: wrap !important;
         align-content: flex-start !important;
         padding: 6px 16px 10px 16px !important;
@@ -5438,14 +5575,16 @@ body.ad-fullscreen-active {
         order: 1 !important;
         gap: 12px !important;
         flex: 1 !important;
-        height: 48px !important;
+        height: auto !important;
+        min-height: 44px !important;
         align-items: center !important;
-        overflow: hidden !important;
+        overflow: visible !important;
     }
 
     .nav-right {
         order: 2 !important;
-        height: 48px !important;
+        height: auto !important;
+        min-height: 44px !important;
         align-items: center !important;
         gap: 10px !important;
     }
@@ -5453,25 +5592,77 @@ body.ad-fullscreen-active {
     .header-search-row {
         order: 3 !important;
         width: 100% !important;
-        margin-top: 4px !important;
+        margin-top: 8px !important;
+    }
+
+    .header-order-notice-pill {
+        order: 4 !important;
+        width: 100% !important;
+        margin-top: 8px !important;
+        padding: 9px 14px !important;
+    }
+
+    .header-glass-divider {
+        order: 5 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        position: relative !important;
+        left: 50% !important;
+        right: 50% !important;
+        margin-left: -50vw !important;
+        margin-right: -50vw !important;
+        margin-top: 10px !important;
+        margin-bottom: 2px !important;
+        height: 1px !important;
+        background: rgba(255, 255, 255, 0.4) !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        display: block !important;
+        flex-shrink: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .navbar.scrolled .header-order-notice-pill {
+        max-height: 0 !important;
+        opacity: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+        border: none !important;
+    }
+
+    .navbar.scrolled .header-glass-divider {
+        max-height: 0 !important;
+        opacity: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+        border: none !important;
     }
 
     .header-search-pill {
-        height: 42px !important;
+        height: 44px !important;
         padding: 0 14px !important;
+        border-radius: 9999px !important;
     }
 
     .header-voice-btn {
-        width: 42px !important;
-        height: 42px !important;
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 50% !important;
     }
 
     .search-pill-prefix {
-        font-size: 13.5px !important;
+        font-size: 14px !important;
     }
 
     .search-pill-keyword {
-        font-size: 13.5px !important;
+        font-size: 14px !important;
     }
 
     .brand-logo-img {
@@ -5593,7 +5784,18 @@ body.ad-fullscreen-active {
     }
 
     .chocoloom-bottom-dock {
-        bottom: 18px !important;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* Native Android App bottom spacing to stay above 3-button system navigation */
+    html.capacitor-native-app .chocoloom-bottom-dock,
+    body.capacitor-native-app .chocoloom-bottom-dock {
+        bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    html.capacitor-native-app body,
+    body.capacitor-native-app {
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     /* Hero Advertisement Showcase on Mobile - Full Bleed Under Notch */
@@ -5606,7 +5808,7 @@ body.ad-fullscreen-active {
     body:has(.hero-ad-section) .hero-ad-section.full-bleed,
     body.has-hero-ad .hero-ad-section.full-bleed,
     .hero-ad-section.full-bleed {
-        margin-top: calc(-118px - env(safe-area-inset-top, 0px)) !important;
+        margin-top: calc(-198px - env(safe-area-inset-top, 0px)) !important;
         padding-top: 0 !important;
     }
 
@@ -5614,7 +5816,7 @@ body.ad-fullscreen-active {
     .hero-ad-section.full-bleed .hero-ad-billboard {
         border-radius: 0 !important;
         box-shadow: none !important;
-        min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(100vw + 60px + env(safe-area-inset-top, 0px)) !important;
         height: auto !important;
         background: #11071f !important;
     }
@@ -5625,13 +5827,13 @@ body.ad-fullscreen-active {
     }
 
     /* Spacious, Grand and Prominent Horizontal Banner on Mobile - Bleeds under Notch */
-    .hero-ad-slide:not(.hero-ad-graphic-slide):not(.hero-ad-craft-slide),
-    .hero-ad-section.full-bleed .hero-ad-slide:not(.hero-ad-graphic-slide):not(.hero-ad-craft-slide) {
+    .hero-ad-slide:not(.hero-ad-graphic-slide):not(.hero-ad-craft-slide):not(.hero-ad-diwali-slide),
+    .hero-ad-section.full-bleed .hero-ad-slide:not(.hero-ad-graphic-slide):not(.hero-ad-craft-slide):not(.hero-ad-diwali-slide) {
         flex-direction: row !important;
         align-items: center !important;
         justify-content: flex-start !important;
-        padding: calc(126px + env(safe-area-inset-top, 0px)) 16px 22px !important;
-        min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
+        padding: calc(206px + env(safe-area-inset-top, 0px)) 16px 22px !important;
+        min-height: calc(100vw + 60px + env(safe-area-inset-top, 0px)) !important;
         height: auto !important;
         gap: 10px !important;
         box-sizing: border-box !important;
@@ -5729,9 +5931,9 @@ body.ad-fullscreen-active {
     }
 
     .hero-ad-discount-tag {
-        top: calc(72px + env(safe-area-inset-top, 0px)) !important;
-        right: 12px !important;
-        padding: 2.5px 7px !important;
+        top: calc(206px + env(safe-area-inset-top, 0px)) !important;
+        right: 14px !important;
+        padding: 3px 8px !important;
         font-size: 8.5px !important;
         font-weight: 800 !important;
         z-index: 10 !important;
@@ -5763,9 +5965,39 @@ body.ad-fullscreen-active {
         /* Touch swipe used on mobile */
     }
 
-    /* Remove indicator dots on mobile to eliminate any widget in between */
+    /* Mobile Indicator Dots - Sleek Glass Micro Capsule */
     .hero-ad-dots {
-        display: none !important;
+        display: flex !important;
+        position: absolute !important;
+        bottom: 10px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        gap: 6px !important;
+        padding: 4px 10px !important;
+        background: rgba(0, 0, 0, 0.42) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        border-radius: 999px !important;
+        z-index: 15 !important;
+        align-items: center !important;
+        pointer-events: auto !important;
+    }
+
+    .hero-ad-dot {
+        width: 6px !important;
+        height: 6px !important;
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.45) !important;
+        border: none !important;
+        padding: 0 !important;
+        cursor: pointer !important;
+        transition: all 0.25s ease !important;
+    }
+
+    .hero-ad-dot.active {
+        width: 16px !important;
+        border-radius: 999px !important;
+        background: #ffffff !important;
     }
 
     /* Completely eliminate any gap between hero advertisement and "What's on your mind?" */
@@ -9288,23 +9520,23 @@ body.category-view-active .products-catalog-section {
     border-color: #86efac;
 }
 
-/* ==================== ZOMATO DARK THEME ORDER HISTORY ==================== */
+/* ==================== ZOMATO WHITE THEME ORDER HISTORY ==================== */
 #userOrdersModalBackdrop {
-    background: rgba(12, 12, 18, 0.78) !important;
-    backdrop-filter: blur(14px) !important;
-    -webkit-backdrop-filter: blur(14px) !important;
+    background: rgba(15, 23, 42, 0.45) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
     z-index: 100000 !important;
 }
 
 #userOrdersModalBackdrop .orders-modal-card {
-    background: #14141d !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 24px;
     width: 95%;
     max-width: 580px;
     max-height: 88vh;
-    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 25px 70px rgba(15, 23, 42, 0.16) !important;
     overflow: hidden;
     position: relative;
     display: flex;
@@ -9312,8 +9544,8 @@ body.category-view-active .products-catalog-section {
 }
 
 #userOrdersModalBackdrop .orders-modal-header {
-    background: #1a1a26;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: #ffffff !important;
+    border-bottom: 1px solid #f1f5f9 !important;
     padding: 16px 20px;
     display: flex;
     align-items: center;
@@ -9324,7 +9556,7 @@ body.category-view-active .products-catalog-section {
 }
 
 #userOrdersModalBackdrop .orders-modal-title {
-    color: #ffffff;
+    color: #0f172a !important;
     font-size: 18px;
     font-weight: 800;
     letter-spacing: -0.3px;
@@ -9334,27 +9566,29 @@ body.category-view-active .products-catalog-section {
 }
 
 #userOrdersModalBackdrop .orders-back-nav-btn {
-    background: transparent;
-    border: none;
-    color: #ffffff;
-    font-size: 17px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #0f172a !important;
+    font-size: 15px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
-    border-radius: 6px;
-    transition: background 0.15s ease;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: all 0.15s ease;
 }
 
 #userOrdersModalBackdrop .orders-back-nav-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: #f1f5f9;
+    color: #f43f5e !important;
 }
 
 #userOrdersModalBackdrop .orders-modal-count-badge {
-    background: rgba(255, 255, 255, 0.08);
-    color: #94a3b8;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
     font-size: 11px;
     font-weight: 700;
     padding: 3px 9px;
@@ -9362,9 +9596,9 @@ body.category-view-active .products-catalog-section {
 }
 
 #userOrdersModalBackdrop .modal-close-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #cbd5e1;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -9377,13 +9611,13 @@ body.category-view-active .products-catalog-section {
 }
 
 #userOrdersModalBackdrop .modal-close-btn:hover {
-    background: rgba(244, 63, 94, 0.2);
-    border-color: #f43f5e;
-    color: #ffffff;
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    color: #ef4444 !important;
 }
 
 #userOrdersModalBackdrop .orders-list-body {
-    background: #14141d;
+    background: #f8fafc !important;
     padding: 16px 16px 125px; /* Clear floating dock */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -9404,27 +9638,30 @@ body.category-view-active .products-catalog-section {
         max-height: 100vh !important;
         border-radius: 0 !important;
         border: none !important;
+        background: #ffffff !important;
     }
     #userOrdersModalBackdrop .orders-list-body {
         padding: 14px 14px 135px;
+        background: #f8fafc !important;
     }
 }
 
-/* Zomato Dark Card */
+/* Zomato Order Card - Clean White Theme */
 .zomato-order-card {
-    background: #1e1e2b;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 18px;
     padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    transition: transform 0.2s ease, border-color 0.2s ease;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
 }
 
 .zomato-order-card:hover {
-    border-color: rgba(255, 255, 255, 0.14);
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08) !important;
 }
 
 /* Header */
@@ -9440,8 +9677,8 @@ body.category-view-active .products-catalog-section {
     height: 48px;
     border-radius: 12px;
     object-fit: cover;
-    background: #252532;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
     flex-shrink: 0;
 }
 
@@ -9453,7 +9690,7 @@ body.category-view-active .products-catalog-section {
 .zomato-brand-title {
     font-size: 15.5px;
     font-weight: 700;
-    color: #ffffff;
+    color: #0f172a !important;
     line-height: 1.25;
     white-space: nowrap;
     overflow: hidden;
@@ -9462,7 +9699,7 @@ body.category-view-active .products-catalog-section {
 
 .zomato-brand-loc {
     font-size: 13px;
-    color: #94a3b8;
+    color: #64748b !important;
     margin-top: 2px;
     font-weight: 400;
     white-space: nowrap;
@@ -9475,8 +9712,8 @@ body.category-view-active .products-catalog-section {
     align-items: center;
     gap: 4px;
     font-size: 13px;
-    font-weight: 600;
-    color: #f43f5e;
+    font-weight: 700;
+    color: #f43f5e !important;
     margin-top: 4px;
     cursor: pointer;
     text-decoration: none;
@@ -9484,13 +9721,13 @@ body.category-view-active .products-catalog-section {
 }
 
 .zomato-view-menu-btn:hover {
-    color: #fb7185;
+    color: #e11d48 !important;
 }
 
 .zomato-dots-btn {
     background: transparent;
     border: none;
-    color: #94a3b8;
+    color: #94a3b8 !important;
     font-size: 17px;
     cursor: pointer;
     padding: 4px 6px;
@@ -9500,8 +9737,8 @@ body.category-view-active .products-catalog-section {
 }
 
 .zomato-dots-btn:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.08);
+    color: #0f172a !important;
+    background: #f1f5f9 !important;
 }
 
 /* Items List */
@@ -9538,18 +9775,18 @@ body.category-view-active .products-catalog-section {
 }
 
 .zomato-food-symbol.veg {
-    border: 1.5px solid #22c55e;
+    border: 1.5px solid #16a34a !important;
 }
 
 .zomato-food-symbol.veg .veg-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #22c55e;
+    background: #16a34a !important;
 }
 
 .zomato-food-symbol.non-veg {
-    border: 1.5px solid #ef4444;
+    border: 1.5px solid #dc2626 !important;
 }
 
 .zomato-food-symbol.non-veg .nonveg-triangle {
@@ -9557,19 +9794,19 @@ body.category-view-active .products-catalog-section {
     height: 0;
     border-left: 3.5px solid transparent;
     border-right: 3.5px solid transparent;
-    border-bottom: 7px solid #ef4444;
+    border-bottom: 7px solid #dc2626 !important;
 }
 
 .zomato-item-title {
     font-size: 14px;
     font-weight: 600;
-    color: #f1f5f9;
+    color: #1e293b !important;
     letter-spacing: -0.1px;
 }
 
 .zomato-item-addons {
     font-size: 12px;
-    color: #94a3b8;
+    color: #64748b !important;
     margin-left: 23px;
     line-height: 1.3;
 }
@@ -9577,7 +9814,7 @@ body.category-view-active .products-catalog-section {
 /* Dashed Divider */
 .zomato-card-divider {
     border: none;
-    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    border-top: 1px dashed #e2e8f0 !important;
     margin: 4px 0 2px;
 }
 
@@ -9596,55 +9833,55 @@ body.category-view-active .products-catalog-section {
 
 .zomato-order-date {
     font-size: 12.5px;
-    color: #94a3b8;
+    color: #64748b !important;
     font-weight: 400;
 }
 
 .zomato-order-status {
     font-size: 13.5px;
-    font-weight: 600;
-    color: #f1f5f9;
+    font-weight: 700;
+    color: #1e293b !important;
     display: flex;
     align-items: center;
     gap: 5px;
 }
 
 .zomato-order-status.status-delivered {
-    color: #e2e8f0;
+    color: #16a34a !important;
 }
 
 .zomato-order-status.status-in-transit,
 .zomato-order-status.status-out-for-delivery {
-    color: #38bdf8;
+    color: #0284c7 !important;
 }
 
 .zomato-order-status.status-preparing {
-    color: #f59e0b;
+    color: #d97706 !important;
 }
 
 .zomato-order-status.status-cancelled {
-    color: #f87171;
+    color: #dc2626 !important;
 }
 
 .zomato-meta-price {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 15.5px;
-    font-weight: 700;
-    color: #ffffff;
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a !important;
     cursor: pointer;
     transition: color 0.15s ease;
     user-select: none;
 }
 
 .zomato-meta-price:hover {
-    color: #f43f5e;
+    color: #f43f5e !important;
 }
 
 .zomato-meta-price i {
     font-size: 12px;
-    color: #94a3b8;
+    color: #94a3b8 !important;
 }
 
 /* Action Row (Bottom) */
@@ -9653,7 +9890,7 @@ body.category-view-active .products-catalog-section {
     justify-content: space-between;
     align-items: center;
     padding-top: 8px;
-    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    border-top: 1px dashed #e2e8f0 !important;
 }
 
 .zomato-feedback-box {
@@ -9665,17 +9902,17 @@ body.category-view-active .products-catalog-section {
 .zomato-rated-text {
     font-size: 13px;
     font-weight: 600;
-    color: #f1f5f9;
+    color: #334155 !important;
 }
 
 .zomato-rated-text .star-gold {
-    color: #f59e0b;
+    color: #f59e0b !important;
 }
 
 .zomato-feedback-link {
     font-size: 12.5px;
-    font-weight: 600;
-    color: #f43f5e;
+    font-weight: 700;
+    color: #f43f5e !important;
     display: inline-flex;
     align-items: center;
     gap: 3px;
@@ -9685,12 +9922,12 @@ body.category-view-active .products-catalog-section {
 }
 
 .zomato-feedback-link:hover {
-    color: #fb7185;
+    color: #e11d48 !important;
 }
 
 .zomato-reorder-btn {
-    background: #f43f5e;
-    color: #ffffff;
+    background: #f43f5e !important;
+    color: #ffffff !important;
     border: none;
     border-radius: 10px;
     padding: 9px 20px;
@@ -9700,15 +9937,15 @@ body.category-view-active .products-catalog-section {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    box-shadow: 0 4px 14px rgba(244, 63, 94, 0.35);
+    box-shadow: 0 4px 14px rgba(244, 63, 94, 0.25) !important;
     transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
     margin-left: auto;
 }
 
 .zomato-reorder-btn:hover {
-    background: #e11d48;
+    background: #e11d48 !important;
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(244, 63, 94, 0.45);
+    box-shadow: 0 6px 18px rgba(244, 63, 94, 0.35) !important;
 }
 
 .zomato-reorder-btn:active {
@@ -9716,8 +9953,8 @@ body.category-view-active .products-catalog-section {
 }
 
 .zomato-closed-pill {
-    background: #2a2a36;
-    color: #94a3b8;
+    background: #f1f5f9 !important;
+    color: #64748b !important;
     font-size: 12px;
     font-weight: 600;
     padding: 8px 14px;
@@ -9727,10 +9964,10 @@ body.category-view-active .products-catalog-section {
     margin-left: auto;
 }
 
-/* Guest Device Sync Chip in Dark Mode */
+/* Guest Device Sync Chip in White Mode */
 .zomato-guest-banner {
-    background: linear-gradient(135deg, rgba(124, 92, 252, 0.15), rgba(244, 63, 94, 0.12));
-    border: 1px solid rgba(124, 92, 252, 0.3);
+    background: linear-gradient(135deg, #fff1f2 0%, #faf5ff 100%) !important;
+    border: 1px solid #fecdd3 !important;
     border-radius: 14px;
     padding: 12px 16px;
     margin-bottom: 6px;
@@ -9738,61 +9975,65 @@ body.category-view-active .products-catalog-section {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    box-shadow: 0 2px 8px rgba(244, 63, 94, 0.05);
 }
 
 .zomato-guest-banner-text strong {
-    color: #ffffff;
-    font-size: 12.5px;
+    color: #9f1239 !important;
+    font-size: 13px;
     display: block;
+    font-weight: 700;
 }
 
 .zomato-guest-banner-text span {
-    color: #94a3b8;
-    font-size: 11.5px;
+    color: #475569 !important;
+    font-size: 12px;
     margin-top: 2px;
     display: block;
 }
 
 .zomato-guest-signin-btn {
-    background: #f43f5e;
-    color: #ffffff;
+    background: #f43f5e !important;
+    color: #ffffff !important;
     border: none;
-    padding: 7px 14px;
+    padding: 8px 16px;
     border-radius: 8px;
     font-weight: 700;
     font-size: 12px;
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.15s ease;
+    box-shadow: 0 2px 8px rgba(244, 63, 94, 0.25);
+    transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .zomato-guest-signin-btn:hover {
-    background: #e11d48;
+    background: #e11d48 !important;
+    transform: translateY(-1px);
 }
 
-/* Empty State Dark */
+/* Empty State White */
 .zomato-empty-state {
     text-align: center;
     padding: 60px 20px 40px;
-    color: #94a3b8;
+    color: #64748b !important;
 }
 
 .zomato-empty-state .empty-icon {
     font-size: 48px;
     margin-bottom: 14px;
-    filter: drop-shadow(0 4px 12px rgba(244, 63, 94, 0.3));
+    filter: drop-shadow(0 4px 12px rgba(244, 63, 94, 0.2));
 }
 
 .zomato-empty-state h4 {
     font-size: 18px;
     font-weight: 800;
-    color: #ffffff;
+    color: #0f172a !important;
     margin-bottom: 8px;
 }
 
 .zomato-empty-state p {
     font-size: 13.5px;
-    color: #94a3b8;
+    color: #64748b !important;
     margin-bottom: 22px;
     max-width: 320px;
     margin-left: auto;
@@ -9801,20 +10042,20 @@ body.category-view-active .products-catalog-section {
 }
 
 .zomato-empty-explore-btn {
-    background: #f43f5e;
-    color: #ffffff;
+    background: #f43f5e !important;
+    color: #ffffff !important;
     border: none;
     padding: 12px 26px;
     border-radius: 12px;
     font-weight: 700;
     font-size: 14px;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(244, 63, 94, 0.4);
+    box-shadow: 0 4px 16px rgba(244, 63, 94, 0.25);
     transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .zomato-empty-explore-btn:hover {
-    background: #e11d48;
+    background: #e11d48 !important;
     transform: translateY(-1px);
 }
 
@@ -9958,18 +10199,39 @@ body.category-view-active .products-catalog-section {
 
 @media (max-width: 768px) {
     .nav-user-pill {
-        padding: 3px 10px 3px 4px;
-        gap: 7px;
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+        padding: 0 !important;
+        gap: 0 !important;
+        border-radius: 50% !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    .nav-user-pill .user-pill-text,
+    .nav-user-pill .user-pill-chevron,
+    .user-pill-role {
+        display: none !important;
     }
 
     .user-avatar-circle {
-        width: 25px;
-        height: 25px;
-        font-size: 11px;
-    }
-
-    .user-pill-role {
-        display: none !important;
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+        font-size: 14px !important;
+        border-radius: 50% !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     .user-pill-greeting {
@@ -9978,8 +10240,30 @@ body.category-view-active .products-catalog-section {
     }
 
     .nav-item-auth {
-        padding: 5px 10px;
-        font-size: 11.5px;
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+        padding: 0 !important;
+        border-radius: 50% !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 16px !important;
+        flex-shrink: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .nav-item-auth i {
+        font-size: 16px !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+    }
+
+    .navbar.scrolled .nav-item-auth {
+        background: #f1f5f9 !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #0f172a !important;
     }
 
     .auth-modal-card,
@@ -12828,6 +13112,132 @@ body.category-view-active .products-catalog-section {
     background: #065ec0 !important;
 }
 
+/* Dedicated Styling for Diwali Festival Square Poster Slide */
+.hero-ad-slide.hero-ad-diwali-slide {
+    background: #fadf84 !important;
+    background-color: #fadf84 !important;
+    cursor: pointer !important;
+    position: relative !important;
+}
+
+.hero-ad-slide.hero-ad-diwali-slide .hero-ad-content,
+.hero-ad-slide.hero-ad-diwali-slide .diwali-hero-ad-content {
+    position: absolute !important;
+    bottom: 24px !important;
+    left: clamp(24px, 6vw, 64px) !important;
+    top: auto !important;
+    margin: 0 !important;
+    z-index: 10 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.hero-ad-slide.hero-ad-diwali-slide .ad-media-overlay,
+.diwali-media-overlay {
+    display: none !important;
+    background: none !important;
+}
+
+.hero-ad-slide.hero-ad-diwali-slide .ad-bg-photo {
+    object-fit: contain !important;
+    object-position: center center !important;
+}
+
+.hero-ad-slide.hero-ad-diwali-slide .hero-ad-perks,
+.hero-ad-slide.hero-ad-diwali-slide .diwali-ad-perks {
+    display: none !important;
+}
+
+.hero-ad-cta-btn.diwali-cta-btn,
+.hero-ad-diwali-slide .diwali-cta-btn,
+.diwali-cta-btn {
+    background: #ffffff !important;
+    color: #92400e !important;
+    border: 1px solid rgba(255, 255, 255, 0.95) !important;
+    border-radius: 9999px !important;
+    padding: 3.5px 4.5px 3.5px 12px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.35px !important;
+    box-shadow: 0 4px 14px rgba(180, 83, 9, 0.28), 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 1.5px rgba(255, 255, 255, 0.9) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    cursor: pointer !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    min-height: auto !important;
+    height: 28px !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.hero-ad-cta-btn.diwali-cta-btn::before,
+.hero-ad-diwali-slide .diwali-cta-btn::before,
+.diwali-cta-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -75%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+    transform: skewX(-20deg);
+    animation: craftCtaShimmer 3.5s infinite ease-in-out;
+}
+
+.hero-ad-cta-btn.diwali-cta-btn:hover,
+.hero-ad-diwali-slide .diwali-cta-btn:hover,
+.diwali-cta-btn:hover {
+    transform: translateY(-1.5px) scale(1.025) !important;
+    box-shadow: 0 6px 18px rgba(180, 83, 9, 0.35), 0 0 0 2px rgba(255, 255, 255, 1) !important;
+    background: #ffffff !important;
+    color: #78350f !important;
+}
+
+.hero-ad-cta-btn.diwali-cta-btn:active,
+.hero-ad-diwali-slide .diwali-cta-btn:active,
+.diwali-cta-btn:active {
+    transform: translateY(0) scale(0.98) !important;
+}
+
+.diwali-cta-btn .diwali-cta-text {
+    color: #92400e !important;
+    font-weight: 800 !important;
+    font-size: 11px !important;
+    letter-spacing: 0.35px !important;
+    line-height: 1 !important;
+}
+
+.diwali-cta-btn .diwali-cta-bubble {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    transition: transform 0.25s ease, background 0.25s ease !important;
+    margin: 0 !important;
+}
+
+.diwali-cta-btn .diwali-cta-bubble i {
+    color: #ffffff !important;
+    font-size: 8.5px !important;
+    margin: 0 !important;
+}
+
+.hero-ad-cta-btn.diwali-cta-btn:hover .diwali-cta-bubble,
+.hero-ad-diwali-slide .diwali-cta-btn:hover .diwali-cta-bubble,
+.diwali-cta-btn:hover .diwali-cta-bubble {
+    transform: translateX(1.5px) !important;
+    background: #b45309 !important;
+}
+
 /* Floating interactive action bar on Tombola graphic ad */
 .hero-graphic-cta-container {
     position: absolute;
@@ -13160,6 +13570,61 @@ body.category-view-active .products-catalog-section {
     }
 
     .hero-ad-slide.hero-ad-craft-slide .ad-bg-photo {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: center center !important;
+        display: block !important;
+    }
+
+    /* Mobile Dedicated 1:1 Square Billboard for Diwali Poster */
+    .hero-ad-slide.hero-ad-diwali-slide {
+        display: block !important;
+        position: relative !important;
+        padding: 0 !important;
+        min-height: calc(100vw + env(safe-area-inset-top, 0px)) !important;
+        height: auto !important;
+        background-color: #fadf84 !important;
+        background: #fadf84 !important;
+        overflow: hidden !important;
+    }
+
+    .hero-ad-slide.hero-ad-diwali-slide .hero-ad-content,
+    .hero-ad-slide.hero-ad-diwali-slide .diwali-hero-ad-content {
+        position: absolute !important;
+        bottom: 14px !important;
+        left: 16px !important;
+        top: auto !important;
+        margin: 0 !important;
+        max-width: calc(100% - 32px) !important;
+        width: auto !important;
+        z-index: 10 !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .hero-ad-slide.hero-ad-diwali-slide .diwali-cta-btn {
+        height: 26px !important;
+        padding: 3px 4px 3px 10px !important;
+        font-size: 10.5px !important;
+        gap: 5px !important;
+    }
+
+    .hero-ad-slide.hero-ad-diwali-slide .diwali-cta-btn .diwali-cta-text {
+        font-size: 10.5px !important;
+    }
+
+    .hero-ad-slide.hero-ad-diwali-slide .diwali-cta-btn .diwali-cta-bubble {
+        width: 18px !important;
+        height: 18px !important;
+        font-size: 8px !important;
+    }
+
+    .hero-ad-slide.hero-ad-diwali-slide .diwali-cta-btn .diwali-cta-bubble i {
+        font-size: 8px !important;
+    }
+
+    .hero-ad-slide.hero-ad-diwali-slide .ad-bg-photo {
         width: 100% !important;
         height: 100% !important;
         object-fit: cover !important;
@@ -14124,10 +14589,10 @@ body.category-view-active .products-catalog-section {
     }
 
     .hero-ad-discount-tag {
-        top: 6px !important;
-        right: 8px !important;
-        padding: 2px 6px !important;
-        font-size: 7.8px !important;
+        top: calc(206px + env(safe-area-inset-top, 0px)) !important;
+        right: 12px !important;
+        padding: 3px 7px !important;
+        font-size: 8px !important;
     }
 }
 
@@ -15434,334 +15899,417 @@ body.category-view-active .products-catalog-section {
 }
 
 /* ==================== BESPOKE STUDIO & CUSTOM CREATIONS (LUXE SHOWCASE CARDS) ==================== */
+/* ==================== BLINKIT / ZEAPTO STYLE CUSTOMISED BENTO SECTION ==================== */
 .bespoke-custom-section {
     width: 100%;
-    margin: 32px 0 40px 0;
-    padding: 34px 28px 32px;
-    background: linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, rgba(254, 247, 242, 0.92) 50%, rgba(250, 245, 255, 0.9) 100%);
-    backdrop-filter: blur(28px) saturate(190%);
-    -webkit-backdrop-filter: blur(28px) saturate(190%);
-    border: 1px solid rgba(226, 218, 245, 0.7);
-    border-radius: 32px;
+    margin: 24px 0 32px 0;
+    padding: 8px 0 16px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
     position: relative;
-    overflow: hidden;
-    box-shadow: 0 20px 50px -12px rgba(124, 92, 252, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 1);
+    box-shadow: none;
 }
 
-.bespoke-custom-section::before {
-    content: '';
-    position: absolute;
-    top: -90px;
-    right: -90px;
-    width: 320px;
-    height: 320px;
-    background: radial-gradient(circle, rgba(251, 191, 36, 0.22) 0%, rgba(244, 114, 182, 0.12) 45%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
+.bespoke-custom-section::before,
 .bespoke-custom-section::after {
-    content: '';
-    position: absolute;
-    bottom: -90px;
-    left: -90px;
-    width: 280px;
-    height: 280px;
-    background: radial-gradient(circle, rgba(124, 92, 252, 0.14) 0%, rgba(219, 39, 119, 0.08) 50%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
+    display: none !important;
 }
 
 .bespoke-section-header {
-    margin-bottom: 24px;
+    margin-bottom: 18px;
     position: relative;
     z-index: 2;
 }
 
-.bespoke-pill-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    background: linear-gradient(135deg, rgba(124, 92, 252, 0.1) 0%, rgba(219, 39, 119, 0.1) 100%);
-    color: #633ef3;
-    border: 1px solid rgba(124, 92, 252, 0.25);
-    font-size: 11.5px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    padding: 6px 14px;
-    border-radius: 999px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 10px rgba(124, 92, 252, 0.1);
-}
-
 .bespoke-section-title {
-    font-size: clamp(23px, 2.4vw, 30px);
+    font-size: clamp(20px, 2.3vw, 26px);
     font-weight: 850;
     color: #0f172a;
     margin: 0 0 6px 0;
-    letter-spacing: -0.6px;
+    letter-spacing: -0.4px;
     line-height: 1.25;
 }
 
 .bespoke-section-subtitle {
-    font-size: 14px;
+    font-size: 13.5px;
     color: #64748b;
-    max-width: 720px;
+    max-width: 680px;
     margin: 0;
-    line-height: 1.55;
-    letter-spacing: -0.15px;
+    line-height: 1.5;
 }
 
-.bespoke-cards-grid {
+/* 3-Column Bento Grid */
+.custom-bento-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: 1.18fr 1fr 1fr;
+    grid-template-rows: 175px 175px;
+    gap: 14px;
     position: relative;
     z-index: 2;
 }
 
-/* Luxe Showcase Card */
-.bespoke-card {
-    background: #ffffff;
-    border: 1px solid rgba(226, 232, 240, 0.9);
+/* Base Card Style (Earthy Olive Gradient matching reference) */
+.custom-bento-card {
+    background: linear-gradient(180deg, #444f38 0%, #303928 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 22px;
-    padding: 0;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.28s ease, border-color 0.28s ease;
+    user-select: none;
+}
+
+.custom-bento-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.38);
+    border-color: rgba(250, 204, 21, 0.4);
+}
+
+.custom-bento-card:active {
+    transform: scale(0.98);
+}
+
+/* 1. Tall Left Card */
+.bento-tall-card {
+    grid-row: 1 / span 2;
+    padding: 18px 16px 0 16px;
+}
+
+.bento-tall-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     position: relative;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+    z-index: 2;
+}
+
+.bento-tall-title {
+    font-size: 19px;
+    font-weight: 850;
+    color: #ffffff;
+    line-height: 1.22;
+    margin: 0;
+    letter-spacing: -0.3px;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.bento-price-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.bento-strikethrough-badge {
+    background: rgba(18, 22, 15, 0.75);
+    color: #9ca3af;
+    text-decoration: line-through;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bento-yellow-pill {
+    background: #facc15;
+    color: #1c2118;
+    font-size: 14px;
+    font-weight: 900;
+    padding: 4px 10px;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    letter-spacing: -0.2px;
+}
+
+.bento-subtext {
+    font-size: 12px;
+    font-weight: 600;
+    color: #d1d5db;
+    margin-top: 2px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.bento-tall-art {
+    margin-top: auto;
+    width: 100%;
+    height: 160px;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
     overflow: hidden;
 }
 
-.bespoke-card:hover {
-    transform: translateY(-6px);
-}
-
-.bespoke-card:active {
-    transform: scale(0.985);
-}
-
-.bespoke-card.bespoke-photo-card:hover {
-    border-color: rgba(99, 102, 241, 0.45);
-    box-shadow: 0 20px 40px -12px rgba(79, 70, 229, 0.22), 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.bespoke-card.bespoke-step-card:hover {
-    border-color: rgba(245, 158, 11, 0.45);
-    box-shadow: 0 20px 40px -12px rgba(217, 119, 6, 0.22), 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.bespoke-card.bespoke-wave-card:hover {
-    border-color: rgba(244, 63, 94, 0.45);
-    box-shadow: 0 20px 40px -12px rgba(219, 39, 119, 0.22), 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-/* Image Showcase Header */
-.bespoke-card-thumb {
+.bento-tall-art img {
     width: 100%;
-    height: 175px;
-    min-height: 175px;
-    border-radius: 21px 21px 0 0;
-    position: relative;
-    overflow: hidden;
-    background: #f1f5f9;
-}
-
-.bespoke-card-img {
-    width: 100%;
-    height: 100%;
+    max-height: 160px;
     object-fit: cover;
-    display: block;
-    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    object-position: bottom center;
+    border-radius: 0 0 20px 20px;
+    transition: transform 0.4s ease;
 }
 
-.bespoke-card:hover .bespoke-card-img {
+.custom-bento-card:hover .bento-tall-art img {
+    transform: scale(1.06);
+}
+
+/* 2. Small 2x2 Grid Cards */
+.bento-small-card {
+    padding: 12px 10px 0 10px;
+}
+
+.bento-card-top {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
+
+.bento-card-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.25;
+    margin: 0;
+    letter-spacing: -0.2px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.bento-card-art {
+    margin-top: auto;
+    width: 100%;
+    height: 95px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.bento-card-art img {
+    width: 100%;
+    height: 95px;
+    object-fit: cover;
+    object-position: bottom center;
+    border-radius: 0 0 20px 20px;
+    transition: transform 0.4s ease;
+}
+
+.custom-bento-card:hover .bento-card-art img {
     transform: scale(1.08);
 }
 
-/* Floating Icon Badge on Image */
-.bespoke-thumb-badge {
-    position: absolute;
-    bottom: 12px;
-    right: 12px;
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
+/* 3. Wide Bento Card (Curated Bento Cakes spanning 2 columns) */
+.bento-wide-card {
+    grid-column: 2 / span 2;
     display: flex;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    backdrop-filter: blur(4px);
+    justify-content: space-between;
+    padding: 12px 18px 12px 18px;
+    text-align: left;
+}
+
+.bento-wide-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     z-index: 2;
 }
 
-.photo-thumb-badge {
-    background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
-}
-
-.step-thumb-badge {
-    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
-}
-
-.wave-thumb-badge {
-    background: linear-gradient(135deg, #db2777 0%, #f43f5e 100%);
-}
-
-/* Info Section */
-.bespoke-card-info {
-    padding: 18px 20px 20px;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-
-.bespoke-card-badge-row {
-    margin-bottom: 8px;
-}
-
-.bespoke-card-badge {
-    display: inline-flex;
-    align-items: center;
-    font-size: 9.5px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    padding: 3.5px 9px;
-    border-radius: 999px;
-    line-height: 1.2;
-}
-
-.bespoke-card-badge.photo-badge {
-    background: rgba(79, 70, 229, 0.08);
-    color: #4338ca;
-    border: 1px solid rgba(79, 70, 229, 0.2);
-}
-
-.bespoke-card-badge.step-badge {
-    background: rgba(217, 119, 6, 0.08);
-    color: #b45309;
-    border: 1px solid rgba(217, 119, 6, 0.2);
-}
-
-.bespoke-card-badge.wave-badge {
-    background: rgba(219, 39, 119, 0.08);
-    color: #be185d;
-    border: 1px solid rgba(219, 39, 119, 0.2);
-}
-
-.bespoke-card-title {
-    font-size: 17px;
+.bento-wide-title {
+    font-size: 15px;
     font-weight: 850;
-    color: #0f172a;
-    margin: 0 0 6px 0;
-    letter-spacing: -0.35px;
-    line-height: 1.3;
-    transition: color 0.2s ease;
+    color: #ffffff;
+    line-height: 1.25;
+    margin: 0;
+    letter-spacing: -0.2px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-.bespoke-card.bespoke-photo-card:hover .bespoke-card-title {
-    color: #4f46e5;
-}
-
-.bespoke-card.bespoke-step-card:hover .bespoke-card-title {
-    color: #d97706;
-}
-
-.bespoke-card.bespoke-wave-card:hover .bespoke-card-title {
-    color: #db2777;
-}
-
-.bespoke-sparkle-tag {
+.bento-wide-sub {
     font-size: 12px;
-    font-weight: 600;
-    color: #64748b;
+    font-weight: 500;
+    color: #d1d5db;
+    margin-top: 1px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.bento-wide-tag {
+    display: inline-block;
+    width: fit-content;
+    margin-top: 5px;
+    background: #facc15;
+    color: #1c2118;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    letter-spacing: -0.2px;
+}
+
+.bento-wide-art {
+    width: 95px;
+    height: 95px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 16px;
-    line-height: 1.4;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    border-radius: 14px;
 }
 
-.bespoke-sparkle-tag i {
-    font-size: 11px;
-}
-
-.bespoke-photo-card .bespoke-sparkle-tag i {
-    color: #6366f1;
-}
-
-.bespoke-step-card .bespoke-sparkle-tag i {
-    color: #f59e0b;
-}
-
-.bespoke-wave-card .bespoke-sparkle-tag i {
-    color: #ec4899;
-}
-
-/* Interactive CTA Button Row (Desktop) */
-.bespoke-card-cta {
-    margin-top: auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: space-between;
+.bento-wide-art img {
     width: 100%;
-    padding: 10px 14px;
-    border-radius: 12px;
-    font-size: 12.5px;
-    font-weight: 750;
-    letter-spacing: -0.1px;
-    color: #ffffff;
-    transition: all 0.25s ease;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 14px;
+    transition: transform 0.4s ease;
 }
 
-.photo-cta {
-    background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+.custom-bento-card:hover .bento-wide-art img {
+    transform: scale(1.08);
 }
 
-.step-cta {
-    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
-    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
-}
-
-.wave-cta {
-    background: linear-gradient(135deg, #db2777 0%, #f43f5e 100%);
-    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.25);
-}
-
-.bespoke-card:hover .bespoke-card-cta {
-    filter: brightness(1.08);
-}
-
-.bespoke-card:hover .bespoke-card-cta i {
-    transform: translateX(3px);
-}
-
-.bespoke-card-cta i {
-    font-size: 11px;
-    transition: transform 0.25s ease;
-}
-
-.bespoke-card-arrow {
-    display: none;
-}
-
-
-@media (max-width: 900px) {
-    .bespoke-cards-grid {
-        grid-template-columns: 1fr;
-        gap: 14px;
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .bespoke-custom-section {
+        border-radius: 0;
+        padding: 4px 0 14px;
+        margin: 14px 0 20px 0;
+        background: transparent;
+        box-shadow: none;
+        border: none;
     }
 
-    .bespoke-custom-section {
-        padding: 20px 16px;
-        margin: 20px 0 28px 0;
-        border-radius: 24px;
+    .bespoke-section-title {
+        font-size: 18px;
+        margin-bottom: 4px;
+        color: #0f172a;
+    }
+
+    .bespoke-section-subtitle {
+        font-size: 11.5px;
+        line-height: 1.4;
+        color: #64748b;
+    }
+
+    .custom-bento-grid {
+        grid-template-columns: 1.15fr 1fr 1fr;
+        grid-template-rows: 135px 135px;
+        gap: 8px;
+    }
+
+    .custom-bento-card {
+        border-radius: 16px;
+    }
+
+    .bento-tall-card {
+        padding: 10px 8px 0 8px;
+    }
+
+    .bento-tall-title {
+        font-size: 13px;
+        line-height: 1.2;
+    }
+
+    .bento-price-row {
+        gap: 4px;
+        margin-top: 2px;
+    }
+
+    .bento-strikethrough-badge {
+        font-size: 9.5px;
+        padding: 1.5px 5px;
+    }
+
+    .bento-yellow-pill {
+        font-size: 11px;
+        padding: 2.5px 7px;
+        border-radius: 6px;
+    }
+
+    .bento-subtext {
+        font-size: 9.5px;
+        margin-top: 1px;
+    }
+
+    .bento-tall-art {
+        height: 135px;
+    }
+
+    .bento-tall-art img {
+        max-height: 135px;
+        border-radius: 0 0 16px 16px;
+    }
+
+    .bento-small-card {
+        padding: 8px 6px 0 6px;
+    }
+
+    .bento-card-title {
+        font-size: 11px;
+        line-height: 1.2;
+    }
+
+    .bento-card-art {
+        height: 72px;
+    }
+
+    .bento-card-art img {
+        height: 72px;
+        border-radius: 0 0 16px 16px;
+    }
+
+    .bento-wide-card {
+        grid-column: 2 / span 2;
+        padding: 8px 10px;
+    }
+
+    .bento-wide-title {
+        font-size: 12px;
+        line-height: 1.2;
+    }
+
+    .bento-wide-sub {
+        font-size: 10px;
+    }
+
+    .bento-wide-tag {
+        font-size: 9.5px;
+        padding: 2px 6px;
+        border-radius: 5px;
+    }
+
+    .bento-wide-art {
+        width: 76px;
+        height: 76px;
+        border-radius: 10px;
+    }
+
+    .bento-wide-art img {
+        border-radius: 10px;
+    }
+}
+
+@media (max-width: 360px) {
+    .custom-bento-grid {
+        grid-template-rows: 125px 125px;
+        gap: 6px;
+    }
+    .bento-tall-title {
+        font-size: 11.5px;
+    }
+    .bento-card-title {
+        font-size: 10px;
     }
 }
 

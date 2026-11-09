@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=15.9">
+    <link rel="stylesheet" href="styles.css?v=19.1">
     <script>
         // Flag this page as the dedicated Uni Chocoloom store
         window.IS_UNI_CHOCOLOOM_PAGE = true;
@@ -72,7 +72,7 @@
         }
     </style>
 </head>
-<body>
+<body class="uni-chocoloom-page">
 
     <!-- Instant Centered Plain Logo Splash Screen (Plain logo only, no box) -->
     <div id="siteLoadingSplash" class="site-loading-splash">
@@ -85,10 +85,13 @@
         <div class="container nav-inner">
             <div class="nav-left">
                 <div class="brand-dock-group" id="brandDockGroup" title="Delivering to SRKR Engineering College, Bhimavaram" role="button" tabindex="0">
-                    <div class="header-status-title" id="headerStatusTitle">Currently unavailable</div>
+                    <div style="display: flex; align-items: center; gap: 7px;">
+                        <img src="assets/one-logo.png" alt="One" class="uni-header-one-badge" style="height: 22px; width: auto; max-height: 22px; object-fit: contain; display: inline-block; vertical-align: middle;">
+                        <div class="header-status-title" id="headerStatusTitle">Accepting Orders</div>
+                    </div>
 
                     <div class="location-dock-btn" id="locationPickerBtn">
-                        <span class="loc-dock-tag" id="currentLocType">CAMPUS</span>
+                        <span class="loc-dock-tag" id="currentLocType" style="color: #16a34a !important; font-weight: 800;">CAMPUS</span>
                         <span class="loc-dock-sep">-</span>
                         <span class="loc-dock-name" id="currentLocName">SRKR Engineering College</span>
                         <i class="fa-solid fa-caret-down loc-dock-caret"></i>
@@ -334,76 +337,51 @@
                 </p>
             </div>
 
-            <div class="bespoke-cards-grid">
-                <!-- 1. Share Reference Photo -->
-                <div class="bespoke-card bespoke-photo-card" onclick="openPhotoReferenceModal()">
-                    <div class="bespoke-card-thumb">
-                        <img src="assets/categories/specialty_cakes.webp" alt="Order by Reference Photo" class="bespoke-card-img" loading="lazy">
-                        <span class="bespoke-thumb-badge photo-thumb-badge"><i class="fa-solid fa-camera-retro"></i></span>
+            <div class="custom-bento-grid">
+                <!-- 1. Tall Left Card: Order by Reference Photo -->
+                <div class="custom-bento-card bento-tall-card" onclick="openPhotoReferenceModal()" role="button" tabindex="0" title="Order by Reference Photo">
+                    <div class="bento-tall-header">
+                        <h3 class="bento-tall-title">Order by<br>Reference Photo</h3>
+                        <div class="bento-price-row">
+                            <span class="bento-strikethrough-badge">₹1,299</span>
+                            <span class="bento-yellow-pill">₹899</span>
+                        </div>
+                        <div class="bento-subtext">Pinterest & Insta Cakes</div>
                     </div>
-                    <div class="bespoke-card-info">
-                        <div class="bespoke-card-badge-row">
-                            <span class="bespoke-card-badge photo-badge">100% CUSTOM DESIGN</span>
-                        </div>
-                        <h3 class="bespoke-card-title">Order by Reference Photo</h3>
-                        <div class="bespoke-sparkle-tag">
-                            <i class="fa-solid fa-bolt"></i> Recreate Any Design • 12+ Flavors
-                        </div>
-                        <div class="bespoke-card-cta photo-cta">
-                            <span>Upload Reference</span>
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </div>
-                    </div>
-                    <div class="bespoke-card-arrow photo-arrow">
-                        <i class="fa-solid fa-arrow-right"></i>
+                    <div class="bento-tall-art">
+                        <img src="assets/categories/specialty_cakes.webp" alt="Order by Reference Photo" class="bento-cutout-img" loading="lazy">
                     </div>
                 </div>
 
-                <!-- 2. Customise Step Cake -->
-                <div class="bespoke-card bespoke-step-card" onclick="openStepCakeModal()">
-                    <div class="bespoke-card-thumb">
-                        <img src="assets/categories/wedding_cakes.webp" alt="Customise Step Cake" class="bespoke-card-img" loading="lazy">
-                        <span class="bespoke-thumb-badge step-thumb-badge"><i class="fa-solid fa-layer-group"></i></span>
+                <!-- 2. Middle-Top Card: Customise Step Cake -->
+                <div class="custom-bento-card bento-small-card" onclick="openStepCakeModal()" role="button" tabindex="0" title="Customise Step Cake">
+                    <div class="bento-card-top">
+                        <h4 class="bento-card-title">Customise<br>Step Cake</h4>
                     </div>
-                    <div class="bespoke-card-info">
-                        <div class="bespoke-card-badge-row">
-                            <span class="bespoke-card-badge step-badge">GRAND CELEBRATIONS</span>
-                        </div>
-                        <h3 class="bespoke-card-title">Customise Step Cake</h3>
-                        <div class="bespoke-sparkle-tag">
-                            <i class="fa-solid fa-crown"></i> 2 & 3 Step Tiered • Mix Flavors
-                        </div>
-                        <div class="bespoke-card-cta step-cta">
-                            <span>Build Tier Cake</span>
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </div>
-                    </div>
-                    <div class="bespoke-card-arrow step-arrow">
-                        <i class="fa-solid fa-arrow-right"></i>
+                    <div class="bento-card-art">
+                        <img src="assets/categories/wedding_cakes.webp" alt="Customise Step Cake" class="bento-cutout-img" loading="lazy">
                     </div>
                 </div>
 
-                <!-- 3. Chocoloom Wave Box -->
-                <div class="bespoke-card bespoke-wave-card" onclick="openWaveBoxModal()">
-                    <div class="bespoke-card-thumb">
-                        <img src="assets/categories/wave_box.jpg" alt="Chocoloom Wave Box" class="bespoke-card-img" loading="lazy">
-                        <span class="bespoke-thumb-badge wave-thumb-badge"><i class="fa-solid fa-box-open"></i></span>
+                <!-- 3. Right-Top Card: Chocoloom Wave Box -->
+                <div class="custom-bento-card bento-small-card" onclick="openWaveBoxModal()" role="button" tabindex="0" title="Chocoloom Wave Box">
+                    <div class="bento-card-top">
+                        <h4 class="bento-card-title">Chocoloom<br>Wave Box</h4>
                     </div>
-                    <div class="bespoke-card-info">
-                        <div class="bespoke-card-badge-row">
-                            <span class="bespoke-card-badge wave-badge">SIGNATURE LUXE HAMPER</span>
-                        </div>
-                        <h3 class="bespoke-card-title">Chocoloom Wave Box</h3>
-                        <div class="bespoke-sparkle-tag">
-                            <i class="fa-solid fa-star"></i> Curate Your Box • 12 Treats
-                        </div>
-                        <div class="bespoke-card-cta wave-cta">
-                            <span>Curate Wave Box</span>
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </div>
+                    <div class="bento-card-art">
+                        <img src="assets/categories/wave_box.jpg" alt="Chocoloom Wave Box" class="bento-cutout-img" loading="lazy">
                     </div>
-                    <div class="bespoke-card-arrow wave-arrow">
-                        <i class="fa-solid fa-arrow-right"></i>
+                </div>
+
+                <!-- 4. Wide Bottom Card: Curated Bento Cakes -->
+                <div class="custom-bento-card bento-wide-card" onclick="if(typeof filterByCategory==='function'){filterByCategory('Bento Cakes');}else{openPhotoReferenceModal();}" role="button" tabindex="0" title="Curated Bento Cakes">
+                    <div class="bento-wide-content">
+                        <h4 class="bento-wide-title">Curated Bento Cakes</h4>
+                        <div class="bento-wide-sub">Cute Mini Bento Cakes • Custom Messages & Piping</div>
+                        <span class="bento-wide-tag">From ₹249</span>
+                    </div>
+                    <div class="bento-wide-art">
+                        <img src="assets/categories/bento_cakes.webp" alt="Curated Bento Cakes" class="bento-cutout-img" loading="lazy">
                     </div>
                 </div>
             </div>
@@ -929,7 +907,7 @@
         </div>
     </div>
 
-    <!-- User Orders & History Modal (Zomato Dark Theme) -->
+    <!-- User Orders & History Modal (Zomato White Theme) -->
     <div class="modal-backdrop" id="userOrdersModalBackdrop" onclick="if(event.target === this) closeOrdersModal()">
         <div class="orders-modal-card">
             <div class="orders-modal-header">
@@ -1223,9 +1201,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="data.js?v=6.8"></script>
-    <script src="react-components.js?v=2.0"></script>
-    <script src="app.js?v=14.9"></script>
-    <script src="pwa.js?v=2.0" defer></script>
+    <script src="data.js?v=14.0"></script>
+    <script src="react-components.js?v=2.1"></script>
+    <script src="app.js?v=16.0"></script>
+    <script src="pwa.js?v=2.1" defer></script>
 </body>
 </html>
