@@ -16776,6 +16776,7 @@ window.renderProductDetailPage = function(dish, restaurant) {
 
     const allProds = typeof getAllProducts === 'function' ? getAllProducts() : [];
     const isWishlisted = Array.isArray(AppState.wishlist) && AppState.wishlist.includes(dish.id);
+    const categoryName = dish.category || 'Specialty Cakes';
 
     // Filter recommended items (same category or bestsellers, excluding current item)
     let recommendations = allProds.filter(p => p.id !== dish.id && p.is_available !== false);
@@ -16786,15 +16787,24 @@ window.renderProductDetailPage = function(dish, restaurant) {
     recommendations = recommendations.slice(0, 4);
 
     container.innerHTML = `
+        <!-- Breadcrumbs Navigation -->
+        <nav class="pdp-breadcrumbs">
+            <a href="./order"><i class="fa-solid fa-house" style="font-size: 11px;"></i> Home</a>
+            <span class="pdp-bc-sep">/</span>
+            <a href="./order">${categoryName}</a>
+            <span class="pdp-bc-sep">/</span>
+            <span class="pdp-bc-current">${dish.name}</span>
+        </nav>
+
         <div class="pdp-grid">
-            <!-- Left Column: Visual Showcase -->
+            <!-- Left Column: Visual Showcase & Quality Badges -->
             <div class="pdp-media-col">
                 <div class="pdp-img-card">
                     <img src="${dish.image}" alt="${dish.name}" id="pdpHeroImage" onerror="this.src='https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80'">
                     
                     <div class="pdp-floating-badges">
                         ${dish.is_available === false ? `
-                            <span class="pdp-badge-pill pdp-badge-out-of-stock">OUT OF STOCK</span>
+                            <span class="pdp-badge-pill pdp-badge-out-of-stock"><i class="fa-solid fa-ban"></i> OUT OF STOCK</span>
                         ` : (dish.isUniSpecial ? `
                             <span class="pdp-badge-pill pdp-badge-discount"><i class="fa-solid fa-graduation-cap"></i> 25% STUDENT OFF</span>
                         ` : (dish.isBestseller ? `
@@ -16807,6 +16817,38 @@ window.renderProductDetailPage = function(dish, restaurant) {
                     <button class="pdp-floating-wishlist" onclick="toggleProductPageWishlist(event)" title="Add to Wishlist" aria-label="Favorite">
                         <i id="pdpHeroWishlistIcon" class="${isWishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart'}" style="color: ${isWishlisted ? '#ec4899' : '#64748b'};"></i>
                     </button>
+                </div>
+
+                <!-- 4 Craft & Quality Badges -->
+                <div class="pdp-trust-grid">
+                    <div class="pdp-trust-card">
+                        <div class="pdp-trust-icon fresh"><i class="fa-solid fa-cake-candles"></i></div>
+                        <div>
+                            <div class="pdp-trust-title">Baked Fresh Today</div>
+                            <div class="pdp-trust-sub">100% on-order, zero pre-mix</div>
+                        </div>
+                    </div>
+                    <div class="pdp-trust-card">
+                        <div class="pdp-trust-icon gift"><i class="fa-solid fa-gift"></i></div>
+                        <div>
+                            <div class="pdp-trust-title">Free Party Kit</div>
+                            <div class="pdp-trust-sub">Candle, knife & card included</div>
+                        </div>
+                    </div>
+                    <div class="pdp-trust-card">
+                        <div class="pdp-trust-icon chilled"><i class="fa-solid fa-snowflake"></i></div>
+                        <div>
+                            <div class="pdp-trust-title">Chilled Delivery</div>
+                            <div class="pdp-trust-sub">Insulated box keeps cake safe</div>
+                        </div>
+                    </div>
+                    <div class="pdp-trust-card">
+                        <div class="pdp-trust-icon pure"><i class="fa-solid fa-leaf"></i></div>
+                        <div>
+                            <div class="pdp-trust-title">Pure Veg Certified</div>
+                            <div class="pdp-trust-sub">Separate dedicated prep line</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -16886,6 +16928,10 @@ window.renderProductDetailPageContent = function() {
     if (hasCooling && isCooling) specsArr.push('❄️ Cooling');
     const specsText = specsArr.join(' • ');
 
+    // Check if this item is already in cart
+    const cartMatches = (Array.isArray(AppState.cart) ? AppState.cart : []).filter(c => c && c.dish && (c.dish.id === dish.id || c.dish.name === dish.name));
+    const totalQtyInCart = cartMatches.reduce((sum, c) => sum + (Number(c.quantity) || 1), 0);
+
     infoCol.innerHTML = `
         <div class="pdp-header-meta">
             <div class="product-veg-indicator ${isVeg ? 'veg' : 'non-veg'}">
@@ -16893,11 +16939,11 @@ window.renderProductDetailPageContent = function() {
             </div>
             <span class="pdp-rating-pill">
                 <i class="fa-solid fa-star"></i>
-                <span>${dish.rating || '4.8'} (${dish.reviewsCount || '120+'} ratings)</span>
+                <span>${dish.rating || '4.9'} (${dish.reviewsCount || '180+'} ratings)</span>
             </span>
             <span class="pdp-cat-pill">${categoryName}</span>
-            <span style="font-size: 11px; font-weight: 800; color: ${isEggless ? '#15803d' : '#b45309'}; background: ${isEggless ? '#dcfce7' : '#fef3c7'}; padding: 4px 10px; border-radius: 6px;">
-                ${isEggless ? '🌱 100% PURE VEG' : '🥚 WITH EGG'}
+            <span style="font-size: 11px; font-weight: 800; color: ${isEggless ? '#15803d' : '#b45309'}; background: ${isEggless ? '#dcfce7' : '#fef3c7'}; padding: 4px 10px; border-radius: 8px;">
+                ${isEggless ? '🌱 100% PURE VEG' : '🥚 CLASSIC RECIPE'}
             </span>
         </div>
 
@@ -16907,21 +16953,32 @@ window.renderProductDetailPageContent = function() {
             <span class="pdp-current-price">₹${totalUnit}</span>
             ${hasDiscount ? `
                 <span class="pdp-original-price">₹${originalPrice}</span>
-                <span class="pdp-discount-tag">${discountPercent}% OFF</span>
+                <span class="pdp-discount-tag">Save ₹${originalPrice - totalUnit} (${discountPercent}% OFF)</span>
             ` : ''}
         </div>
 
         <div class="pdp-delivery-chip">
-            <i class="fa-solid fa-bolt" style="color: #f59e0b; font-size: 15px;"></i>
-            <span>Freshly handcrafted upon order • Delivered in <strong>25–45 mins</strong> in Bhimavaram</span>
+            <i class="fa-solid fa-bolt" style="color: #f59e0b; font-size: 16px;"></i>
+            <span>Freshly baked upon order • Handcrafted & Delivered in <strong>25–40 mins</strong> in Bhimavaram</span>
+        </div>
+
+        <!-- Segmented Dietary Preference Switch -->
+        <div class="pdp-dietary-switch">
+            <button type="button" class="pdp-dietary-btn ${!isEggless ? 'active' : ''}" onclick="selectCustomEggless(false)">
+                <span>🥚 Classic Recipe (With Egg)</span>
+            </button>
+            <button type="button" class="pdp-dietary-btn ${isEggless ? 'active pure-veg' : ''}" onclick="selectCustomEggless(true)">
+                <span>🌱 100% Pure Eggless</span>
+                <span class="diet-badge">+₹${getEgglessPrice(currentWeightKey)}</span>
+            </button>
         </div>
 
         <p class="pdp-desc">
-            ${dish.description || 'Indulge in freshly baked artisan confectionery crafted with premium ingredients, real rich cocoa, and master culinary passion.'}
+            ${dish.description || 'Indulge in freshly baked artisan confectionery crafted with premium ingredients, real rich cocoa, and master culinary passion by Chocoloom.'}
         </p>
 
         ${hasWeight ? `
-        <!-- Section 1: Weight / Size Selection -->
+        <!-- Section 1: Modern Size Cards Grid -->
         <div class="customization-section-card pdp-custom-section">
             <div class="customization-section-header">
                 <div class="customization-section-title">
@@ -16931,118 +16988,70 @@ window.renderProductDetailPageContent = function() {
                 <span class="customization-badge-required active"><i class="fa-solid fa-check"></i> Required</span>
             </div>
 
-            <div class="custom-options-grid">
+            <div class="pdp-size-grid">
                 ${WEIGHT_CONFIG.map(w => {
                     const price = (hasFlavours && currentFlavour) ? getDishFlavourPrice(dish, currentFlavour, w.key) : getWeightPrice(dish, w.key);
                     const isSelected = currentWeightKey === w.key;
+                    const tag = w.key === '1kg' ? 'POPULAR' : (w.key === 'half_kg' ? 'MINI' : (w.key === '2kg' ? 'PARTY' : ''));
                     return `
-                        <label class="custom-option-label ${isSelected ? 'selected' : ''}" onclick="selectCustomWeight('${w.key}')">
-                            <div class="custom-option-left">
-                                <div class="custom-option-radio"></div>
-                                <div>
-                                    <div class="custom-option-name">${w.label}</div>
-                                    <div class="custom-option-desc">${w.desc}</div>
-                                </div>
-                            </div>
-                            <div class="custom-option-price">₹${price}</div>
-                        </label>
+                        <div class="pdp-size-card ${isSelected ? 'selected' : ''}" onclick="selectCustomWeight('${w.key}')" role="button" tabindex="0">
+                            ${tag ? `<span class="pdp-size-tag">${tag}</span>` : ''}
+                            <div class="pdp-size-weight">${w.weightTag}</div>
+                            <div class="pdp-size-serves">${w.desc.split('•')[0]}</div>
+                            <div class="pdp-size-price">₹${price}</div>
+                        </div>
                     `;
                 }).join('')}
             </div>
         </div>
         ` : (isBento ? `
-        <div style="background: linear-gradient(135deg, #fdf4ff, #fae8ff); border: 1.5px solid #f0abfc; border-radius: 12px; padding: 12px 14px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #701a75;">
-                <span style="font-size: 18px;">🍱</span>
+        <div style="background: linear-gradient(135deg, #fdf4ff, #fae8ff); border: 1.5px solid #f0abfc; border-radius: 16px; padding: 14px 18px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 700; color: #701a75;">
+                <span style="font-size: 22px;">🍱</span>
                 <div>
-                    <div style="font-weight: 800;">Bento Box Cake (Single Size)</div>
-                    <div style="font-size: 11.5px; color: #a21caf; font-weight: 500;">Personal mini treat (1–2 servings) • Custom piped decoration</div>
+                    <div style="font-weight: 900; font-size: 14.5px;">Bento Box Cake (Single Size)</div>
+                    <div style="font-size: 12px; color: #a21caf; font-weight: 600;">Personal mini treat (1–2 servings) • Custom piped decoration</div>
                 </div>
             </div>
-            <div style="font-size: 18px; font-weight: 900; color: #a21caf;">₹${dish.price || 349}</div>
+            <div style="font-size: 20px; font-weight: 900; color: #a21caf;">₹${dish.price || 349}</div>
         </div>
         ` : '')}
 
-        <!-- Section 2: Egg or Eggless -->
-        <div class="customization-section-card pdp-custom-section">
-            <div class="customization-section-header">
-                <div class="customization-section-title">
-                    <i class="fa-solid fa-seedling" style="color: #16a34a;"></i>
-                    <span>Egg or Eggless Option</span>
-                </div>
-                <span class="customization-badge-required active"><i class="fa-solid fa-check"></i> Required</span>
-            </div>
-
-            <div class="custom-options-grid">
-                <label class="custom-option-label ${!isEggless ? 'selected' : ''}" onclick="selectCustomEggless(false)">
-                    <div class="custom-option-left">
-                        <div class="custom-option-radio"></div>
-                        <div>
-                            <div class="custom-option-name">🥚 With Egg (Regular)</div>
-                            <div class="custom-option-desc">Authentic classic bakery recipe</div>
-                        </div>
-                    </div>
-                    <div class="custom-option-price" style="color: #64748b; font-size: 12px; font-weight: 800;">FREE (+₹0)</div>
-                </label>
-
-                <label class="custom-option-label ${isEggless ? 'selected' : ''}" onclick="selectCustomEggless(true)">
-                    <div class="custom-option-left">
-                        <div class="custom-option-radio"></div>
-                        <div>
-                            <div class="custom-option-name" style="display: flex; align-items: center; gap: 6px;">
-                                <span>🌱 100% Pure Eggless</span>
-                                <span style="font-size: 10px; font-weight: 800; color: #15803d; background: #dcfce7; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0;">PURE VEG</span>
-                            </div>
-                            <div class="custom-option-desc">Freshly prepared in dedicated eggless line</div>
-                        </div>
-                    </div>
-                    <div class="custom-option-price" style="color: #16a34a; font-size: 13px; font-weight: 800;">+₹${getEgglessPrice(currentWeightKey)}</div>
-                </label>
-            </div>
-        </div>
-
         ${hasCooling ? `
-        <!-- Section 3: Cake Cooling Option -->
+        <!-- Section 2: Cake Cooling & Temperature Option -->
         <div class="customization-section-card pdp-custom-section">
             <div class="customization-section-header">
                 <div class="customization-section-title">
                     <i class="fa-solid fa-snowflake" style="color: #0284c7;"></i>
-                    <span>Cake Cooling Option</span>
+                    <span>Cake Chilling & Temperature</span>
                 </div>
                 <span class="customization-badge-required active"><i class="fa-solid fa-check"></i> Required</span>
             </div>
 
-            <div class="custom-options-grid">
-                <label class="custom-option-label ${!isCooling ? 'selected' : ''}" onclick="selectCustomCooling(false)">
-                    <div class="custom-option-left">
-                        <div class="custom-option-radio"></div>
-                        <div>
-                            <div class="custom-option-name">🎂 Normal Cakes</div>
-                            <div class="custom-option-desc">Room temperature baked cake (5 classic flavours)</div>
-                        </div>
+            <div class="pdp-cooling-grid">
+                <div class="pdp-cooling-card ${!isCooling ? 'selected' : ''}" onclick="selectCustomCooling(false)" role="button" tabindex="0">
+                    <span class="pdp-cooling-icon">🎂</span>
+                    <div>
+                        <div class="pdp-cooling-name">Room Temp Baked</div>
+                        <div class="pdp-cooling-desc">Classic room temperature cake</div>
                     </div>
-                    <div class="custom-option-price" style="color: #16a34a; font-size: 12px; font-weight: 800;">FREE (+₹0)</div>
-                </label>
+                    <span class="pdp-cooling-price" style="color: #16a34a;">FREE</span>
+                </div>
 
-                <label class="custom-option-label ${isCooling ? 'selected' : ''}" onclick="selectCustomCooling(true)">
-                    <div class="custom-option-left">
-                        <div class="custom-option-radio"></div>
-                        <div>
-                            <div class="custom-option-name" style="display: flex; align-items: center;">
-                                ❄️ Cooling Cakes
-                                <span class="cooling-badge-ice"><i class="fa-solid fa-snowflake"></i> ICE COOL</span>
-                            </div>
-                            <div class="custom-option-desc">Specially chilled in cold storage (15 gourmet flavours)</div>
-                        </div>
+                <div class="pdp-cooling-card ${isCooling ? 'selected' : ''}" onclick="selectCustomCooling(true)" role="button" tabindex="0">
+                    <span class="pdp-cooling-icon">❄️</span>
+                    <div>
+                        <div class="pdp-cooling-name">Cooling Cake <span class="cooling-badge-ice"><i class="fa-solid fa-snowflake"></i> ICE COOL</span></div>
+                        <div class="pdp-cooling-desc">Chilled in cold storage, velvety cream</div>
                     </div>
-                    <div class="custom-option-price" style="color: #0284c7;">+₹${selectedCoolingPrice}</div>
-                </label>
+                    <span class="pdp-cooling-price">+₹${selectedCoolingPrice}</span>
+                </div>
             </div>
         </div>
         ` : ''}
 
         ${dish.has_flavours !== false ? `
-        <!-- Section 4: Select Flavour -->
+        <!-- Section 3: Select Cake Flavour -->
         <div class="customization-section-card pdp-custom-section ${!isFlavourChosen ? 'flavour-selection-pending' : ''}" id="pdpFlavourSection">
             <div class="customization-section-header">
                 <div class="customization-section-title">
@@ -17050,14 +17059,14 @@ window.renderProductDetailPageContent = function() {
                     <span>Select Cake Flavour</span>
                 </div>
                 <span class="customization-badge-required ${!isFlavourChosen ? 'pending' : 'active'}" style="${!isFlavourChosen ? 'background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; font-weight: 800;' : (isCooling ? 'background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;' : 'background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8;')}">
-                    ${!isFlavourChosen ? '<i class="fa-solid fa-circle-exclamation"></i> Required: Choose 1 Flavour' : (isCooling ? '<i class="fa-solid fa-snowflake"></i> 15 Cooling Flavours' : '<i class="fa-solid fa-cake-candles"></i> 5 Normal Flavours')}
+                    ${!isFlavourChosen ? '<i class="fa-solid fa-circle-exclamation"></i> Required: Choose 1 Flavour' : (isCooling ? '<i class="fa-solid fa-snowflake"></i> 15 Cooling Flavours' : '<i class="fa-solid fa-cake-candles"></i> 5 Classic Flavours')}
                 </span>
             </div>
 
             ${!isFlavourChosen ? `
-            <div class="flavour-prompt-banner" style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1.5px dashed #f59e0b; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 18px;">👉</span>
-                <span style="font-size: 12px; font-weight: 800; color: #92400e;">Please select your favourite flavour below to add to cart!</span>
+            <div class="flavour-prompt-banner" style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1.5px dashed #f59e0b; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;">👉</span>
+                <span style="font-size: 13px; font-weight: 800; color: #92400e;">Please select your favourite cake flavour below to add to cart!</span>
             </div>
             ` : ''}
 
@@ -17081,7 +17090,7 @@ window.renderProductDetailPageContent = function() {
                             </div>
                             <div class="custom-flavour-right">
                                 <div class="custom-flavour-price-col" style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px;">
-                                    <span class="custom-flavour-extra-badge" style="font-size: 10.5px; font-weight: 800; color: ${extraP > 0 ? '#db2777' : '#16a34a'}; background: ${extraP > 0 ? '#fdf2f8' : '#dcfce7'}; padding: 1px 6px; border-radius: 4px; border: 1px solid ${extraP > 0 ? '#fbcfe8' : '#bbf7d0'};">
+                                    <span class="custom-flavour-extra-badge" style="font-size: 10.5px; font-weight: 800; color: ${extraP > 0 ? '#db2777' : '#16a34a'}; background: ${extraP > 0 ? '#fdf2f8' : '#dcfce7'}; padding: 2px 7px; border-radius: 5px; border: 1px solid ${extraP > 0 ? '#fbcfe8' : '#bbf7d0'};">
                                         ${extraP > 0 ? `+₹${extraP}` : 'Included'}
                                     </span>
                                     <span class="custom-flavour-total-pill">₹${flavourTotal}</span>
@@ -17095,16 +17104,53 @@ window.renderProductDetailPageContent = function() {
         </div>
         ` : ''}
 
-        <!-- Section 5: Message on Cake -->
+        <!-- Section 4: Message on Cake with Live Ribbon Preview -->
         <div class="customization-section-card pdp-custom-section">
             <div class="customization-section-header">
                 <div class="customization-section-title">
-                    <i class="fa-solid fa-comment-dots" style="color: #8b5cf6;"></i>
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color: #8b5cf6;"></i>
                     <span>Message on Cake (Optional)</span>
                 </div>
-                <span class="customization-badge-required">Optional</span>
+                <span class="customization-badge-required" style="background: #f3f0ff; color: var(--primary);">Free Piping</span>
             </div>
-            <input type="text" id="customCakeMessageInput" placeholder="e.g. Happy Birthday Rahul!" maxlength="50" value="${currentCustomization.customMessage || ''}" oninput="updateCustomMessage(this.value)" style="width: 100%; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 13.5px; background: #fff; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'">
+            <input type="text" id="customCakeMessageInput" placeholder="e.g. Happy Birthday Sneha 🎉" maxlength="50" value="${currentCustomization.customMessage || ''}" oninput="updateCustomMessage(this.value)" style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: 14px; font-size: 14px; background: #fff; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'">
+            
+            <div class="pdp-ribbon-preview" id="pdpRibbonPreview" style="${currentCustomization.customMessage ? 'display: flex;' : 'display: none;'}">
+                <i class="fa-solid fa-cake-candles" style="color: #d946ef;"></i>
+                <span id="pdpRibbonText">Piping Preview: <strong>"${currentCustomization.customMessage || ''}"</strong></span>
+            </div>
+        </div>
+
+        <!-- Complimentary Party Extras Banner -->
+        <div class="pdp-free-extras-box">
+            <span class="pdp-free-extras-icon">🎁</span>
+            <div class="pdp-free-extras-text">
+                <h5>Complimentary Party Essentials Included</h5>
+                <p>Every cake order includes 1x Sparkle Candle, 1x Luxury Cake Knife, and 1x Greeting Tag — completely free!</p>
+            </div>
+        </div>
+
+        <!-- Verified Reviews & Testimonials Section -->
+        <div class="pdp-reviews-box">
+            <div class="pdp-reviews-header">
+                <h4 class="pdp-reviews-title"><i class="fa-solid fa-heart" style="color: #ec4899;"></i> Loved by Bhimavaram Foodies</h4>
+                <div class="pdp-reviews-score">
+                    <i class="fa-solid fa-star" style="color: #f59e0b;"></i>
+                    <span>4.9 / 5.0 (280+ Reviews)</span>
+                </div>
+            </div>
+            <div class="pdp-reviews-grid">
+                <div class="pdp-review-card">
+                    <div class="pdp-review-stars">★★★★★</div>
+                    <div class="pdp-review-quote">"Ordered for midnight birthday near Someswaram. The truffle chocolate was incredibly moist and delivered in 25 mins!"</div>
+                    <div class="pdp-review-author"><span>Priya K.</span> <i class="fa-solid fa-circle-check pdp-review-verified" title="Verified Order"></i></div>
+                </div>
+                <div class="pdp-review-card">
+                    <div class="pdp-review-stars">★★★★★</div>
+                    <div class="pdp-review-quote">"Best 100% eggless cakes in town. Perfectly chilled and fresh. Highly recommended!"</div>
+                    <div class="pdp-review-author"><span>Kalyan V. (SRKR)</span> <i class="fa-solid fa-circle-check pdp-review-verified" title="Verified Order"></i></div>
+                </div>
+            </div>
         </div>
     `;
 
@@ -17129,12 +17175,38 @@ window.renderProductDetailPageContent = function() {
                     <i class="fa-solid fa-wand-magic-sparkles"></i> CHOOSE A FLAVOUR
                 </button>
             `;
+        } else if (totalQtyInCart > 0) {
+            btnWrap.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button class="pdp-add-to-cart-btn" onclick="openCart()" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 8px 24px -4px rgba(16, 185, 129, 0.45);">
+                        <i class="fa-solid fa-bag-shopping"></i> VIEW IN CART (${totalQtyInCart})
+                    </button>
+                    <button class="pdp-add-to-cart-btn" onclick="confirmProductPageAddToCart()" style="padding: 14px 20px;" title="Add another">
+                        <i class="fa-solid fa-plus"></i> ADD MORE
+                    </button>
+                </div>
+            `;
         } else {
             btnWrap.innerHTML = `
                 <button class="pdp-add-to-cart-btn" onclick="confirmProductPageAddToCart()">
                     <i class="fa-solid fa-cart-plus"></i> ADD TO CART • ₹${totalUnit}
                 </button>
             `;
+        }
+    }
+};
+
+window.updateCustomMessage = function(msg) {
+    if (!currentCustomization) return;
+    currentCustomization.customMessage = msg;
+    const ribbon = document.getElementById('pdpRibbonPreview');
+    const ribbonText = document.getElementById('pdpRibbonText');
+    if (ribbon) {
+        if (msg && msg.trim()) {
+            ribbon.style.display = 'flex';
+            if (ribbonText) ribbonText.innerHTML = `Piping Preview: <strong>"${msg.trim()}"</strong>`;
+        } else {
+            ribbon.style.display = 'none';
         }
     }
 };
