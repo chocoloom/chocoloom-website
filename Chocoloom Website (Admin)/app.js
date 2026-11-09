@@ -3726,6 +3726,17 @@ function initApp() {
     // Ensure Bespoke Modals DOM is mounted
     try { ensureBespokeModalsDOM(); } catch(e) { console.warn("Bespoke modals init:", e); }
 
+    // Check if on dedicated Product Details page
+    if (window.location.pathname.includes('product') || window.IS_PRODUCT_PAGE) {
+        window.IS_PRODUCT_PAGE = true;
+        try { if (typeof syncLiveCatalogState === 'function') syncLiveCatalogState(); } catch(e) {}
+        try { initAuthSystem(); } catch(e) {}
+        try { updateCartUI(); } catch(e) {}
+        try { bindEvents(); } catch(e) {}
+        try { initProductDetailPage(); } catch(e) { console.error("Product detail page init error:", e); }
+        return;
+    }
+
     // Check if on dedicated Uni Chocoloom store page FIRST
     if (window.location.pathname.includes('uni-chocoloom') || window.IS_UNI_CHOCOLOOM_PAGE) {
         window.IS_UNI_CHOCOLOOM_PAGE = true;
@@ -6319,7 +6330,13 @@ window.loadNextCatalogBatch = function() {
 };
 
 window.handleCardClick = function(event, prodId, restId) {
-    if (event.target.closest('.product-add-btn-wrap') || event.target.closest('.card-heart-btn')) {
+    if (event && (
+        event.target.closest('.product-add-btn-wrap') || 
+        event.target.closest('.card-heart-btn') || 
+        event.target.closest('.uni-add-btn') || 
+        event.target.closest('.uni-qty-counter') ||
+        event.target.closest('.product-qty-counter')
+    )) {
         return;
     }
     const prod = (typeof getAllProducts === 'function' ? getAllProducts() : []).find(p => p.id === prodId || p.sql_id === prodId || p.name === prodId);
@@ -6329,7 +6346,10 @@ window.handleCardClick = function(event, prodId, restId) {
         }
         return;
     }
-    openCustomizationModal(prodId, restId);
+    const safeId = prod ? (prod.id || prod.sql_id || prod.name) : prodId;
+    const fromParam = (window.IS_UNI_CHOCOLOOM_PAGE || window.location.pathname.includes('uni-chocoloom')) ? '&from=uni' : '';
+    const targetUrl = 'product.html?id=' + encodeURIComponent(safeId) + (restId ? '&restId=' + encodeURIComponent(restId) : '') + fromParam;
+    window.location.href = targetUrl;
 };
 
 window.toggleWishlist = function(event, prodId) {
@@ -6754,7 +6774,11 @@ function detectDefaultFlavour(dish, isNormalOnly = false) {
 window.selectCustomFlavour = function(flavourName) {
     if (!currentCustomization) return;
     currentCustomization.selectedFlavour = flavourName;
-    renderCustomizationModalContent();
+    if (window.IS_PRODUCT_PAGE && typeof renderProductDetailPageContent === 'function') {
+        renderProductDetailPageContent();
+    } else {
+        renderCustomizationModalContent();
+    }
 };
 
 const WEIGHT_CONFIG = [
@@ -7192,13 +7216,21 @@ function renderCustomizationModalContent() {
 window.selectCustomWeight = function(weightKey) {
     if (!currentCustomization) return;
     currentCustomization.selectedWeightKey = weightKey;
-    renderCustomizationModalContent();
+    if (window.IS_PRODUCT_PAGE && typeof renderProductDetailPageContent === 'function') {
+        renderProductDetailPageContent();
+    } else {
+        renderCustomizationModalContent();
+    }
 };
 
 window.selectCustomEggless = function(isEggless) {
     if (!currentCustomization) return;
     currentCustomization.isEggless = Boolean(isEggless);
-    renderCustomizationModalContent();
+    if (window.IS_PRODUCT_PAGE && typeof renderProductDetailPageContent === 'function') {
+        renderProductDetailPageContent();
+    } else {
+        renderCustomizationModalContent();
+    }
 };
 
 window.selectCustomCooling = function(isCooling) {
@@ -7213,7 +7245,11 @@ window.selectCustomCooling = function(isCooling) {
     } else {
         currentCustomization.selectedFlavour = detectDefaultFlavour(currentCustomization.dish, !currentCustomization.isCooling);
     }
-    renderCustomizationModalContent();
+    if (window.IS_PRODUCT_PAGE && typeof renderProductDetailPageContent === 'function') {
+        renderProductDetailPageContent();
+    } else {
+        renderCustomizationModalContent();
+    }
 };
 
 window.updateCustomMessage = function(msg) {
@@ -7554,6 +7590,8 @@ function updateCartUI() {
     if (badgeEl) badgeEl.textContent = totalItems;
     const mobBadgeEl = document.getElementById('mobileCartBadge') || DOM.mobileCartBadge;
     if (mobBadgeEl) mobBadgeEl.textContent = totalItems;
+    const pdpBadgeEl = document.getElementById('pdpCartBadge');
+    if (pdpBadgeEl) pdpBadgeEl.textContent = totalItems;
 
     // Floating Cart Preview Bar
     const lingeringIsland = document.getElementById('reactCartIslandRoot');
@@ -11370,7 +11408,7 @@ window.renderUniModalProducts = function() {
         const strikePrice = p.originalPrice || Math.round(p.price * 1.35);
 
         return `
-            <div class="uni-product-card" id="uniCard_${p.id}">
+            <div class="uni-product-card" id="uniCard_${p.id}" onclick="handleCardClick(event, '${p.id}', '${restId}')" style="cursor: pointer;">
                 <div class="uni-card-img-wrap">
                     <img src="${p.image}" alt="${p.name}" class="uni-card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80'">
                     <span class="uni-card-category-badge">${p.uniCategory || p.category || 'Campus'}</span>
@@ -16657,4 +16695,561 @@ if (typeof window !== 'undefined') {
             }
         }
     });
+}
+
+
+// ==================== DEDICATED PRODUCT DETAILS PAGE (PDP) CONTROLLER ====================
+window.initProductDetailPage = function() {
+    const params = new URLSearchParams(window.location.search);
+    const prodId = params.get('id') || params.get('productId') || params.get('dishId');
+    const restId = params.get('restId') || 'rest_chocoloom_flagship';
+
+    // Synchronously hydrate cached database prices
+    try { if (typeof applyCachedDbPricesToMenu === 'function') applyCachedDbPricesToMenu(); } catch(e) {}
+
+    const allProds = typeof getAllProducts === 'function' ? getAllProducts() : [];
+    let dish = allProds.find(p => p.id === prodId || (p.sql_id && p.sql_id === prodId) || (p.name && p.name === prodId) || (p.name && encodeURIComponent(p.name) === prodId));
+
+    if (!dish && SWIGGY_DATA.restaurants) {
+        for (const r of SWIGGY_DATA.restaurants) {
+            if (r.menu) {
+                const found = r.menu.find(d => d.id === prodId || (d.sql_id && d.sql_id === prodId) || (d.name && d.name === prodId));
+                if (found) {
+                    dish = { ...found, restaurantId: r.id, restaurantName: r.name };
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!dish && allProds.length > 0) {
+        dish = allProds.find(p => p.isBestseller) || allProds[0];
+    }
+
+    if (!dish) {
+        const container = document.getElementById('productPageContainer');
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 80px 20px; max-width: 500px; margin: 0 auto;">
+                    <div style="font-size: 54px; margin-bottom: 16px;">🍰</div>
+                    <h2 style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 10px;">Treat Not Found</h2>
+                    <p style="font-size: 14px; color: #64748b; margin-bottom: 24px;">The sweet treat you are looking for may have moved or is freshly baking in our oven.</p>
+                    <a href="./order" style="display: inline-block; background: var(--primary); color: #fff; padding: 12px 28px; border-radius: 12px; font-weight: 700; text-decoration: none;">Browse Full Menu</a>
+                </div>
+            `;
+        }
+        return;
+    }
+
+    // Dynamic Title & Meta
+    document.title = `${dish.name} | Chocoloom Bakery`;
+
+    const defaultRest = (SWIGGY_DATA.restaurants && SWIGGY_DATA.restaurants[0]) ? SWIGGY_DATA.restaurants[0] : {
+        id: 'rest_chocoloom_flagship',
+        name: 'Chocoloom Flagship Bakery & Confectionery',
+        distance: '1.2 km'
+    };
+    const restaurant = (SWIGGY_DATA.restaurants && SWIGGY_DATA.restaurants.find(r => r.id === (restId || dish.restaurantId))) || defaultRest;
+
+    const isBento = isBentoCake(dish);
+    const hasWeight = (dish.has_weight !== false) && !isBento;
+    const isCoolingCategory = (dish.category || '').toLowerCase().includes('cooling') || (dish.name || '').toLowerCase().includes('cooling');
+    const initialCooling = (dish.has_cooling !== false && !isBento) ? isCoolingCategory : false;
+    const defaultFlavour = (dish.has_flavours !== false || isBento) ? detectDefaultFlavour(dish, !initialCooling) : null;
+
+    currentCustomization = {
+        dish: dish,
+        restaurant: restaurant,
+        selectedWeightKey: hasWeight ? 'half_kg' : 'standard',
+        selectedFlavour: defaultFlavour,
+        isEggless: false,
+        isCooling: initialCooling,
+        customMessage: ''
+    };
+
+    renderProductDetailPage(dish, restaurant);
+};
+
+window.renderProductDetailPage = function(dish, restaurant) {
+    const container = document.getElementById('productPageContainer');
+    if (!container || !dish) return;
+
+    const allProds = typeof getAllProducts === 'function' ? getAllProducts() : [];
+    const isWishlisted = Array.isArray(AppState.wishlist) && AppState.wishlist.includes(dish.id);
+
+    // Filter recommended items (same category or bestsellers, excluding current item)
+    let recommendations = allProds.filter(p => p.id !== dish.id && p.is_available !== false);
+    if (dish.category) {
+        const sameCat = recommendations.filter(p => (p.category || '').toLowerCase() === (dish.category || '').toLowerCase());
+        if (sameCat.length >= 2) recommendations = sameCat;
+    }
+    recommendations = recommendations.slice(0, 4);
+
+    container.innerHTML = `
+        <div class="pdp-grid">
+            <!-- Left Column: Visual Showcase -->
+            <div class="pdp-media-col">
+                <div class="pdp-img-card">
+                    <img src="${dish.image}" alt="${dish.name}" id="pdpHeroImage" onerror="this.src='https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80'">
+                    
+                    <div class="pdp-floating-badges">
+                        ${dish.is_available === false ? `
+                            <span class="pdp-badge-pill pdp-badge-out-of-stock">OUT OF STOCK</span>
+                        ` : (dish.isUniSpecial ? `
+                            <span class="pdp-badge-pill pdp-badge-discount"><i class="fa-solid fa-graduation-cap"></i> 25% STUDENT OFF</span>
+                        ` : (dish.isBestseller ? `
+                            <span class="pdp-badge-pill pdp-badge-bestseller"><i class="fa-solid fa-crown"></i> Bestseller</span>
+                        ` : (dish.originalPrice && Number(dish.originalPrice) > Number(dish.price) ? `
+                            <span class="pdp-badge-pill pdp-badge-discount">${Math.round(((Number(dish.originalPrice) - Number(dish.price)) / Number(dish.originalPrice)) * 100)}% OFF</span>
+                        ` : '')))}
+                    </div>
+
+                    <button class="pdp-floating-wishlist" onclick="toggleProductPageWishlist(event)" title="Add to Wishlist" aria-label="Favorite">
+                        <i id="pdpHeroWishlistIcon" class="${isWishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart'}" style="color: ${isWishlisted ? '#ec4899' : '#64748b'};"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Interactive Details & Customization -->
+            <div class="pdp-info-col" id="pdpInfoColContent"></div>
+        </div>
+
+        <!-- Sticky Bottom Bar -->
+        <div class="pdp-sticky-bar" id="pdpStickyBar">
+            <div class="pdp-sticky-inner">
+                <div class="pdp-sticky-price-col">
+                    <span class="pdp-sticky-price-label">Total Payable</span>
+                    <span class="pdp-sticky-price-val" id="pdpStickyPriceVal">₹0</span>
+                    <span class="pdp-sticky-specs" id="pdpStickySpecs"></span>
+                </div>
+                <div id="pdpStickyBtnWrap"></div>
+            </div>
+        </div>
+
+        <!-- Similar / Recommended Treats Section -->
+        ${recommendations.length > 0 ? `
+        <section class="pdp-recommendations">
+            <h3 class="pdp-rec-title">
+                <i class="fa-solid fa-cake-candles" style="color: var(--primary);"></i>
+                <span>You Might Also Crave</span>
+            </h3>
+            <div class="pdp-rec-grid">
+                ${recommendations.map(r => createProductCardHtml(r, 'pdpRec')).join('')}
+            </div>
+        </section>
+        ` : ''}
+    `;
+
+    renderProductDetailPageContent();
+    updateWishlistIcons(dish.id);
+};
+
+window.renderProductDetailPageContent = function() {
+    if (!currentCustomization || !currentCustomization.dish) return;
+    const infoCol = document.getElementById('pdpInfoColContent');
+    if (!infoCol) return;
+
+    const dish = currentCustomization.dish;
+    const isBento = isBentoCake(dish);
+    const hasWeight = (dish.has_weight !== false) && !isBento;
+    const hasCooling = (dish.has_cooling !== false) && !isBento;
+    const currentWeightKey = hasWeight ? (currentCustomization.selectedWeightKey || 'half_kg') : 'standard';
+    const isCooling = hasCooling ? Boolean(currentCustomization.isCooling) : false;
+    const isEggless = Boolean(currentCustomization.isEggless);
+    const hasFlavours = isBento || (dish.has_flavours !== false);
+    const currentFlavour = currentCustomization.selectedFlavour || (hasFlavours ? detectDefaultFlavour(dish, !isCooling) : null);
+    currentCustomization.selectedFlavour = currentFlavour;
+    currentCustomization.selectedWeightKey = currentWeightKey;
+    currentCustomization.isCooling = isCooling;
+    const isFlavourChosen = !hasFlavours || Boolean(currentFlavour);
+
+    const baseWeightPrice = hasWeight ? getWeightPrice(dish, currentWeightKey) : Number(dish.price || 0);
+    const flavourPriceForWeight = (hasFlavours && currentFlavour) ? getDishFlavourPrice(dish, currentFlavour, currentWeightKey) : baseWeightPrice;
+    const selectedCoolingPrice = hasCooling ? getCoolingCharge(dish, currentWeightKey) : 0;
+    const currentCoolingCharge = (hasCooling && isCooling) ? selectedCoolingPrice : 0;
+    const currentEgglessPrice = isEggless ? getEgglessPrice(currentWeightKey) : 0;
+    const totalUnit = flavourPriceForWeight + currentCoolingCharge + currentEgglessPrice;
+
+    const weightOpt = WEIGHT_CONFIG.find(w => w.key === currentWeightKey) || WEIGHT_CONFIG[0];
+    const originalPrice = dish.originalPrice ? Math.round(Number(dish.originalPrice) * (hasWeight ? (weightOpt.key === 'half_kg' ? 1 : (weightOpt.key === '1kg' ? 1.5 : (weightOpt.key === '1_5kg' ? 2 : (weightOpt.key === '2kg' ? 2.5 : 3.5)))) : 1)) : 0;
+    const hasDiscount = originalPrice > totalUnit;
+    const discountPercent = hasDiscount ? Math.round(((originalPrice - totalUnit) / originalPrice) * 100) : 0;
+    const isVeg = isEggless;
+    const categoryName = dish.category || 'Specialty Cakes';
+
+    // Specs summary string for sticky bar
+    const specsArr = [];
+    if (hasWeight) specsArr.push(weightOpt.weightTag);
+    else if (isBento) specsArr.push('Bento Box');
+    if (currentFlavour) specsArr.push(currentFlavour);
+    specsArr.push(isEggless ? '🌱 Eggless' : '🥚 With Egg');
+    if (hasCooling && isCooling) specsArr.push('❄️ Cooling');
+    const specsText = specsArr.join(' • ');
+
+    infoCol.innerHTML = `
+        <div class="pdp-header-meta">
+            <div class="product-veg-indicator ${isVeg ? 'veg' : 'non-veg'}">
+                <span class="veg-circle"></span>
+            </div>
+            <span class="pdp-rating-pill">
+                <i class="fa-solid fa-star"></i>
+                <span>${dish.rating || '4.8'} (${dish.reviewsCount || '120+'} ratings)</span>
+            </span>
+            <span class="pdp-cat-pill">${categoryName}</span>
+            <span style="font-size: 11px; font-weight: 800; color: ${isEggless ? '#15803d' : '#b45309'}; background: ${isEggless ? '#dcfce7' : '#fef3c7'}; padding: 4px 10px; border-radius: 6px;">
+                ${isEggless ? '🌱 100% PURE VEG' : '🥚 WITH EGG'}
+            </span>
+        </div>
+
+        <h1 class="pdp-title">${dish.name}</h1>
+
+        <div class="pdp-price-box">
+            <span class="pdp-current-price">₹${totalUnit}</span>
+            ${hasDiscount ? `
+                <span class="pdp-original-price">₹${originalPrice}</span>
+                <span class="pdp-discount-tag">${discountPercent}% OFF</span>
+            ` : ''}
+        </div>
+
+        <div class="pdp-delivery-chip">
+            <i class="fa-solid fa-bolt" style="color: #f59e0b; font-size: 15px;"></i>
+            <span>Freshly handcrafted upon order • Delivered in <strong>25–45 mins</strong> in Bhimavaram</span>
+        </div>
+
+        <p class="pdp-desc">
+            ${dish.description || 'Indulge in freshly baked artisan confectionery crafted with premium ingredients, real rich cocoa, and master culinary passion.'}
+        </p>
+
+        ${hasWeight ? `
+        <!-- Section 1: Weight / Size Selection -->
+        <div class="customization-section-card pdp-custom-section">
+            <div class="customization-section-header">
+                <div class="customization-section-title">
+                    <i class="fa-solid fa-weight-scale" style="color: var(--primary);"></i>
+                    <span>Select Cake Weight (Size)</span>
+                </div>
+                <span class="customization-badge-required active"><i class="fa-solid fa-check"></i> Required</span>
+            </div>
+
+            <div class="custom-options-grid">
+                ${WEIGHT_CONFIG.map(w => {
+                    const price = (hasFlavours && currentFlavour) ? getDishFlavourPrice(dish, currentFlavour, w.key) : getWeightPrice(dish, w.key);
+                    const isSelected = currentWeightKey === w.key;
+                    return `
+                        <label class="custom-option-label ${isSelected ? 'selected' : ''}" onclick="selectCustomWeight('${w.key}')">
+                            <div class="custom-option-left">
+                                <div class="custom-option-radio"></div>
+                                <div>
+                                    <div class="custom-option-name">${w.label}</div>
+                                    <div class="custom-option-desc">${w.desc}</div>
+                                </div>
+                            </div>
+                            <div class="custom-option-price">₹${price}</div>
+                        </label>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+        ` : (isBento ? `
+        <div style="background: linear-gradient(135deg, #fdf4ff, #fae8ff); border: 1.5px solid #f0abfc; border-radius: 12px; padding: 12px 14px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #701a75;">
+                <span style="font-size: 18px;">🍱</span>
+                <div>
+                    <div style="font-weight: 800;">Bento Box Cake (Single Size)</div>
+                    <div style="font-size: 11.5px; color: #a21caf; font-weight: 500;">Personal mini treat (1–2 servings) • Custom piped decoration</div>
+                </div>
+            </div>
+            <div style="font-size: 18px; font-weight: 900; color: #a21caf;">₹${dish.price || 349}</div>
+        </div>
+        ` : '')}
+
+        <!-- Section 2: Egg or Eggless -->
+        <div class="customization-section-card pdp-custom-section">
+            <div class="customization-section-header">
+                <div class="customization-section-title">
+                    <i class="fa-solid fa-seedling" style="color: #16a34a;"></i>
+                    <span>Egg or Eggless Option</span>
+                </div>
+                <span class="customization-badge-required active"><i class="fa-solid fa-check"></i> Required</span>
+            </div>
+
+            <div class="custom-options-grid">
+                <label class="custom-option-label ${!isEggless ? 'selected' : ''}" onclick="selectCustomEggless(false)">
+                    <div class="custom-option-left">
+                        <div class="custom-option-radio"></div>
+                        <div>
+                            <div class="custom-option-name">🥚 With Egg (Regular)</div>
+                            <div class="custom-option-desc">Authentic classic bakery recipe</div>
+                        </div>
+                    </div>
+                    <div class="custom-option-price" style="color: #64748b; font-size: 12px; font-weight: 800;">FREE (+₹0)</div>
+                </label>
+
+                <label class="custom-option-label ${isEggless ? 'selected' : ''}" onclick="selectCustomEggless(true)">
+                    <div class="custom-option-left">
+                        <div class="custom-option-radio"></div>
+                        <div>
+                            <div class="custom-option-name" style="display: flex; align-items: center; gap: 6px;">
+                                <span>🌱 100% Pure Eggless</span>
+                                <span style="font-size: 10px; font-weight: 800; color: #15803d; background: #dcfce7; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0;">PURE VEG</span>
+                            </div>
+                            <div class="custom-option-desc">Freshly prepared in dedicated eggless line</div>
+                        </div>
+                    </div>
+                    <div class="custom-option-price" style="color: #16a34a; font-size: 13px; font-weight: 800;">+₹${getEgglessPrice(currentWeightKey)}</div>
+                </label>
+            </div>
+        </div>
+
+        ${hasCooling ? `
+        <!-- Section 3: Cake Cooling Option -->
+        <div class="customization-section-card pdp-custom-section">
+            <div class="customization-section-header">
+                <div class="customization-section-title">
+                    <i class="fa-solid fa-snowflake" style="color: #0284c7;"></i>
+                    <span>Cake Cooling Option</span>
+                </div>
+                <span class="customization-badge-required active"><i class="fa-solid fa-check"></i> Required</span>
+            </div>
+
+            <div class="custom-options-grid">
+                <label class="custom-option-label ${!isCooling ? 'selected' : ''}" onclick="selectCustomCooling(false)">
+                    <div class="custom-option-left">
+                        <div class="custom-option-radio"></div>
+                        <div>
+                            <div class="custom-option-name">🎂 Normal Cakes</div>
+                            <div class="custom-option-desc">Room temperature baked cake (5 classic flavours)</div>
+                        </div>
+                    </div>
+                    <div class="custom-option-price" style="color: #16a34a; font-size: 12px; font-weight: 800;">FREE (+₹0)</div>
+                </label>
+
+                <label class="custom-option-label ${isCooling ? 'selected' : ''}" onclick="selectCustomCooling(true)">
+                    <div class="custom-option-left">
+                        <div class="custom-option-radio"></div>
+                        <div>
+                            <div class="custom-option-name" style="display: flex; align-items: center;">
+                                ❄️ Cooling Cakes
+                                <span class="cooling-badge-ice"><i class="fa-solid fa-snowflake"></i> ICE COOL</span>
+                            </div>
+                            <div class="custom-option-desc">Specially chilled in cold storage (15 gourmet flavours)</div>
+                        </div>
+                    </div>
+                    <div class="custom-option-price" style="color: #0284c7;">+₹${selectedCoolingPrice}</div>
+                </label>
+            </div>
+        </div>
+        ` : ''}
+
+        ${dish.has_flavours !== false ? `
+        <!-- Section 4: Select Flavour -->
+        <div class="customization-section-card pdp-custom-section ${!isFlavourChosen ? 'flavour-selection-pending' : ''}" id="pdpFlavourSection">
+            <div class="customization-section-header">
+                <div class="customization-section-title">
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color: #db2777;"></i>
+                    <span>Select Cake Flavour</span>
+                </div>
+                <span class="customization-badge-required ${!isFlavourChosen ? 'pending' : 'active'}" style="${!isFlavourChosen ? 'background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; font-weight: 800;' : (isCooling ? 'background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;' : 'background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8;')}">
+                    ${!isFlavourChosen ? '<i class="fa-solid fa-circle-exclamation"></i> Required: Choose 1 Flavour' : (isCooling ? '<i class="fa-solid fa-snowflake"></i> 15 Cooling Flavours' : '<i class="fa-solid fa-cake-candles"></i> 5 Normal Flavours')}
+                </span>
+            </div>
+
+            ${!isFlavourChosen ? `
+            <div class="flavour-prompt-banner" style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1.5px dashed #f59e0b; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px;">👉</span>
+                <span style="font-size: 12px; font-weight: 800; color: #92400e;">Please select your favourite flavour below to add to cart!</span>
+            </div>
+            ` : ''}
+
+            <div class="custom-flavour-grid">
+                ${(isCooling ? COOLING_CAKE_FLAVOURS : NORMAL_CAKE_FLAVOURS).map(f => {
+                    const isSelected = currentFlavour && (currentFlavour.toLowerCase() === f.name.toLowerCase() || currentFlavour.toLowerCase() === f.id.toLowerCase());
+                    const fPrice = getDishFlavourPrice(dish, f.name, currentWeightKey);
+                    const extraP = getFlavourExtraPrice(dish, f.name, currentWeightKey);
+                    const flavourTotal = fPrice + currentCoolingCharge + currentEgglessPrice;
+                    return `
+                        <div class="custom-flavour-card ${isSelected ? 'selected' : ''}" onclick="selectCustomFlavour('${f.name}')">
+                            <div class="custom-flavour-left">
+                                <span class="custom-flavour-icon">${f.icon}</span>
+                                <div class="custom-flavour-text">
+                                    <div class="custom-flavour-name-row">
+                                        <span class="custom-flavour-name">${f.name}</span>
+                                        <span class="custom-flavour-tier-badge ${f.tier ? f.tier.toLowerCase() : 'classic'}">${f.tier || 'Classic'}</span>
+                                    </div>
+                                    <div class="custom-flavour-desc">${f.desc}</div>
+                                </div>
+                            </div>
+                            <div class="custom-flavour-right">
+                                <div class="custom-flavour-price-col" style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px;">
+                                    <span class="custom-flavour-extra-badge" style="font-size: 10.5px; font-weight: 800; color: ${extraP > 0 ? '#db2777' : '#16a34a'}; background: ${extraP > 0 ? '#fdf2f8' : '#dcfce7'}; padding: 1px 6px; border-radius: 4px; border: 1px solid ${extraP > 0 ? '#fbcfe8' : '#bbf7d0'};">
+                                        ${extraP > 0 ? `+₹${extraP}` : 'Included'}
+                                    </span>
+                                    <span class="custom-flavour-total-pill">₹${flavourTotal}</span>
+                                </div>
+                                <div class="custom-flavour-radio"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+        ` : ''}
+
+        <!-- Section 5: Message on Cake -->
+        <div class="customization-section-card pdp-custom-section">
+            <div class="customization-section-header">
+                <div class="customization-section-title">
+                    <i class="fa-solid fa-comment-dots" style="color: #8b5cf6;"></i>
+                    <span>Message on Cake (Optional)</span>
+                </div>
+                <span class="customization-badge-required">Optional</span>
+            </div>
+            <input type="text" id="customCakeMessageInput" placeholder="e.g. Happy Birthday Rahul!" maxlength="50" value="${currentCustomization.customMessage || ''}" oninput="updateCustomMessage(this.value)" style="width: 100%; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 13.5px; background: #fff; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'">
+        </div>
+    `;
+
+    // Update sticky price and specs
+    const stickyPriceVal = document.getElementById('pdpStickyPriceVal');
+    if (stickyPriceVal) stickyPriceVal.textContent = `₹${totalUnit}`;
+    const stickySpecs = document.getElementById('pdpStickySpecs');
+    if (stickySpecs) stickySpecs.textContent = specsText;
+
+    // Update Sticky Button
+    const btnWrap = document.getElementById('pdpStickyBtnWrap');
+    if (btnWrap) {
+        if (dish.is_available === false) {
+            btnWrap.innerHTML = `
+                <button class="pdp-add-to-cart-btn" disabled>
+                    <i class="fa-solid fa-ban"></i> OUT OF STOCK
+                </button>
+            `;
+        } else if (!isFlavourChosen) {
+            btnWrap.innerHTML = `
+                <button class="pdp-add-to-cart-btn" onclick="scrollToFlavourSection()" style="background: #94a3b8; cursor: pointer;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> CHOOSE A FLAVOUR
+                </button>
+            `;
+        } else {
+            btnWrap.innerHTML = `
+                <button class="pdp-add-to-cart-btn" onclick="confirmProductPageAddToCart()">
+                    <i class="fa-solid fa-cart-plus"></i> ADD TO CART • ₹${totalUnit}
+                </button>
+            `;
+        }
+    }
+};
+
+window.scrollToFlavourSection = function() {
+    const el = document.getElementById('pdpFlavourSection') || document.getElementById('customFlavourSection');
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.outline = '2px solid #ef4444';
+        setTimeout(() => { el.style.outline = 'none'; }, 1500);
+    }
+};
+
+window.confirmProductPageAddToCart = function() {
+    if (!currentCustomization || !currentCustomization.dish) return;
+    const dish = currentCustomization.dish;
+    if (dish.is_available === false) {
+        if (typeof showToast === 'function') {
+            showToast('This item is currently marked out of stock', 'fa-solid fa-circle-exclamation', '#ef4444');
+        }
+        return;
+    }
+
+    if (dish.has_flavours !== false && !currentCustomization.selectedFlavour) {
+        if (typeof showToast === 'function') {
+            showToast('Please select a cake flavour before adding to cart!', 'fa-solid fa-wand-magic-sparkles', '#ef4444');
+        }
+        scrollToFlavourSection();
+        return;
+    }
+
+    confirmAddCustomizedItem();
+    const pdpBadge = document.getElementById('pdpCartBadge');
+    if (pdpBadge && typeof getCartItemCount === 'function') {
+        pdpBadge.textContent = getCartItemCount();
+    }
+};
+
+window.productPageGoBack = function() {
+    const params = new URLSearchParams(window.location.search);
+    const from = params.get('from');
+    if (from === 'uni') {
+        window.location.href = 'uni-chocoloom.html';
+        return;
+    }
+    if (window.history.length > 1 && document.referrer && document.referrer.includes(window.location.host)) {
+        window.history.back();
+    } else {
+        window.location.href = 'order.html';
+    }
+};
+
+window.shareCurrentProduct = function() {
+    const shareUrl = window.location.href;
+    const dish = currentCustomization?.dish;
+    const shareTitle = dish ? `${dish.name} | Chocoloom Bakery` : 'Chocoloom Treats';
+    const shareText = dish ? `Order ${dish.name} freshly baked on Chocoloom!` : 'Check out delicious artisan cakes on Chocoloom!';
+
+    if (navigator.share) {
+        navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: shareUrl
+        }).catch(() => {});
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            if (typeof showToast === 'function') {
+                showToast('Link copied to clipboard! Share with friends 🔗', 'fa-solid fa-link', '#7c5cfc');
+            }
+        }).catch(() => {
+            if (typeof showToast === 'function') showToast('Share URL: ' + shareUrl, 'fa-solid fa-share-nodes');
+        });
+    } else {
+        if (typeof showToast === 'function') showToast('Share URL: ' + shareUrl, 'fa-solid fa-share-nodes');
+    }
+};
+
+window.toggleProductPageWishlist = function(event) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    if (!currentCustomization || !currentCustomization.dish) return;
+    const prodId = currentCustomization.dish.id;
+    if (!Array.isArray(AppState.wishlist)) {
+        try {
+            AppState.wishlist = JSON.parse(localStorage.getItem('chocoloom_wishlist') || '[]');
+        } catch(e) {
+            AppState.wishlist = [];
+        }
+    }
+    const idx = AppState.wishlist.indexOf(prodId);
+    if (idx > -1) {
+        AppState.wishlist.splice(idx, 1);
+        if (typeof showToast === 'function') showToast('Removed from favorites', 'fa-regular fa-heart');
+    } else {
+        AppState.wishlist.push(prodId);
+        if (typeof showToast === 'function') showToast('Added to favorites!', 'fa-solid fa-heart', '#ec4899');
+    }
+    try {
+        localStorage.setItem('chocoloom_wishlist', JSON.stringify(AppState.wishlist));
+    } catch(e) {}
+    updateWishlistIcons(prodId);
+};
+
+function updateWishlistIcons(prodId) {
+    const isWishlisted = Array.isArray(AppState.wishlist) && AppState.wishlist.includes(prodId);
+    const navHeart = document.getElementById('pdpWishlistIcon');
+    if (navHeart) {
+        navHeart.className = isWishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+        navHeart.style.color = isWishlisted ? '#ec4899' : '#64748b';
+    }
+    const heroHeart = document.getElementById('pdpHeroWishlistIcon');
+    if (heroHeart) {
+        heroHeart.className = isWishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+        heroHeart.style.color = isWishlisted ? '#ec4899' : '#64748b';
+    }
 }

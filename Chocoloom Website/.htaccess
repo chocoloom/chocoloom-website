@@ -11,8 +11,9 @@ RewriteRule ^(order|index)\.html$ / [R=301,L]
 RewriteCond %{THE_REQUEST} \s/+(.+?)\.html[\s?] [NC]
 RewriteRule ^ /%1 [R=301,L]
 
-# 3. Allow /order to serve order.html internally without exposing the extension
+# 3. Allow /order and /product to serve HTML files internally without exposing the extension
 RewriteRule ^order/?$ order.html [L]
+RewriteRule ^product/?$ product.html [L]
 
 # 4. Clean URLs for all pages (e.g. /login, /landing, /chocowallet, /uni-chocoloom)
 RewriteCond %{REQUEST_FILENAME} !-f
