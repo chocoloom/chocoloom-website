@@ -1,5 +1,5 @@
 // Chocoloom Progressive Web App (PWA) Service Worker
-const CACHE_NAME = 'chocoloom-cache-v1.0.16';
+const CACHE_NAME = 'chocoloom-cache-v1.0.17';
 const PRECACHE_ASSETS = [
     './',
     './order.html',
@@ -91,7 +91,7 @@ self.addEventListener('fetch', (event) => {
                     if (networkResponse && networkResponse.status === 200) {
                         caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse));
                     }
-                }).catch(() => {/* offline, ignore */});
+                }).catch(() => {/* offline, ignore */ });
                 return cachedResponse;
             }
 

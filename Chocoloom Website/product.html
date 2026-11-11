@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=19.4">
+    <link rel="stylesheet" href="styles.css?v=19.5">
 
     <!-- Instant Plain Logo Splash Preloader CSS (Zero-delay) -->
     <style>
@@ -132,9 +132,15 @@
                 <span>Your Food Cart</span>
                 <span class="cart-header-badge" id="cartHeaderBadge">0 items</span>
             </div>
-            <button class="modal-close-btn" id="closeCartBtn" onclick="closeCart()" aria-label="Close Cart">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            <div class="cart-header-actions" style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="cart-header-clear-btn" id="cartHeaderClearBtn" onclick="clearCart(true)" style="display: none;" title="Empty cart entirely">
+                    <i class="fa-regular fa-trash-can"></i>
+                    <span>Empty Cart</span>
+                </button>
+                <button class="modal-close-btn" id="closeCartBtn" onclick="closeCart()" aria-label="Close Cart">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Cart User Auth Status Banner -->
@@ -230,7 +236,7 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="data.js?v=14.0"></script>
-    <script src="app.js?v=16.3"></script>
+    <script src="app.js?v=16.4"></script>
     <script src="pwa.js?v=2.1" defer></script>
 </body>
 </html>

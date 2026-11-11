@@ -256,6 +256,14 @@ if (savedUserSession) {
 
 let initialCart = [];
 try {
+    // One-time automatic reset to ensure all previous/stale cart items are removed entirely as requested
+    const CART_RESET_KEY = 'chocoloom_cart_reset_v2';
+    if (!localStorage.getItem(CART_RESET_KEY)) {
+        localStorage.removeItem('swiggy_cart');
+        sessionStorage.removeItem('swiggy_cart');
+        localStorage.setItem(CART_RESET_KEY, 'true');
+    }
+
     const rawCart = JSON.parse(localStorage.getItem('swiggy_cart') || '[]');
     if (Array.isArray(rawCart)) {
         initialCart = rawCart.filter(item => item && item.dish && (item.dish.id || item.dish.name));
@@ -7522,6 +7530,48 @@ window.removeFromCart = function(index) {
     if (typeof renderQuoteQuickCards === 'function') renderQuoteQuickCards();
 };
 
+// Clear all items from the shopping cart completely
+window.clearCart = function(confirmPrompt = true) {
+    if (!Array.isArray(AppState.cart) || AppState.cart.length === 0) {
+        if (typeof showToast === 'function') {
+            showToast('Your cart is already empty', 'fa-solid fa-circle-info', '#3b82f6');
+        }
+        return;
+    }
+
+    if (confirmPrompt) {
+        const count = AppState.cart.reduce((sum, item) => sum + (Number(item?.quantity) || 1), 0);
+        const countStr = count === 1 ? '1 item' : `${count} items`;
+        if (!confirm(`Are you sure you want to remove all ${countStr} from your cart?`)) {
+            return;
+        }
+    }
+
+    AppState.cart = [];
+    AppState.activeCoupon = null;
+    AppState.tipAmount = 0;
+
+    try {
+        localStorage.removeItem('swiggy_cart');
+        sessionStorage.removeItem('swiggy_cart');
+    } catch (e) {}
+
+    saveCart();
+    updateCartUI();
+    syncAllProductCardButtons();
+
+    if (typeof renderUniModalProducts === 'function') renderUniModalProducts();
+    if (typeof renderQuoteQuickCards === 'function') renderQuoteQuickCards();
+
+    if (typeof showToast === 'function') {
+        showToast('All items have been removed from your cart', 'fa-solid fa-trash-can', '#ef4444');
+    }
+};
+
+window.clearEntireCart = function() {
+    window.clearCart(false);
+};
+
 function updateProductCardBtn(dishId) {
     if (!dishId) return;
     const safeProdId = String(dishId).replace(/'/g, "\\'");
@@ -7626,6 +7676,10 @@ function updateCartUI() {
     const cartHeaderBadge = document.getElementById('cartHeaderBadge');
     if (cartHeaderBadge) {
         cartHeaderBadge.textContent = totalItems === 0 ? '0 items' : `${totalItems} ${totalItems === 1 ? 'item' : 'items'}`;
+    }
+    const cartHeaderClearBtn = document.getElementById('cartHeaderClearBtn');
+    if (cartHeaderClearBtn) {
+        cartHeaderClearBtn.style.display = totalItems > 0 ? 'inline-flex' : 'none';
     }
 
     if (!cartBody) return;
@@ -7822,6 +7876,18 @@ function updateCartUI() {
                 </div>
             </div>
         ` : ''}
+        <!-- Items Header with Remove All Option -->
+        <div class="cart-items-header-bar" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 0 4px;">
+            <div style="font-size: 12px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-basket-shopping" style="color: var(--primary);"></i>
+                <span>Cart Items (${totalItems})</span>
+            </div>
+            <button type="button" class="cart-remove-all-btn" onclick="clearCart(true)" title="Remove all items entirely">
+                <i class="fa-regular fa-trash-can"></i>
+                <span>Remove All</span>
+            </button>
+        </div>
+
         <!-- Items List -->
         <div class="cart-items-list" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
             ${AppState.cart.map((item, idx) => {
