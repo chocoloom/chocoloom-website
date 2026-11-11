@@ -2314,8 +2314,9 @@ body.has-hero-ad .navbar:not(.scrolled) .voice-waveform-svg rect {
 /* Fullscreen Mode Button */
 .hero-ad-fullscreen-btn {
     position: absolute;
-    top: 18px;
-    right: 22px;
+    bottom: 24px !important;
+    right: 24px !important;
+    top: auto !important;
     z-index: 12;
     background: rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(10px);
@@ -5523,6 +5524,31 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */
+/* Responsive Desktop / Laptop Top Navigation Layout (prevents overlaps and wrapping) */
+@media (max-width: 1250px) and (min-width: 901px) {
+    .nav-right {
+        gap: 16px !important;
+    }
+    .header-order-notice-pill {
+        padding: 4px 10px 4px 6px !important;
+    }
+    .header-order-notice-pill .notice-pill-text {
+        font-size: 11px !important;
+    }
+}
+
+@media (max-width: 1080px) and (min-width: 769px) {
+    .header-order-notice-pill {
+        display: none !important; /* Hide notice badge so core nav items never collide on medium desktop/laptop */
+    }
+    .nav-right {
+        gap: 14px !important;
+    }
+    .nav-item-uni .nav-text {
+        font-size: 13.5px !important;
+    }
+}
+
 @media (max-width: 900px) {
     .nav-right .nav-text {
         display: none !important;

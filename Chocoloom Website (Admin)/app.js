@@ -256,12 +256,16 @@ if (savedUserSession) {
 
 let initialCart = [];
 try {
-    // One-time automatic reset to ensure all previous/stale cart items are removed entirely as requested
-    const CART_RESET_KEY = 'chocoloom_cart_reset_v2';
-    if (!localStorage.getItem(CART_RESET_KEY)) {
+    // One-time automatic reset to ensure all previous/stale cart items and catalog caches are removed entirely as requested
+    const CATALOG_RESET_KEY = 'chocoloom_catalog_reset_v3';
+    if (!localStorage.getItem(CATALOG_RESET_KEY)) {
         localStorage.removeItem('swiggy_cart');
         sessionStorage.removeItem('swiggy_cart');
-        localStorage.setItem(CART_RESET_KEY, 'true');
+        localStorage.removeItem('chocoloom_custom_products');
+        localStorage.removeItem('chocoloom_db_catalog_cache');
+        localStorage.removeItem('chocoloom_price_overrides');
+        localStorage.removeItem('chocoloom_deleted_products');
+        localStorage.setItem(CATALOG_RESET_KEY, 'true');
     }
 
     const rawCart = JSON.parse(localStorage.getItem('swiggy_cart') || '[]');

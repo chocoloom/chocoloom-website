@@ -65,8 +65,17 @@ if (!savedSupabaseKey || savedSupabaseKey.length < 20) {
 }
 const savedNeonUrl = localStorage.getItem('chocoloom_neon_url');
 
-// Immediately purge legacy fake demo orders from localStorage so state is always 100% authentic
+// Purge legacy caches and reset catalog when requested
 try {
+    const CATALOG_RESET_KEY = 'chocoloom_catalog_reset_v3';
+    if (!localStorage.getItem(CATALOG_RESET_KEY)) {
+        localStorage.removeItem('chocoloom_custom_products');
+        localStorage.removeItem('chocoloom_db_catalog_cache');
+        localStorage.removeItem('chocoloom_price_overrides');
+        localStorage.removeItem('chocoloom_deleted_products');
+        localStorage.setItem(CATALOG_RESET_KEY, 'true');
+    }
+} catch(e) {}
     if (localStorage.getItem('chocoloom_stock_sync_v4') !== 'true') {
         localStorage.removeItem('chocoloom_db_catalog_cache');
         const co = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');

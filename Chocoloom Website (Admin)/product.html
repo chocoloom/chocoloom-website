@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=19.5">
+    <link rel="stylesheet" href="styles.css?v=19.6">
 
     <!-- Instant Plain Logo Splash Preloader CSS (Zero-delay) -->
     <style>
@@ -58,14 +58,27 @@
     </style>
 
     <script>
-        // Clean URL: Strip .html extensions from address bar immediately
-        (function() {
-            var path = window.location.pathname;
-            if (path.endsWith('.html')) {
-                var cleanPath = path.slice(0, -5);
-                if (cleanPath.endsWith('/index')) cleanPath = cleanPath.slice(0, -6) || '/';
-                window.history.replaceState(null, '', cleanPath + window.location.search + window.location.hash);
-            }
+        // Clean URL: Strip .html extensions from address bar only on production environments
+        (function () {
+            try {
+                if (window.history && window.history.replaceState && window.location) {
+                    var host = window.location.hostname || '';
+                    var isLocal = host === 'localhost' || 
+                                  host === '127.0.0.1' || 
+                                  host.endsWith('.local') || 
+                                  window.location.protocol === 'file:' || 
+                                  (window.location.port && window.location.port !== '80' && window.location.port !== '443');
+                    if (isLocal) return; // Preserve file extensions on local servers to avoid 404s
+                    if (host.includes('github.io') || window.location.protocol === 'file:') return;
+
+                    var p = window.location.pathname;
+                    if (p.endsWith('.html')) {
+                        var cleanPath = p.slice(0, -5);
+                        if (cleanPath.endsWith('/index')) cleanPath = cleanPath.slice(0, -6) || '/';
+                        window.history.replaceState(null, '', cleanPath + window.location.search + window.location.hash);
+                    }
+                }
+            } catch (e) { }
         })();
         window.IS_PRODUCT_PAGE = true;
     </script>
@@ -235,8 +248,8 @@
     <!-- Razorpay Checkout, Supabase SDK & App Suite -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="data.js?v=14.0"></script>
-    <script src="app.js?v=16.4"></script>
+    <script src="data.js?v=15.0"></script>
+    <script src="app.js?v=16.5"></script>
     <script src="pwa.js?v=2.1" defer></script>
 </body>
 </html>
