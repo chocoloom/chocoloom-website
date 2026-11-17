@@ -1413,9 +1413,53 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 }
 
 /* Dedicated Uni Chocoloom header styles */
+body.uni-chocoloom-page .navbar,
+body.uni-chocoloom-page .navbar:not(.scrolled) {
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+}
+
+body.uni-chocoloom-page .nav-left,
+body.uni-chocoloom-page .brand-dock-group {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+body.uni-chocoloom-page .header-status-title,
+body.uni-chocoloom-page .navbar:not(.scrolled) .header-status-title {
+    color: #0f172a !important;
+    font-weight: 800 !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
 body.uni-chocoloom-page .loc-dock-tag,
 body:has(#dockNavUni.active) .loc-dock-tag {
     color: #16a34a !important;
+    font-weight: 800 !important;
+    visibility: visible !important;
+}
+
+body.uni-chocoloom-page .loc-dock-name,
+body.uni-chocoloom-page .navbar:not(.scrolled) .loc-dock-name {
+    color: #334155 !important;
+    font-weight: 600 !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+body.uni-chocoloom-page .loc-dock-sep,
+body.uni-chocoloom-page .navbar:not(.scrolled) .loc-dock-sep,
+body.uni-chocoloom-page .loc-dock-caret,
+body.uni-chocoloom-page .navbar:not(.scrolled) .loc-dock-caret {
+    color: #64748b !important;
+    visibility: visible !important;
 }
 
 body.uni-chocoloom-page .uni-header-one-badge,
@@ -1424,8 +1468,9 @@ body.uni-chocoloom-page .uni-header-one-logo {
     width: auto;
     max-height: 22px;
     object-fit: contain;
-    display: inline-block;
+    display: inline-block !important;
     vertical-align: middle;
+    visibility: visible !important;
 }
 
 /* ==================== SWIGGY-STYLE SEARCH BAR ROW ==================== */

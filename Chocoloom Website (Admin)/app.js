@@ -3759,6 +3759,7 @@ _Please review my cake design and confirm feasibility & pricing!_ ✨`;
             try { updateCartUI(); } catch (e) { }
             try { bindEvents(); } catch (e) { }
             try { initProductDetailPage(); } catch (e) { console.error("Product detail page init error:", e); }
+            try { hideSiteLoadingSplash(); } catch (e) { }
             return;
         }
 
@@ -3966,7 +3967,7 @@ _Please review my cake design and confirm feasibility & pricing!_ ✨`;
             ratingLabel: "Studio Choice",
             cta: "Register Now",
             ctaAction: "redirect_url",
-            redirectUrl: "http://127.0.0.1:5501/",
+            redirectUrl: "workshop/",
             category: "Creative Kits",
             isGraphicBanner: false,
             isActive: true
@@ -16820,6 +16821,7 @@ _Please review my cake design and confirm feasibility & pricing!_ ✨`;
                 </div>
             `;
             }
+            try { hideSiteLoadingSplash(); } catch (e) { }
             return;
         }
 
@@ -17276,6 +17278,7 @@ _Please review my cake design and confirm feasibility & pricing!_ ✨`;
             `;
             }
         }
+        try { hideSiteLoadingSplash(); } catch (e) { }
     };
 
     window.updateCustomMessage = function (msg) {

@@ -731,7 +731,7 @@ window.SWIGGY_DATA = {
             "ratingLabel": "Studio Choice",
             "cta": "Register Now",
             "ctaAction": "redirect_url",
-            "redirectUrl": "http://127.0.0.1:5501/",
+            "redirectUrl": "workshop/",
             "category": "Creative Kits",
             "isGraphicBanner": false,
             "isActive": true
