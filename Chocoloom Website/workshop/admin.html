@@ -119,6 +119,33 @@
         <main class="admin-main">
             <div class="container">
 
+                <!-- BATCH 1 CONCLUSION & SUCCESS BANNER -->
+                <div class="batch-completed-banner" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1.5px solid #10b981; border-radius: 18px; padding: 18px 22px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.12);">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: #10b981; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+                            <i class="fa-solid fa-flag-checkered"></i>
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #047857; background: #a7f3d0; padding: 2px 8px; border-radius: 999px;">BATCH 1 STATUS • COMPLETED</span>
+                                <span style="font-size: 11px; font-weight: 700; color: #065f46;">15 Nov 2026 Session</span>
+                            </div>
+                            <div style="font-size: 17px; font-weight: 850; color: #064e3b; margin-top: 3px;">15 November 2026 Masterclass Successfully Concluded! 🎉</div>
+                            <div style="font-size: 13px; color: #065f46; margin-top: 2px;">Full attendance recorded • All tote bags distributed • Post-event photo gallery is live on website.</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <button type="button" class="btn-action primary" onclick="setFilter('waitlist', document.getElementById('tabWaitlist'))" style="background: #7c5cfc; color: #ffffff; border-color: #7c5cfc; font-weight: 750;">
+                            <i class="fa-solid fa-bell"></i>
+                            <span>Upcoming Waitlist (<span id="adminWaitlistCount">0</span>)</span>
+                        </button>
+                        <a href="index.html#workshopGallerySection" target="_blank" class="btn-action secondary" style="background: #ffffff; color: #047857; border-color: #a7f3d0; text-decoration: none; font-weight: 750;">
+                            <i class="fa-solid fa-camera-retro"></i>
+                            <span>View Storefront Gallery</span>
+                        </a>
+                    </div>
+                </div>
+
                 <!-- 1. METRICS KPI CARDS -->
                 <section class="kpi-grid">
                     <!-- Total Passes Card -->
@@ -214,6 +241,10 @@
                         <button class="filter-tab" data-filter="attended" onclick="setFilter('attended', this)">
                             <span>Checked-In</span>
                             <span class="tab-badge purple" id="badgeAttendedCount">0</span>
+                        </button>
+                        <button class="filter-tab" id="tabWaitlist" data-filter="waitlist" onclick="setFilter('waitlist', this)">
+                            <span>🔔 Next Batch Waitlist</span>
+                            <span class="tab-badge purple" id="badgeWaitlistCount">0</span>
                         </button>
                     </div>
                 </section>

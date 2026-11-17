@@ -62,8 +62,8 @@
             payMethod: 'upi',
             paymentStatus: 'paid',
             paymentScreenshot: 'assets/payment_qr.jpg',
-            checkedIn: false,
-            toteGiven: false
+            checkedIn: true,
+            toteGiven: true
         },
         {
             id: 'CL-WRK-2026-3829',
@@ -85,10 +85,10 @@
             batch: 'Exclusive Sunday Masterclass',
             amount: 499,
             payMethod: 'counter',
-            paymentStatus: 'counter',
+            paymentStatus: 'paid',
             paymentScreenshot: null,
-            checkedIn: false,
-            toteGiven: false
+            checkedIn: true,
+            toteGiven: true
         },
         {
             id: 'CL-WRK-2026-5190',
@@ -112,8 +112,8 @@
             payMethod: 'upi',
             paymentStatus: 'paid',
             paymentScreenshot: 'assets/payment_qr.jpg',
-            checkedIn: false,
-            toteGiven: false
+            checkedIn: true,
+            toteGiven: true
         }
     ];
 
@@ -519,6 +519,31 @@
         if (elTotalTotes) elTotalTotes.textContent = `${totalTotes} Bags`;
     }
 
+    function getWaitlistLeads() {
+        try {
+            const raw = localStorage.getItem('chocoloom_workshop_notify_leads');
+            if (raw) return JSON.parse(raw);
+        } catch (e) {
+            console.warn(e);
+        }
+        return [
+            {
+                id: 'WAITLIST-5821',
+                name: 'Deepika Rao',
+                phone: '9849123456',
+                passPreference: 'duo',
+                createdAt: '2026-11-16T11:20:00.000Z'
+            },
+            {
+                id: 'WAITLIST-7439',
+                name: 'Karthik Raju',
+                phone: '9701234567',
+                passPreference: 'solo',
+                createdAt: '2026-11-16T15:45:00.000Z'
+            }
+        ];
+    }
+
     function updateFilterBadges(roster) {
         let solo = 0, duo = 0, paid = 0, pending = 0, counter = 0, attended = 0;
 
@@ -530,6 +555,8 @@
             if (r.paymentStatus === 'counter') counter++;
             if (r.checkedIn) attended++;
         });
+
+        const waitlistLeads = getWaitlistLeads();
 
         const setVal = (id, val) => {
             const el = document.getElementById(id);
@@ -543,6 +570,8 @@
         setVal('badgePendingCount', pending);
         setVal('badgeCounterCount', counter);
         setVal('badgeAttendedCount', attended);
+        setVal('badgeWaitlistCount', waitlistLeads.length);
+        setVal('adminWaitlistCount', waitlistLeads.length);
     }
 
     // ==========================================
@@ -594,6 +623,57 @@
         const table = document.getElementById('ticketsTable');
 
         if (!tbody) return;
+
+        // Special handling for Next Batch Waitlist view
+        if (currentFilter === 'waitlist') {
+            const waitlist = getWaitlistLeads();
+            let filteredWaitlist = waitlist;
+            if (searchQuery) {
+                filteredWaitlist = waitlist.filter(w => (w.name + ' ' + w.phone + ' ' + (w.passPreference || '')).toLowerCase().includes(searchQuery));
+            }
+            if (recordsCount) {
+                recordsCount.textContent = `Showing ${filteredWaitlist.length} upcoming batch waitlist leads`;
+            }
+            if (filteredWaitlist.length === 0) {
+                tbody.innerHTML = '';
+                if (table) table.style.display = 'none';
+                if (emptyState) {
+                    emptyState.style.display = 'block';
+                    emptyState.innerHTML = '<div style="padding:40px; text-align:center;"><i class="fa-solid fa-bell" style="font-size:36px; color:#7c5cfc; margin-bottom:12px;"></i><h3 style="color:#1e1b4b;">No Waitlist Leads Yet</h3><p style="color:#6b7280;">When visitors click "Notify Me" on the website, their details appear here.</p></div>';
+                }
+                return;
+            }
+            if (table) table.style.display = 'table';
+            if (emptyState) emptyState.style.display = 'none';
+
+            tbody.innerHTML = filteredWaitlist.map(lead => {
+                const dateStr = lead.createdAt ? new Date(lead.createdAt).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent';
+                const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
+                const waPhone = cleanPhone.startsWith('91') ? cleanPhone : (cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone);
+                const msg = encodeURIComponent(`Hi ${lead.name}, exciting news from Chocoloom! You requested to be notified for our upcoming creative workshop in Bhimavaram. Next batch dates are opening soon! Would you like early-bird pass access?`);
+                return `
+                    <tr>
+                        <td><span class="ticket-code-tag" style="background:#ede8ff; color:#7c5cfc; border:1px solid #ddd6fe;"><i class="fa-solid fa-bell"></i> ${lead.id || 'WAITLIST'}</span></td>
+                        <td>
+                            <strong>${lead.name}</strong><br>
+                            <a href="https://wa.me/${waPhone}?text=${msg}" target="_blank" style="color:#25d366; font-weight:700; text-decoration:none;"><i class="fa-brands fa-whatsapp"></i> +91 ${lead.phone}</a>
+                        </td>
+                        <td><span class="tier-pill ${lead.passPreference || 'solo'}">${(lead.passPreference || 'Any').toUpperCase()} PASS</span></td>
+                        <td>Upcoming Batch 2</td>
+                        <td><span class="badge-status waitlist" style="background:#ecfdf5; color:#059669; padding:4px 10px; border-radius:999px; font-weight:750; font-size:12px;"><i class="fa-solid fa-circle-check"></i> VIP Lead</span></td>
+                        <td><span style="font-size:12px; color:#6b7280;">Requested: ${dateStr}</span></td>
+                        <td><span style="color:#7c5cfc; font-weight:700; font-size:12px;"><i class="fa-solid fa-bell"></i> Notify on Release</span></td>
+                        <td style="text-align: right;">
+                            <a href="https://wa.me/${waPhone}?text=${msg}" target="_blank" class="btn-sm-action" style="background:#25d366; color:#fff; text-decoration:none; display:inline-flex; align-items:center; gap:6px; border:none; padding:6px 12px; border-radius:8px; font-weight:700;">
+                                <i class="fa-brands fa-whatsapp"></i>
+                                <span>WhatsApp VIP</span>
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            return;
+        }
 
         // Apply Filter & Search
         const filtered = roster.filter(item => {

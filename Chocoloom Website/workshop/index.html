@@ -27,7 +27,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="workshop.css?v=9">
+    <link rel="stylesheet" href="workshop.css?v=11">
 
     <style>
         /* Critical CSS to guarantee correct layout instantly under all network speeds */
@@ -82,26 +82,17 @@
 
             <!-- Navbar Right Actions -->
             <div class="nav-right">
-                <!-- Book Pass Primary CTA -->
-                <a href="#passesSection" class="nav-book-cta">
-                    <i class="fa-solid fa-ticket"></i>
-                    <span>Book Pass</span>
-                </a>
+                <!-- Compact Notify Me Button -->
+                <button type="button" class="nav-notify-cta" onclick="openNotifyModal('general')" title="Get Notified for Upcoming Workshop">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Notify Me</span>
+                </button>
             </div>
         </div>
     </header>
 
     <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
-    <main class="container" style="padding-top: 24px;">
-
-        <!-- ==================== 0. STARTING HERO BANNER IMAGE ==================== -->
-        <section class="starting-hero-banner" id="heroBannerSection">
-            <div class="shb-card">
-                <a href="#passesSection" class="shb-link" aria-label="Explore Workshop & Passes">
-                    <img src="assets/craft_happy_moments.jpg" alt="Craft Your Happy Moments - Chocoloom Creative Workshop & Kits" class="shb-img" loading="eager">
-                </a>
-            </div>
-        </section>
+    <main class="container" style="padding-top: 16px;">
 
         <!-- ==================== 1. TOP BANNER: BOLD WORKSHOP TITLE & INFO ==================== -->
         <section class="workshop-top-banner">
@@ -122,9 +113,162 @@
                     Get ready for a fun-filled creative experience with Chocoloom! Join us for an exciting Clay Art Workshop where you can sculpt, create and customise your very own Bento Cake Design using clay. Bring your imagination to life, explore your creativity and enjoy a memorable artistic experience!
                 </p>
                 <div class="wtb-meta-chips">
-                    <span class="wtb-chip highlight-date"><i class="fa-solid fa-calendar-days"></i> 15 November 2026 (Sunday)</span>
+                    <span class="wtb-chip highlight-date"><i class="fa-solid fa-calendar-check"></i> 15 November 2026 (Completed)</span>
                     <span class="wtb-chip"><i class="fa-solid fa-location-dot"></i> Bhimavaram, Andhra Pradesh</span>
-                    <span class="wtb-chip" style="background: #fef2f2; color: #dc2626;"><i class="fa-solid fa-fire"></i> Registrations Open • Limited Seats</span>
+                    <span class="wtb-chip" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;"><i class="fa-solid fa-circle-check"></i> Batch 1 Concluded • Housefull! 🎉</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== WORKSHOP HIGHLIGHTS & MEMORIES GALLERY ==================== -->
+        <section class="past-workshop-gallery-section" id="workshopGallerySection">
+            <div class="pwg-header">
+                <div class="pwg-badge-wrap">
+                    <span class="pwg-badge"><i class="fa-solid fa-sparkles"></i> 15 NOV WORKSHOP RECAP</span>
+                    <span class="pwg-success-pill"><i class="fa-solid fa-circle-check"></i> Batch 1 Concluded Successfully!</span>
+                </div>
+                <h2 class="pwg-title">Memories, Smiles & Masterpieces 🎨✨</h2>
+                <p class="pwg-subtitle">
+                    Our hands-on Clay Art Workshop in Bhimavaram was an absolute blast! Check out the happy creators, vibrant clay Bento Cakes, and our proud participants with their custom hand-painted Spider-Man tote bags.
+                </p>
+                <div class="pwg-stats-strip">
+                    <div class="pwg-stat-item">
+                        <span class="pwg-stat-num">100%</span>
+                        <span class="pwg-stat-label">Happy Creators</span>
+                    </div>
+                    <div class="pwg-stat-item">
+                        <span class="pwg-stat-num">15+</span>
+                        <span class="pwg-stat-label">Hand-Painted Totes</span>
+                    </div>
+                    <div class="pwg-stat-item">
+                        <span class="pwg-stat-num">3 Hours</span>
+                        <span class="pwg-stat-label">Pure Creativity</span>
+                    </div>
+                    <div class="pwg-stat-item">
+                        <span class="pwg-stat-num">5 ★</span>
+                        <span class="pwg-stat-label">Wall of Love</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Photo Showcase Grid -->
+            <div class="pwg-grid">
+                <!-- 1. Grand Group Photo (Large feature card) -->
+                <div class="pwg-card pwg-featured">
+                    <div class="pwg-img-wrap">
+                        <img src="assets/gallery/group_success.jpg?v=2" alt="Chocoloom Workshop Group Photo with Hand-Painted Spider-Man Tote Bags" class="pwg-img" loading="lazy">
+                        <div class="pwg-img-tag"><i class="fa-solid fa-trophy"></i> Masterclass Tribe</div>
+                    </div>
+                    <div class="pwg-card-body">
+                        <h3 class="pwg-card-title">The Proud Creators of Batch 1! 🎒🎨</h3>
+                        <p class="pwg-card-desc">
+                            All our participants proudly showing off their custom hand-painted Spider-Man tote bags next to our signature Chocoloom easel. The creative energy, laughter, and talent in this room was truly unmatched!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 2. Hands-on Mentoring Card -->
+                <div class="pwg-card">
+                    <div class="pwg-img-wrap">
+                        <img src="assets/gallery/hands_on_crafting.jpg" alt="1-on-1 Clay Sculpting Guidance at Chocoloom Workshop" class="pwg-img" loading="lazy">
+                        <div class="pwg-img-tag purple"><i class="fa-solid fa-palette"></i> 1-on-1 Guidance</div>
+                    </div>
+                    <div class="pwg-card-body">
+                        <h3 class="pwg-card-title">Sculpting, Playing & Learning 👩‍🎨</h3>
+                        <p class="pwg-card-desc">
+                            From basic color mixing to delicate miniature detailing, everyone received personal hands-on mentorship to bring their imagination to life.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 3. Smiles & Friends Card -->
+                <div class="pwg-card">
+                    <div class="pwg-img-wrap">
+                        <img src="assets/gallery/creative_smiles.jpg" alt="Participants Smiling and Enjoying Chocoloom Workshop" class="pwg-img" loading="lazy">
+                        <div class="pwg-img-tag pink"><i class="fa-solid fa-heart"></i> Fun & Bonding</div>
+                    </div>
+                    <div class="pwg-card-body">
+                        <h3 class="pwg-card-title">Creating Happy Moments Together 💖</h3>
+                        <p class="pwg-card-desc">
+                            Art is better together! Friends, families, and young creators enjoying an interactive, relaxing Sunday filled with laughs and crafts.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 4. Workshop Setup & Feedback Wall Card -->
+                <div class="pwg-card">
+                    <div class="pwg-img-wrap">
+                        <img src="assets/gallery/setup_decor.jpg" alt="Chocoloom Aesthetic Setup, Fairy Lights and Sticky-Note Feedback Wall" class="pwg-img" loading="lazy">
+                        <div class="pwg-img-tag amber"><i class="fa-solid fa-note-sticky"></i> Feedback Wall</div>
+                    </div>
+                    <div class="pwg-card-body">
+                        <h3 class="pwg-card-title">The Aesthetic Welcome Corner ✨</h3>
+                        <p class="pwg-card-desc">
+                            Fairy lights, cloud decorations, signature canvas tote bags, and our heartwarming sticky-notes feedback line filled with attendee love.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wall of Love Sticky Notes (Reflecting the real feedback wall in the photos!) -->
+            <div class="pwg-wall-of-love">
+                <div class="pwg-wol-head">
+                    <span class="section-tag-pill" style="background: #fdf2f8; color: #db2777; border-color: #fbcfe8;"><i class="fa-solid fa-heart"></i> From Our Sticky-Notes Wall</span>
+                    <h3 class="pwg-wol-title">What Attendees Wrote on Our Feedback Wall 💌</h3>
+                    <p style="font-size: 13px; color: #6b7280; margin: 4px 0 0;">Handwritten notes from our fairy-lit feedback string line</p>
+                </div>
+
+                <!-- Fairy String Decor with Glowing Bulbs -->
+                <div class="pwg-fairy-twine">
+                    <span class="pwg-cloud left">☁️</span>
+                    <div class="pwg-twine-rope">
+                        <span class="fairy-dot dot-1"></span>
+                        <span class="fairy-dot dot-2"></span>
+                        <span class="fairy-dot dot-3"></span>
+                        <span class="fairy-dot dot-4"></span>
+                        <span class="fairy-dot dot-5"></span>
+                        <span class="fairy-dot dot-6"></span>
+                        <span class="fairy-dot dot-7"></span>
+                    </div>
+                    <span class="pwg-cloud right">☁️</span>
+                </div>
+
+                <div class="pwg-notes-grid">
+                    <div class="pwg-note note-yellow">
+                        <div class="note-pin">📎</div>
+                        <p class="note-text">“Loved painting the Spider-Man tote bags so much! Such a therapeutic and fun Sunday morning!”</p>
+                        <span class="note-author">— Sneha & Priya</span>
+                    </div>
+                    <div class="pwg-note note-pink">
+                        <div class="note-pin">📎</div>
+                        <p class="note-text">“The mentors were super friendly and patient with my kid. The miniature clay cake looks unbelievable!”</p>
+                        <span class="note-author">— Lakshmi M. (Proud Mom)</span>
+                    </div>
+                    <div class="pwg-note note-green">
+                        <div class="note-pin">📎</div>
+                        <p class="note-text">“Aesthetic fairy lights setup, great music, and free tote bag! Worth every single rupee. 10/10!”</p>
+                        <span class="note-author">— Rahul K.</span>
+                    </div>
+                    <div class="pwg-note note-blue">
+                        <div class="note-pin">📎</div>
+                        <p class="note-text">“Bhimavaram finally has such aesthetic creative workshops! Please announce Batch 2 dates soon!”</p>
+                        <span class="note-author">— Divya R. (Uni Student)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Waitlist / Next Batch CTA Banner -->
+            <div class="pwg-next-batch-banner">
+                <div class="pnb-left">
+                    <span class="pnb-pill">✨ NEXT BATCH COMING SOON</span>
+                    <h4 class="pnb-title">Want to Join the Next Chocoloom Workshop?</h4>
+                    <p class="pnb-desc">Batch 1 seats filled up quickly! Message us on WhatsApp to join the VIP waitlist and get first access when upcoming dates open.</p>
+                </div>
+                <div class="pnb-right">
+                    <a href="https://wa.me/919849783788?text=Hi%20Chocoloom%2C%20I%20saw%20the%20photos%20from%20Batch%201!%20Please%20notify%20me%20for%20the%20next%20workshop%20dates." target="_blank" class="btn-waitlist-whatsapp">
+                        <i class="fa-brands fa-whatsapp"></i>
+                        <span>Join Next Batch Waitlist</span>
+                    </a>
                 </div>
             </div>
         </section>
@@ -136,9 +280,9 @@
             </div>
             <div style="flex: 1;">
                 <span style="font-size: 11px; font-weight: 900; letter-spacing: 1px; color: #b45309; text-transform: uppercase;">SPECIAL CONTEST & PRIZES</span>
-                <h3 style="font-size: 19px; font-weight: 900; color: #78350f; margin: 2px 0 4px;">EXCITING WINNERS SELECTION!</h3>
+                <h3 style="font-size: 19px; font-weight: 900; color: #78350f; margin: 2px 0 4px;">EXCITING WINNERS SELECTED!</h3>
                 <p style="font-size: 14px; color: #92400e; margin: 0; font-weight: 600; line-height: 1.45;">
-                    The most creative and impressive designs will be selected as winners!
+                    The most creative and impressive designs from Batch 1 have been selected and rewarded! Stay tuned on our social media for winning design spotlights.
                 </p>
             </div>
         </section>
@@ -196,14 +340,36 @@
         <!-- ==================== 3. PRICING & PASSES ==================== -->
         <section class="passes-section" id="passesSection" style="margin-bottom: 48px;">
             <div class="section-head-center">
-                <span class="section-tag-pill">Choose Your Pass</span>
-                <h2 class="section-h2">🎟️ CHOOSE YOUR PASS</h2>
-                <p class="section-lead">Seats are strictly limited. Bring your creativity, invite your favourite person and make beautiful memories!</p>
+                <span class="section-tag-pill" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a;"><i class="fa-solid fa-clock-rotate-left"></i> Batch 1 Ended • Upcoming Batch Soon</span>
+                <h2 class="section-h2">🎟️ WORKSHOP PASSES & PRE-REGISTRATION</h2>
+                <p class="section-lead">The 15 November masterclass has ended. Click <strong>Notify Me</strong> below to get first priority when the upcoming workshop dates open!</p>
+            </div>
+
+            <!-- Upcoming Event Alert Box -->
+            <div class="upcoming-notify-banner" style="background: linear-gradient(135deg, #ede8ff 0%, #fdf4ff 100%); border: 2px dashed #7c5cfc; border-radius: 20px; padding: 20px 24px; margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #7c5cfc; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; box-shadow: 0 4px 14px rgba(124, 92, 252, 0.35);">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                    <div>
+                        <div style="font-size: 16.5px; font-weight: 850; color: #1e1b4b;">Upcoming Workshop Announcement! ✨</div>
+                        <div style="font-size: 13.5px; color: #4b5563; margin-top: 3px;">Due to full house in Batch 1, our upcoming event dates will be announced shortly. Pass booking is temporarily paused until new batch dates open.</div>
+                    </div>
+                </div>
+                <button type="button" onclick="openNotifyModal('general')" style="display: inline-flex; align-items: center; gap: 8px; background: #7c5cfc; color: #ffffff; padding: 12px 24px; border-radius: 999px; font-weight: 800; font-size: 14px; border: none; cursor: pointer; box-shadow: 0 6px 18px rgba(124, 92, 252, 0.35); transition: transform 0.2s ease;">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Notify Me First</span>
+                </button>
             </div>
 
             <div class="passes-grid">
                 <!-- Solo Creator Pass -->
                 <div class="pass-card">
+                    <div style="margin-bottom: 8px;">
+                        <span style="display: inline-flex; align-items: center; gap: 5px; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px;">
+                            <i class="fa-solid fa-circle-exclamation"></i> Batch 1 Booking Closed
+                        </span>
+                    </div>
                     <div class="pass-head">
                         <h3 class="pass-name">SOLO PASS</h3>
                         <p class="pass-desc">Enjoy your own creative experience</p>
@@ -227,14 +393,20 @@
                         <li class="pass-benefit"><i class="fa-solid fa-trophy"></i> <span>Eligible for <strong>Exciting Winners Selection!</strong></span></li>
                     </ul>
 
-                    <button class="btn-pass-select" onclick="selectPassAndOpenModal('solo')">
-                        <span>Select Solo Pass • ₹499</span>
+                    <button type="button" class="btn-pass-select notify-btn" onclick="openNotifyModal('solo')" style="background: #ede8ff; color: #6d28d9; border: 2px solid #7c5cfc; font-weight: 850;">
+                        <i class="fa-solid fa-bell"></i>
+                        <span>Notify Me • Next Solo Batch</span>
                     </button>
                 </div>
 
                 <!-- Duo Creative Pass (Featured) -->
                 <div class="pass-card featured">
-                    <div class="pass-pill-flag">MOST POPULAR • SAVE ₹1,100</div>
+                    <div style="margin-bottom: 8px;">
+                        <span style="display: inline-flex; align-items: center; gap: 5px; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px;">
+                            <i class="fa-solid fa-circle-exclamation"></i> Batch 1 Booking Closed
+                        </span>
+                    </div>
+                    <div class="pass-pill-flag">MOST POPULAR • UPCOMING BATCH</div>
                     <div class="pass-head">
                         <h3 class="pass-name">DUO PASS</h3>
                         <p class="pass-desc">Bring your bestie, friend, cousin or anyone special!</p>
@@ -259,8 +431,9 @@
                         <li class="pass-benefit"><i class="fa-solid fa-trophy"></i> <span>Both eligible for <strong>Exciting Winners Selection!</strong></span></li>
                     </ul>
 
-                    <button class="btn-pass-select" onclick="selectPassAndOpenModal('duo')">
-                        <span>Select Duo Pass • ₹899</span>
+                    <button type="button" class="btn-pass-select notify-btn" onclick="openNotifyModal('duo')" style="background: linear-gradient(135deg, #7c5cfc, #633ef3); color: #ffffff; border: 2px solid #7c5cfc; font-weight: 850;">
+                        <i class="fa-solid fa-bell"></i>
+                        <span>Notify Me • Next Duo Batch</span>
                     </button>
                 </div>
             </div>
@@ -276,10 +449,10 @@
 
             <!-- Slots Grid -->
             <div class="slots-grid">
-                <!-- Single Slot: Nov 15 Sunday -->
+                <!-- Single Slot: Nov 15 Sunday (Completed) -->
                 <div class="slot-card selected" data-slot-id="batch1" data-day="Sunday" data-date="Nov 15, 2026" data-time="10:00 AM - 1:00 PM" data-batch="Exclusive Sunday Masterclass">
                     <div class="slot-card-top">
-                        <span class="slot-badge urgent"><i class="fa-solid fa-fire"></i> Only 15 Seats • High Demand</span>
+                        <span class="slot-badge completed" style="background: #ecfdf5; color: #047857; border: 1px solid #6ee7b7;"><i class="fa-solid fa-circle-check"></i> Batch 1 Concluded • Housefull & Successful!</span>
                         <h3 class="slot-day">Sunday Masterclass</h3>
                     </div>
 
@@ -287,7 +460,7 @@
                         <div class="slot-detail-row">
                             <div class="slot-detail-icon"><i class="fa-solid fa-calendar-check"></i></div>
                             <div class="slot-detail-info">
-                                <strong class="slot-detail-val">Sunday, Nov 15, 2026</strong>
+                                <strong class="slot-detail-val">Sunday, Nov 15, 2026 <span class="slot-duration-tag" style="background: #ecfdf5; color: #047857;">Completed 🎉</span></strong>
                             </div>
                         </div>
 
@@ -301,14 +474,14 @@
                         <div class="slot-detail-row">
                             <div class="slot-detail-icon"><i class="fa-solid fa-location-dot"></i></div>
                             <div class="slot-detail-info">
-                                <strong class="slot-detail-val">Bhimavaram <span class="slot-sub-val">(Venue announced upon registration)</span></strong>
+                                <strong class="slot-detail-val">Bhimavaram <span class="slot-sub-val">(Chocoloom Creative Space)</span></strong>
                             </div>
                         </div>
                     </div>
 
-                    <div class="slot-confirm-strip">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>Includes Free Tote Bag, Keepsake Dome & Materials</span>
+                    <div class="slot-confirm-strip" style="background: #faf5ff; border: 1px dashed #c084fc; color: #581c87; font-weight: 700; margin-top: 10px;">
+                        <i class="fa-solid fa-sparkles" style="color: #7c5cfc;"></i>
+                        <span>All 15 spots filled & completed! Pre-book now for next batch priority.</span>
                     </div>
                 </div>
             </div>
@@ -411,24 +584,30 @@
             </div>
         </section>
 
-        <!-- ==================== REGISTRATIONS OPEN CALLOUT ==================== -->
+        <!-- ==================== UPCOMING WORKSHOP CALLOUT ==================== -->
         <section class="registrations-open-strip" style="background: linear-gradient(135deg, #7c5cfc, #ec4899); border-radius: 20px; padding: 28px 32px; color: #ffffff; margin-bottom: 40px; text-align: center; box-shadow: 0 14px 34px rgba(124, 92, 252, 0.25);">
             <span style="display: inline-block; background: rgba(255,255,255,0.22); padding: 5px 16px; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;">
-                💌 REGISTRATIONS ARE OPEN!
+                🔔 UPCOMING WORKSHOP COMING SOON
             </span>
             <h3 style="font-size: 26px; font-weight: 900; margin: 4px 0 10px; color: #ffffff;">
-                Let’s Sculpt, Create & Celebrate! ✨
+                Missed Batch 1? Next Workshop is Coming Soon! ✨
             </h3>
             <p style="font-size: 15px; max-width: 680px; margin: 0 auto 20px; line-height: 1.6; opacity: 0.95;">
-                Seats are limited, so don’t miss this opportunity to create something extraordinary! Bring your creativity, invite your favourite person and make beautiful memories with Chocoloom.
+                Due to full house in Batch 1, our team is currently preparing the next creative masterclass in Bhimavaram. Get early VIP notification before general release!
             </p>
             <div style="font-size: 14px; font-weight: 800; letter-spacing: 1px; margin-bottom: 16px; color: #fef08a;">
                 CHOCOLOOM – Create • Play • Enjoy
             </div>
-            <a href="#passesSection" style="display: inline-flex; align-items: center; gap: 8px; background: #ffffff; color: #7c5cfc; padding: 13px 28px; border-radius: 999px; font-weight: 850; font-size: 14.5px; text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,0,0.18); transition: transform 0.2s ease;">
-                <i class="fa-solid fa-ticket"></i>
-                <span>Choose Your Pass (Solo ₹499 • Duo ₹899)</span>
-            </a>
+            <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                <button type="button" onclick="openNotifyModal('general')" style="display: inline-flex; align-items: center; gap: 8px; background: #ffffff; color: #7c5cfc; padding: 13px 28px; border-radius: 999px; font-weight: 850; font-size: 14.5px; border: none; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.18); transition: transform 0.2s ease;">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Notify Me for Next Batch</span>
+                </button>
+                <a href="https://wa.me/919849783788?text=Hi%20Chocoloom%2C%20please%20notify%20me%20when%20the%20upcoming%20workshop%20tickets%20are%20live!" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; background: #25d366; color: #ffffff; padding: 13px 24px; border-radius: 999px; font-weight: 850; font-size: 14.5px; text-decoration: none; box-shadow: 0 6px 18px rgba(37,211,102,0.35); transition: transform 0.2s ease;">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <span>WhatsApp VIP Alert</span>
+                </a>
+            </div>
         </section>
 
         <!-- ==================== 9. FAQ ACCORDION ==================== -->
@@ -508,6 +687,7 @@
                 <div class="footer-col">
                     <h5>Workshops</h5>
                     <ul class="footer-links">
+                        <li><a href="#workshopGallerySection">Workshop Memories & Gallery 📸</a></li>
                         <li><a href="#scheduleSection">Clay Toy Cakes Masterclass</a></li>
                         <li><a href="#toteBagSection">Free Tote Bag Offer</a></li>
                         <li><a href="#passesSection">Book Workshop Pass</a></li>
@@ -550,6 +730,85 @@
     </footer>
 
 
+
+    <!-- ==================== NOTIFY ME MODAL (UPCOMING EVENT WAITLIST) ==================== -->
+    <div class="modal-backdrop" id="notifyModal" onclick="if(event.target===this) closeNotifyModal()">
+        <div class="modal-card" style="max-width: 500px; border-radius: 24px; padding: 28px 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);">
+            <button class="modal-close-btn" onclick="closeNotifyModal()"><i class="fa-solid fa-xmark"></i></button>
+
+            <div class="modal-head" style="text-align: center; padding-bottom: 10px;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: #ede8ff; color: #7c5cfc; display: inline-flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 12px;">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <h3 class="modal-title" style="font-size: 22px; font-weight: 900; color: #1e1b4b; margin: 0 0 6px;">Get Notified for Upcoming Workshop! ✨</h3>
+                <p class="modal-subtitle" style="font-size: 13.5px; color: #6b7280; line-height: 1.5; margin: 0;">
+                    Batch 1 has successfully completed. Leave your details below to get early VIP notification on WhatsApp as soon as our upcoming batch opens!
+                </p>
+            </div>
+
+            <!-- Form Body -->
+            <form id="notifyWaitlistForm" onsubmit="handleNotifySubmit(event)" style="padding-top: 14px;">
+                <div class="form-group" style="margin-bottom: 14px; text-align: left;">
+                    <label class="form-label" style="font-size: 12.5px; font-weight: 750; color: #374151; display: block; margin-bottom: 6px;">
+                        Full Name <span style="color: #dc2626;">*</span>
+                    </label>
+                    <input type="text" id="notifyName" class="form-control" placeholder="Enter your name" required style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #d1d5db; font-size: 14px; box-sizing: border-box; outline: none;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 14px; text-align: left;">
+                    <label class="form-label" style="font-size: 12.5px; font-weight: 750; color: #374151; display: block; margin-bottom: 6px;">
+                        WhatsApp Number <span style="color: #dc2626;">*</span>
+                    </label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 750; color: #6b7280; font-size: 14px;">+91</span>
+                        <input type="tel" id="notifyPhone" class="form-control" maxlength="10" placeholder="10-digit mobile number" required style="width: 100%; padding: 12px 14px 12px 48px; border-radius: 12px; border: 1.5px solid #d1d5db; font-size: 14px; box-sizing: border-box; outline: none;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px; text-align: left;">
+                    <label class="form-label" style="font-size: 12.5px; font-weight: 750; color: #374151; display: block; margin-bottom: 6px;">
+                        Pass Preference
+                    </label>
+                    <select id="notifyPassPreference" class="form-control" style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #d1d5db; font-size: 14px; box-sizing: border-box; background: #fff; outline: none;">
+                        <option value="either">Any Pass (Solo or Duo)</option>
+                        <option value="solo">Solo Pass (₹499)</option>
+                        <option value="duo">Duo Pass (₹899 for 2)</option>
+                    </select>
+                </div>
+
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px 14px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; text-align: left;">
+                    <i class="fa-solid fa-shield-check" style="color: #16a34a; font-size: 16px; flex-shrink: 0;"></i>
+                    <span style="font-size: 12px; color: #166534; font-weight: 600;">Direct WhatsApp alert only. We never spam.</span>
+                </div>
+
+                <button type="submit" id="btnSubmitNotify" style="width: 100%; padding: 14px; border-radius: 999px; background: linear-gradient(135deg, #7c5cfc, #633ef3); color: #ffffff; font-size: 15px; font-weight: 850; border: none; cursor: pointer; box-shadow: 0 6px 18px rgba(124, 92, 252, 0.4); display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.2s ease;">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Notify Me for Next Batch</span>
+                </button>
+
+                <div style="text-align: center; margin-top: 14px;">
+                    <a href="https://wa.me/919849783788?text=Hi%20Chocoloom%2C%20please%20notify%20me%20when%20the%20upcoming%20workshop%20tickets%20are%20live!" target="_blank" style="font-size: 13px; color: #25d366; font-weight: 750; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-brands fa-whatsapp" style="font-size: 15px;"></i>
+                        <span>Or notify me on WhatsApp</span>
+                    </a>
+                </div>
+            </form>
+
+            <!-- Success State inside modal -->
+            <div id="notifySuccessBox" style="display: none; text-align: center; padding: 20px 10px;">
+                <div style="width: 64px; height: 64px; border-radius: 50%; background: #ecfdf5; color: #059669; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 14px;">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h3 style="font-size: 22px; font-weight: 900; color: #064e3b; margin: 0 0 6px;">You're on the VIP Waitlist! 🎉</h3>
+                <p style="font-size: 14px; color: #065f46; line-height: 1.5; margin: 0 0 20px;">
+                    Thank you! We've saved your details. You will get the earliest notification on WhatsApp as soon as upcoming workshop dates are announced.
+                </p>
+                <button type="button" onclick="closeNotifyModal()" style="padding: 10px 24px; border-radius: 999px; background: #059669; color: #fff; font-weight: 800; border: none; cursor: pointer;">
+                    Got It!
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- ==================== REGISTRATION MODAL ==================== -->
     <div class="modal-backdrop" id="registrationModal">
@@ -934,22 +1193,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    
-    <!-- ==================== ENTRY ADVERTISEMENT MODAL (SHOWCASE IMAGE) ==================== -->
-    <div class="ad-modal-backdrop" id="advertisementModal" onclick="if(event.target===this) closeAdvertisementModal()" role="dialog" aria-modal="true" aria-label="Chocoloom Advertisement">
-        <div class="ad-image-modal-card">
-            <!-- Close Button (X) -->
-            <button class="ad-image-close-btn" onclick="closeAdvertisementModal()" aria-label="Close Advertisement" title="Close (Esc)">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <!-- Full Uncropped Advertisement Image -->
-            <a href="#passesSection" class="ad-image-click-wrap" onclick="handleAdModalCta()" title="Shop Creative Kits & Workshop Passes">
-                <img src="assets/craft_happy_moments.jpg" alt="Craft Your Happy Moments - Chocoloom Creative Kits & Workshop Advertisement" class="ad-full-image" loading="eager">
-            </a>
         </div>
     </div>
 

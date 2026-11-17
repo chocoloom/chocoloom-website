@@ -140,7 +140,14 @@
     }
 
     // 5. Pass Selector & Registration Modal
+    const WORKSHOP_CONCLUDED = true;
+
     window.selectPassAndOpenModal = function (passTierKey) {
+        if (WORKSHOP_CONCLUDED) {
+            openNotifyModal(passTierKey || 'solo');
+            return;
+        }
+
         // Default to solo pass automatically
         const tierKey = (passTierKey && PASS_TIERS[passTierKey]) ? passTierKey : 'solo';
         WorkshopState.selectedPass = PASS_TIERS[tierKey];
@@ -155,6 +162,10 @@
     };
 
     window.openRegistrationModal = function () {
+        if (WORKSHOP_CONCLUDED) {
+            openNotifyModal('general');
+            return;
+        }
         const modal = document.getElementById('registrationModal');
         if (modal) {
             modal.classList.add('open');
@@ -168,6 +179,84 @@
             modal.classList.remove('open');
             document.body.style.overflow = '';
         }
+    };
+
+    // ==========================================
+    // NOTIFY ME / UPCOMING WORKSHOP WAITLIST
+    // ==========================================
+    window.openNotifyModal = function (passTierKey) {
+        const modal = document.getElementById('notifyModal');
+        if (!modal) return;
+        const passSelect = document.getElementById('notifyPassPreference');
+        if (passSelect && passTierKey) {
+            if (passTierKey === 'solo' || passTierKey === 'duo') {
+                passSelect.value = passTierKey;
+            } else {
+                passSelect.value = 'either';
+            }
+        }
+        const form = document.getElementById('notifyWaitlistForm');
+        const successBox = document.getElementById('notifySuccessBox');
+        if (form) form.style.display = 'block';
+        if (successBox) successBox.style.display = 'none';
+
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeNotifyModal = function () {
+        const modal = document.getElementById('notifyModal');
+        if (modal) {
+            modal.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    };
+
+    window.handleNotifySubmit = function (e) {
+        if (e) e.preventDefault();
+        const nameInput = document.getElementById('notifyName');
+        const phoneInput = document.getElementById('notifyPhone');
+        const passPrefSelect = document.getElementById('notifyPassPreference');
+
+        const name = (nameInput ? nameInput.value : '').trim();
+        const phone = (phoneInput ? phoneInput.value : '').trim();
+        const passPref = passPrefSelect ? passPrefSelect.value : 'either';
+
+        if (!name || phone.length < 10) {
+            showToast('Please enter your full name and 10-digit WhatsApp phone number');
+            return;
+        }
+
+        // Save to leads in localStorage
+        try {
+            const leads = JSON.parse(localStorage.getItem('chocoloom_workshop_notify_leads') || '[]');
+            leads.unshift({
+                id: 'WAITLIST-' + Math.floor(1000 + Math.random() * 9000),
+                name: name,
+                phone: phone,
+                passPreference: passPref,
+                createdAt: new Date().toISOString()
+            });
+            localStorage.setItem('chocoloom_workshop_notify_leads', JSON.stringify(leads));
+        } catch (err) {
+            console.warn('LocalStorage error:', err);
+        }
+
+        // Canvas Confetti Celebration
+        if (typeof confetti === 'function') {
+            confetti({
+                particleCount: 70,
+                spread: 60,
+                origin: { y: 0.6 }
+            });
+        }
+
+        const form = document.getElementById('notifyWaitlistForm');
+        const successBox = document.getElementById('notifySuccessBox');
+        if (form) form.style.display = 'none';
+        if (successBox) successBox.style.display = 'block';
+
+        showToast('You are on the VIP waitlist! 🎉 We will notify you first on WhatsApp.');
     };
 
     window.handlePassTierChange = function (val) {
