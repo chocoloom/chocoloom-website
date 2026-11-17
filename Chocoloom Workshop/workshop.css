@@ -3936,8 +3936,10 @@ button {
 
 .pwg-notes-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    position: relative;
+    padding-top: 14px;
 }
 
 .pwg-note {
@@ -4012,6 +4014,54 @@ button {
     color: #075985;
 }
 .note-blue .note-author { color: #075985; }
+
+.note-peach {
+    background: #fed7aa;
+    border: 1px solid #fdba74;
+    transform: rotate(-1.8deg);
+    color: #9a3412;
+}
+.note-peach .note-author { color: #9a3412; }
+
+.note-purple {
+    background: #e9d5ff;
+    border: 1px solid #d8b4fe;
+    transform: rotate(1.3deg);
+    color: #6b21a8;
+}
+.note-purple .note-author { color: #6b21a8; }
+
+.note-rose {
+    background: #fecdd3;
+    border: 1px solid #fda4af;
+    transform: rotate(-1.5deg);
+    color: #9f1239;
+}
+.note-rose .note-author { color: #9f1239; }
+
+.note-teal {
+    background: #99f6e4;
+    border: 1px solid #5eead4;
+    transform: rotate(1.7deg);
+    color: #115e59;
+}
+.note-teal .note-author { color: #115e59; }
+
+.note-amber {
+    background: #fde68a;
+    border: 1px solid #fcd34d;
+    transform: rotate(-1.2deg);
+    color: #92400e;
+}
+.note-amber .note-author { color: #92400e; }
+
+.note-lavender {
+    background: #ddd6fe;
+    border: 1px solid #c4b5fd;
+    transform: rotate(1.5deg);
+    color: #5b21b6;
+}
+.note-lavender .note-author { color: #5b21b6; }
 
 /* Next Batch Waitlist Banner */
 .pwg-next-batch-banner {
