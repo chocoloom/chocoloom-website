@@ -1,5 +1,5 @@
 // Chocoloom Progressive Web App (PWA) Service Worker
-const CACHE_NAME = 'chocoloom-cache-v1.0.22';
+const CACHE_NAME = 'chocoloom-cache-v1.0.23';
 const PRECACHE_ASSETS = [
     './',
     './order.html',
@@ -11,6 +11,10 @@ const PRECACHE_ASSETS = [
     './data.js',
     './manifest.json',
     './assets/logo.png',
+    './assets/categories/bento_ref_cake.webp',
+    './assets/categories/bento_step_cake.webp',
+    './assets/categories/bento_wave_box.webp',
+    './assets/categories/bento_curated_cake.webp',
     './assets/diwali_poster_banner.jpg',
     './assets/craft_happy_moments.jpg',
     './assets/icons/icon-192x192.png',
