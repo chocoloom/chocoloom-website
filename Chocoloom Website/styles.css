@@ -5741,7 +5741,7 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
     }
 
     .navbar:has(.header-order-notice-pill) {
-        min-height: calc(198px + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(208px + env(safe-area-inset-top, 0px)) !important;
         padding-top: calc(20px + env(safe-area-inset-top, 0px)) !important;
     }
 
@@ -5995,7 +5995,7 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
     body:has(.hero-ad-section) .hero-ad-section.full-bleed,
     body.has-hero-ad .hero-ad-section.full-bleed,
     .hero-ad-section.full-bleed {
-        margin-top: calc(-198px - env(safe-area-inset-top, 0px)) !important;
+        margin-top: calc(-208px - env(safe-area-inset-top, 0px)) !important;
         padding-top: 0 !important;
     }
 
