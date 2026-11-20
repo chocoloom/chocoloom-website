@@ -110,6 +110,25 @@
     <div id="siteLoadingSplash" class="site-loading-splash">
         <img src="assets/logo.png" alt="Chocoloom" class="splash-plain-logo">
     </div>
+    <script>
+        // Bulletproof Preloader Fail-Safe: guarantees splash fades out smoothly within 700ms under ALL conditions
+        (function () {
+            function dismissSplash() {
+                var splash = document.getElementById('siteLoadingSplash');
+                if (splash && !splash.classList.contains('splash-hidden')) {
+                    splash.classList.add('splash-hidden');
+                    splash.style.opacity = '0';
+                    splash.style.pointerEvents = 'none';
+                    setTimeout(function () {
+                        try { if (splash && splash.parentNode) splash.parentNode.removeChild(splash); } catch (e) { }
+                    }, 350);
+                }
+            }
+            window.hideSiteLoadingSplash = dismissSplash;
+            setTimeout(dismissSplash, 700);
+            window.addEventListener('load', function () { setTimeout(dismissSplash, 80); });
+        })();
+    </script>
 
 
     <header class="navbar" id="catalogNavbar">
@@ -1684,7 +1703,7 @@
     <script src="data.js?v=15.0"></script>
     <script src="react-components.js?v=2.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
-    <script src="app.js?v=16.6"></script>
+    <script src="app.js?v=16.7"></script>
     <script src="pwa.js?v=2.1" defer></script>
 </body>
 </html>

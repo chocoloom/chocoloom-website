@@ -24,20 +24,39 @@
         ensureZoomEnabled();
     }
 
-    // 2. Service Worker Registration
+    // 2. Service Worker Registration (Production only - bypass on local dev to prevent stale cache lock)
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            // Determine relative root path
-            const swPath = './sw.js';
-            navigator.serviceWorker.register(swPath)
-                .then((registration) => {
-                    registration.update();
-                    console.log('[Chocoloom PWA] Service Worker registered with scope:', registration.scope);
-                })
-                .catch((error) => {
-                    console.warn('[Chocoloom PWA] Service Worker registration failed:', error);
-                });
-        });
+        const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname) ||
+            window.location.hostname.endsWith('.local') ||
+            window.location.protocol === 'file:';
+
+        if (isLocalHost) {
+            // Automatically unregister service workers on local dev to prevent stale cache lock
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+                for (let reg of registrations) {
+                    reg.unregister().then(() => console.log('[Chocoloom PWA] Unregistered dev service worker'));
+                }
+            }).catch(() => { });
+            // Also clear old dev caches
+            if ('caches' in window) {
+                caches.keys().then((keys) => {
+                    keys.forEach((k) => caches.delete(k));
+                }).catch(() => { });
+            }
+        } else {
+            window.addEventListener('load', () => {
+                // Determine relative root path
+                const swPath = './sw.js';
+                navigator.serviceWorker.register(swPath)
+                    .then((registration) => {
+                        registration.update();
+                        console.log('[Chocoloom PWA] Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.warn('[Chocoloom PWA] Service Worker registration failed:', error);
+                    });
+            });
+        }
     }
 
     // 3. Chrome PWA Install Prompt Management
