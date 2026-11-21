@@ -247,12 +247,12 @@
 
                     <div class="user-profile-dropdown" id="userProfileDropdown">
                         <div class="user-dropdown-header">
-                            <div class="dropdown-avatar" id="dropdownAvatar">M</div>
+                            <div class="dropdown-avatar" id="dropdownAvatar">U</div>
                             <div class="dropdown-info">
-                                <div class="dropdown-name" id="dropdownName">Mohith Kumar</div>
-                                <div class="dropdown-sub" id="dropdownSub">student@srkr.edu.in</div>
-                                <span class="dropdown-badge" id="dropdownBadge"><i class="fa-solid fa-star"></i>
-                                    Chocoloom VIP</span>
+                                <div class="dropdown-name" id="dropdownName">User</div>
+                                <div class="dropdown-sub" id="dropdownSub">user@example.com</div>
+                                <span class="dropdown-badge" id="dropdownBadge"><i class="fa-solid fa-user"></i>
+                                    Member</span>
                             </div>
                         </div>
                         <div class="user-dropdown-divider"></div>
@@ -1357,8 +1357,8 @@
                                 <h3 style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 4px;"
                                     id="modalLoggedInName">User</h3>
                                 <span id="modalLoggedInRoleBadge"
-                                    style="display: inline-flex; align-items: center; gap: 5px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px;">
-                                    <i class="fa-solid fa-graduation-cap"></i> SRKR Student • 25% OFF
+                                    style="display: inline-flex; align-items: center; gap: 5px; background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px;">
+                                    <i class="fa-solid fa-user"></i> Member
                                 </span>
                             </div>
                         </div>
@@ -1374,8 +1374,7 @@
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span style="color: #64748b; font-weight: 600;">Campus</span>
-                                <span style="font-weight: 700; color: #0f172a;" id="modalLoggedInCampus">S.R.K.R.
-                                    Engineering College</span>
+                                <span style="font-weight: 700; color: #0f172a;" id="modalLoggedInCampus">General Customer</span>
                             </div>
                         </div>
                     </div>
@@ -1584,23 +1583,23 @@
                             </div>
                         </div>
 
-                        <!-- SRKR College Student Perk -->
+                        <!-- College Student Perk (Optional) -->
                         <div
-                            style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 10px 12px; margin-bottom: 14px;">
+                            style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 14px;">
                             <label
-                                style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 4px;">
-                                <div style="font-size: 12.5px; font-weight: 800; color: #14532d;">
-                                    <i class="fa-solid fa-graduation-cap"></i> I am a College Student
+                                style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 0;">
+                                <div style="font-size: 12.5px; font-weight: 800; color: #334155;">
+                                    <i class="fa-solid fa-graduation-cap" style="color: #16a34a;"></i> I am a College Student
                                 </div>
-                                <input type="checkbox" id="otpNewUserIsStudent" checked
-                                    onchange="document.getElementById('modalCollegeSelectWrapper').style.display = this.checked ? 'block' : 'none'"
+                                <input type="checkbox" id="otpNewUserIsStudent"
+                                    onchange="const w = document.getElementById('modalCollegeSelectWrapper'); if(w) w.style.display = this.checked ? 'block' : 'none';"
                                     style="width: 17px; height: 17px; accent-color: #16a34a; cursor: pointer;">
                             </label>
-                            <div id="modalCollegeSelectWrapper">
+                            <div id="modalCollegeSelectWrapper" style="display: none; margin-top: 8px;">
                                 <select id="otpNewUserCollegeSelect"
-                                    style="width: 100%; border-radius: 8px; border: 1px solid #86efac; padding: 6px 8px; font-size: 11.5px; background: #fff; outline: none; cursor: pointer;">
-                                    <option value="col_srkr" selected>S.R.K.R. Engineering College (SRKR) - Active (25%
-                                        OFF)</option>
+                                    style="width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; padding: 6px 8px; font-size: 11.5px; background: #fff; outline: none; cursor: pointer;">
+                                    <option value="" disabled selected>Select Your College / Campus</option>
+                                    <option value="col_srkr">S.R.K.R. Engineering College (SRKR) - Active (25% OFF)</option>
                                     <option value="col_vishnu">Vishnu Engineering College (Bhimavaram)</option>
                                     <option value="col_gitam">GITAM University</option>
                                     <option value="col_andhra">Andhra University</option>
@@ -1691,7 +1690,7 @@
                             style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Email
                             Address</span>
                         <span style="font-size: 14px; font-weight: 700; color: #0f172a;"
-                            id="accModalEmail">student@srkr.edu.in</span>
+                            id="accModalEmail">user@example.com</span>
                     </div>
 
                     <div
@@ -1700,8 +1699,7 @@
                             style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Campus
                             / University</span>
                         <span style="font-size: 13.5px; font-weight: 700; color: #0f172a;" id="accModalCollege"><i
-                                class="fa-solid fa-graduation-cap" style="color: #16a34a;"></i> S.R.K.R. Engineering
-                            College</span>
+                                class="fa-solid fa-user" style="color: #64748b;"></i> Regular Member</span>
                     </div>
 
                     <div
@@ -1983,7 +1981,7 @@
     <script src="data.js?v=15.1"></script>
     <script src="react-components.js?v=2.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
-    <script src="app.js?v=16.8"></script>
+    <script src="app.js?v=16.9"></script>
     <script src="pwa.js?v=2.1" defer></script>
 </body>
 

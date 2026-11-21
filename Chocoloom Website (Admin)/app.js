@@ -432,7 +432,7 @@ window.buyChocowalletCard = function (details = {}) {
     const defaultHolder = (AppState.currentUser?.name || AppState.customerProfile?.name || 'Mohith Kumar').trim();
     const holderName = (details.cardHolderName || defaultHolder || 'CHOCOLOOM VIP').toUpperCase();
     const phone = details.phone || AppState.currentUser?.phone || AppState.customerProfile?.phone || '+91 98765 43210';
-    const street = details.street || AppState.customerProfile?.street || 'SRKR Campus Road, Chinna Amiram';
+    const street = details.street || AppState.customerProfile?.street || '20-1-6, Gandhi Nagar';
     const city = details.city || AppState.customerProfile?.city || 'Bhimavaram';
     const pincode = details.pincode || AppState.customerProfile?.pincode || '534204';
     const edition = details.edition || 'Matte Black Titanium VIP';
@@ -661,7 +661,7 @@ window.showCardOrderTransitModal = function (givenCardData = null) {
     const trackingCode = physical.trackingNumber || 'BD88429108IN';
     const courier = physical.courier || 'BlueDart Express Air Priority';
     const city = physical.shippingAddress ? physical.shippingAddress.split(',').pop().trim() : (AppState.customerProfile?.city || 'Bhimavaram');
-    const address = physical.shippingAddress || (AppState.customerProfile?.street ? `${AppState.customerProfile.street}, ${AppState.customerProfile.city || ''} - ${AppState.customerProfile.pincode || ''}` : 'SRKR Campus Road, Bhimavaram, 534204');
+    const address = physical.shippingAddress || (AppState.customerProfile?.street ? `${AppState.customerProfile.street}, ${AppState.customerProfile.city || ''} - ${AppState.customerProfile.pincode || ''}` : '20-1-6, Gandhi Nagar, Bhimavaram, 534202');
     const phone = physical.phone || (AppState.currentUser?.phone || AppState.customerProfile?.phone || '+91 98765 43210');
     const edition = cardData.edition || 'Matte Black Titanium VIP';
     const bal = window.getChocowalletBalance();
@@ -12320,7 +12320,7 @@ function updateAuthUI() {
 
         if (dropdownBadge) {
             dropdownBadge.innerHTML = AppState.currentUser.isStudent
-                ? '<i class="fa-solid fa-graduation-cap"></i> ' + (AppState.currentUser.collegeName || 'SRKR Student') + ' • 25% OFF'
+                ? '<i class="fa-solid fa-graduation-cap"></i> ' + (AppState.currentUser.collegeName || 'Student') + ' • 25% OFF'
                 : '<i class="fa-solid fa-star"></i> Chocoloom VIP Member';
         }
 
@@ -12447,9 +12447,9 @@ window.openAuthModal = function (defaultTab = 'passcode') {
             if (phoneEl) phoneEl.textContent = cleanPhone ? `+91 ${cleanPhone.slice(0, 5)} ${cleanPhone.slice(5)}` : 'Not linked';
             if (emailEl) emailEl.textContent = user.email || 'Not provided';
             if (avatarEl) avatarEl.textContent = (user.name || 'U').charAt(0).toUpperCase();
-            if (campusEl) campusEl.textContent = user.isStudent ? (user.collegeName || 'S.R.K.R. Engineering College') : 'General Customer';
+            if (campusEl) campusEl.textContent = user.isStudent ? (user.collegeName || 'College Student') : 'General Customer';
             if (roleEl) {
-                roleEl.innerHTML = user.isStudent ? '<i class="fa-solid fa-graduation-cap"></i> SRKR Student • 25% OFF' : '<i class="fa-solid fa-user"></i> Member';
+                roleEl.innerHTML = user.isStudent ? `<i class="fa-solid fa-graduation-cap"></i> ${user.collegeName || 'Student'} • 25% OFF` : '<i class="fa-solid fa-user"></i> Member';
             }
 
             if (stepProfile) stepProfile.style.display = 'block';
@@ -12881,6 +12881,14 @@ window.openNewUserOnboardingScreen = function (phone = '', passcode = '') {
         phoneBadge.textContent = `+91 ${cleanDigits.slice(0, 5)} ${cleanDigits.slice(5)}`;
     }
 
+    // Ensure student checkbox starts UNCHECKED by default and college selection is hidden
+    const studentBox = document.getElementById('otpNewUserIsStudent');
+    if (studentBox) studentBox.checked = false;
+    const collegeWrapper = document.getElementById('modalCollegeSelectWrapper') || document.getElementById('otpCollegeSelectWrapper');
+    if (collegeWrapper) collegeWrapper.style.display = 'none';
+    const collegeSelect = document.getElementById('otpNewUserCollegeSelect');
+    if (collegeSelect) collegeSelect.value = '';
+
     // Passcode input must start completely empty for new user registration and strictly show numeric keyboard
     const passInput = document.getElementById('otpNewUserPassword');
     if (passInput) {
@@ -13100,8 +13108,8 @@ window.completePasscodeOnboarding = async function (event) {
     const email = (emailInput ? emailInput.value : '').trim().toLowerCase();
     const passcode = (passwordInput ? passwordInput.value : '').trim();
     const address = (addressInput ? addressInput.value : '').trim();
-    const isStudent = isStudentCheckbox ? isStudentCheckbox.checked : true;
-    const collegeId = isStudent ? (collegeSelect ? collegeSelect.value : 'col_srkr') : null;
+    const isStudent = isStudentCheckbox ? isStudentCheckbox.checked : false;
+    const collegeId = isStudent ? (collegeSelect && collegeSelect.value ? collegeSelect.value : null) : null;
 
     // Mobile number: prioritize editable onboarding phone input, then previous step input or state
     const onboardingPhoneInput = document.getElementById('onboardingPhoneNumber');
@@ -13173,15 +13181,21 @@ window.completePasscodeOnboarding = async function (event) {
         return;
     }
 
+    if (isStudent && !collegeId) {
+        showToast('Please select your college / campus', 'fa-solid fa-graduation-cap', '#f59e0b');
+        if (collegeSelect) collegeSelect.focus();
+        return;
+    }
+
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Creating Your Account...</span>';
     }
 
     let collegeName = null;
-    if (isStudent) {
+    if (isStudent && collegeId) {
         const colObj = (SWIGGY_DATA && SWIGGY_DATA.colleges ? SWIGGY_DATA.colleges : []).find(c => c.id === collegeId);
-        collegeName = colObj ? colObj.name : 'S.R.K.R. Engineering College (SRKR)';
+        collegeName = colObj ? colObj.name : 'College Student';
     }
 
     const newUser = {
@@ -13194,9 +13208,9 @@ window.completePasscodeOnboarding = async function (event) {
         address: address || null,
         addresses: address ? [{ address: address, label: 'Default Delivery', added_at: new Date().toISOString() }] : [],
         isStudent: Boolean(isStudent),
-        college: collegeId,
-        collegeName: collegeName,
-        role: isStudent ? 'SRKR Student' : 'Chocoloom Member',
+        college: isStudent ? collegeId : null,
+        collegeName: isStudent ? collegeName : null,
+        role: isStudent ? (collegeId === 'col_srkr' ? 'SRKR Student' : 'College Student') : 'Chocoloom Member',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     };
@@ -13356,10 +13370,10 @@ window.handleSignInSubmit = async function (event) {
                         name: data.user.user_metadata?.full_name || 'Customer',
                         email: data.user.email,
                         phone: data.user.user_metadata?.phone || '',
-                        isStudent: Boolean(data.user.user_metadata?.college),
-                        college: data.user.user_metadata?.college || 'col_srkr',
-                        collegeName: data.user.user_metadata?.college_name || 'S.R.K.R. Engineering College (SRKR)',
-                        role: data.user.user_metadata?.college ? 'SRKR Student' : 'Chocoloom Member'
+                        isStudent: Boolean(data.user.user_metadata?.is_student),
+                        college: data.user.user_metadata?.is_student ? (data.user.user_metadata?.college || null) : null,
+                        collegeName: data.user.user_metadata?.is_student ? (data.user.user_metadata?.college_name || null) : null,
+                        role: data.user.user_metadata?.is_student ? (data.user.user_metadata?.college === 'col_srkr' ? 'SRKR Student' : 'College Student') : 'Chocoloom Member'
                     };
                 }
             } catch (supabaseErr) {
@@ -13528,8 +13542,8 @@ window.handleSignUpSubmit = async function (event) {
         (u.phone && cleanPhone && u.phone.replace(/\D/g, '').slice(-10) === cleanPhone)
     );
 
-    let collegeName = 'S.R.K.R. Engineering College (SRKR)';
-    if (collegeId) {
+    let collegeName = null;
+    if (isStudent && collegeId) {
         const found = (SWIGGY_DATA.colleges || []).find(c => c.id === collegeId);
         if (found) collegeName = found.name;
     }
@@ -13543,7 +13557,7 @@ window.handleSignUpSubmit = async function (event) {
         email: email,
         password: password,
         isStudent: isStudent,
-        college: isStudent ? (collegeId || 'col_srkr') : null,
+        college: isStudent ? collegeId : null,
         collegeName: isStudent ? collegeName : null,
         role: isStudent ? (collegeId === 'col_srkr' ? 'SRKR Student' : 'College Student') : 'Chocoloom Member',
         createdAt: (existingIndex !== -1 && users[existingIndex].createdAt) ? users[existingIndex].createdAt : new Date().toISOString(),
@@ -13717,7 +13731,7 @@ window.openAccountDetailsModal = function () {
 
     if (collegeEl) {
         if (u.isStudent) {
-            collegeEl.innerHTML = '<i class="fa-solid fa-graduation-cap" style="color: #16a34a;"></i> S.R.K.R. Engineering College';
+            collegeEl.innerHTML = `<i class="fa-solid fa-graduation-cap" style="color: #16a34a;"></i> ${u.collegeName || 'College Student'}`;
             if (discountBadgeEl) discountBadgeEl.style.display = 'inline-flex';
         } else {
             collegeEl.innerHTML = '<i class="fa-solid fa-user" style="color: #64748b;"></i> Regular Member';

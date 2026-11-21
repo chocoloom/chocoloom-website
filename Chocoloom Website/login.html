@@ -366,11 +366,11 @@
                 <!-- Profile Card -->
                 <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 20px; margin-bottom: 20px;">
                     <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid #e2e8f0;">
-                        <div style="width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #7c5cfc, #ec4899); color: #fff; font-size: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(124, 92, 252, 0.3);" id="loggedInAvatar">M</div>
+                        <div style="width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #7c5cfc, #ec4899); color: #fff; font-size: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(124, 92, 252, 0.3);" id="loggedInAvatar">U</div>
                         <div>
-                            <h3 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 4px;" id="loggedInName">Mohith Kumar</h3>
-                            <span id="loggedInRoleBadge" style="display: inline-flex; align-items: center; gap: 5px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 11.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px;">
-                                <i class="fa-solid fa-graduation-cap"></i> SRKR Student • 25% OFF
+                            <h3 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 4px;" id="loggedInName">User</h3>
+                            <span id="loggedInRoleBadge" style="display: inline-flex; align-items: center; gap: 5px; background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; font-size: 11.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px;">
+                                <i class="fa-solid fa-user"></i> Member
                             </span>
                         </div>
                     </div>
@@ -378,15 +378,15 @@
                     <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span style="color: #64748b; font-weight: 600;">Mobile</span>
-                            <span style="font-weight: 700; color: #0f172a;" id="loggedInPhone">+91 98765 43210</span>
+                            <span style="font-weight: 700; color: #0f172a;" id="loggedInPhone">+91 ...</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span style="color: #64748b; font-weight: 600;">Email</span>
-                            <span style="font-weight: 700; color: #0f172a;" id="loggedInEmail">student@srkr.edu.in</span>
+                            <span style="font-weight: 700; color: #0f172a;" id="loggedInEmail">user@example.com</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span style="color: #64748b; font-weight: 600;">Campus</span>
-                            <span style="font-weight: 700; color: #0f172a;" id="loggedInCampus">S.R.K.R. Engineering College</span>
+                            <span style="font-weight: 700; color: #0f172a;" id="loggedInCampus">General Customer</span>
                         </div>
                     </div>
                 </div>
@@ -530,17 +530,18 @@
                         </div>
                     </div>
 
-                    <!-- SRKR College Student Perk -->
-                    <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;">
-                        <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 6px;">
-                            <div style="font-size: 13px; font-weight: 800; color: #14532d;">
-                                <i class="fa-solid fa-graduation-cap"></i> I am a College Student
+                    <!-- College Student Perk (Optional) -->
+                    <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;">
+                        <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 0;">
+                            <div style="font-size: 13px; font-weight: 800; color: #334155;">
+                                <i class="fa-solid fa-graduation-cap" style="color: #16a34a;"></i> I am a College Student
                             </div>
-                            <input type="checkbox" id="otpNewUserIsStudent" checked onchange="document.getElementById('otpCollegeSelectWrapper').style.display = this.checked ? 'block' : 'none'" style="width: 18px; height: 18px; accent-color: #16a34a; cursor: pointer;">
+                            <input type="checkbox" id="otpNewUserIsStudent" onchange="const w = document.getElementById('otpCollegeSelectWrapper'); if(w) w.style.display = this.checked ? 'block' : 'none';" style="width: 18px; height: 18px; accent-color: #16a34a; cursor: pointer;">
                         </label>
-                        <div id="otpCollegeSelectWrapper">
-                            <select id="otpNewUserCollegeSelect" style="width: 100%; border-radius: 8px; border: 1px solid #86efac; padding: 8px 10px; font-size: 12px; background: #fff; outline: none; cursor: pointer;">
-                                <option value="col_srkr" selected>S.R.K.R. Engineering College (SRKR) - Active (25% OFF)</option>
+                        <div id="otpCollegeSelectWrapper" style="display: none; margin-top: 8px;">
+                            <select id="otpNewUserCollegeSelect" style="width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size: 12px; background: #fff; outline: none; cursor: pointer;">
+                                <option value="" disabled selected>Select Your College / Campus</option>
+                                <option value="col_srkr">S.R.K.R. Engineering College (SRKR) - Active (25% OFF)</option>
                                 <option value="col_vishnu">Vishnu Engineering College (Bhimavaram)</option>
                                 <option value="col_gitam">GITAM University</option>
                                 <option value="col_andhra">Andhra University</option>
@@ -574,8 +575,8 @@
 
     <!-- Supabase SDK & Core Engine -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="data.js?v=6.6"></script>
-    <script src="app.js?v=8.9"></script>
+    <script src="data.js?v=15.1"></script>
+    <script src="app.js?v=16.9"></script>
 
     <script>
         // Screen Navigation Controller
@@ -689,9 +690,9 @@
                 if (phoneEl) phoneEl.textContent = cleanPhone ? `+91 ${cleanPhone.slice(0, 5)} ${cleanPhone.slice(5)}` : 'Not linked';
                 if (emailEl) emailEl.textContent = u.email || 'Not provided';
                 if (avatarEl) avatarEl.textContent = (u.name || 'U').charAt(0).toUpperCase();
-                if (campusEl) campusEl.textContent = u.isStudent ? 'S.R.K.R. Engineering College' : 'General Customer';
+                if (campusEl) campusEl.textContent = u.isStudent ? (u.collegeName || 'College Student') : 'General Customer';
                 if (roleEl) {
-                    roleEl.innerHTML = u.isStudent ? '<i class="fa-solid fa-graduation-cap"></i> SRKR Student • 25% OFF' : '<i class="fa-solid fa-user"></i> Member';
+                    roleEl.innerHTML = u.isStudent ? `<i class="fa-solid fa-graduation-cap"></i> ${u.collegeName || 'Student'} • 25% OFF` : '<i class="fa-solid fa-user"></i> Member';
                 }
 
                 // Show ONLY the profile screen
