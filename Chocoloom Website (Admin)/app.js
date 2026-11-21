@@ -3909,14 +3909,13 @@ function getActiveHeroBanners() {
         if (stored) {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed) && parsed.length > 0) {
-                const storedCraft = parsed.find(b => b && b.id === 'b_craft_happy_moments');
-                const storedDiwali = parsed.find(b => b && b.id === 'b_diwali');
-                if (storedCraft && storedCraft.cta === 'Register Now' && !storedCraft.title && storedDiwali && storedDiwali.image === 'assets/diwali_poster_banner.jpg?v=2') {
-                    savedBanners = parsed;
-                } else {
+                const hasLegacyAds = parsed.some(b => b && (b.id === 'b_craft_happy_moments' || b.id === 'b_diwali'));
+                if (hasLegacyAds) {
                     localStorage.removeItem("chocoloom_banners");
                     savedBanners = null;
                     needsCacheUpdate = true;
+                } else {
+                    savedBanners = parsed;
                 }
             }
         }
@@ -3924,60 +3923,8 @@ function getActiveHeroBanners() {
 
     let banners = savedBanners || (window.SWIGGY_DATA ? (SWIGGY_DATA.banners || SWIGGY_DATA.heroBanners || []) : []);
 
-    // Ensure Craft Workshop Banner (#1) and Diwali Festival Ad (#2)
-    const diwaliItem = {
-        id: "b_diwali",
-        tag: "DIWALI SPECIAL (NOV 7–9 ONLY)",
-        tagIcon: "fa-solid fa-sparkles",
-        title: "",
-        subtitle: "",
-        discountText: "FLAT 40% OFF (NOV 7–9)",
-        code: "DIWALI40",
-        image: "assets/diwali_poster_banner.jpg?v=2",
-        fallbackImage: "assets/diwali_poster_banner.jpg?v=2",
-        mobileImage: "assets/diwali_poster_banner.jpg?v=2",
-        overlayGradient: "none",
-        bgColor: "#fadf84",
-        badge: "VALID NOV 7–9 ONLY 🪔",
-        rating: "4.99",
-        ratingLabel: "Festive Choice",
-        cta: "Claim 40% OFF",
-        ctaAction: "copy_coupon",
-        category: "Diwali Hampers",
-        isGraphicBanner: false,
-        isActive: true
-    };
-
-    // Ensure Craft Your Happy Moments Creative Kit Banner is ALWAYS present and styled cleanly
-    const craftItem = {
-        id: "b_craft_happy_moments",
-        tag: "",
-        tagIcon: "",
-        title: "",
-        subtitle: "",
-        discountText: "",
-        code: "CRAFTFUN",
-        image: "assets/craft_happy_moments.jpg",
-        fallbackImage: "assets/craft_happy_moments.jpg",
-        mobileImage: "assets/craft_happy_moments.jpg",
-        overlayGradient: "none",
-        bgColor: "#0871dc",
-        badge: "",
-        rating: "4.98",
-        ratingLabel: "Studio Choice",
-        cta: "Register Now",
-        ctaAction: "redirect_url",
-        redirectUrl: "workshop/",
-        category: "Creative Kits",
-        isGraphicBanner: false,
-        isActive: true
-    };
-
-    // Filter and Pin: Slide #1 = Workshop, Slide #2 = Diwali Poster Ad
+    // Ensure workshop and diwali ads (1 and 2 ad) are completely removed
     banners = banners.filter(b => b && b.id !== 'b_craft_happy_moments' && b.id !== 'b_diwali');
-    banners.unshift(diwaliItem);
-    banners.unshift(craftItem);
-    needsCacheUpdate = true;
 
     // Filter out Tombola banner and Uni Chocoloom ad banner permanently
     const preFilterCount = banners.length;
@@ -3996,24 +3943,6 @@ function getActiveHeroBanners() {
         const fallback = ban.fallbackImage ? ban.fallbackImage.trim() : img;
         const isComingSoon = ban.isComingSoon !== undefined ? Boolean(ban.isComingSoon) : false;
         const redirectUrl = (ban.redirectUrl || ban.url || ban.link || '').trim();
-        if (ban.id === 'b_diwali') {
-            ban.discountText = 'FLAT 40% OFF (NOV 7–9)';
-            ban.badge = 'VALID NOV 7–9 ONLY 🪔';
-            ban.tag = 'DIWALI SPECIAL (NOV 7–9 ONLY)';
-            ban.title = '';
-            ban.subtitle = '';
-            ban.image = 'assets/diwali_poster_banner.jpg?v=2';
-            ban.fallbackImage = 'assets/diwali_poster_banner.jpg?v=2';
-            ban.mobileImage = 'assets/diwali_poster_banner.jpg?v=2';
-            ban.overlayGradient = 'none';
-            ban.bgColor = '#fadf84';
-            ban.cta = 'Claim 40% OFF';
-            ban.code = 'DIWALI40';
-            ban.ctaAction = 'copy_coupon';
-            ban.isGraphicBanner = false;
-            img = 'assets/diwali_poster_banner.jpg?v=2';
-            needsCacheUpdate = true;
-        }
         const discountText = (ban.discountText && ban.discountText.includes('COMING SOON')) ? '' : (ban.discountText || '');
         const ctaText = ban.cta || 'Claim Offer';
         const code = ban.code || '';
@@ -4047,24 +3976,11 @@ function getActiveHeroBanners() {
     }
 
     // Only display banners marked as active
-    banners = banners.filter(b => b.isActive !== false);
+    banners = banners.filter(b => b.isActive !== false && b.id !== 'b_craft_happy_moments' && b.id !== 'b_diwali');
     if (!banners.length) {
         banners = (window.SWIGGY_DATA && SWIGGY_DATA.banners) ? SWIGGY_DATA.banners : [];
+        banners = banners.filter(b => b && b.isActive !== false && b.id !== 'b_craft_happy_moments' && b.id !== 'b_diwali');
     }
-
-    // Pin Slide #1 = Workshop (b_craft_happy_moments) and Slide #2 = Diwali Poster Ad (b_diwali)
-    const diwaliIdx = banners.findIndex(b => b && (b.id === 'b_diwali' || (b.title && b.title.includes('Diwali'))));
-    let pinnedDiwali = diwaliItem;
-    if (diwaliIdx !== -1) {
-        pinnedDiwali = banners.splice(diwaliIdx, 1)[0];
-    }
-    const craftIdx = banners.findIndex(b => b && b.id === 'b_craft_happy_moments');
-    let pinnedCraft = craftItem;
-    if (craftIdx !== -1) {
-        pinnedCraft = banners.splice(craftIdx, 1)[0];
-    }
-    banners.unshift(pinnedDiwali);
-    banners.unshift(pinnedCraft);
 
     return banners;
 }
