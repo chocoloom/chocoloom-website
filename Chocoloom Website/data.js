@@ -585,11 +585,11 @@ window.SWIGGY_DATA = {
     ],
     "categories": [
         {
-            "id": "cat_diwali",
-            "name": "Diwali Hampers",
-            "image": "assets/categories/diwali_hampers.webp",
-            "query": "Diwali Hampers",
-            "badge": "🪔 40% OFF"
+            "id": "cat_combo_gifts",
+            "name": "Combo Gifts",
+            "image": "assets/categories/combo_gifts.webp",
+            "query": "Combo Gifts",
+            "badge": "🎁 Best Value"
         },
         {
             "id": "cat_chocolates",

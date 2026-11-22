@@ -5765,6 +5765,7 @@ function renderFilterPills() {
         'chocolate': '🍫',
         'snack': '🍿',
         'combo': '🎁',
+        'gift': '🎁',
         'cooling': '❄️',
         'custom': '🪄',
         'pastr': '🥐',
@@ -5988,7 +5989,8 @@ function getFilteredProducts() {
                     (cleanCat && cleanPCat && (cleanPCat === cleanCat || cleanPCat.includes(cleanCat) || cleanCat.includes(cleanPCat))) ||
                     pCat.includes(cat) ||
                     cat.includes(pCat) ||
-                    (cat.includes('combo') && pCat.includes('combo')) ||
+                    (cat.includes('combo') && (pCat.includes('combo') || pCat.includes('gift') || pCat.includes('hamper') || pCat.includes('diwali'))) ||
+                    (cat.includes('gift') && (pCat.includes('gift') || pCat.includes('combo') || pCat.includes('hamper') || pCat.includes('diwali'))) ||
                     (cat.includes('snack') && pCat.includes('snack')) ||
                     (cat.includes('bachelor') && pCat.includes('bachelor')) ||
                     (cat.includes('dessert') && pCat.includes('dessert'));
@@ -6192,12 +6194,12 @@ function renderProductsGrid(resetPagination = true) {
                     </div>
                 </div>
 
-                <!-- 4. Gift Hampers -->
-                <div class="curated-collection-card curated-fullcover-card" onclick="if(typeof filterByCategory==='function'){ filterByCategory('Combos'); }">
-                    <div class="curated-cover-img" style="background-image: url('assets/categories/curated_gift_hamper.jpg');"></div>
+                <!-- 4. Combo Gifts -->
+                <div class="curated-collection-card curated-fullcover-card" onclick="if(typeof filterByCategory==='function'){ filterByCategory('Combo Gifts'); }">
+                    <div class="curated-cover-img" style="background-image: url('assets/categories/combo_gifts.webp');"></div>
                     <div class="curated-cover-overlay" style="background: linear-gradient(0deg, rgba(146,64,14,0.82) 0%, rgba(146,64,14,0.15) 60%, transparent 100%);"></div>
                     <div class="curated-cover-content">
-                        <span class="curated-cover-heading">Gift Hampers</span>
+                        <span class="curated-cover-heading">Combo Gifts</span>
                         <span class="curated-cover-sub">Packed with Love &amp; Surprises 🎁</span>
                         <button type="button" class="curated-card-btn" style="background: rgba(255,255,255,0.22); border: 1.5px solid rgba(255,255,255,0.5); backdrop-filter: blur(6px);">Explore &rarr;</button>
                     </div>
@@ -11589,7 +11591,7 @@ function initSearchPillRotator() {
     keywordEl.dataset.rotatorStarted = 'true';
 
     const keywords = [
-        '"diwali cleaning"',
+        '"combo gifts"',
         '"cakes"',
         '"chocolate truffles"',
         '"bento cakes"',
@@ -14932,7 +14934,7 @@ const GAME_ZONE_DATA = [
         title: 'Diwali Festive Mega Draw',
         subtitle: 'Grand Festival Bumper • Win Deluxe Hampers & Cakes',
         description: 'Celebrate Diwali with Chocoloom\'s Mega Festive Draw! Scratch & roll for grand festive hampers, luxury chocolate gift boxes & celebration cakes.',
-        image: 'assets/categories/diwali_hampers.webp',
+        image: 'assets/categories/combo_gifts.webp',
         badge: '🪔 MEGA BUMPER',
         badgeColor: 'linear-gradient(135deg, #ea580c, #f59e0b)',
         rating: 5.0,

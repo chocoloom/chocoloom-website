@@ -2993,8 +2993,7 @@ function renderProducts() {
                 if (filterCat.includes('snack') && prodCat.includes('snack')) matches = true;
                 if (filterCat.includes('bachelor') && prodCat.includes('bachelor')) matches = true;
                 if (filterCat.includes('dessert') && prodCat.includes('dessert')) matches = true;
-                if (filterCat.includes('combo') && (prodCat.includes('combo') || prodCat.includes('hamper'))) matches = true;
-                if (filterCat.includes('diwali') && (prodCat.includes('diwali') || prodCat.includes('hamper'))) matches = true;
+                if ((filterCat.includes('combo') || filterCat.includes('gift') || filterCat.includes('hamper')) && (prodCat.includes('combo') || prodCat.includes('gift') || prodCat.includes('hamper') || prodCat.includes('diwali'))) matches = true;
             }
             if (!matches) return false;
         }
@@ -3112,7 +3111,7 @@ function createProductCardHTML(prod) {
     const isAvail = prod.is_available !== false;
     const hasWeight = prod.has_weight !== false;
     const hasCooling = prod.has_cooling !== false;
-    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
+    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'combo gifts', 'gifts', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
     const isCatNonCake = nonCakeCategories.some(nc => (prod.category || '').toLowerCase().includes(nc));
     const hasFlavours = prod.has_flavours !== false && !isCatNonCake;
     const defaultFlavour = (prod.flavour && prod.flavour.trim()) ? prod.flavour.trim() : (hasFlavours ? getAdminDefaultFlavour(prod) : null);
@@ -3199,7 +3198,7 @@ function createProductCardHTML(prod) {
 // Single Product Table Row HTML
 function createProductTableRowHTML(prod) {
     const isAvail = prod.is_available !== false;
-    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
+    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'combo gifts', 'gifts', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
     const isCatNonCake = nonCakeCategories.some(nc => (prod.category || '').toLowerCase().includes(nc));
     const hasFlavours = prod.has_flavours !== false && !isCatNonCake;
     const defaultFlavour = hasFlavours ? getAdminDefaultFlavour(prod) : null;
@@ -3764,7 +3763,7 @@ window.handleAdminCategoryChange = function(category) {
     const isBento = cat.includes("bento");
     const nonCakeCategories = [
         "chocolates", "snacks", "desserts", "shakes", 
-        "brownies", "combos", "extras", "dark", "milk", "ruby", "drinks"
+        "brownies", "combos", "combo gifts", "gifts", "extras", "dark", "milk", "ruby", "drinks"
     ];
 
     const isNonCake = nonCakeCategories.some(nc => cat.includes(nc));
@@ -3989,7 +3988,7 @@ window.openEditProductModal = function(productId) {
     const nameLower = (prod.name || "").toLowerCase();
     const isBento = catLower.includes("bento") || nameLower.includes("bento");
 
-    const nonCakeCategories = ["chocolates", "snacks", "desserts", "shakes", "brownies", "combos", "extras", "dark", "milk", "ruby", "drinks"];
+    const nonCakeCategories = ["chocolates", "snacks", "desserts", "shakes", "brownies", "combos", "combo gifts", "gifts", "extras", "dark", "milk", "ruby", "drinks"];
     const isCatNonCake = nonCakeCategories.some(nc => catLower.includes(nc));
     
     let hasWeight = true;
