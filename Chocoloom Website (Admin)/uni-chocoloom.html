@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=19.9">
+    <link rel="stylesheet" href="styles.css?v=20.0">
     <script>
         // Flag this page as the dedicated Uni Chocoloom store
         window.IS_UNI_CHOCOLOOM_PAGE = true;
@@ -107,6 +107,29 @@
                     <div style="display: flex; align-items: center; gap: 7px;">
                         <img src="assets/one-logo.png" alt="One" class="uni-header-one-badge" style="height: 22px; width: auto; max-height: 22px; object-fit: contain; display: inline-block; vertical-align: middle;" onerror="this.style.display='none';">
                         <div class="header-status-title" id="headerStatusTitle">Accepting Orders</div>
+                        <script>
+                            (function () {
+                                try {
+                                    var now = new Date();
+                                    var fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: 'numeric', hour12: false });
+                                    var parts = fmt.formatToParts(now);
+                                    var h = parseInt(parts.find(function(p){ return p.type === 'hour'; }).value, 10);
+                                    if (h === 24) h = 0;
+                                    var m = parseInt(parts.find(function(p){ return p.type === 'minute'; }).value, 10);
+                                    var cur = h * 60 + m;
+                                    var adminStatus = localStorage.getItem('chocoloom_store_status');
+                                    var testStatus = sessionStorage.getItem('chocoloom_store_test_override') || localStorage.getItem('chocoloom_store_test_override');
+                                    var isOpen = (cur >= 540 && cur < 1230);
+                                    if (testStatus === 'open') isOpen = true;
+                                    else if (testStatus === 'closed' || adminStatus === 'closed') isOpen = false;
+                                    var el = document.getElementById('headerStatusTitle');
+                                    if (el) {
+                                        el.textContent = isOpen ? 'Accepting Orders' : 'Store Closed';
+                                        if (!isOpen) el.classList.add('store-closed');
+                                    }
+                                } catch (e) { }
+                            })();
+                        </script>
                     </div>
 
                     <div class="location-dock-btn" id="locationPickerBtn">
@@ -1229,7 +1252,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="data.js?v=15.1"></script>
     <script src="react-components.js?v=2.1"></script>
-    <script src="app.js?v=16.9"></script>
+    <script src="app.js?v=17.0"></script>
     <script src="pwa.js?v=2.1" defer></script>
 </body>
 </html>

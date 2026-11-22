@@ -32,6 +32,13 @@
     } catch (e) { }
 })();
 
+// Clean up legacy test overrides from prior sessions so live 9:00 AM – 8:30 PM store schedule is respected
+try {
+    if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('chocoloom_store_status_override');
+    }
+} catch (e) { }
+
 // Universal Asset & Image URL Resolver for WordPress & Local Environments
 if (!window.getThemeAssetUrl) {
     window.getThemeAssetUrl = function (path) {
@@ -1395,7 +1402,6 @@ async function fetchLiveProductsFromNeon() {
                 const cur = localStorage.getItem('chocoloom_store_status');
                 if (cur !== val) {
                     localStorage.setItem('chocoloom_store_status', val);
-                    localStorage.setItem('chocoloom_store_status_override', val);
                     if (typeof updateStoreOperatingStatusUI === 'function') updateStoreOperatingStatusUI();
                 }
             }
@@ -2165,7 +2171,6 @@ async function loadServerCatalogOverrides() {
                             const curStatus = localStorage.getItem("chocoloom_store_status");
                             if (curStatus !== data.store_status) {
                                 localStorage.setItem("chocoloom_store_status", data.store_status);
-                                localStorage.setItem("chocoloom_store_status_override", data.store_status);
                                 hasChanges = true;
                                 if (typeof updateStoreOperatingStatusUI === "function") updateStoreOperatingStatusUI();
                             }
@@ -7744,16 +7749,11 @@ function updateCartUI() {
 
         const storeStatus = (typeof getStoreOperatingStatus === 'function') ? getStoreOperatingStatus() : { isOpen: true };
         if (!storeStatus.isOpen) {
-            if (!isUserLoggedIn) {
-                payBtn.innerHTML = `<span><i class="fa-solid fa-user-lock" style="margin-right: 6px;"></i> SIGN IN TO PRE-BOOK</span><span id="cartCheckoutTotal">₹${finalPayable}</span>`;
-                payBtn.style.background = 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)';
-                payBtn.style.boxShadow = '0 8px 24px -4px rgba(124, 58, 237, 0.45)';
-            } else {
-                payBtn.innerHTML = `<span><i class="fa-solid fa-calendar-check" style="margin-right: 6px;"></i> PRE-BOOK NOW (DELIVERS FROM 9 AM)</span><span id="cartCheckoutTotal">₹${finalPayable}</span>`;
-                payBtn.style.background = 'linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%)';
-                payBtn.style.boxShadow = '0 8px 24px -4px rgba(124, 58, 237, 0.45)';
-            }
-            payBtn.disabled = false;
+            payBtn.innerHTML = `<span><i class="fa-solid fa-lock" style="margin-right: 6px;"></i> STORE CLOSED (OPENS 9:00 AM)</span><span id="cartCheckoutTotal">₹${finalPayable}</span>`;
+            payBtn.style.background = '#64748b';
+            payBtn.style.cursor = 'not-allowed';
+            payBtn.style.boxShadow = 'none';
+            payBtn.disabled = true;
         }
     }
     const checkoutTotalEl = document.getElementById('cartCheckoutTotal') || DOM.cartCheckoutTotal;
@@ -7761,43 +7761,22 @@ function updateCartUI() {
     if (cartFooter) cartFooter.style.display = 'block';
 
     const storeStatus = (typeof getStoreOperatingStatus === 'function') ? getStoreOperatingStatus() : { isOpen: true };
-    const curSlot = (typeof AppState !== 'undefined' && AppState.prebookSlot) ? AppState.prebookSlot : 'morning';
 
     cartBody.innerHTML = `
         ${(!storeStatus.isOpen) ? `
-            <div style="background: linear-gradient(135deg, #fdf4ff 0%, #fae8ff 50%, #f3e8ff 100%); border: 1.5px solid #d8b4fe; border-radius: 14px; padding: 14px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.08);">
+            <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 14px; padding: 14px; margin-bottom: 16px;">
                 <div style="display: flex; align-items: flex-start; gap: 12px;">
-                    <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.25);">
-                        <i class="fa-solid fa-calendar-check"></i>
+                    <div style="width: 38px; height: 38px; border-radius: 10px; background: #ef4444; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0;">
+                        <i class="fa-solid fa-store-slash"></i>
                     </div>
                     <div style="flex: 1;">
                         <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
-                            <span style="font-size: 13px; font-weight: 800; color: #581c87;">24/7 Pre-Booking Active</span>
-                            <span style="font-size: 10px; font-weight: 800; background: #7c3aed; color: #fff; padding: 2px 7px; border-radius: 999px; text-transform: uppercase;">Open 24h</span>
+                            <span style="font-size: 13px; font-weight: 800; color: #991b1b;">Store Closed</span>
+                            <span style="font-size: 10px; font-weight: 800; background: #ef4444; color: #fff; padding: 2px 7px; border-radius: 999px; text-transform: uppercase;">Closed</span>
                         </div>
-                        <div style="font-size: 12px; color: #6b21a8; line-height: 1.4;">
-                            Store closes at <strong>8:30 PM</strong> and reopens at <strong>9:00 AM</strong> for instant orders. <strong>Pre-booking is available 24 hours!</strong> Your cake will be baked fresh in the morning and delivered to your doorstep.
+                        <div style="font-size: 12px; color: #b91c1c; line-height: 1.4;">
+                            Our store is currently closed for the night. We accept orders daily from <strong>9:00 AM to 8:30 PM</strong>. Orders resume at 9:00 AM tomorrow morning!
                         </div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #d8b4fe;">
-                    <div style="font-size: 11.5px; font-weight: 700; color: #581c87; margin-bottom: 8px; display: flex; align-items: center; gap: 5px;">
-                        <i class="fa-regular fa-clock"></i> Select Delivery Slot for Tomorrow:
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
-                        <button type="button" onclick="selectPrebookSlot('morning')" style="padding: 8px 4px; border-radius: 8px; border: ${curSlot === 'morning' ? '2px solid #7c3aed' : '1px solid #e2e8f0'}; background: ${curSlot === 'morning' ? '#ffffff' : 'rgba(255,255,255,0.6)'}; cursor: pointer; text-align: center; transition: all 0.15s ease;">
-                            <div style="font-size: 11px; font-weight: 800; color: #581c87;">9 AM – 12 PM</div>
-                            <div style="font-size: 9.5px; color: ${curSlot === 'morning' ? '#7c3aed' : '#64748b'}; font-weight: 700;">☀️ Morning</div>
-                        </button>
-                        <button type="button" onclick="selectPrebookSlot('afternoon')" style="padding: 8px 4px; border-radius: 8px; border: ${curSlot === 'afternoon' ? '2px solid #7c3aed' : '1px solid #e2e8f0'}; background: ${curSlot === 'afternoon' ? '#ffffff' : 'rgba(255,255,255,0.6)'}; cursor: pointer; text-align: center; transition: all 0.15s ease;">
-                            <div style="font-size: 11px; font-weight: 800; color: #581c87;">12 PM – 4 PM</div>
-                            <div style="font-size: 9.5px; color: ${curSlot === 'afternoon' ? '#7c3aed' : '#64748b'}; font-weight: 700;">🌤️ Afternoon</div>
-                        </button>
-                        <button type="button" onclick="selectPrebookSlot('evening')" style="padding: 8px 4px; border-radius: 8px; border: ${curSlot === 'evening' ? '2px solid #7c3aed' : '1px solid #e2e8f0'}; background: ${curSlot === 'evening' ? '#ffffff' : 'rgba(255,255,255,0.6)'}; cursor: pointer; text-align: center; transition: all 0.15s ease;">
-                            <div style="font-size: 11px; font-weight: 800; color: #581c87;">4 PM – 8:30 PM</div>
-                            <div style="font-size: 9.5px; color: ${curSlot === 'evening' ? '#7c3aed' : '#64748b'}; font-weight: 700;">🌙 Evening</div>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -9376,17 +9355,23 @@ window.updateCampusAvailabilityBanner = function () {
     `;
 };
 
-// ==================== CHOCOLOOM STORE OPERATING HOURS & 24/7 PRE-BOOKING SYSTEM ====================
-// Regular Orders: 9:00 AM – 8:00 PM (Asia/Kolkata / IST)
-// Pre-Booking: Available 24 Hours / 7 Days!
+// ==================== CHOCOLOOM STORE OPERATING HOURS ====================
+// Regular Orders: 9:00 AM – 8:30 PM (Asia/Kolkata / IST)
+// Outside 9:00 AM – 8:30 PM: Store Closed
 window.getStoreOperatingStatus = function () {
-    // Check cloud / admin store status or testing override
-    const override = localStorage.getItem('chocoloom_store_status_override') || localStorage.getItem('chocoloom_store_status');
-    if (override === 'open') {
-        return { isOpen: true, openTime: '9:00 AM', closeTime: '8:00 PM', isOverridden: true, prebookingOnly: false, prebookingAvailable24h: true, statusText: 'Accepting Orders', statusTitle: 'Accepting Orders' };
+    // 1. Check developer test simulation (used exclusively for manual QA testing)
+    const testOverride = sessionStorage.getItem('chocoloom_store_test_override') || localStorage.getItem('chocoloom_store_test_override');
+    if (testOverride === 'open') {
+        return { isOpen: true, openTime: '9:00 AM', closeTime: '8:30 PM', isOverridden: true, prebookingOnly: false, statusText: 'Accepting Orders', statusTitle: 'Accepting Orders' };
     }
-    if (override === 'closed') {
-        return { isOpen: false, openTime: '9:00 AM', closeTime: '8:00 PM', isOverridden: true, prebookingOnly: true, prebookingAvailable24h: true, statusText: 'Currently unavailable', statusTitle: 'Currently unavailable' };
+    if (testOverride === 'closed') {
+        return { isOpen: false, openTime: '9:00 AM', closeTime: '8:30 PM', isOverridden: true, prebookingOnly: false, statusText: 'Store Closed', statusTitle: 'Store Closed' };
+    }
+
+    // 2. Check admin force-closure (if admin manually clicked to close the store)
+    const adminStatus = localStorage.getItem('chocoloom_store_status');
+    if (adminStatus === 'closed') {
+        return { isOpen: false, openTime: '9:00 AM', closeTime: '8:30 PM', isOverridden: true, prebookingOnly: false, statusText: 'Store Closed', statusTitle: 'Store Closed' };
     }
 
     try {
@@ -9403,38 +9388,38 @@ window.getStoreOperatingStatus = function () {
         const minute = parseInt(parts.find(p => p.type === 'minute').value, 10);
         const currentTotalMinutes = hour * 60 + minute;
 
-        // Opens at 9:00 AM (540 mins), Closes at 8:00 PM (1200 mins) IST
-        const openMinutes = 9 * 60;
-        const closeMinutes = 20 * 60;
+        // Opens at 9:00 AM (540 mins), Closes at 8:30 PM (1230 mins) IST
+        const openMinutes = 9 * 60; // 540
+        const closeMinutes = 20 * 60 + 30; // 1230
 
         const isOpen = currentTotalMinutes >= openMinutes && currentTotalMinutes < closeMinutes;
 
         return {
             isOpen: isOpen,
             openTime: '9:00 AM',
-            closeTime: '8:00 PM',
+            closeTime: '8:30 PM',
             hour: hour,
             minute: minute,
             isOverridden: false,
-            prebookingOnly: !isOpen,
-            prebookingAvailable24h: true,
-            statusText: isOpen ? 'Accepting Orders' : 'Currently unavailable',
-            statusTitle: isOpen ? 'Accepting Orders' : 'Currently unavailable'
+            prebookingOnly: false,
+            statusText: isOpen ? 'Accepting Orders' : 'Store Closed',
+            statusTitle: isOpen ? 'Accepting Orders' : 'Store Closed'
         };
     } catch (e) {
         console.warn('getStoreOperatingStatus error:', e);
         const d = new Date();
         const m = d.getHours() * 60 + d.getMinutes();
-        const isOpen = m >= 540 && m < 1200;
+        const isOpen = m >= 540 && m < 1230;
         return {
             isOpen,
             openTime: '9:00 AM',
-            closeTime: '8:00 PM',
+            closeTime: '8:30 PM',
+            hour: d.getHours(),
+            minute: d.getMinutes(),
             isOverridden: false,
-            prebookingOnly: !isOpen,
-            prebookingAvailable24h: true,
-            statusText: isOpen ? 'Accepting Orders' : 'Currently unavailable',
-            statusTitle: isOpen ? 'Accepting Orders' : 'Currently unavailable'
+            prebookingOnly: false,
+            statusText: isOpen ? 'Accepting Orders' : 'Store Closed',
+            statusTitle: isOpen ? 'Accepting Orders' : 'Store Closed'
         };
     }
 };
@@ -9466,33 +9451,26 @@ window.showStoreClosedModal = function () {
         modal.className = 'custom-modal-backdrop';
         modal.innerHTML = `
             <div class="custom-modal-dialog" style="max-width: 440px; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
-                <div style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); padding: 24px; text-align: center; color: #fff; position: relative;">
+                <div style="background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%); padding: 24px; text-align: center; color: #fff; position: relative;">
                     <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.15); display: inline-flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 12px;">
-                        <i class="fa-solid fa-calendar-check"></i>
+                        <i class="fa-solid fa-store-slash"></i>
                     </div>
-                    <h3 style="margin: 0 0 6px; font-size: 19px; font-weight: 800;">Store Hours &amp; 24/7 Pre-Booking</h3>
-                    <p style="margin: 0; font-size: 13px; color: #cbd5e1;">Bhimavaram Flagship Bakery Schedule</p>
+                    <h3 style="margin: 0 0 6px; font-size: 19px; font-weight: 800;">Store Closed</h3>
+                    <p style="margin: 0; font-size: 13px; color: #fecaca;">Bhimavaram Flagship Bakery</p>
                     <button type="button" onclick="closeStoreClosedModal()" style="position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.2); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 14px;">✕</button>
                 </div>
                 <div style="padding: 22px;">
                     <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
-                            <i class="fa-solid fa-clock" style="color: #7c5cfc; font-size: 18px; margin-top: 2px;"></i>
+                        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: #fef2f2; border-radius: 12px; border: 1.5px solid #fecaca;">
+                            <i class="fa-solid fa-clock" style="color: #ef4444; font-size: 20px; margin-top: 2px;"></i>
                             <div>
-                                <div style="font-size: 13px; font-weight: 800; color: #0f172a;">Instant Orders: 9:00 AM – 8:30 PM</div>
-                                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Kitchen closes at 8:30 PM and reopens at 9:00 AM daily for instant baking.</div>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: #fdf4ff; border-radius: 12px; border: 1.5px solid #d8b4fe;">
-                            <i class="fa-solid fa-calendar-check" style="color: #9333ea; font-size: 18px; margin-top: 2px;"></i>
-                            <div>
-                                <div style="font-size: 13px; font-weight: 800; color: #581c87;">24/7 Pre-Booking Always Open!</div>
-                                <div style="font-size: 12px; color: #6b21a8; margin-top: 2px;">You can place your pre-booking anytime 24 hours a day! Orders placed after 8:30 PM will be prepared fresh in the morning from 9:00 AM.</div>
+                                <div style="font-size: 14px; font-weight: 800; color: #991b1b;">Operating Hours: 9:00 AM – 8:30 PM</div>
+                                <div style="font-size: 12.5px; color: #b91c1c; margin-top: 3px; line-height: 1.4;">Our kitchen is closed after 8:30 PM and reopens tomorrow morning at 9:00 AM. Orders cannot be placed while the store is closed.</div>
                             </div>
                         </div>
                     </div>
-                    <button type="button" onclick="closeStoreClosedModal(); if(typeof openCart==='function') openCart();" style="width: 100%; background: linear-gradient(135deg, #7c3aed, #ec4899); color: #fff; border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35);">
-                        <i class="fa-solid fa-calendar-check" style="margin-right: 6px;"></i> Pre-Book Your Cake Now 🎂
+                    <button type="button" onclick="closeStoreClosedModal()" style="width: 100%; background: #0f172a; color: #fff; border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer;">
+                        Got It
                     </button>
                 </div>
             </div>
@@ -9510,28 +9488,36 @@ window.closeStoreClosedModal = function () {
 // Developer / Admin testing utility to simulate store open/closed states
 window.toggleStoreHoursForTesting = function (state) {
     if (state === 'open' || state === 'closed') {
-        localStorage.setItem('chocoloom_store_status_override', state);
+        localStorage.setItem('chocoloom_store_test_override', state);
+        sessionStorage.setItem('chocoloom_store_test_override', state);
         console.log(`[Store Hours] Simulation active: ${state.toUpperCase()}`);
     } else {
+        localStorage.removeItem('chocoloom_store_test_override');
+        sessionStorage.removeItem('chocoloom_store_test_override');
         localStorage.removeItem('chocoloom_store_status_override');
         console.log('[Store Hours] Simulation cleared. Running on live 9:00 AM - 8:30 PM IST schedule.');
     }
     updateStoreOperatingStatusUI();
-    updateCartUI();
+    if (typeof updateCartUI === 'function') updateCartUI();
     return getStoreOperatingStatus();
 };
 
 window.updateStoreOperatingStatusUI = function () {
     const status = getStoreOperatingStatus();
 
-    // 0. Update Header Status Title (Morning 9:00 AM - Evening 8:00 PM: "Accepting Orders", Otherwise: "Currently unavailable")
-    const headerStatusTitle = document.getElementById('headerStatusTitle');
-    if (headerStatusTitle) {
-        const targetTitle = status.isOpen ? 'Accepting Orders' : 'Currently unavailable';
-        if (headerStatusTitle.textContent !== targetTitle) {
-            headerStatusTitle.textContent = targetTitle;
+    // 0. Update Header Status Title (Morning 9:00 AM - Evening 8:30 PM: "Accepting Orders", Otherwise: "Store Closed")
+    const headerStatusTitles = document.querySelectorAll('#headerStatusTitle, .header-status-title');
+    headerStatusTitles.forEach(el => {
+        const targetTitle = status.isOpen ? 'Accepting Orders' : 'Store Closed';
+        if (el.textContent !== targetTitle) {
+            el.textContent = targetTitle;
         }
-    }
+        if (status.isOpen) {
+            el.classList.remove('store-closed');
+        } else {
+            el.classList.add('store-closed');
+        }
+    });
 
     // 1. Header Status Badge
     const badge = document.getElementById('headerStoreStatusBadge');
@@ -9553,29 +9539,26 @@ window.updateStoreOperatingStatusUI = function () {
     if (banner) {
         if (!status.isOpen) {
             banner.style.display = 'block';
-            banner.className = 'store-operating-banner prebooking';
+            banner.className = 'store-operating-banner store-closed-banner';
             banner.innerHTML = `
-                <div class="store-banner-inner" style="background: linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%); color: #fff; padding: 10px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1.5px solid rgba(168, 85, 247, 0.4);">
+                <div class="store-banner-inner" style="background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%); color: #fff; padding: 10px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1.5px solid rgba(239, 68, 68, 0.4); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
                     <div class="store-banner-left" style="display: flex; align-items: center; gap: 12px;">
-                        <div class="store-banner-icon-box" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(168, 85, 247, 0.25); color: #d8b4fe; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;">
+                        <div class="store-banner-icon-box" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(239, 68, 68, 0.25); color: #fca5a5; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;">
                             <i class="fa-solid fa-moon"></i>
                         </div>
                         <div>
                             <div class="store-banner-title" style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800;">
-                                <span>Store Operating Hours: 9:00 AM – 8:30 PM</span>
-                                <span class="store-banner-tag" style="background: #10b981; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px;">24/7 PRE-BOOKING ACTIVE</span>
+                                <span>Store Closed</span>
+                                <span class="store-banner-tag" style="background: #ef4444; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px;">OPENS 9:00 AM</span>
                             </div>
-                            <div class="store-banner-sub" style="font-size: 12px; color: #cbd5e1; margin-top: 1px;">
-                                Regular orders closed (opens 9:00 AM). <strong>Pre-booking is available 24 hours!</strong> Order now for delivery tomorrow after 9:00 AM.
+                            <div class="store-banner-sub" style="font-size: 12px; color: #fecaca; margin-top: 1px;">
+                                We are closed for the night. Regular orders accepted daily from <strong>9:00 AM to 8:30 PM</strong>.
                             </div>
                         </div>
                     </div>
                     <div class="store-banner-right" style="display: flex; align-items: center; gap: 8px;">
-                        <button type="button" class="store-banner-action-btn" onclick="openCart()" style="background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; border: none; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer;">
-                            <i class="fa-solid fa-calendar-check" style="margin-right: 5px;"></i> Pre-Book Now
-                        </button>
-                        <button type="button" class="store-banner-action-btn" onclick="showStoreClosedModal()" style="background: rgba(255, 255, 255, 0.15); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
-                            <i class="fa-regular fa-clock" style="margin-right: 4px;"></i> Timings
+                        <button type="button" class="store-banner-action-btn" onclick="showStoreClosedModal()" style="background: rgba(255, 255, 255, 0.15); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                            <i class="fa-regular fa-clock" style="margin-right: 4px;"></i> Store Hours
                         </button>
                     </div>
                 </div>
@@ -10182,13 +10165,18 @@ let isOrderCheckoutActive = false;
 window.__lastCheckoutTimestamp = 0;
 
 window.proceedToCheckout = async function () {
-    // 0. Store Operating Hours: Instant orders 9:00 AM – 8:30 PM, Pre-Booking available 24 Hours!
+    // 0. Store Operating Hours Check (9:00 AM – 8:30 PM IST)
     const storeStatus = (typeof getStoreOperatingStatus === 'function') ? getStoreOperatingStatus() : { isOpen: true };
-    const isPrebookingOnly = !storeStatus.isOpen;
-    if (isPrebookingOnly) {
+    if (!storeStatus.isOpen) {
         if (typeof showToast === 'function') {
-            showToast('Placing your order as a 24/7 Pre-Booking! (Kitchen opens 9:00 AM) 📅', 'fa-solid fa-calendar-check', '#7c3aed');
+            showToast('Store is currently closed (8:30 PM – 9:00 AM). Ordering reopens at 9:00 AM!', 'fa-solid fa-store-slash', '#ef4444');
+        } else {
+            alert('Store is currently closed. We accept orders daily between 9:00 AM and 8:30 PM. Please visit again after 9:00 AM!');
         }
+        if (typeof showStoreClosedModal === 'function') {
+            showStoreClosedModal();
+        }
+        return;
     }
 
     // 0. Concurrency & Rapid Double-Click Protection

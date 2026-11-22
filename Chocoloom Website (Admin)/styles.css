@@ -1167,6 +1167,12 @@ body.has-hero-ad .navbar:not(.scrolled) .header-status-title {
     text-shadow: none !important;
 }
 
+body:has(.hero-ad-section) .navbar:not(.scrolled) .header-status-title.store-closed,
+body.has-hero-ad .navbar:not(.scrolled) .header-status-title.store-closed {
+    color: #fca5a5 !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+}
+
 body:has(.hero-ad-section) .navbar:not(.scrolled) .loc-dock-tag,
 body.has-hero-ad .navbar:not(.scrolled) .loc-dock-tag {
     color: #ffffff !important;
@@ -1319,6 +1325,24 @@ body.has-hero-ad .hero-ad-section.full-bleed .hero-ad-slide {
 
 .navbar.scrolled .brand-dock-group:hover .header-status-title {
     color: var(--primary) !important;
+}
+
+.header-status-title.store-closed {
+    color: #ef4444 !important;
+}
+
+.brand-dock-group:hover .header-status-title.store-closed,
+.navbar.scrolled .brand-dock-group:hover .header-status-title.store-closed {
+    color: #dc2626 !important;
+}
+
+.navbar.scrolled .header-status-title.store-closed {
+    color: #ef4444 !important;
+}
+
+body.uni-chocoloom-page .header-status-title.store-closed,
+body.uni-chocoloom-page .navbar:not(.scrolled) .header-status-title.store-closed {
+    color: #ef4444 !important;
 }
 
 .location-dock-btn {
