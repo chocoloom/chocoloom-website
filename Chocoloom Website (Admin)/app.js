@@ -5942,17 +5942,28 @@ function getFilteredProducts() {
         if (AppState.activeCategory && AppState.activeCategory !== 'all') {
             const cat = AppState.activeCategory.toLowerCase().trim();
             list = list.filter(p => {
+                const pCat = (p.category || '').toLowerCase().trim();
+                const uCat = (p.uniCategory || '').toLowerCase().trim();
+                const pName = (p.name || '').toLowerCase().trim();
+
                 if (cat.includes('uni') || cat === 'unichocoloom') {
-                    return Boolean(p.isUniSpecial) || (p.category && p.category.toLowerCase().includes('uni'));
+                    return Boolean(p.isUniSpecial) || pCat.includes('uni');
                 }
                 if (cat === 'chocolates') {
-                    return (p.category && p.category.toLowerCase().includes('choc')) || Boolean(p.uniCategory === 'Chocolates');
+                    return (pCat.includes('choc') && !pCat.includes('cake')) || uCat === 'chocolates';
                 }
-                if (cat.includes('snack')) {
-                    return (p.category && p.category.toLowerCase().includes('snack')) || Boolean(p.uniCategory === 'Snacks');
+                if (cat.includes('snack') || cat.includes('munch')) {
+                    return pCat.includes('snack') || pCat.includes('munch') || uCat === 'snacks';
                 }
-                if (!p.category) return false;
-                const pCat = p.category.toLowerCase().trim();
+                if (cat.includes('combo') || cat.includes('gift') || cat.includes('hamper')) {
+                    return pCat.includes('combo') || pCat.includes('gift') || pCat.includes('hamper') || pCat.includes('diwali') || uCat === 'combos';
+                }
+                if (cat.includes('bento')) {
+                    return pCat.includes('bento') || pName.includes('bento');
+                }
+                if (cat.includes('dessert')) {
+                    return pCat.includes('dessert') || uCat === 'desserts';
+                }
 
                 // Cartoons & Kids wonderland category filtering with interactive sub-themes
                 if (cat === 'cartoons' || cat === 'kids' || cat.includes('cartoon') || cat.includes('kid')) {
@@ -5960,7 +5971,6 @@ function getFilteredProducts() {
                     if (!isCartoonOrKid) return false;
                     if (window.currentKidsSubtheme && window.currentKidsSubtheme !== 'all') {
                         const sub = window.currentKidsSubtheme;
-                        const pName = (p.name || '').toLowerCase();
                         if (sub === 'barbie-princess') {
                             return pName.includes('barbie') || pName.includes('princess') || pName.includes('moana') || pName.includes('minnie') || pName.includes('unicorn') || pName.includes('fairy');
                         }
@@ -5980,6 +5990,8 @@ function getFilteredProducts() {
                     return true;
                 }
 
+                if (!p.category) return false;
+
                 // Robust normalized category matching (stripping filler words like 'cakes', 'hampers', etc.)
                 const cleanCat = cat.replace(/cakes?|gift|hampers?|and|&/gi, '').replace(/[^a-z0-9]/g, '');
                 const cleanPCat = pCat.replace(/cakes?|gift|hampers?|and|&/gi, '').replace(/[^a-z0-9]/g, '');
@@ -5989,11 +6001,7 @@ function getFilteredProducts() {
                     (cleanCat && cleanPCat && (cleanPCat === cleanCat || cleanPCat.includes(cleanCat) || cleanCat.includes(cleanPCat))) ||
                     pCat.includes(cat) ||
                     cat.includes(pCat) ||
-                    (cat.includes('combo') && (pCat.includes('combo') || pCat.includes('gift') || pCat.includes('hamper') || pCat.includes('diwali'))) ||
-                    (cat.includes('gift') && (pCat.includes('gift') || pCat.includes('combo') || pCat.includes('hamper') || pCat.includes('diwali'))) ||
-                    (cat.includes('snack') && pCat.includes('snack')) ||
-                    (cat.includes('bachelor') && pCat.includes('bachelor')) ||
-                    (cat.includes('dessert') && pCat.includes('dessert'));
+                    (cat.includes('bachelor') && pCat.includes('bachelor'));
             });
         }
     }
@@ -6132,7 +6140,7 @@ function renderProductsGrid(resetPagination = true) {
     const countSubtitle = document.getElementById('catalogItemCountSubtitle');
     if (countSubtitle) {
         if (AppState.activeCategory || AppState.activeFilter || AppState.searchQuery) {
-            countSubtitle.textContent = `Showing ${products.length} of ${allProds.length} fresh handcrafted items`;
+            countSubtitle.textContent = `Showing ${products.length} fresh handcrafted items`;
         } else {
             countSubtitle.textContent = `Showing all ${allProds.length} fresh handcrafted cakes, treats & desserts`;
         }

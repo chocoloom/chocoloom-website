@@ -9042,18 +9042,155 @@ body.user-logged-in #navAuthBtn {
 }
 
 /* Category View Active: Hide Hero Advertisement & "What's on your mind?" Section */
+body.category-view-active,
+html.category-view-active {
+    background-color: #ffffff !important;
+}
+
+/* Force navbar solid white, sticky top, with clean border and no hero gradient */
+body.category-view-active .navbar,
+body.category-view-active.has-hero-ad .navbar,
+body.category-view-active .navbar:has(.header-order-notice-pill),
+body.category-view-active.has-hero-ad .navbar:not(.scrolled),
+html.category-view-active .navbar,
+html.category-view-active.has-hero-ad .navbar,
+html.category-view-active .navbar:has(.header-order-notice-pill),
+html.category-view-active.has-hero-ad .navbar:not(.scrolled) {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+    position: sticky !important;
+    top: 0 !important;
+    min-height: auto !important;
+    height: auto !important;
+    padding-top: calc(10px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: 10px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    z-index: 1000 !important;
+}
+
+body.category-view-active .navbar .nav-inner,
+html.category-view-active .navbar .nav-inner {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+}
+
+/* In Category View: HIDE Location / Status Dock, Right Auth Nav, Brown Order Notice Pill, Glass Divider */
+body.category-view-active .nav-left,
+body.category-view-active .brand-dock-group,
+body.category-view-active .nav-right,
+body.category-view-active .header-order-notice-pill,
+body.category-view-active .header-glass-divider,
+html.category-view-active .nav-left,
+html.category-view-active .brand-dock-group,
+html.category-view-active .nav-right,
+html.category-view-active .header-order-notice-pill,
+html.category-view-active .header-glass-divider {
+    display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
+}
+
+/* In Category View: SEARCH BAR ONLY in the header */
+body.category-view-active .header-search-row,
+html.category-view-active .header-search-row {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 800px !important;
+    margin: 0 auto !important;
+    order: 1 !important;
+}
+
+body.category-view-active .header-search-pill,
+html.category-view-active .header-search-pill {
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+}
+
+body.category-view-active .header-search-pill .search-pill-icon,
+body.category-view-active .header-search-pill .search-pill-prefix,
+body.category-view-active .header-search-pill .search-pill-keyword,
+html.category-view-active .header-search-pill .search-pill-icon,
+html.category-view-active .header-search-pill .search-pill-prefix,
+html.category-view-active .header-search-pill .search-pill-keyword {
+    color: #475569 !important;
+}
+
+body.category-view-active .header-voice-btn,
+html.category-view-active .header-voice-btn {
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
+}
+
+body.category-view-active .header-voice-btn .voice-waveform-svg rect,
+html.category-view-active .header-voice-btn .voice-waveform-svg rect {
+    fill: #475569 !important;
+}
+
+/* In Category View: HIDE Hero Billboard, What's on your mind, Bento Showcase, Gamezone, Quote Strip, Store Hours Banner */
 body.category-view-active .hero-ad-section,
 body.category-view-active .mind-category-section,
 body.category-view-active .categories-section,
+body.category-view-active .bespoke-custom-section,
+body.category-view-active .quote-quick-strip,
+body.category-view-active .daily-quote-section,
+body.category-view-active .gamezone-main-section,
+body.category-view-active .gamezone-top-header,
+body.category-view-active .gamezone-categories-section,
+body.category-view-active #gameZoneCardsSection,
+body.category-view-active #tambolaArenaSection,
+body.category-view-active .custom-celebration-bento-section,
+body.category-view-active #storeOperatingHoursBanner,
 html.category-view-active .hero-ad-section,
 html.category-view-active .mind-category-section,
-html.category-view-active .categories-section {
+html.category-view-active .categories-section,
+html.category-view-active .bespoke-custom-section,
+html.category-view-active .quote-quick-strip,
+html.category-view-active .daily-quote-section,
+html.category-view-active .gamezone-main-section,
+html.category-view-active .gamezone-top-header,
+html.category-view-active .gamezone-categories-section,
+html.category-view-active #gameZoneCardsSection,
+html.category-view-active #tambolaArenaSection,
+html.category-view-active .custom-celebration-bento-section,
+html.category-view-active #storeOperatingHoursBanner {
     display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
 }
 
-body.category-view-active .products-catalog-section {
-    padding-top: 24px !important;
+/* Products Catalog: clean padding right below the search bar */
+body.category-view-active .products-catalog-section,
+html.category-view-active .products-catalog-section {
+    padding-top: 16px !important;
     margin-top: 0 !important;
+}
+
+body.category-view-active .catalog-header,
+html.category-view-active .catalog-header {
+    margin-bottom: 16px !important;
+}
+
+body.category-view-active .category-back-nav-btn,
+html.category-view-active .category-back-nav-btn {
+    display: inline-flex !important;
+    margin-bottom: 8px !important;
 }
 
 .category-back-nav-btn {
