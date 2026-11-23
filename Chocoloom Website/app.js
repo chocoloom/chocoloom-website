@@ -5277,6 +5277,7 @@ window.setCustomQuotes = function (quotesList) {
 function registerQuoteQuickDishes() {
     if (!window.SWIGGY_DATA || !Array.isArray(SWIGGY_DATA.restaurants) || !SWIGGY_DATA.restaurants[0]) return;
     if (!Array.isArray(SWIGGY_DATA.restaurants[0].menu)) SWIGGY_DATA.restaurants[0].menu = [];
+    if (SWIGGY_DATA.restaurants[0].menu.length === 0) return;
     QUOTE_QUICK_CARDS_DATA.forEach(dish => {
         if (!SWIGGY_DATA.restaurants[0].menu.some(d => d.id === dish.id || (d.sql_id && d.sql_id === dish.sql_id))) {
             SWIGGY_DATA.restaurants[0].menu.push({

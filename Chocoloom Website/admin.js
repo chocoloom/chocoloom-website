@@ -2953,7 +2953,7 @@ window.loadAllProducts = async function () {
 
     // Update sidebar badge
     const badge = document.getElementById("sidebarProductsBadge");
-    if (badge) badge.textContent = baseList.length + "+";
+    if (badge) badge.textContent = baseList.length > 0 ? (baseList.length + "+") : "0";
 
     renderProductsStats();
     renderProducts();
@@ -4902,6 +4902,45 @@ window.resetToDataJs = function () {
             renderProductsStats();
             showToast("Catalog reset to base data.js!", "fa-solid fa-rotate-left", "#7c5cfc");
         });
+    }
+};
+
+// Remove all products from menu
+window.removeAllAdminProducts = async function () {
+    if (!confirm("Are you sure you want to remove ALL items from the active bakery menu? This will clear the entire product list.")) {
+        return;
+    }
+    const currentList = [...(AdminState.products || [])];
+    const allIds = currentList.map(p => p.id || p.sql_id).filter(Boolean);
+
+    // Save all to deleted list in localStorage
+    try {
+        const deletedIds = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
+        currentList.forEach(p => {
+            if (p.id && !deletedIds.includes(p.id)) deletedIds.push(p.id);
+            if (p.sql_id && !deletedIds.includes(p.sql_id)) deletedIds.push(p.sql_id);
+        });
+        localStorage.setItem("chocoloom_deleted_products", JSON.stringify(deletedIds));
+        localStorage.setItem("chocoloom_custom_products", JSON.stringify([]));
+    } catch (e) { }
+
+    // Clear state
+    AdminState.products = [];
+
+    // Instant UI update
+    renderProductsStats();
+    renderProducts();
+    const badge = document.getElementById("sidebarProductsBadge");
+    if (badge) badge.textContent = "0";
+
+    showToast("All items have been removed from the menu!", "fa-solid fa-trash-can", "#ef4444");
+
+    // Broadcast across tabs
+    broadcastProductUpdate("DELETE_ALL", { ids: allIds });
+
+    // Sync to server endpoints
+    if (typeof syncCatalogToServer === "function") {
+        syncCatalogToServer();
     }
 };
 
