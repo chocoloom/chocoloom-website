@@ -9536,15 +9536,23 @@ window.updateStoreOperatingStatusUI = function () {
         badge.style.display = 'none';
     }
 
-    // 2. Update Top Banner Strip
+    // 2. Update Top Banner Strip (Ensuring it never sits between navbar and hero-ad-section)
     let banner = document.getElementById('storeOperatingHoursBanner');
+    const heroAdSection = document.querySelector('.hero-ad-section');
     if (!banner) {
         banner = document.createElement('div');
         banner.id = 'storeOperatingHoursBanner';
-        const navbar = document.querySelector('.navbar') || document.querySelector('header');
-        if (navbar && navbar.parentNode) {
-            navbar.parentNode.insertBefore(banner, navbar.nextSibling);
+        if (heroAdSection && heroAdSection.parentNode) {
+            heroAdSection.parentNode.insertBefore(banner, heroAdSection.nextSibling);
+        } else {
+            const navbar = document.querySelector('.navbar') || document.querySelector('header');
+            if (navbar && navbar.parentNode) {
+                navbar.parentNode.insertBefore(banner, navbar.nextSibling);
+            }
         }
+    } else if (heroAdSection && heroAdSection.parentNode && banner.nextSibling === heroAdSection) {
+        // Relocate banner to follow hero-ad-section so full-bleed hero ad is never pushed down
+        heroAdSection.parentNode.insertBefore(banner, heroAdSection.nextSibling);
     }
 
     if (banner) {
