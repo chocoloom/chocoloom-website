@@ -6,8 +6,9 @@
 window.SWIGGY_DATA = {
     "currentUser": {
         "id": "usr_chocoloom_01",
-        "name": "Mohith",
-        "phone": "+91 98765 43210",
+        "name": "Mohith Kumar",
+        "phone": "+91-9494768069",
+        "dob": "29 Dec 2007",
         "email": "mohith@chocoloom.com",
         "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80",
         "isVIP": true

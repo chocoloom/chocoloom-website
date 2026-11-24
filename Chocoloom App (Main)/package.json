@@ -1,0 +1,35 @@
+{
+  "name": "chocoloom",
+  "version": "1.0.0",
+  "description": "Chocoloom Artisan Bakery & Gourmet Sweets Mobile App",
+  "main": "index.html",
+  "scripts": {
+    "prepare:www": "node scripts/prepare-www.js",
+    "cap:sync": "npm run prepare:www && cap sync android",
+    "cap:copy": "npm run prepare:www && cap copy android",
+    "cap:open": "cap open android",
+    "build:apk": "npm run cap:sync && cd android && ./gradlew assembleDebug",
+    "build:bundle": "npm run cap:sync && cd android && ./gradlew bundleRelease",
+    "build": "npm run cap:sync"
+  },
+  "keywords": [
+    "chocoloom",
+    "bakery",
+    "cakes",
+    "android",
+    "capacitor"
+  ],
+  "author": "Chocoloom",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/app": "^6.0.2",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/splash-screen": "^6.0.3",
+    "@capacitor/status-bar": "^6.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0"
+  }
+}
+

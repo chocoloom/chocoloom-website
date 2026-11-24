@@ -12301,8 +12301,24 @@ function updateAuthUI() {
             if (navRight) navRight.classList.add('only-profile');
         } catch (e) { }
 
-        if (authBtn) authBtn.style.display = 'none';
-        if (userContainer) userContainer.style.display = 'inline-flex';
+        if (authBtn) {
+            authBtn.style.display = 'none';
+            authBtn.onclick = function (e) {
+                if (typeof openProfileScreen === 'function') openProfileScreen(e);
+            };
+        }
+        if (userContainer) {
+            userContainer.style.display = 'inline-flex';
+            userContainer.onclick = function (e) {
+                if (typeof openProfileScreen === 'function') openProfileScreen(e);
+            };
+        }
+        const navPillEl = document.getElementById('navUserPill');
+        if (navPillEl) {
+            navPillEl.onclick = function (e) {
+                if (typeof openProfileScreen === 'function') openProfileScreen(e);
+            };
+        }
 
         const firstName = AppState.currentUser.name ? AppState.currentUser.name.trim().split(' ')[0] : 'User';
         const initial = (AppState.currentUser.name ? AppState.currentUser.name.trim()[0] : 'U').toUpperCase();
@@ -12362,7 +12378,12 @@ function updateAuthUI() {
             if (navRight) navRight.classList.remove('only-profile');
         } catch (e) { }
 
-        if (authBtn) authBtn.style.display = 'inline-flex';
+        if (authBtn) {
+            authBtn.style.display = 'inline-flex';
+            authBtn.onclick = function (e) {
+                if (typeof openProfileScreen === 'function') openProfileScreen(e);
+            };
+        }
         if (userContainer) {
             userContainer.style.display = 'none';
             userContainer.classList.remove('open');
@@ -13670,9 +13691,97 @@ window.handleUserLogout = function () {
     showToast('Signed out successfully', 'fa-solid fa-arrow-right-from-bracket', '#64748b');
 };
 
+// Blinkit-Style Dedicated Fullscreen Profile Screen Controller
+window.openProfileScreen = function (event) {
+    if (event) {
+        try { event.preventDefault(); event.stopPropagation(); } catch (e) { }
+    }
+    const dropdown = document.getElementById('userProfileDropdown');
+    if (dropdown) dropdown.classList.remove('open');
+    const userContainer = document.getElementById('navUserContainer');
+    if (userContainer) userContainer.classList.remove('open');
+
+    let profileOverlay = document.getElementById('profileScreenOverlay');
+    if (!profileOverlay) {
+        if (typeof openAccountDetailsModal === 'function') {
+            openAccountDetailsModal();
+        }
+        return;
+    }
+
+    const u = AppState.currentUser || (window.SWIGGY_DATA && window.SWIGGY_DATA.currentUser) || {
+        name: 'Mohith Kumar',
+        phone: '+91-9494768069',
+        dob: '29 Dec 2007'
+    };
+
+    const nameEl = document.getElementById('profileUserName');
+    const phoneEl = document.getElementById('profileUserPhone');
+    const dobEl = document.getElementById('profileUserDob');
+
+    if (nameEl) nameEl.textContent = u.name || 'Mohith Kumar';
+    if (phoneEl) phoneEl.textContent = u.phone || '+91-9494768069';
+    if (dobEl) dobEl.textContent = u.dob || '29 Dec 2007';
+
+    profileOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+};
+
+window.closeProfileScreen = function () {
+    const profileOverlay = document.getElementById('profileScreenOverlay');
+    if (profileOverlay) profileOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+};
+
+window.toggleAppearanceMode = function () {
+    const label = document.getElementById('profileAppearanceLabel');
+    if (!label) return;
+    const isLight = label.textContent.trim().toLowerCase() === 'light';
+    label.textContent = isLight ? 'Dark' : 'Light';
+    if (typeof showToast === 'function') {
+        showToast(`Appearance switched to ${isLight ? 'Dark' : 'Light'} mode`, 'fa-regular fa-sun', '#7c5cfc');
+    }
+};
+
+window.copyAppVersion = function () {
+    const versionText = 'v19.01.2 (1)';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(versionText).then(() => {
+            if (typeof showToast === 'function') showToast('App version copied to clipboard!', 'fa-regular fa-copy', '#16a34a');
+        }).catch(() => {
+            if (typeof showToast === 'function') showToast(`Version: ${versionText}`, 'fa-regular fa-copy', '#16a34a');
+        });
+    } else {
+        if (typeof showToast === 'function') showToast(`Version: ${versionText}`, 'fa-regular fa-copy', '#16a34a');
+    }
+};
+
+window.shareChocoloomApp = function () {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Chocoloom',
+            text: 'Order delicious fresh cakes, handcrafted chocolates & desserts on Chocoloom!',
+            url: window.location.origin
+        }).catch(() => {});
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(window.location.origin).then(() => {
+            if (typeof showToast === 'function') showToast('Store link copied to clipboard!', 'fa-solid fa-share-nodes', '#16a34a');
+        });
+    } else {
+        if (typeof showToast === 'function') showToast('Share Chocoloom with friends & family!', 'fa-solid fa-share-nodes', '#16a34a');
+    }
+};
+
 // Toggle User Dropdown Menu
 window.toggleUserProfileDropdown = function (event) {
-    if (event) event.stopPropagation();
+    if (event) {
+        try { event.stopPropagation(); } catch (e) { }
+    }
+    const profileOverlay = document.getElementById('profileScreenOverlay');
+    if (profileOverlay) {
+        openProfileScreen(event);
+        return;
+    }
     const dropdown = document.getElementById('userProfileDropdown');
     const userContainer = document.getElementById('navUserContainer');
     if (!dropdown) return;
@@ -13688,6 +13797,11 @@ window.toggleUserProfileDropdown = function (event) {
 
 // Account Details & Profile Modal
 window.openAccountDetailsModal = function () {
+    const profileOverlay = document.getElementById('profileScreenOverlay');
+    if (profileOverlay) {
+        openProfileScreen();
+        return;
+    }
     const dropdown = document.getElementById('userProfileDropdown');
     if (dropdown) dropdown.classList.remove('open');
     const userContainer = document.getElementById('navUserContainer');
