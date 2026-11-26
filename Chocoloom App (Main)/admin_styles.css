@@ -1849,12 +1849,90 @@ body {
     margin-bottom: 22px;
 }
 
+/* Prominent Passcode Hint Badge */
+.auth-hint-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(124, 92, 252, 0.08), rgba(236, 72, 153, 0.08));
+    border: 1.5px dashed rgba(124, 92, 252, 0.45);
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin: 8px 0 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.auth-hint-badge:hover {
+    background: linear-gradient(135deg, rgba(124, 92, 252, 0.15), rgba(236, 72, 153, 0.15));
+    border-color: var(--primary, #7c5cfc);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(124, 92, 252, 0.15);
+}
+
+.auth-hint-badge .hint-icon {
+    font-size: 15px;
+    color: var(--primary, #7c5cfc);
+    display: flex;
+    align-items: center;
+}
+
+.auth-hint-badge .hint-text {
+    font-size: 13px;
+    color: #334155;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.auth-hint-badge .hint-code {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--primary, #7c5cfc);
+    letter-spacing: 2px;
+    background: rgba(124, 92, 252, 0.12);
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.auth-hint-badge .hint-sub {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+}
+
 .pin-inputs-wrap {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 20px;
+}
+
+.pin-toggle-btn {
+    width: 44px;
+    height: 56px;
+    border-radius: 14px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.pin-toggle-btn:hover {
+    background: #f1f5f9;
+    color: var(--primary, #7c5cfc);
+    border-color: var(--primary, #7c5cfc);
 }
 
 .pin-box {
@@ -1870,6 +1948,10 @@ body {
     outline: none;
     transition: var(--transition);
     -webkit-text-security: disc;
+}
+
+.pin-box.show-text {
+    -webkit-text-security: none !important;
 }
 
 .pin-box:focus {

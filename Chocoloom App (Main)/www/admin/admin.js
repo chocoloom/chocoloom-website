@@ -67,6 +67,20 @@ const savedNeonUrl = localStorage.getItem('chocoloom_neon_url');
 
 // Immediately purge legacy fake demo orders from localStorage so state is always 100% authentic
 try {
+    if (localStorage.getItem('chocoloom_stock_sync_v4') !== 'true') {
+        localStorage.removeItem('chocoloom_db_catalog_cache');
+        const co = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
+        let changed = false;
+        Object.keys(co).forEach(k => {
+            if (co[k] && co[k].is_available === false) {
+                delete co[k].is_available;
+                changed = true;
+            }
+        });
+        if (changed) localStorage.setItem('chocoloom_price_overrides', JSON.stringify(co));
+        localStorage.setItem('chocoloom_stock_sync_v4', 'true');
+    }
+
     const rawLocalOrders = localStorage.getItem('chocoloom_orders');
     if (rawLocalOrders) {
         const parsed = JSON.parse(rawLocalOrders);
@@ -2979,8 +2993,7 @@ function renderProducts() {
                 if (filterCat.includes('snack') && prodCat.includes('snack')) matches = true;
                 if (filterCat.includes('bachelor') && prodCat.includes('bachelor')) matches = true;
                 if (filterCat.includes('dessert') && prodCat.includes('dessert')) matches = true;
-                if (filterCat.includes('combo') && (prodCat.includes('combo') || prodCat.includes('hamper'))) matches = true;
-                if (filterCat.includes('diwali') && (prodCat.includes('diwali') || prodCat.includes('hamper'))) matches = true;
+                if ((filterCat.includes('combo') || filterCat.includes('gift') || filterCat.includes('hamper')) && (prodCat.includes('combo') || prodCat.includes('gift') || prodCat.includes('hamper') || prodCat.includes('diwali'))) matches = true;
             }
             if (!matches) return false;
         }
@@ -3098,7 +3111,7 @@ function createProductCardHTML(prod) {
     const isAvail = prod.is_available !== false;
     const hasWeight = prod.has_weight !== false;
     const hasCooling = prod.has_cooling !== false;
-    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
+    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'combo gifts', 'gifts', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
     const isCatNonCake = nonCakeCategories.some(nc => (prod.category || '').toLowerCase().includes(nc));
     const hasFlavours = prod.has_flavours !== false && !isCatNonCake;
     const defaultFlavour = (prod.flavour && prod.flavour.trim()) ? prod.flavour.trim() : (hasFlavours ? getAdminDefaultFlavour(prod) : null);
@@ -3185,7 +3198,7 @@ function createProductCardHTML(prod) {
 // Single Product Table Row HTML
 function createProductTableRowHTML(prod) {
     const isAvail = prod.is_available !== false;
-    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
+    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'combo gifts', 'gifts', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
     const isCatNonCake = nonCakeCategories.some(nc => (prod.category || '').toLowerCase().includes(nc));
     const hasFlavours = prod.has_flavours !== false && !isCatNonCake;
     const defaultFlavour = hasFlavours ? getAdminDefaultFlavour(prod) : null;
@@ -3750,7 +3763,7 @@ window.handleAdminCategoryChange = function(category) {
     const isBento = cat.includes("bento");
     const nonCakeCategories = [
         "chocolates", "snacks", "desserts", "shakes", 
-        "brownies", "combos", "extras", "dark", "milk", "ruby", "drinks"
+        "brownies", "combos", "combo gifts", "gifts", "extras", "dark", "milk", "ruby", "drinks"
     ];
 
     const isNonCake = nonCakeCategories.some(nc => cat.includes(nc));
@@ -3975,7 +3988,7 @@ window.openEditProductModal = function(productId) {
     const nameLower = (prod.name || "").toLowerCase();
     const isBento = catLower.includes("bento") || nameLower.includes("bento");
 
-    const nonCakeCategories = ["chocolates", "snacks", "desserts", "shakes", "brownies", "combos", "extras", "dark", "milk", "ruby", "drinks"];
+    const nonCakeCategories = ["chocolates", "snacks", "desserts", "shakes", "brownies", "combos", "combo gifts", "gifts", "extras", "dark", "milk", "ruby", "drinks"];
     const isCatNonCake = nonCakeCategories.some(nc => catLower.includes(nc));
     
     let hasWeight = true;
@@ -5541,12 +5554,20 @@ function broadcastProductUpdate(action, prod) {
 }
 
 
-// ==================== SECURITY PIN AUTHENTICATION (PIN: 2026) ====================
-const SECURITY_PIN = '2026';
+// ==================== SECURITY PIN AUTHENTICATION (PIN: 2411) ====================
+const SECURITY_PIN = '2411';
+
+// In-memory authentication state: always prompts for passcode whenever admin panel is opened/refreshed
+let isSessionAuthed = false;
+
+// Purge any stored auth tokens so opening admin panel always asks for passcode
+try {
+    localStorage.removeItem('chocoloom_admin_authed');
+    sessionStorage.removeItem('chocoloom_admin_authed');
+} catch (e) { }
 
 function isUserAuthenticated() {
-    return localStorage.getItem('chocoloom_admin_authed') === 'true' || 
-           sessionStorage.getItem('chocoloom_admin_authed') === 'true';
+    return isSessionAuthed;
 }
 
 function checkAdminAuth() {
@@ -5579,7 +5600,7 @@ function resetPinInputs() {
     if (err) err.textContent = '';
 }
 
-window.quickFillPin = function(pin = '2026') {
+window.quickFillPin = function (pin = '2411') {
     const boxes = [1, 2, 3, 4].map(i => document.getElementById(`pinBox${i}`));
     pin.split('').slice(0, 4).forEach((digit, idx) => {
         if (boxes[idx]) {
@@ -5590,8 +5611,34 @@ window.quickFillPin = function(pin = '2026') {
     verifyPin();
 };
 
-window.pressKeypad = function(digit) {
-    try { getAudioContext(); } catch(e) {}
+window.togglePinVisibility = function () {
+    const box1 = document.getElementById('pinBox1');
+    if (!box1) return;
+    const isPass = box1.type === 'password';
+    const newType = isPass ? 'text' : 'password';
+    for (let i = 1; i <= 4; i++) {
+        const b = document.getElementById(`pinBox${i}`);
+        if (b) {
+            b.type = newType;
+            if (isPass) {
+                b.classList.add('show-text');
+            } else {
+                b.classList.remove('show-text');
+            }
+        }
+    }
+    const icon = document.getElementById('pinToggleVisIcon');
+    if (icon) {
+        icon.className = isPass ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+    }
+    const btn = document.getElementById('pinToggleVisBtn');
+    if (btn) {
+        btn.title = isPass ? 'Hide PIN digits' : 'Show PIN digits';
+    }
+};
+
+window.pressKeypad = function (digit) {
+    try { getAudioContext(); } catch (e) { }
     const boxes = [1, 2, 3, 4].map(i => document.getElementById(`pinBox${i}`));
     let targetBox = boxes.find(b => b && !b.value);
     if (!targetBox) {
@@ -5610,13 +5657,13 @@ window.pressKeypad = function(digit) {
     }
 };
 
-window.clearPin = function() {
+window.clearPin = function () {
     resetPinInputs();
     const first = document.getElementById('pinBox1');
     if (first) first.focus();
 };
 
-window.backspacePin = function() {
+window.backspacePin = function () {
     const boxes = [1, 2, 3, 4].map(i => document.getElementById(`pinBox${i}`));
     for (let i = 3; i >= 0; i--) {
         const box = boxes[i];
@@ -5629,7 +5676,7 @@ window.backspacePin = function() {
     }
 };
 
-window.verifyPin = function() {
+window.verifyPin = function () {
     const d1 = document.getElementById('pinBox1')?.value || '';
     const d2 = document.getElementById('pinBox2')?.value || '';
     const d3 = document.getElementById('pinBox3')?.value || '';
@@ -5639,37 +5686,36 @@ window.verifyPin = function() {
     const err = document.getElementById('authErrorMsg');
     const card = document.getElementById('authCardBox');
     const overlay = document.getElementById('adminAuthOverlay');
-    const rememberMe = document.getElementById('authRememberCheckbox')?.checked;
 
     if (enteredPin === SECURITY_PIN) {
         // Correct PIN
+        isSessionAuthed = true;
         if (err) err.textContent = '';
+
+        // Clear any persistent storage to guarantee prompt on next open/reload
         try {
-            if (rememberMe) {
-                localStorage.setItem('chocoloom_admin_authed', 'true');
-            } else {
-                sessionStorage.setItem('chocoloom_admin_authed', 'true');
-            }
-        } catch(e) {}
+            localStorage.removeItem('chocoloom_admin_authed');
+            sessionStorage.removeItem('chocoloom_admin_authed');
+        } catch (e) { }
 
         // Play positive unlock chime
-        try { playUnlockChime(); } catch(e) {}
+        try { playUnlockChime(); } catch (e) { }
 
         if (overlay) {
             overlay.classList.add('hidden');
             overlay.style.display = 'none';
         }
 
-        try { showToast('🔓 Access Granted! Welcome to Chocoloom Admin Portal.'); } catch(e) {}
-        try { loadAllOrders(); } catch(e) { console.error("Error loading orders:", e); }
-        try { loadAllProducts(); } catch(e) { console.error("Error loading products:", e); }
-        try { if (typeof loadAllBanners === 'function') loadAllBanners(true); } catch(e) { console.error("Error loading banners:", e); }
-        try { if (typeof loadAllCardOrders === 'function') loadAllCardOrders(); } catch(e) { console.error("Error loading card orders:", e); }
+        try { showToast('🔓 Access Granted! Welcome to Chocoloom Admin Portal.'); } catch (e) { }
+        try { loadAllOrders(); } catch (e) { console.error("Error loading orders:", e); }
+        try { loadAllProducts(); } catch (e) { console.error("Error loading products:", e); }
+        try { if (typeof loadAllBanners === 'function') loadAllBanners(true); } catch (e) { console.error("Error loading banners:", e); }
+        try { if (typeof loadAllCardOrders === 'function') loadAllCardOrders(); } catch (e) { console.error("Error loading card orders:", e); }
     } else {
         // Incorrect PIN
-        try { playErrorBuzz(); } catch(e) {}
+        try { playErrorBuzz(); } catch (e) { }
         if (err) {
-            err.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Incorrect PIN. Security PIN is <strong>2026</strong>.';
+            err.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Incorrect PIN. Security PIN is <strong>2411</strong>.';
         }
         if (card) {
             card.classList.remove('shake');
@@ -5684,11 +5730,12 @@ window.verifyPin = function() {
     }
 };
 
-window.lockAdminPortal = function() {
+window.lockAdminPortal = function () {
+    isSessionAuthed = false;
     try {
         localStorage.removeItem('chocoloom_admin_authed');
         sessionStorage.removeItem('chocoloom_admin_authed');
-    } catch(e) {}
+    } catch (e) { }
     const overlay = document.getElementById('adminAuthOverlay');
     if (overlay) {
         overlay.classList.remove('hidden');

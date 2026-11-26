@@ -2953,7 +2953,7 @@ window.loadAllProducts = async function () {
 
     // Update sidebar badge
     const badge = document.getElementById("sidebarProductsBadge");
-    if (badge) badge.textContent = baseList.length + "+";
+    if (badge) badge.textContent = baseList.length > 0 ? (baseList.length + "+") : "0";
 
     renderProductsStats();
     renderProducts();
@@ -3001,8 +3001,7 @@ function renderProducts() {
                 if (filterCat.includes('snack') && prodCat.includes('snack')) matches = true;
                 if (filterCat.includes('bachelor') && prodCat.includes('bachelor')) matches = true;
                 if (filterCat.includes('dessert') && prodCat.includes('dessert')) matches = true;
-                if (filterCat.includes('combo') && (prodCat.includes('combo') || prodCat.includes('hamper'))) matches = true;
-                if (filterCat.includes('diwali') && (prodCat.includes('diwali') || prodCat.includes('hamper'))) matches = true;
+                if ((filterCat.includes('combo') || filterCat.includes('gift') || filterCat.includes('hamper')) && (prodCat.includes('combo') || prodCat.includes('gift') || prodCat.includes('hamper') || prodCat.includes('diwali'))) matches = true;
             }
             if (!matches) return false;
         }
@@ -3120,7 +3119,7 @@ function createProductCardHTML(prod) {
     const isAvail = prod.is_available !== false;
     const hasWeight = prod.has_weight !== false;
     const hasCooling = prod.has_cooling !== false;
-    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
+    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'combo gifts', 'gifts', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
     const isCatNonCake = nonCakeCategories.some(nc => (prod.category || '').toLowerCase().includes(nc));
     const hasFlavours = prod.has_flavours !== false && !isCatNonCake;
     const defaultFlavour = (prod.flavour && prod.flavour.trim()) ? prod.flavour.trim() : (hasFlavours ? getAdminDefaultFlavour(prod) : null);
@@ -3207,7 +3206,7 @@ function createProductCardHTML(prod) {
 // Single Product Table Row HTML
 function createProductTableRowHTML(prod) {
     const isAvail = prod.is_available !== false;
-    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
+    const nonCakeCategories = ['chocolates', 'snacks', 'desserts', 'shakes', 'brownies', 'combos', 'combo gifts', 'gifts', 'extras', 'dark', 'milk', 'ruby', 'drinks'];
     const isCatNonCake = nonCakeCategories.some(nc => (prod.category || '').toLowerCase().includes(nc));
     const hasFlavours = prod.has_flavours !== false && !isCatNonCake;
     const defaultFlavour = hasFlavours ? getAdminDefaultFlavour(prod) : null;
@@ -3772,7 +3771,7 @@ window.handleAdminCategoryChange = function (category) {
     const isBento = cat.includes("bento");
     const nonCakeCategories = [
         "chocolates", "snacks", "desserts", "shakes",
-        "brownies", "combos", "extras", "dark", "milk", "ruby", "drinks"
+        "brownies", "combos", "combo gifts", "gifts", "extras", "dark", "milk", "ruby", "drinks"
     ];
 
     const isNonCake = nonCakeCategories.some(nc => cat.includes(nc));
@@ -3997,7 +3996,7 @@ window.openEditProductModal = function (productId) {
     const nameLower = (prod.name || "").toLowerCase();
     const isBento = catLower.includes("bento") || nameLower.includes("bento");
 
-    const nonCakeCategories = ["chocolates", "snacks", "desserts", "shakes", "brownies", "combos", "extras", "dark", "milk", "ruby", "drinks"];
+    const nonCakeCategories = ["chocolates", "snacks", "desserts", "shakes", "brownies", "combos", "combo gifts", "gifts", "extras", "dark", "milk", "ruby", "drinks"];
     const isCatNonCake = nonCakeCategories.some(nc => catLower.includes(nc));
 
     let hasWeight = true;
@@ -4906,6 +4905,45 @@ window.resetToDataJs = function () {
     }
 };
 
+// Remove all products from menu
+window.removeAllAdminProducts = async function () {
+    if (!confirm("Are you sure you want to remove ALL items from the active bakery menu? This will clear the entire product list.")) {
+        return;
+    }
+    const currentList = [...(AdminState.products || [])];
+    const allIds = currentList.map(p => p.id || p.sql_id).filter(Boolean);
+
+    // Save all to deleted list in localStorage
+    try {
+        const deletedIds = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
+        currentList.forEach(p => {
+            if (p.id && !deletedIds.includes(p.id)) deletedIds.push(p.id);
+            if (p.sql_id && !deletedIds.includes(p.sql_id)) deletedIds.push(p.sql_id);
+        });
+        localStorage.setItem("chocoloom_deleted_products", JSON.stringify(deletedIds));
+        localStorage.setItem("chocoloom_custom_products", JSON.stringify([]));
+    } catch (e) { }
+
+    // Clear state
+    AdminState.products = [];
+
+    // Instant UI update
+    renderProductsStats();
+    renderProducts();
+    const badge = document.getElementById("sidebarProductsBadge");
+    if (badge) badge.textContent = "0";
+
+    showToast("All items have been removed from the menu!", "fa-solid fa-trash-can", "#ef4444");
+
+    // Broadcast across tabs
+    broadcastProductUpdate("DELETE_ALL", { ids: allIds });
+
+    // Sync to server endpoints
+    if (typeof syncCatalogToServer === "function") {
+        syncCatalogToServer();
+    }
+};
+
 // 1-Click Sync to Main Site
 window.syncAllToMainSite = async function () {
     showToast("Syncing catalog to main site...", "fa-solid fa-cloud-arrow-up fa-spin", "#7c5cfc");
@@ -5565,12 +5603,20 @@ function broadcastProductUpdate(action, prod) {
 }
 
 
-// ==================== SECURITY PIN AUTHENTICATION (PIN: 2026) ====================
-const SECURITY_PIN = '2026';
+// ==================== SECURITY PIN AUTHENTICATION (PIN: 2411) ====================
+const SECURITY_PIN = '2411';
+
+// In-memory authentication state: always prompts for passcode whenever admin panel is opened/refreshed
+let isSessionAuthed = false;
+
+// Purge any stored auth tokens so opening admin panel always asks for passcode
+try {
+    localStorage.removeItem('chocoloom_admin_authed');
+    sessionStorage.removeItem('chocoloom_admin_authed');
+} catch (e) { }
 
 function isUserAuthenticated() {
-    return localStorage.getItem('chocoloom_admin_authed') === 'true' ||
-        sessionStorage.getItem('chocoloom_admin_authed') === 'true';
+    return isSessionAuthed;
 }
 
 function checkAdminAuth() {
@@ -5603,7 +5649,7 @@ function resetPinInputs() {
     if (err) err.textContent = '';
 }
 
-window.quickFillPin = function (pin = '2026') {
+window.quickFillPin = function (pin = '2411') {
     const boxes = [1, 2, 3, 4].map(i => document.getElementById(`pinBox${i}`));
     pin.split('').slice(0, 4).forEach((digit, idx) => {
         if (boxes[idx]) {
@@ -5612,6 +5658,32 @@ window.quickFillPin = function (pin = '2026') {
         }
     });
     verifyPin();
+};
+
+window.togglePinVisibility = function () {
+    const box1 = document.getElementById('pinBox1');
+    if (!box1) return;
+    const isPass = box1.type === 'password';
+    const newType = isPass ? 'text' : 'password';
+    for (let i = 1; i <= 4; i++) {
+        const b = document.getElementById(`pinBox${i}`);
+        if (b) {
+            b.type = newType;
+            if (isPass) {
+                b.classList.add('show-text');
+            } else {
+                b.classList.remove('show-text');
+            }
+        }
+    }
+    const icon = document.getElementById('pinToggleVisIcon');
+    if (icon) {
+        icon.className = isPass ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+    }
+    const btn = document.getElementById('pinToggleVisBtn');
+    if (btn) {
+        btn.title = isPass ? 'Hide PIN digits' : 'Show PIN digits';
+    }
 };
 
 window.pressKeypad = function (digit) {
@@ -5663,17 +5735,16 @@ window.verifyPin = function () {
     const err = document.getElementById('authErrorMsg');
     const card = document.getElementById('authCardBox');
     const overlay = document.getElementById('adminAuthOverlay');
-    const rememberMe = document.getElementById('authRememberCheckbox')?.checked;
 
     if (enteredPin === SECURITY_PIN) {
         // Correct PIN
+        isSessionAuthed = true;
         if (err) err.textContent = '';
+
+        // Clear any persistent storage to guarantee prompt on next open/reload
         try {
-            if (rememberMe) {
-                localStorage.setItem('chocoloom_admin_authed', 'true');
-            } else {
-                sessionStorage.setItem('chocoloom_admin_authed', 'true');
-            }
+            localStorage.removeItem('chocoloom_admin_authed');
+            sessionStorage.removeItem('chocoloom_admin_authed');
         } catch (e) { }
 
         // Play positive unlock chime
@@ -5693,7 +5764,7 @@ window.verifyPin = function () {
         // Incorrect PIN
         try { playErrorBuzz(); } catch (e) { }
         if (err) {
-            err.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Incorrect PIN. Security PIN is <strong>2026</strong>.';
+            err.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Incorrect PIN. Security PIN is <strong>2411</strong>.';
         }
         if (card) {
             card.classList.remove('shake');
@@ -5709,6 +5780,7 @@ window.verifyPin = function () {
 };
 
 window.lockAdminPortal = function () {
+    isSessionAuthed = false;
     try {
         localStorage.removeItem('chocoloom_admin_authed');
         sessionStorage.removeItem('chocoloom_admin_authed');

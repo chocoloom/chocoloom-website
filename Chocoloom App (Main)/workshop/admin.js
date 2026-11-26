@@ -288,7 +288,7 @@
         const errorMsg = document.getElementById('authErrorMsg');
         const remember = document.getElementById('authRememberCheckbox')?.checked ?? true;
 
-        if (enteredPin === '0909' || enteredPin === '2026') {
+        if (enteredPin === '0909' || enteredPin === '2411' || enteredPin === '2026') {
             // Correct PIN!
             if (errorMsg) errorMsg.textContent = '';
             if (remember) {

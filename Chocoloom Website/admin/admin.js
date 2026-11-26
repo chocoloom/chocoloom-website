@@ -5554,12 +5554,20 @@ function broadcastProductUpdate(action, prod) {
 }
 
 
-// ==================== SECURITY PIN AUTHENTICATION (PIN: 2026) ====================
-const SECURITY_PIN = '2026';
+// ==================== SECURITY PIN AUTHENTICATION (PIN: 2411) ====================
+const SECURITY_PIN = '2411';
+
+// In-memory authentication state: always prompts for passcode whenever admin panel is opened/refreshed
+let isSessionAuthed = false;
+
+// Purge any stored auth tokens so opening admin panel always asks for passcode
+try {
+    localStorage.removeItem('chocoloom_admin_authed');
+    sessionStorage.removeItem('chocoloom_admin_authed');
+} catch (e) { }
 
 function isUserAuthenticated() {
-    return localStorage.getItem('chocoloom_admin_authed') === 'true' || 
-           sessionStorage.getItem('chocoloom_admin_authed') === 'true';
+    return isSessionAuthed;
 }
 
 function checkAdminAuth() {
@@ -5592,7 +5600,7 @@ function resetPinInputs() {
     if (err) err.textContent = '';
 }
 
-window.quickFillPin = function(pin = '2026') {
+window.quickFillPin = function (pin = '2411') {
     const boxes = [1, 2, 3, 4].map(i => document.getElementById(`pinBox${i}`));
     pin.split('').slice(0, 4).forEach((digit, idx) => {
         if (boxes[idx]) {
@@ -5603,8 +5611,34 @@ window.quickFillPin = function(pin = '2026') {
     verifyPin();
 };
 
-window.pressKeypad = function(digit) {
-    try { getAudioContext(); } catch(e) {}
+window.togglePinVisibility = function () {
+    const box1 = document.getElementById('pinBox1');
+    if (!box1) return;
+    const isPass = box1.type === 'password';
+    const newType = isPass ? 'text' : 'password';
+    for (let i = 1; i <= 4; i++) {
+        const b = document.getElementById(`pinBox${i}`);
+        if (b) {
+            b.type = newType;
+            if (isPass) {
+                b.classList.add('show-text');
+            } else {
+                b.classList.remove('show-text');
+            }
+        }
+    }
+    const icon = document.getElementById('pinToggleVisIcon');
+    if (icon) {
+        icon.className = isPass ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+    }
+    const btn = document.getElementById('pinToggleVisBtn');
+    if (btn) {
+        btn.title = isPass ? 'Hide PIN digits' : 'Show PIN digits';
+    }
+};
+
+window.pressKeypad = function (digit) {
+    try { getAudioContext(); } catch (e) { }
     const boxes = [1, 2, 3, 4].map(i => document.getElementById(`pinBox${i}`));
     let targetBox = boxes.find(b => b && !b.value);
     if (!targetBox) {
@@ -5623,13 +5657,13 @@ window.pressKeypad = function(digit) {
     }
 };
 
-window.clearPin = function() {
+window.clearPin = function () {
     resetPinInputs();
     const first = document.getElementById('pinBox1');
     if (first) first.focus();
 };
 
-window.backspacePin = function() {
+window.backspacePin = function () {
     const boxes = [1, 2, 3, 4].map(i => document.getElementById(`pinBox${i}`));
     for (let i = 3; i >= 0; i--) {
         const box = boxes[i];
@@ -5642,7 +5676,7 @@ window.backspacePin = function() {
     }
 };
 
-window.verifyPin = function() {
+window.verifyPin = function () {
     const d1 = document.getElementById('pinBox1')?.value || '';
     const d2 = document.getElementById('pinBox2')?.value || '';
     const d3 = document.getElementById('pinBox3')?.value || '';
@@ -5652,37 +5686,36 @@ window.verifyPin = function() {
     const err = document.getElementById('authErrorMsg');
     const card = document.getElementById('authCardBox');
     const overlay = document.getElementById('adminAuthOverlay');
-    const rememberMe = document.getElementById('authRememberCheckbox')?.checked;
 
     if (enteredPin === SECURITY_PIN) {
         // Correct PIN
+        isSessionAuthed = true;
         if (err) err.textContent = '';
+
+        // Clear any persistent storage to guarantee prompt on next open/reload
         try {
-            if (rememberMe) {
-                localStorage.setItem('chocoloom_admin_authed', 'true');
-            } else {
-                sessionStorage.setItem('chocoloom_admin_authed', 'true');
-            }
-        } catch(e) {}
+            localStorage.removeItem('chocoloom_admin_authed');
+            sessionStorage.removeItem('chocoloom_admin_authed');
+        } catch (e) { }
 
         // Play positive unlock chime
-        try { playUnlockChime(); } catch(e) {}
+        try { playUnlockChime(); } catch (e) { }
 
         if (overlay) {
             overlay.classList.add('hidden');
             overlay.style.display = 'none';
         }
 
-        try { showToast('🔓 Access Granted! Welcome to Chocoloom Admin Portal.'); } catch(e) {}
-        try { loadAllOrders(); } catch(e) { console.error("Error loading orders:", e); }
-        try { loadAllProducts(); } catch(e) { console.error("Error loading products:", e); }
-        try { if (typeof loadAllBanners === 'function') loadAllBanners(true); } catch(e) { console.error("Error loading banners:", e); }
-        try { if (typeof loadAllCardOrders === 'function') loadAllCardOrders(); } catch(e) { console.error("Error loading card orders:", e); }
+        try { showToast('🔓 Access Granted! Welcome to Chocoloom Admin Portal.'); } catch (e) { }
+        try { loadAllOrders(); } catch (e) { console.error("Error loading orders:", e); }
+        try { loadAllProducts(); } catch (e) { console.error("Error loading products:", e); }
+        try { if (typeof loadAllBanners === 'function') loadAllBanners(true); } catch (e) { console.error("Error loading banners:", e); }
+        try { if (typeof loadAllCardOrders === 'function') loadAllCardOrders(); } catch (e) { console.error("Error loading card orders:", e); }
     } else {
         // Incorrect PIN
-        try { playErrorBuzz(); } catch(e) {}
+        try { playErrorBuzz(); } catch (e) { }
         if (err) {
-            err.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Incorrect PIN. Security PIN is <strong>2026</strong>.';
+            err.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Incorrect PIN. Security PIN is <strong>2411</strong>.';
         }
         if (card) {
             card.classList.remove('shake');
@@ -5697,11 +5730,12 @@ window.verifyPin = function() {
     }
 };
 
-window.lockAdminPortal = function() {
+window.lockAdminPortal = function () {
+    isSessionAuthed = false;
     try {
         localStorage.removeItem('chocoloom_admin_authed');
         sessionStorage.removeItem('chocoloom_admin_authed');
-    } catch(e) {}
+    } catch (e) { }
     const overlay = document.getElementById('adminAuthOverlay');
     if (overlay) {
         overlay.classList.remove('hidden');

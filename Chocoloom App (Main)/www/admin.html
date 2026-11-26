@@ -72,7 +72,7 @@
                     <i class="fa-solid fa-cake-candles"></i>
                     <span>Menu & Items</span>
                     <span class="nav-badge" id="sidebarProductsBadge"
-                        style="background: rgba(124, 92, 252, 0.25); color: #c4b5fd;">250+</span>
+                        style="background: rgba(124, 92, 252, 0.25); color: #c4b5fd;">0</span>
                 </button>
                 <button class="nav-link" id="tabNavAdvertisements" onclick="switchAdminTab('advertisements')">
                     <i class="fa-solid fa-rectangle-ad" style="color: #f59e0b;"></i>
@@ -320,7 +320,7 @@
                         <div class="stat-card">
                             <div class="stat-info">
                                 <span>Total Products</span>
-                                <h3 id="statTotalProducts">318</h3>
+                                <h3 id="statTotalProducts">0</h3>
                             </div>
                             <div class="stat-icon"><i class="fa-solid fa-cake-candles"></i></div>
                         </div>
@@ -328,7 +328,7 @@
                         <div class="stat-card delivered">
                             <div class="stat-info">
                                 <span>In Stock (Live)</span>
-                                <h3 id="statInStockProducts">315</h3>
+                                <h3 id="statInStockProducts">0</h3>
                             </div>
                             <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
                         </div>
@@ -336,7 +336,7 @@
                         <div class="stat-card" style="border-left: 4px solid #ef4444;">
                             <div class="stat-info">
                                 <span>Out of Stock</span>
-                                <h3 id="statOutOfStockProducts">3</h3>
+                                <h3 id="statOutOfStockProducts">0</h3>
                             </div>
                             <div class="stat-icon" style="background: #fee2e2; color: #dc2626;"><i
                                     class="fa-solid fa-box-archive"></i></div>
@@ -345,7 +345,7 @@
                         <div class="stat-card preparing">
                             <div class="stat-info">
                                 <span>Categories</span>
-                                <h3 id="statTotalCategories">12</h3>
+                                <h3 id="statTotalCategories">0</h3>
                             </div>
                             <div class="stat-icon"><i class="fa-solid fa-layer-group"></i></div>
                         </div>
@@ -353,7 +353,7 @@
                         <div class="stat-card revenue">
                             <div class="stat-info">
                                 <span>Avg Cake Price</span>
-                                <h3 id="statAvgPrice">₹799</h3>
+                                <h3 id="statAvgPrice">₹0</h3>
                             </div>
                             <div class="stat-icon"><i class="fa-solid fa-tag"></i></div>
                         </div>
@@ -384,8 +384,7 @@
                                 <option value="Bachelorette Cakes">Bachelorette Cakes</option>
                                 <option value="Half Birthday Cakes">Half Birthday Cakes</option>
                                 <option value="Truffle Cakes">Truffle Cakes</option>
-                                <option value="Combos">Combos & Gift Hampers</option>
-                                <option value="Diwali Hampers">Diwali Hampers</option>
+                                <option value="Combo Gifts">Combo Gifts</option>
                                 <option value="Mango Cakes">Mango Cakes</option>
                                 <option value="Black Currant Cakes">Black Currant Cakes</option>
                                 <option value="Square Cakes">Square Cakes</option>
@@ -417,6 +416,10 @@
                             <button class="header-btn" onclick="resetToDataJs()"
                                 title="Reset all overrides to base data.js">
                                 <i class="fa-solid fa-rotate-left"></i> Reset
+                            </button>
+                            <button class="header-btn" style="color: #ef4444;" onclick="removeAllAdminProducts()"
+                                title="Remove all products from menu">
+                                <i class="fa-solid fa-trash-can" style="color: #ef4444;"></i> Remove All
                             </button>
                             <button class="header-btn primary" onclick="openAddProductModal()">
                                 <i class="fa-solid fa-plus"></i> Add New Product
@@ -988,8 +991,7 @@
                                 <option value="Bachelorette Cakes">Bachelorette Cakes</option>
                                 <option value="Half Birthday Cakes">Half Birthday Cakes</option>
                                 <option value="Truffle Cakes">Truffle Cakes</option>
-                                <option value="Combos">Combos & Gift Hampers</option>
-                                <option value="Diwali Hampers">Diwali Hampers</option>
+                                <option value="Combo Gifts">Combo Gifts</option>
                                 <option value="Mango Cakes">Mango Cakes</option>
                                 <option value="Black Currant Cakes">Black Currant Cakes</option>
                                 <option value="Square Cakes">Square Cakes</option>
@@ -2174,7 +2176,17 @@
             <h2 class="auth-title">Chocoloom Staff Access</h2>
             <p class="auth-subtitle">Enter your 4-digit security PIN to unlock</p>
 
-            <!-- 4 PIN Boxes -->
+            <!-- Prominent Password Hint Badge -->
+            <div class="auth-hint-badge" onclick="quickFillPin('2411')" title="Click to auto-fill passcode 2411">
+                <div class="hint-icon"><i class="fa-solid fa-key"></i></div>
+                <div class="hint-text">
+                    <span class="hint-label">Passcode Hint:</span>
+                    <strong class="hint-code">2411</strong>
+                    <span class="hint-sub">(Tap to fill)</span>
+                </div>
+            </div>
+
+            <!-- 4 PIN Boxes with Visibility Toggle -->
             <div class="pin-inputs-wrap">
                 <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox1" autofocus
                     autocomplete="off">
@@ -2184,6 +2196,9 @@
                     autocomplete="off">
                 <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox4"
                     autocomplete="off">
+                <button type="button" class="pin-toggle-btn" id="pinToggleVisBtn" onclick="togglePinVisibility()" title="Show/Hide PIN digits">
+                    <i class="fa-solid fa-eye" id="pinToggleVisIcon"></i>
+                </button>
             </div>
 
             <div class="auth-error" id="authErrorMsg"></div>
@@ -2205,21 +2220,14 @@
                         class="fa-solid fa-delete-left"></i></button>
             </div>
 
-            <div class="auth-remember-row">
-                <label class="auth-remember-label">
-                    <input type="checkbox" id="authRememberCheckbox" checked>
-                    <span>Remember on this browser</span>
-                </label>
-            </div>
-
             <button type="button" class="auth-unlock-btn" onclick="verifyPin()">
                 <i class="fa-solid fa-lock-open"></i> Unlock Dashboard
             </button>
 
-            <div class="auth-footer-hint" style="cursor: pointer;" onclick="quickFillPin('2026')"
-                title="Click to quickly unlock with Staff PIN 2026">
+            <div class="auth-footer-hint" style="cursor: pointer;" onclick="quickFillPin('2411')"
+                title="Click to quickly unlock with Staff PIN 2411">
                 <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> Staff Security PIN:
-                <strong>2026</strong> <span style="font-size: 11px; opacity: 0.85;">(Click to unlock)</span>
+                <strong>2411</strong> <span style="font-size: 11px; opacity: 0.85;">(Click to unlock)</span>
             </div>
         </div>
     </div>

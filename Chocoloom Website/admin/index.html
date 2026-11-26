@@ -1651,12 +1651,25 @@
             <h2 class="auth-title">Chocoloom Staff Access</h2>
             <p class="auth-subtitle">Enter your 4-digit security PIN to unlock</p>
 
-            <!-- 4 PIN Boxes -->
+            <!-- Prominent Password Hint Badge -->
+            <div class="auth-hint-badge" onclick="quickFillPin('2411')" title="Click to auto-fill passcode 2411">
+                <div class="hint-icon"><i class="fa-solid fa-key"></i></div>
+                <div class="hint-text">
+                    <span class="hint-label">Passcode Hint:</span>
+                    <strong class="hint-code">2411</strong>
+                    <span class="hint-sub">(Tap to fill)</span>
+                </div>
+            </div>
+
+            <!-- 4 PIN Boxes with Visibility Toggle -->
             <div class="pin-inputs-wrap">
                 <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox1" autofocus autocomplete="off">
                 <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox2" autocomplete="off">
                 <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox3" autocomplete="off">
                 <input type="password" maxlength="1" inputmode="numeric" class="pin-box" id="pinBox4" autocomplete="off">
+                <button type="button" class="pin-toggle-btn" id="pinToggleVisBtn" onclick="togglePinVisibility()" title="Show/Hide PIN digits">
+                    <i class="fa-solid fa-eye" id="pinToggleVisIcon"></i>
+                </button>
             </div>
 
             <div class="auth-error" id="authErrorMsg"></div>
@@ -1677,19 +1690,12 @@
                 <button type="button" class="keypad-btn action-key" onclick="backspacePin()" title="Backspace"><i class="fa-solid fa-delete-left"></i></button>
             </div>
 
-            <div class="auth-remember-row">
-                <label class="auth-remember-label">
-                    <input type="checkbox" id="authRememberCheckbox" checked>
-                    <span>Remember on this browser</span>
-                </label>
-            </div>
-
             <button type="button" class="auth-unlock-btn" onclick="verifyPin()">
                 <i class="fa-solid fa-lock-open"></i> Unlock Dashboard
             </button>
 
-            <div class="auth-footer-hint" style="cursor: pointer;" onclick="quickFillPin('2026')" title="Click to quickly unlock with Staff PIN 2026">
-                <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> Staff Security PIN: <strong>2026</strong> <span style="font-size: 11px; opacity: 0.85;">(Click to unlock)</span>
+            <div class="auth-footer-hint" style="cursor: pointer;" onclick="quickFillPin('2411')" title="Click to quickly unlock with Staff PIN 2411">
+                <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> Staff Security PIN: <strong>2411</strong> <span style="font-size: 11px; opacity: 0.85;">(Click to unlock)</span>
             </div>
         </div>
     </div>
