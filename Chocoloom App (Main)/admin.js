@@ -5649,7 +5649,8 @@ function resetPinInputs() {
     if (err) err.textContent = '';
 }
 
-window.quickFillPin = function (pin = '2411') {
+window.quickFillPin = function (pin) {
+    if (!pin) return;
     const boxes = [1, 2, 3, 4].map(i => document.getElementById(`pinBox${i}`));
     pin.split('').slice(0, 4).forEach((digit, idx) => {
         if (boxes[idx]) {
@@ -5764,7 +5765,7 @@ window.verifyPin = function () {
         // Incorrect PIN
         try { playErrorBuzz(); } catch (e) { }
         if (err) {
-            err.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Incorrect PIN. Security PIN is <strong>2411</strong>.';
+            err.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Incorrect PIN. Please try again.';
         }
         if (card) {
             card.classList.remove('shake');
