@@ -231,6 +231,7 @@ function initSupabase() {
             console.log('✅ Supabase Client Initialized in Admin Panel with URL:', SUPABASE_CONFIG.url);
             setupSupabaseRealtime();
             setupAdminCatalogRealtime();
+            setupActiveDevicesRealtime();
         } catch (e) {
             console.warn('Supabase client error:', e);
         }
@@ -5603,6 +5604,301 @@ function broadcastProductUpdate(action, prod) {
 }
 
 
+// ==================== LIVE ADMIN ACTIVE DEVICES CONTROLLER (PRESENCE & REMOTE LOCK) ====================
+let adminDevicesChannel = null;
+let currentDeviceId = null;
+let currentDeviceMeta = null;
+let activeDevicesMap = new Map();
+
+function getOrCreateDeviceId() {
+    let id = sessionStorage.getItem('chocoloom_admin_device_id');
+    if (!id) {
+        id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 8);
+        sessionStorage.setItem('chocoloom_admin_device_id', id);
+    }
+    return id;
+}
+
+function detectDeviceMetadata() {
+    const ua = navigator.userAgent || '';
+    let os = 'Unknown OS';
+    if (ua.includes('iPhone')) os = 'iOS (iPhone)';
+    else if (ua.includes('iPad')) os = 'iPadOS';
+    else if (ua.includes('Macintosh') || ua.includes('Mac OS')) os = 'macOS';
+    else if (ua.includes('Windows')) os = 'Windows';
+    else if (ua.includes('Android')) os = 'Android';
+    else if (ua.includes('Linux')) os = 'Linux';
+
+    let browser = 'Browser';
+    if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome';
+    else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+    else if (ua.includes('Edg')) browser = 'Edge';
+    else if (ua.includes('Firefox')) browser = 'Firefox';
+
+    const isMobile = /Mobi|Android|iPhone/i.test(ua);
+    const isTablet = /iPad|Tablet/i.test(ua) || (os.includes('macOS') && navigator.maxTouchPoints > 1);
+    const deviceType = isTablet ? 'Tablet' : (isMobile ? 'Mobile' : 'Desktop');
+
+    let deviceModel = deviceType;
+    if (os.includes('macOS')) deviceModel = 'MacBook / Mac';
+    else if (os.includes('iOS')) deviceModel = 'iPhone';
+    else if (os.includes('iPad')) deviceModel = 'iPad';
+    else if (os.includes('Windows')) deviceModel = 'Windows PC';
+    else if (os.includes('Android')) deviceModel = 'Android Phone';
+
+    return {
+        deviceId: getOrCreateDeviceId(),
+        deviceType,
+        deviceModel,
+        os,
+        browser,
+        screen: `${window.screen.width} × ${window.screen.height}`,
+        unlockedAt: Date.now(),
+        lastActive: Date.now()
+    };
+}
+
+function setupActiveDevicesRealtime() {
+    if (!supabaseClient) return;
+
+    try {
+        if (adminDevicesChannel) {
+            try { adminDevicesChannel.unsubscribe(); } catch (e) { }
+        }
+
+        currentDeviceId = getOrCreateDeviceId();
+        currentDeviceMeta = detectDeviceMetadata();
+
+        adminDevicesChannel = supabaseClient.channel('admin_live_devices', {
+            config: {
+                presence: { key: currentDeviceId }
+            }
+        });
+
+        adminDevicesChannel
+            .on('presence', { event: 'sync' }, () => {
+                const state = adminDevicesChannel.presenceState();
+                handlePresenceSync(state);
+            })
+            .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+                console.log('📱 Active Device connected:', key, newPresences);
+            })
+            .on('presence', { event: 'leave' }, ({ key }) => {
+                console.log('📱 Device disconnected:', key);
+            })
+            .on('broadcast', { event: 'REMOTE_LOCK' }, ({ payload }) => {
+                if (payload) {
+                    if (payload.targetDeviceId === currentDeviceId || 
+                       (payload.target === 'all_others' && payload.fromDeviceId !== currentDeviceId)) {
+                        console.warn('🔒 Remote lock triggered from another device');
+                        window.lockAdminPortal();
+                        showToast('🔒 This device was remotely locked from another device.', 'fa-solid fa-lock', '#ef4444');
+                    }
+                }
+            });
+
+        adminDevicesChannel.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                console.log('⚡ Admin Live Devices Presence Subscribed');
+                if (isUserAuthenticated()) {
+                    await trackCurrentDevicePresence();
+                }
+            }
+        });
+
+        // Periodic presence heartbeat every 25 seconds
+        setInterval(() => {
+            if (isUserAuthenticated() && adminDevicesChannel) {
+                trackCurrentDevicePresence();
+            }
+        }, 25000);
+
+    } catch (e) {
+        console.warn('Active devices realtime init error:', e);
+    }
+}
+
+async function trackCurrentDevicePresence() {
+    if (!adminDevicesChannel || !isUserAuthenticated()) return;
+    try {
+        if (!currentDeviceMeta) currentDeviceMeta = detectDeviceMetadata();
+        currentDeviceMeta.lastActive = Date.now();
+        await adminDevicesChannel.track(currentDeviceMeta);
+        console.log('📱 Tracked current device presence:', currentDeviceMeta.deviceId);
+    } catch (e) {
+        console.warn('Presence track error:', e);
+    }
+}
+
+async function untrackCurrentDevicePresence() {
+    if (!adminDevicesChannel) return;
+    try {
+        await adminDevicesChannel.untrack();
+        console.log('📱 Untracked device presence on lock');
+    } catch (e) { }
+}
+
+function handlePresenceSync(state) {
+    activeDevicesMap.clear();
+
+    if (state) {
+        Object.keys(state).forEach(key => {
+            const list = state[key];
+            if (Array.isArray(list) && list.length > 0) {
+                activeDevicesMap.set(key, list[0]);
+            }
+        });
+    }
+
+    // Always include current device if authenticated
+    if (isUserAuthenticated()) {
+        const myMeta = currentDeviceMeta || detectDeviceMetadata();
+        if (!activeDevicesMap.has(myMeta.deviceId)) {
+            activeDevicesMap.set(myMeta.deviceId, myMeta);
+        }
+    }
+
+    const deviceCount = activeDevicesMap.size;
+
+    // Update Header Pill
+    const countText = document.getElementById('activeDevicesCountText');
+    if (countText) {
+        countText.textContent = deviceCount === 1 ? '1 Device Active' : `${deviceCount} Devices Active`;
+    }
+    const mobileBadge = document.getElementById('mobileDevicesBadge');
+    if (mobileBadge) {
+        mobileBadge.textContent = deviceCount;
+        mobileBadge.style.display = deviceCount > 0 ? 'flex' : 'none';
+    }
+    const sidebarBadge = document.getElementById('sidebarDevicesBadge');
+    if (sidebarBadge) {
+        sidebarBadge.textContent = deviceCount;
+    }
+    const heading = document.getElementById('devicesListCountHeading');
+    if (heading) {
+        heading.textContent = deviceCount === 1 ? '1 Device Currently Active' : `${deviceCount} Devices Currently Active`;
+    }
+
+    renderActiveDevicesList();
+}
+
+function renderActiveDevicesList() {
+    const container = document.getElementById('activeDevicesList');
+    if (!container) return;
+
+    const devices = Array.from(activeDevicesMap.values());
+    if (devices.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: #94a3b8; padding: 32px 16px;">
+                <i class="fa-solid fa-laptop" style="font-size: 32px; margin-bottom: 8px; opacity: 0.5;"></i>
+                <div style="font-size: 14px; font-weight: 600;">No devices currently active</div>
+            </div>
+        `;
+        return;
+    }
+
+    // Sort: current device first, then newest
+    devices.sort((a, b) => {
+        if (a.deviceId === currentDeviceId) return -1;
+        if (b.deviceId === currentDeviceId) return 1;
+        return (b.lastActive || 0) - (a.lastActive || 0);
+    });
+
+    container.innerHTML = devices.map(dev => {
+        const isCurrent = dev.deviceId === currentDeviceId;
+        let icon = 'fa-desktop';
+        if (dev.deviceType === 'Mobile') icon = 'fa-mobile-screen-button';
+        else if (dev.deviceType === 'Tablet') icon = 'fa-tablet-screen-button';
+
+        const timeStr = dev.unlockedAt ? new Date(dev.unlockedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now';
+
+        return `
+            <div class="active-device-card ${isCurrent ? 'is-current' : ''}">
+                <div class="device-card-icon">
+                    <i class="fa-solid ${icon}"></i>
+                </div>
+                <div class="device-card-info">
+                    <div class="device-card-header">
+                        <span class="device-card-title">${escapeHtml(dev.deviceModel || 'Device')}</span>
+                        ${isCurrent 
+                            ? '<span class="device-badge current"><i class="fa-solid fa-circle-check"></i> This Device</span>' 
+                            : '<span class="device-badge online"><span class="status-dot pulse"></span> Live</span>'}
+                    </div>
+                    <div class="device-card-details">
+                        <span><i class="fa-solid fa-globe"></i> ${escapeHtml(dev.browser || 'Browser')} on ${escapeHtml(dev.os || 'OS')}</span>
+                        <span class="dot-sep">•</span>
+                        <span><i class="fa-regular fa-clock"></i> Active since ${timeStr}</span>
+                    </div>
+                </div>
+                ${!isCurrent ? `
+                    <button type="button" class="device-kick-btn" onclick="lockRemoteDevice('${dev.deviceId}')" title="Remotely lock this device">
+                        <i class="fa-solid fa-power-off"></i> Lock
+                    </button>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+window.openActiveDevicesModal = function () {
+    openAdminModal('activeDevicesModal');
+    if (adminDevicesChannel) {
+        handlePresenceSync(adminDevicesChannel.presenceState());
+    } else {
+        handlePresenceSync({});
+    }
+};
+
+window.lockRemoteDevice = async function (targetDeviceId) {
+    if (!adminDevicesChannel || !targetDeviceId) return;
+    if (confirm('Are you sure you want to remotely lock this device? It will be disconnected immediately.')) {
+        try {
+            await adminDevicesChannel.send({
+                type: 'broadcast',
+                event: 'REMOTE_LOCK',
+                payload: {
+                    targetDeviceId,
+                    fromDeviceId: currentDeviceId
+                }
+            });
+            activeDevicesMap.delete(targetDeviceId);
+            renderActiveDevicesList();
+            showToast('🔒 Remote lock command sent.', 'fa-solid fa-shield-check', '#10b981');
+        } catch (e) {
+            console.error('Remote lock error:', e);
+        }
+    }
+};
+
+window.lockAllOtherDevices = async function () {
+    if (!adminDevicesChannel) return;
+    const otherCount = activeDevicesMap.size - (activeDevicesMap.has(currentDeviceId) ? 1 : 0);
+    if (otherCount <= 0) {
+        showToast('No other active devices connected.', 'fa-solid fa-info-circle', '#64748b');
+        return;
+    }
+    if (confirm(`Are you sure you want to remotely lock all other (${otherCount}) logged-in devices?`)) {
+        try {
+            await adminDevicesChannel.send({
+                type: 'broadcast',
+                event: 'REMOTE_LOCK',
+                payload: {
+                    target: 'all_others',
+                    fromDeviceId: currentDeviceId
+                }
+            });
+            const myMeta = activeDevicesMap.get(currentDeviceId);
+            activeDevicesMap.clear();
+            if (myMeta) activeDevicesMap.set(currentDeviceId, myMeta);
+            renderActiveDevicesList();
+            showToast('🔒 Locked all other devices.', 'fa-solid fa-shield-check', '#10b981');
+        } catch (e) {
+            console.error('Remote lock all error:', e);
+        }
+    }
+};
+
+
 // ==================== SECURITY PIN AUTHENTICATION (PIN: 2411) ====================
 const SECURITY_PIN = '2411';
 
@@ -5757,6 +6053,7 @@ window.verifyPin = function () {
         }
 
         try { showToast('🔓 Access Granted! Welcome to Chocoloom Admin Portal.'); } catch (e) { }
+        try { if (typeof trackCurrentDevicePresence === 'function') trackCurrentDevicePresence(); } catch (e) { }
         try { loadAllOrders(); } catch (e) { console.error("Error loading orders:", e); }
         try { loadAllProducts(); } catch (e) { console.error("Error loading products:", e); }
         try { if (typeof loadAllBanners === 'function') loadAllBanners(true); } catch (e) { console.error("Error loading banners:", e); }
@@ -5786,6 +6083,7 @@ window.lockAdminPortal = function () {
         localStorage.removeItem('chocoloom_admin_authed');
         sessionStorage.removeItem('chocoloom_admin_authed');
     } catch (e) { }
+    try { if (typeof untrackCurrentDevicePresence === 'function') untrackCurrentDevicePresence(); } catch (e) { }
     const overlay = document.getElementById('adminAuthOverlay');
     if (overlay) {
         overlay.classList.remove('hidden');

@@ -6,7 +6,7 @@
 
 // Universal Asset & Image URL Resolver for WordPress & Local Environments
 if (!window.getThemeAssetUrl) {
-    window.getThemeAssetUrl = function(path) {
+    window.getThemeAssetUrl = function (path) {
         if (!path || typeof path !== 'string') return path;
         path = path.trim();
         if (!path) return '';
@@ -19,7 +19,7 @@ if (!window.getThemeAssetUrl) {
 }
 
 if (!window.getAppUrl) {
-    window.getAppUrl = function(target) {
+    window.getAppUrl = function (target) {
         if (!target || typeof target !== 'string') return target;
         const wpConfig = (typeof window !== 'undefined' && (window.CHOCOLOOM_WP_CONFIG || (window.parent && window.parent.CHOCOLOOM_WP_CONFIG))) || {};
         if (!wpConfig.isWordPress) return target;
@@ -65,8 +65,16 @@ if (!savedSupabaseKey || savedSupabaseKey.length < 20) {
 }
 const savedNeonUrl = localStorage.getItem('chocoloom_neon_url');
 
-// Immediately purge legacy fake demo orders from localStorage so state is always 100% authentic
+// Purge legacy caches and reset catalog when requested
 try {
+    const CATALOG_RESET_KEY = 'chocoloom_catalog_reset_v3';
+    if (!localStorage.getItem(CATALOG_RESET_KEY)) {
+        localStorage.removeItem('chocoloom_custom_products');
+        localStorage.removeItem('chocoloom_db_catalog_cache');
+        localStorage.removeItem('chocoloom_price_overrides');
+        localStorage.removeItem('chocoloom_deleted_products');
+        localStorage.setItem(CATALOG_RESET_KEY, 'true');
+    }
     if (localStorage.getItem('chocoloom_stock_sync_v4') !== 'true') {
         localStorage.removeItem('chocoloom_db_catalog_cache');
         const co = JSON.parse(localStorage.getItem('chocoloom_price_overrides') || '{}');
@@ -91,7 +99,7 @@ try {
             }
         }
     }
-} catch(e) {}
+} catch (e) { }
 
 const SUPABASE_CONFIG = {
     url: savedSupabaseUrl.trim().replace(/\/$/, ''),
@@ -113,13 +121,13 @@ const NEON_CONFIG = {
     url: sanitizeNeonUrl(savedNeonUrl || DEFAULT_NEON_URL)
 };
 
-window.setSupabaseConfig = function(url, anonKey) {
+window.setSupabaseConfig = function (url, anonKey) {
     if (url) localStorage.setItem('chocoloom_supabase_url', url.trim().replace(/\/$/, ''));
     if (anonKey) localStorage.setItem('chocoloom_supabase_key', anonKey.trim());
     window.location.reload();
 };
 
-window.setNeonConfig = function(url) {
+window.setNeonConfig = function (url) {
     if (url) localStorage.setItem('chocoloom_neon_url', url.trim());
     window.location.reload();
 };
@@ -184,7 +192,7 @@ function updateCloudStatusBadges() {
 }
 
 // Switch between Supabase and Neon tabs in Cloud Settings Modal
-window.switchCloudTab = function(tab) {
+window.switchCloudTab = function (tab) {
     const tabSupabase = document.getElementById('cloudTabSupabase');
     const tabNeon = document.getElementById('cloudTabNeon');
     const btnSupabase = document.getElementById('tabBtnSupabase');
@@ -223,6 +231,7 @@ function initSupabase() {
             console.log('✅ Supabase Client Initialized in Admin Panel with URL:', SUPABASE_CONFIG.url);
             setupSupabaseRealtime();
             setupAdminCatalogRealtime();
+            setupActiveDevicesRealtime();
         } catch (e) {
             console.warn('Supabase client error:', e);
         }
@@ -234,7 +243,7 @@ function setupAdminCatalogRealtime() {
     if (!supabaseClient) return;
     try {
         if (adminLiveCatalogChannel) {
-            try { adminLiveCatalogChannel.unsubscribe(); } catch(e) {}
+            try { adminLiveCatalogChannel.unsubscribe(); } catch (e) { }
         }
         adminLiveCatalogChannel = supabaseClient.channel('live-products-sync');
         adminLiveCatalogChannel.subscribe((status) => {
@@ -242,7 +251,7 @@ function setupAdminCatalogRealtime() {
                 console.log('⚡ Admin Live Sync Channel subscribed to "live-products-sync"');
             }
         });
-    } catch(e) {
+    } catch (e) {
         console.warn('Admin catalog realtime error:', e);
     }
 }
@@ -256,7 +265,7 @@ function setupSupabaseRealtime() {
 
     try {
         if (supabaseRealtimeChannel) {
-            try { supabaseRealtimeChannel.unsubscribe(); } catch(e) {}
+            try { supabaseRealtimeChannel.unsubscribe(); } catch (e) { }
         }
 
         supabaseRealtimeChannel = supabaseClient
@@ -329,7 +338,7 @@ function setupSupabaseRealtime() {
 }
 
 // Test Supabase Connection (REST + Realtime check)
-window.testSupabaseConnection = async function(showToastMsg = true) {
+window.testSupabaseConnection = async function (showToastMsg = true) {
     const statusBox = document.getElementById('supabaseConnectionStatusBox');
     const urlInput = document.getElementById('supabaseConfigUrl');
     const keyInput = document.getElementById('supabaseConfigKey');
@@ -369,7 +378,7 @@ window.testSupabaseConnection = async function(showToastMsg = true) {
         } else {
             throw new Error(`HTTP ${res.status}`);
         }
-    } catch(err) {
+    } catch (err) {
         AdminState.supabaseConnected = false;
         updateCloudStatusBadges();
         if (statusBox) {
@@ -466,7 +475,7 @@ function sqlEscape(val) {
 function createNeonSql(connString) {
     const parsed = parseNeonConnectionString(connString);
     if (!parsed) return null;
-    const sql = async function(strings, ...values) {
+    const sql = async function (strings, ...values) {
         let query = '';
         if (typeof strings === 'string') {
             query = strings;
@@ -507,7 +516,7 @@ function getNeonClient() {
 }
 
 // Test Neon Connection with Live Diagnostics
-window.testNeonConnection = async function(showToastMsg = true) {
+window.testNeonConnection = async function (showToastMsg = true) {
     const statusBox = document.getElementById('neonConnectionStatusBox');
     const inputUrl = document.getElementById('neonConfigUrl');
     let rawUrl = (inputUrl && inputUrl.value.trim()) ? inputUrl.value.trim() : (localStorage.getItem('chocoloom_neon_url') || NEON_CONFIG.url || DEFAULT_NEON_URL);
@@ -604,7 +613,7 @@ async function initNeon() {
     if (neonUrl) {
         try {
             await testNeonConnection(false);
-        } catch(e) {}
+        } catch (e) { }
     }
 }
 
@@ -623,7 +632,7 @@ function setupBroadcastChannel() {
                 } else if (data.type === 'NEW_ORDER' && data.order) {
                     handleIncomingOrder(data.order, true);
                 } else if (data.type === 'STATUS_UPDATE') {
-                    const existing = AdminState.orders.find(o => 
+                    const existing = AdminState.orders.find(o =>
                         o.order_number === data.order_number || (data.order_id && o.id === data.order_id)
                     );
                     if (existing && existing.status !== data.status) {
@@ -647,14 +656,14 @@ function setupBroadcastChannel() {
                     mergeOrdersIntoState(freshOrders, true);
                     renderDashboard();
                 }
-            } catch (err) {}
+            } catch (err) { }
         } else if (e.key === 'chocoloom_card_orders') {
             loadAllCardOrders(true);
         } else if (e.key === 'chocoloom_last_order' && e.newValue) {
             try {
                 const lastOrder = JSON.parse(e.newValue);
                 if (lastOrder) handleIncomingOrder(lastOrder, true);
-            } catch (err) {}
+            } catch (err) { }
         } else if (e.key === 'chocoloom_order_ping' && e.newValue) {
             loadAllOrders(false);
         }
@@ -693,10 +702,10 @@ function playOrderChime() {
         if (!ctx) return;
 
         const now = ctx.currentTime;
-        
+
         // Chord frequencies (Bakery Bell: E5, G#5, B5, E6)
         const notes = [659.25, 830.61, 987.77, 1318.51];
-        
+
         notes.forEach((freq, idx) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
@@ -729,7 +738,7 @@ function playOrderChime() {
                 chimeGain.connect(ctx.destination);
                 chimeOsc.start(chimeNow);
                 chimeOsc.stop(chimeNow + 0.85);
-            } catch(e) {}
+            } catch (e) { }
         }, 300);
 
     } catch (err) {
@@ -777,8 +786,8 @@ function handleIncomingOrder(order, triggerAlert = true) {
     const orderKey = normalized.order_number || normalized.id;
 
     // Check if already present
-    const existingIndex = AdminState.orders.findIndex(o => 
-        (normalized.order_number && o.order_number === normalized.order_number) || 
+    const existingIndex = AdminState.orders.findIndex(o =>
+        (normalized.order_number && o.order_number === normalized.order_number) ||
         (normalized.id && o.id === normalized.id)
     );
 
@@ -807,8 +816,8 @@ function handleIncomingOrder(order, triggerAlert = true) {
 
 function handleOrderUpdate(updatedOrder) {
     const normalized = normalizeOrderData(updatedOrder);
-    const idx = AdminState.orders.findIndex(o => 
-        (normalized.order_number && o.order_number === normalized.order_number) || 
+    const idx = AdminState.orders.findIndex(o =>
+        (normalized.order_number && o.order_number === normalized.order_number) ||
         (normalized.id && o.id === normalized.id)
     );
     if (idx >= 0) {
@@ -821,7 +830,7 @@ function handleOrderUpdate(updatedOrder) {
 function normalizeOrderData(order) {
     let items = order.items;
     if (typeof items === 'string') {
-        try { items = JSON.parse(items); } catch(e) { items = []; }
+        try { items = JSON.parse(items); } catch (e) { items = []; }
     }
     if (!Array.isArray(items)) items = [];
 
@@ -875,15 +884,15 @@ async function loadAllOrders(isUserInitiated = false) {
 
             const newestInDb = latestCheck?.[0];
             const newestInMemory = AdminState.orders?.[0];
-            if (newestInDb && newestInMemory && 
+            if (newestInDb && newestInMemory &&
                 newestInMemory.customer_name !== 'Aarav Sharma' &&
                 !String(newestInMemory.order_number || '').endsWith('-2489') &&
-                newestInDb.order_number === newestInMemory.order_number && 
+                newestInDb.order_number === newestInMemory.order_number &&
                 newestInDb.updated_at === newestInMemory.updated_at) {
                 // Zero new orders or changes: exit immediately, saving 100% of payload egress!
                 return;
             }
-        } catch (deltaErr) {}
+        } catch (deltaErr) { }
     }
 
     // 1. Try Supabase JS Client (Primary Cloud Live Database)
@@ -938,9 +947,9 @@ async function loadAllOrders(isUserInitiated = false) {
                     console.warn('Supabase REST returned non-array (check RLS / table):', JSON.stringify(data).slice(0, 200));
                 }
             } else {
-                res.text().then(function(t) {
+                res.text().then(function (t) {
                     console.warn('Supabase REST orders failed (HTTP ' + res.status + '):', t.slice(0, 300));
-                }).catch(function() {});
+                }).catch(function () { });
             }
         } catch (e) {
             console.warn('Supabase REST fetch fallback failed:', e);
@@ -958,7 +967,7 @@ async function loadAllOrders(isUserInitiated = false) {
                     console.log('Loaded ' + neonOrders.length + ' orders from Neon Postgres');
                 }
             }
-        } catch(e) {
+        } catch (e) {
             console.warn('Neon order fetch exception:', e);
         }
     }
@@ -1031,13 +1040,13 @@ async function loadAllOrders(isUserInitiated = false) {
 
 function mergeOrdersIntoState(newOrders, triggerAlertForNew = false) {
     if (!Array.isArray(newOrders)) return;
-    
+
     newOrders.forEach(raw => {
         const item = normalizeOrderData(raw);
         if (!item || item.customer_name === 'Aarav Sharma' || String(item.order_number || '').endsWith('-2489')) return;
         const orderKey = item.order_number || item.id;
-        const idx = AdminState.orders.findIndex(o => 
-            (item.order_number && o.order_number === item.order_number) || 
+        const idx = AdminState.orders.findIndex(o =>
+            (item.order_number && o.order_number === item.order_number) ||
             (item.id && o.id === item.id)
         );
 
@@ -1067,7 +1076,7 @@ function persistOrdersLocally() {
     try {
         const cleanOrders = (AdminState.orders || []).filter(o => o && o.customer_name !== 'Aarav Sharma' && !String(o.order_number || '').endsWith('-2489'));
         localStorage.setItem('chocoloom_orders', JSON.stringify(cleanOrders.slice(0, 100)));
-    } catch (e) {}
+    } catch (e) { }
 }
 
 // Initial demonstration orders disabled - real dashboard shows authentic orders only
@@ -1078,7 +1087,7 @@ function seedInitialDemoOrders() {
 // ==================== WORKFLOW STATUS UPDATES ====================
 
 // Advance order status (Confirmed -> Preparing -> Out for Delivery -> Delivered)
-window.advanceOrderStatus = async function(orderNumber) {
+window.advanceOrderStatus = async function (orderNumber) {
     const order = AdminState.orders.find(o => o.order_number === orderNumber);
     if (!order) return;
 
@@ -1091,7 +1100,7 @@ window.advanceOrderStatus = async function(orderNumber) {
 };
 
 // Update order status explicitly
-window.updateOrderStatus = async function(orderNumber, newStatus) {
+window.updateOrderStatus = async function (orderNumber, newStatus) {
     const order = AdminState.orders.find(o => o.order_number === orderNumber);
     if (!order) return;
 
@@ -1120,7 +1129,7 @@ window.updateOrderStatus = async function(orderNumber, newStatus) {
                 },
                 body: JSON.stringify({ status: newStatus, updated_at: order.updated_at })
             });
-        } catch (e) {}
+        } catch (e) { }
     }
 
     // 1b. Update in Neon Postgres (if configured)
@@ -1144,9 +1153,9 @@ window.updateOrderStatus = async function(orderNumber, newStatus) {
                 order_id: order.id,
                 status: newStatus
             });
-            setTimeout(() => { try { ch.close(); } catch(e){} }, 500);
+            setTimeout(() => { try { ch.close(); } catch (e) { } }, 500);
         }
-    } catch (e) {}
+    } catch (e) { }
 
     // 3. Persist locally
     persistOrdersLocally();
@@ -1158,7 +1167,7 @@ window.updateOrderStatus = async function(orderNumber, newStatus) {
 
 // ==================== MANUAL ORDER MANAGEMENT & CREATION ====================
 
-window.openManualOrderModal = function() {
+window.openManualOrderModal = function () {
     getAudioContext(); // Enable Web Audio on user gesture
 
     // Reset form elements
@@ -1233,7 +1242,7 @@ function populateManualOrderProductDropdown() {
     });
 }
 
-window.onManualProductSelectChange = function(val) {
+window.onManualProductSelectChange = function (val) {
     const customGroup = document.getElementById('manualCustomNameGroup');
     const customInput = document.getElementById('manualCustomName');
     const priceInput = document.getElementById('manualItemPrice');
@@ -1271,7 +1280,7 @@ window.onManualProductSelectChange = function(val) {
     recalcManualOrderTotal();
 };
 
-window.recalcManualOrderTotal = function() {
+window.recalcManualOrderTotal = function () {
     const priceInput = document.getElementById('manualItemPrice');
     const qtyInput = document.getElementById('manualItemQty');
     const coolingCheck = document.getElementById('manualCoolingCheck');
@@ -1303,7 +1312,7 @@ window.recalcManualOrderTotal = function() {
     return { itemTotal, finalTotal, deliveryFee, platformFee, gstFee, coolingPrice, isCooling, qty, price };
 };
 
-window.fillSampleManualOrder = function() {
+window.fillSampleManualOrder = function () {
     const sampleCustomers = [
         { name: "Pooja Reddy", phone: "+91 99887 76655", area: "Koramangala 5th Block, Jyoti Nivas Rd, Bengaluru - 560034" },
         { name: "Vikram Malhotra", phone: "+91 98112 34567", area: "Sector 2, HSR Layout, 27th Main, Bengaluru - 560102" },
@@ -1378,7 +1387,7 @@ window.fillSampleManualOrder = function() {
     showToast('⚡ Sample order details auto-filled!');
 };
 
-window.handleManualOrderSubmit = async function(e) {
+window.handleManualOrderSubmit = async function (e) {
     if (e && e.preventDefault) e.preventDefault();
 
     const submitBtn = document.getElementById('manualOrderSubmitBtn');
@@ -1524,7 +1533,7 @@ function sanitizeSupabaseOrderPayload(raw) {
     return clean;
 }
 
-window.saveOrderToDatabasesAndBus = async function(order) {
+window.saveOrderToDatabasesAndBus = async function (order) {
     let supabaseSaved = false;
 
     // 1. Save to Supabase (Primary Cloud Live Database)
@@ -1567,7 +1576,7 @@ window.saveOrderToDatabasesAndBus = async function(order) {
                     console.warn('Supabase JS client insert error:', error.message || error);
                 }
             }
-        } catch(sbErr) {
+        } catch (sbErr) {
             console.warn('Supabase order save exception:', sbErr);
         }
     }
@@ -1624,7 +1633,7 @@ window.saveOrderToDatabasesAndBus = async function(order) {
             `;
             console.log('✅ Order saved to Neon Postgres');
         }
-    } catch(neonErr) {
+    } catch (neonErr) {
         console.warn('Neon order save warning:', neonErr);
     }
 
@@ -1633,15 +1642,15 @@ window.saveOrderToDatabasesAndBus = async function(order) {
         if ('BroadcastChannel' in window) {
             const ch = new BroadcastChannel('chocoloom_orders_bus');
             ch.postMessage({ type: 'NEW_ORDER', order: order });
-            setTimeout(() => { try { ch.close(); } catch(e){} }, 500);
+            setTimeout(() => { try { ch.close(); } catch (e) { } }, 500);
         }
-    } catch(e) {}
+    } catch (e) { }
 
     return supabaseSaved;
 };
 
 // Backward-compatible alias for simulateIncomingOrder
-window.simulateIncomingOrder = function() {
+window.simulateIncomingOrder = function () {
     window.openManualOrderModal();
     window.fillSampleManualOrder();
 };
@@ -1831,13 +1840,13 @@ function createOrderCardHTML(order) {
             <!-- Items List -->
             <div class="order-items-box">
                 ${items.map(item => {
-                    const weight = item.selected_weight || item.weight || '0.5 KG';
-                    const isCooling = Boolean(item.is_cooling);
-                    const coolingP = Number(item.cooling_price || 0);
-                    const msg = item.custom_message || null;
-                    const subtotal = (Number(item.price) || 0) * (Number(item.quantity) || 1);
+        const weight = item.selected_weight || item.weight || '0.5 KG';
+        const isCooling = Boolean(item.is_cooling);
+        const coolingP = Number(item.cooling_price || 0);
+        const msg = item.custom_message || null;
+        const subtotal = (Number(item.price) || 0) * (Number(item.quantity) || 1);
 
-                    return `
+        return `
                         <div class="order-item-row">
                             <div class="item-left">
                                 <span class="item-name-qty">
@@ -1855,7 +1864,7 @@ function createOrderCardHTML(order) {
                             <span class="item-price">₹${subtotal}</span>
                         </div>
                     `;
-                }).join('')}
+    }).join('')}
             </div>
 
             <!-- Financials & Payment -->
@@ -1958,7 +1967,7 @@ function getTimeAgo(dateStr) {
     const now = Date.now();
     const then = new Date(dateStr).getTime();
     const diffSecs = Math.max(0, Math.floor((now - then) / 1000));
-    
+
     if (diffSecs < 60) return 'Just now';
     if (diffSecs < 3600) return `${Math.floor(diffSecs / 60)}m ago`;
     if (diffSecs < 86400) return `${Math.floor(diffSecs / 3600)}h ago`;
@@ -2015,7 +2024,7 @@ function showToast(message) {
 }
 
 // Order Details Drilldown Modal
-window.openOrderDetailsModal = function(orderNumber) {
+window.openOrderDetailsModal = function (orderNumber) {
     const order = AdminState.orders.find(o => o.order_number === orderNumber);
     if (!order) return;
 
@@ -2093,19 +2102,19 @@ window.openOrderDetailsModal = function(orderNumber) {
     modal.classList.add('open');
 };
 
-window.openAdminModal = function(modalId) {
+window.openAdminModal = function (modalId) {
     const m = document.getElementById(modalId);
     if (m) m.classList.add('open');
 };
 
-window.closeAdminModal = function(modalId) {
+window.closeAdminModal = function (modalId) {
     const m = document.getElementById(modalId);
     if (m) m.classList.remove('open');
 };
 
 // ==================== THERMAL RECEIPT & KOT PRINTING ====================
 
-window.openPrintModal = function(orderNumber) {
+window.openPrintModal = function (orderNumber) {
     const order = AdminState.orders.find(o => o.order_number === orderNumber);
     if (!order) return;
 
@@ -2276,7 +2285,7 @@ function initEventListeners() {
             const status = AdminState.storeOpen ? 'open' : 'closed';
             try {
                 localStorage.setItem('chocoloom_store_status', status);
-            } catch(e) {}
+            } catch (e) { }
             updateStoreStatusUI();
             loadAllCardOrders();
             if (AdminState.storeOpen) {
@@ -2366,13 +2375,13 @@ function broadcastStoreStatus(isOpen) {
         try {
             const ch = new BroadcastChannel('chocoloom_orders_bus');
             ch.postMessage(payload);
-            setTimeout(() => { try { ch.close(); } catch(e){} }, 500);
-        } catch(e) {}
+            setTimeout(() => { try { ch.close(); } catch (e) { } }, 500);
+        } catch (e) { }
         try {
             const chSync = new BroadcastChannel('chocoloom_admin_sync');
             chSync.postMessage(payload);
-            setTimeout(() => { try { chSync.close(); } catch(e){} }, 500);
-        } catch(e) {}
+            setTimeout(() => { try { chSync.close(); } catch (e) { } }, 500);
+        } catch (e) { }
     }
 
     // 2. Cross-origin sync (bridges, windows, parent)
@@ -2385,7 +2394,7 @@ function broadcastStoreStatus(isOpen) {
 // Synchronize store status to Supabase and Neon Postgres
 async function syncStoreStatusToCloud(isOpen) {
     const statusVal = isOpen ? 'open' : 'closed';
-    
+
     // Supabase
     if (supabaseClient) {
         try {
@@ -2393,8 +2402,8 @@ async function syncStoreStatusToCloud(isOpen) {
                 key: 'store_status',
                 value: statusVal,
                 updated_at: new Date().toISOString()
-            }, { onConflict: 'key' }).catch(() => {});
-        } catch(e) {}
+            }, { onConflict: 'key' }).catch(() => { });
+        } catch (e) { }
 
         try {
             const channel = supabaseClient.channel('admin_orders_feed');
@@ -2402,8 +2411,8 @@ async function syncStoreStatusToCloud(isOpen) {
                 type: 'broadcast',
                 event: 'store_status_change',
                 payload: { storeOpen: isOpen, status: statusVal }
-            }).catch(() => {});
-        } catch(e) {}
+            }).catch(() => { });
+        } catch (e) { }
     }
 
     // Neon Serverless Postgres
@@ -2424,7 +2433,7 @@ async function syncStoreStatusToCloud(isOpen) {
             `;
             console.log('✅ Store status synced to Neon Postgres:', statusVal);
         }
-    } catch(e) {
+    } catch (e) {
         console.warn('Neon store status sync error:', e);
     }
 
@@ -2454,9 +2463,9 @@ async function syncStoreStatusToCloud(isOpen) {
                 if (res && res.ok) {
                     console.log('✅ Store status synced to WordPress:', wpTarget);
                 }
-            } catch(wErr) {}
+            } catch (wErr) { }
         }
-    } catch(wpErr) {}
+    } catch (wpErr) { }
 }
 
 // Fetch store status from Supabase on init
@@ -2472,19 +2481,19 @@ async function fetchStoreStatusFromCloud() {
                     updateStoreStatusUI();
                 }
             }
-        } catch(e) {}
+        } catch (e) { }
     }
 }
 
 // ==================== MOBILE NAVIGATION CONTROLS ====================
-window.toggleMobileSidebar = function() {
+window.toggleMobileSidebar = function () {
     const sb = document.querySelector('.sidebar');
     const bd = document.getElementById('sidebarBackdrop');
     if (sb) sb.classList.toggle('mobile-open');
     if (bd) bd.classList.toggle('active');
 };
 
-window.closeMobileSidebar = function() {
+window.closeMobileSidebar = function () {
     const sb = document.querySelector('.sidebar');
     const bd = document.getElementById('sidebarBackdrop');
     if (sb) sb.classList.remove('mobile-open');
@@ -2492,7 +2501,7 @@ window.closeMobileSidebar = function() {
 };
 
 // ==================== TAB SWITCHER (ORDERS vs PRODUCTS) ====================
-window.switchAdminTab = function(tabName) {
+window.switchAdminTab = function (tabName) {
     if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
 
     const mobOrders = document.getElementById('mobNavOrders');
@@ -2550,7 +2559,7 @@ window.switchAdminTab = function(tabName) {
 // ==================== MENU, PRODUCTS & PRICING ENGINE ====================
 
 // Load all products directly from Supabase Cloud (with fallback to Neon / Local)
-window.loadAllProducts = async function() {
+window.loadAllProducts = async function () {
     // 1. PRIMARY: Receive all live products directly from Supabase Cloud Database!
     const PRODUCT_COLUMNS = "*";
     try {
@@ -2559,7 +2568,7 @@ window.loadAllProducts = async function() {
             try {
                 const { data, error } = await supabaseClient.from("products").select(PRODUCT_COLUMNS).order("category", { ascending: true }).order("name", { ascending: true });
                 if (!error && Array.isArray(data) && data.length > 0) supaProds = data;
-            } catch(e) {}
+            } catch (e) { }
         }
         if (!supaProds) {
             // Direct REST API fetch to Supabase
@@ -2574,7 +2583,7 @@ window.loadAllProducts = async function() {
                     const data = await res.json();
                     if (Array.isArray(data) && data.length > 0) supaProds = data;
                 }
-            } catch(e) {}
+            } catch (e) { }
         }
 
         if (supaProds && supaProds.length > 0) {
@@ -2619,7 +2628,7 @@ window.loadAllProducts = async function() {
                         mappedProds[exIdx] = { ...mappedProds[exIdx], ...c };
                     }
                 });
-            } catch(e) {}
+            } catch (e) { }
 
             // Apply any local price/stock overrides
             try {
@@ -2636,7 +2645,7 @@ window.loadAllProducts = async function() {
                         if (over.image) { p.image = over.image; p.image_url = over.image; }
                     }
                 });
-            } catch(e) {}
+            } catch (e) { }
 
             // Filter out deleted items
             try {
@@ -2644,7 +2653,7 @@ window.loadAllProducts = async function() {
                 if (dels.length > 0) {
                     mappedProds = mappedProds.filter(p => !dels.includes(p.id) && (!p.sql_id || !dels.includes(p.sql_id)));
                 }
-            } catch(e) {}
+            } catch (e) { }
 
             AdminState.products = mappedProds;
             AdminState.supabaseConnected = true;
@@ -2672,13 +2681,13 @@ window.loadAllProducts = async function() {
                         console.log('✅ Admin loaded live flavour weights from Supabase:', fwList.length);
                     }
                 }
-            } catch(e) {}
+            } catch (e) { }
 
             renderProductsStats();
             renderProducts();
             return;
         }
-    } catch(supaErr) {
+    } catch (supaErr) {
         console.warn('Supabase catalog fetch exception, checking Neon fallback:', supaErr);
     }
 
@@ -2726,7 +2735,7 @@ window.loadAllProducts = async function() {
                         if (exIdx === -1) mappedNeon.unshift(c);
                         else mappedNeon[exIdx] = { ...mappedNeon[exIdx], ...c };
                     });
-                } catch(e) {}
+                } catch (e) { }
 
                 // Apply price & detail overrides
                 try {
@@ -2743,7 +2752,7 @@ window.loadAllProducts = async function() {
                             if (over.image) { p.image = over.image; p.image_url = over.image; }
                         }
                     });
-                } catch(e) {}
+                } catch (e) { }
 
                 // Filter deleted items
                 try {
@@ -2751,7 +2760,7 @@ window.loadAllProducts = async function() {
                     if (dels.length > 0) {
                         mappedNeon = mappedNeon.filter(p => !dels.includes(p.id) && (!p.sql_id || !dels.includes(p.sql_id)));
                     }
-                } catch(e) {}
+                } catch (e) { }
 
                 AdminState.products = mappedNeon;
                 AdminState.neonConnected = true;
@@ -2761,7 +2770,7 @@ window.loadAllProducts = async function() {
                 return;
             }
         }
-    } catch(neonErr) {}
+    } catch (neonErr) { }
 
     let baseList = [];
     const seen = new Set();
@@ -2805,7 +2814,7 @@ window.loadAllProducts = async function() {
         deletedIds = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
         priceOverrides = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
         customProducts = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
-    } catch(e) {}
+    } catch (e) { }
 
     // Filter out deleted items
     baseList = baseList.filter(p => !deletedIds.includes(p.id) && (!p.sql_id || !deletedIds.includes(p.sql_id)));
@@ -2889,7 +2898,7 @@ window.loadAllProducts = async function() {
                     }
                 });
             }
-        } catch(e) {
+        } catch (e) {
             console.warn("Supabase products fetch:", e);
         }
     }
@@ -2937,7 +2946,7 @@ window.loadAllProducts = async function() {
                 });
             }
         }
-    } catch(e) {
+    } catch (e) {
         console.warn("Neon products fetch exception:", e);
     }
 
@@ -2945,7 +2954,7 @@ window.loadAllProducts = async function() {
 
     // Update sidebar badge
     const badge = document.getElementById("sidebarProductsBadge");
-    if (badge) badge.textContent = baseList.length + "+";
+    if (badge) badge.textContent = baseList.length > 0 ? (baseList.length + "+") : "0";
 
     renderProductsStats();
     renderProducts();
@@ -3241,7 +3250,7 @@ function createProductTableRowHTML(prod) {
 }
 
 // Toggle between Card View and Table View for products
-window.toggleProductView = function(mode) {
+window.toggleProductView = function (mode) {
     AdminState.productsViewMode = mode;
     const cardsBtn = document.getElementById("viewProdCardsBtn");
     const tableBtn = document.getElementById("viewProdTableBtn");
@@ -3296,7 +3305,7 @@ function compressImageToDataUrl(file, maxWidth = 800, maxHeight = 800, quality =
                     if (webpUrl && webpUrl.startsWith('data:image/webp')) {
                         return resolve(webpUrl);
                     }
-                } catch(err) {}
+                } catch (err) { }
                 resolve(canvas.toDataURL('image/jpeg', quality));
             };
             img.onerror = () => resolve(e.target.result);
@@ -3307,13 +3316,13 @@ function compressImageToDataUrl(file, maxWidth = 800, maxHeight = 800, quality =
     });
 }
 
-window.handleProductImageFileSelect = function(input) {
+window.handleProductImageFileSelect = function (input) {
     if (input && input.files && input.files[0]) {
         window.processAndUploadProductImage(input.files[0]);
     }
 };
 
-window.handleProductImageDrop = function(e) {
+window.handleProductImageDrop = function (e) {
     if (e) {
         e.preventDefault();
         const dropzone = document.getElementById('productImageDropzone');
@@ -3327,7 +3336,7 @@ window.handleProductImageDrop = function(e) {
     }
 };
 
-window.processAndUploadProductImage = async function(file) {
+window.processAndUploadProductImage = async function (file) {
     if (!file) return;
 
     const dropzone = document.getElementById('productImageDropzone');
@@ -3374,12 +3383,12 @@ window.processAndUploadProductImage = async function(file) {
 
                 const uploadPayload = (compressedBlob && compressedBlob.size) ? compressedBlob : file;
                 const fileName = `item_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.webp`;
-                
+
                 // 1-year browser cache (31536000s) prevents repeated downloads from Supabase Storage
                 const { data, error } = await supabaseClient.storage
                     .from('products')
-                    .upload(fileName, uploadPayload, { 
-                        cacheControl: '31536000', 
+                    .upload(fileName, uploadPayload, {
+                        cacheControl: '31536000',
                         upsert: true,
                         contentType: 'image/webp'
                     });
@@ -3437,7 +3446,7 @@ window.processAndUploadProductImage = async function(file) {
                             break;
                         }
                     }
-                } catch(epErr) {}
+                } catch (epErr) { }
             }
         }
 
@@ -3453,7 +3462,7 @@ window.processAndUploadProductImage = async function(file) {
             if (statusBadge) statusBadge.style.display = 'inline-flex';
             showToast('✅ Image uploaded & link generated successfully!', 'fa-solid fa-circle-check', '#10b981');
         }
-    } catch(err) {
+    } catch (err) {
         console.error('Image upload error:', err);
         showToast('Image processing failed: ' + (err.message || 'Unknown error'), 'fa-solid fa-triangle-exclamation', '#ef4444');
     } finally {
@@ -3462,7 +3471,7 @@ window.processAndUploadProductImage = async function(file) {
     }
 };
 
-window.updateProductImagePreview = function(url) {
+window.updateProductImagePreview = function (url) {
     const container = document.getElementById('productImagePreviewContainer');
     const img = document.getElementById('productImagePreviewImg');
     const text = document.getElementById('productImagePreviewUrlText');
@@ -3478,7 +3487,7 @@ window.updateProductImagePreview = function(url) {
     const cleanUrl = url.trim();
     if (img) {
         img.src = cleanUrl;
-        img.onerror = function() {
+        img.onerror = function () {
             img.src = 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80';
         };
     }
@@ -3491,7 +3500,7 @@ window.updateProductImagePreview = function(url) {
     if (inputUrl && inputUrl.value !== cleanUrl) inputUrl.value = cleanUrl;
 };
 
-window.clearProductUploadedImage = function() {
+window.clearProductUploadedImage = function () {
     const fileInput = document.getElementById('productFileInput');
     if (fileInput) fileInput.value = '';
     const inputUrl = document.getElementById('prodInputImage');
@@ -3525,7 +3534,7 @@ const ADMIN_FLAVOUR_KEYS = [
 
 window.ADMIN_FLAVOUR_KEYS = ADMIN_FLAVOUR_KEYS;
 
-window.onFlavour05Input = function(flavourId, val) {
+window.onFlavour05Input = function (flavourId, val) {
     const p = Number(val) || 0;
     const cat = document.getElementById("prodInputCategory") ? document.getElementById("prodInputCategory").value : "";
     const name = document.getElementById("prodInputName") ? document.getElementById("prodInputName").value : "";
@@ -3553,7 +3562,7 @@ window.onFlavour05Input = function(flavourId, val) {
     }
 };
 
-window.autoCalcSingleFlavourWeights = function(flavourId) {
+window.autoCalcSingleFlavourWeights = function (flavourId) {
     const inp05 = document.getElementById('flavourPrice_' + flavourId);
     const p = inp05 ? (Number(inp05.value) || 0) : 0;
     if (p <= 0) {
@@ -3569,11 +3578,11 @@ window.autoCalcSingleFlavourWeights = function(flavourId) {
     if (inp20) inp20.value = p + 1200;
 
     if (typeof showToast === 'function') {
-        showToast(`✨ Auto-filled weights for ${flavourId}: 0.5KG (₹${p}) • 1KG (₹${p+400}) • 1.5KG (₹${p+800}) • 2KG (₹${p+1200})`, 'fa-solid fa-wand-magic-sparkles', '#db2777');
+        showToast(`✨ Auto-filled weights for ${flavourId}: 0.5KG (₹${p}) • 1KG (₹${p + 400}) • 1.5KG (₹${p + 800}) • 2KG (₹${p + 1200})`, 'fa-solid fa-wand-magic-sparkles', '#db2777');
     }
 };
 
-window.autoFillAllFlavourWeights = function() {
+window.autoFillAllFlavourWeights = function () {
     let count = 0;
     const baseFallback = Number(document.getElementById("prodInputPrice") ? document.getElementById("prodInputPrice").value : 749) || 749;
     ADMIN_FLAVOUR_KEYS.forEach(f => {
@@ -3597,7 +3606,7 @@ window.autoFillAllFlavourWeights = function() {
     }
 };
 
-window.setAllFlavourPrices = function(val) {
+window.setAllFlavourPrices = function (val) {
     ADMIN_FLAVOUR_KEYS.forEach(f => {
         const inp05 = document.getElementById('flavourPrice_' + f.id);
         const inp10 = document.getElementById('flavourPrice_' + f.id + '_10');
@@ -3614,7 +3623,7 @@ window.setAllFlavourPrices = function(val) {
     }
 };
 
-window.resetDefaultFlavourPrices = function() {
+window.resetDefaultFlavourPrices = function () {
     ADMIN_FLAVOUR_KEYS.forEach(f => {
         const inp05 = document.getElementById('flavourPrice_' + f.id);
         const inp10 = document.getElementById('flavourPrice_' + f.id + '_10');
@@ -3631,7 +3640,7 @@ window.resetDefaultFlavourPrices = function() {
     }
 };
 
-window.toggleAdminWeightSection = function(enabled) {
+window.toggleAdminWeightSection = function (enabled) {
     const chk = document.getElementById("prodInputHasWeight");
     if (chk && chk.checked !== enabled) chk.checked = enabled;
 
@@ -3653,7 +3662,7 @@ window.toggleAdminWeightSection = function(enabled) {
     }
 };
 
-window.toggleAdminCoolingSection = function(enabled) {
+window.toggleAdminCoolingSection = function (enabled) {
     const chk = document.getElementById("prodInputHasCooling");
     if (chk && chk.checked !== enabled) chk.checked = enabled;
 
@@ -3669,7 +3678,7 @@ window.toggleAdminCoolingSection = function(enabled) {
     }
 };
 
-window.toggleAdminFlavoursSection = function(enabled) {
+window.toggleAdminFlavoursSection = function (enabled) {
     const chk = document.getElementById("prodInputHasFlavours");
     if (chk && chk.checked !== enabled) chk.checked = enabled;
 
@@ -3691,17 +3700,17 @@ window.toggleAdminFlavoursSection = function(enabled) {
     }
 };
 
-window.toggleAdminBentoFlavourMode = function(isBento) {
+window.toggleAdminBentoFlavourMode = function (isBento) {
     // 1. Hide/show Auto-fill All KG Weights button in the Flavour section header
     const autoFillBtn = document.getElementById("btnAutoFillFlavourWeights") || document.querySelector("button[onclick*='autoFillAllFlavourWeights']");
     if (autoFillBtn) autoFillBtn.style.display = isBento ? "none" : "";
 
     // 2. Update Flavour section heading
-    const flavourHeading = document.getElementById("adminFlavourSectionHeading") || 
+    const flavourHeading = document.getElementById("adminFlavourSectionHeading") ||
         Array.from(document.querySelectorAll("#adminFlavoursContent span")).find(s => s.textContent.includes("Cake Flavour Surcharges") || s.textContent.includes("Bento Cake Flavours"));
     if (flavourHeading) {
-        flavourHeading.textContent = isBento 
-            ? "🍱 Bento Cake Flavours (Single Size • No KG Weights)" 
+        flavourHeading.textContent = isBento
+            ? "🍱 Bento Cake Flavours (Single Size • No KG Weights)"
             : "Cake Flavour Surcharges & Pricing (₹)";
     }
 
@@ -3758,11 +3767,11 @@ window.toggleAdminBentoFlavourMode = function(isBento) {
     }
 };
 
-window.handleAdminCategoryChange = function(category) {
+window.handleAdminCategoryChange = function (category) {
     const cat = (category || "").toLowerCase();
     const isBento = cat.includes("bento");
     const nonCakeCategories = [
-        "chocolates", "snacks", "desserts", "shakes", 
+        "chocolates", "snacks", "desserts", "shakes",
         "brownies", "combos", "combo gifts", "gifts", "extras", "dark", "milk", "ruby", "drinks"
     ];
 
@@ -3788,11 +3797,11 @@ window.handleAdminCategoryChange = function(category) {
     }
 };
 
-window.syncAdminPriceFlavour = function(val) {
+window.syncAdminPriceFlavour = function (val) {
     if (document.getElementById("prodInputFlavour")) {
         document.getElementById("prodInputFlavour").value = val;
     }
-    
+
     // Find the product being edited
     const formId = document.getElementById("prodFormId") ? document.getElementById("prodFormId").value.trim() : "";
     const prod = formId ? AdminState.products.find(p => p.id === formId || p.sql_id === formId || String(p.id) === String(formId) || String(p.sql_id) === String(formId)) : null;
@@ -3868,7 +3877,7 @@ window.syncAdminPriceFlavour = function(val) {
     }
 };
 
-window.openAddProductModal = function() {
+window.openAddProductModal = function () {
     const modal = document.getElementById("productModal");
     const title = document.getElementById("productModalTitle");
     const form = document.getElementById("productForm");
@@ -3897,7 +3906,7 @@ window.openAddProductModal = function() {
     const prodNameElAdd = document.getElementById("prodInputName");
     if (prodNameElAdd && !prodNameElAdd.dataset.bentoListener) {
         prodNameElAdd.dataset.bentoListener = "true";
-        prodNameElAdd.addEventListener("input", function() {
+        prodNameElAdd.addEventListener("input", function () {
             const cat = document.getElementById("prodInputCategory") ? document.getElementById("prodInputCategory").value : "";
             const isBento = ((cat || "").toLowerCase().includes("bento")) || (this.value.toLowerCase().includes("bento"));
             if (isBento) {
@@ -3914,7 +3923,7 @@ window.openAddProductModal = function() {
     modal.classList.add("open");
 };
 
-window.openEditProductModal = function(productId) {
+window.openEditProductModal = function (productId) {
     const prod = AdminState.products.find(p => p.id === productId || p.sql_id === productId || String(p.id) === String(productId) || String(p.sql_id) === String(productId));
     if (!prod) return;
 
@@ -3990,7 +3999,7 @@ window.openEditProductModal = function(productId) {
 
     const nonCakeCategories = ["chocolates", "snacks", "desserts", "shakes", "brownies", "combos", "combo gifts", "gifts", "extras", "dark", "milk", "ruby", "drinks"];
     const isCatNonCake = nonCakeCategories.some(nc => catLower.includes(nc));
-    
+
     let hasWeight = true;
     if (isBento) {
         hasWeight = false;
@@ -4027,7 +4036,7 @@ window.openEditProductModal = function(productId) {
     const prodNameElEdit = document.getElementById("prodInputName");
     if (prodNameElEdit && !prodNameElEdit.dataset.bentoListener) {
         prodNameElEdit.dataset.bentoListener = "true";
-        prodNameElEdit.addEventListener("input", function() {
+        prodNameElEdit.addEventListener("input", function () {
             const cat = document.getElementById("prodInputCategory") ? document.getElementById("prodInputCategory").value : "";
             const isBentoNow = ((cat || "").toLowerCase().includes("bento")) || (this.value.toLowerCase().includes("bento"));
             if (isBentoNow) {
@@ -4074,7 +4083,7 @@ window.openEditProductModal = function(productId) {
     modal.classList.add("open");
 };
 
-window.autoComputeWeightPrices = function(baseVal, force = false) {
+window.autoComputeWeightPrices = function (baseVal, force = false) {
     const p = Number(baseVal) || 0;
     if (p <= 0) return;
     const p05 = document.getElementById("prodInputPrice05");
@@ -4100,12 +4109,12 @@ window.autoComputeWeightPrices = function(baseVal, force = false) {
 
         const noteEl = document.getElementById("adminWeightFlavourSyncNote");
         if (noteEl) {
-            noteEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>KG weights scaled for <strong>${selFlavour}</strong>: 0.5KG (₹${p}) • 1KG (₹${p+400}) • 1.5KG (₹${p+800}) • 2KG (₹${p+1200})</span>`;
+            noteEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>KG weights scaled for <strong>${selFlavour}</strong>: 0.5KG (₹${p}) • 1KG (₹${p + 400}) • 1.5KG (₹${p + 800}) • 2KG (₹${p + 1200})</span>`;
         }
     }
 };
 
-window.setPresetImage = function(url) {
+window.setPresetImage = function (url) {
     const el = document.getElementById("prodInputImage");
     if (el) el.value = url;
     window.updateProductImagePreview(url);
@@ -4113,7 +4122,7 @@ window.setPresetImage = function(url) {
 };
 
 // Handle Add / Edit Product Submit with complete persistence
-window.handleProductFormSubmit = async function(e) {
+window.handleProductFormSubmit = async function (e) {
     if (e && e.preventDefault) e.preventDefault();
 
     const saveBtn = document.getElementById("saveProductBtn");
@@ -4208,10 +4217,10 @@ window.handleProductFormSubmit = async function(e) {
 
         if (formId) {
             // Edit existing product in memory
-            const idx = AdminState.products.findIndex(p => 
-                p.id === formId || 
-                p.sql_id === formId || 
-                String(p.id) === String(formId) || 
+            const idx = AdminState.products.findIndex(p =>
+                p.id === formId ||
+                p.sql_id === formId ||
+                String(p.id) === String(formId) ||
                 String(p.sql_id) === String(formId) ||
                 (sqlId && (p.sql_id === sqlId || p.id === sqlId)) ||
                 (originalName && p.name && p.name.toLowerCase().trim() === originalName.toLowerCase().trim())
@@ -4303,8 +4312,8 @@ window.handleProductFormSubmit = async function(e) {
             // Also update in chocoloom_custom_products if was custom and un-delete
             try {
                 let customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
-                const cIdx = customs.findIndex(c => 
-                    c.id === formId || 
+                const cIdx = customs.findIndex(c =>
+                    c.id === formId ||
                     (c.sql_id && c.sql_id === formId) ||
                     (targetSqlId && (c.sql_id === targetSqlId || c.id === targetSqlId)) ||
                     (originalName && c.name && c.name.toLowerCase().trim() === originalName.toLowerCase().trim())
@@ -4318,7 +4327,7 @@ window.handleProductFormSubmit = async function(e) {
                     dels = dels.filter(d => d !== formId);
                     localStorage.setItem("chocoloom_deleted_products", JSON.stringify(dels));
                 }
-            } catch(e) {}
+            } catch (e) { }
         } else {
             // Create new product
             const newId = "choco_custom_" + Date.now();
@@ -4364,11 +4373,11 @@ window.handleProductFormSubmit = async function(e) {
                     syncProductToNeon(updatedProduct),
                     syncCatalogToServer()
                 ]);
-            } catch(syncErr) {
+            } catch (syncErr) {
                 console.warn('Background sync error:', syncErr);
             }
         })();
-    } catch(err) {
+    } catch (err) {
         console.error("Error in handleProductFormSubmit:", err);
         showToast("Error: " + (err.message || "Failed to save"), "fa-solid fa-triangle-exclamation", "#ef4444");
     } finally {
@@ -4380,7 +4389,7 @@ window.handleProductFormSubmit = async function(e) {
 };
 
 // Quick 1-Click Price Update Modal
-window.openQuickPriceModal = function(productId) {
+window.openQuickPriceModal = function (productId) {
     const prod = AdminState.products.find(p => p.id === productId || p.sql_id === productId);
     if (!prod) return;
 
@@ -4399,7 +4408,7 @@ window.openQuickPriceModal = function(productId) {
     }, 150);
 };
 
-window.handleQuickPriceSubmit = async function(e) {
+window.handleQuickPriceSubmit = async function (e) {
     if (e && e.preventDefault) e.preventDefault();
     const prodId = document.getElementById("quickPriceProdId").value;
     const newPrice = Number(document.getElementById("quickPriceNewVal").value);
@@ -4473,7 +4482,7 @@ window.handleQuickPriceSubmit = async function(e) {
                     syncProductToNeon(prod),
                     syncCatalogToServer()
                 ]);
-            } catch(err) {
+            } catch (err) {
                 console.warn('Background quick price sync error:', err);
             }
         })();
@@ -4481,7 +4490,7 @@ window.handleQuickPriceSubmit = async function(e) {
 };
 
 // Toggle in-stock availability switch (Instant sub-1ms response)
-window.toggleProductStock = function(productId, isAvailable) {
+window.toggleProductStock = function (productId, isAvailable) {
     const prod = AdminState.products.find(p => p.id === productId || p.sql_id === productId || String(p.id) === String(productId) || String(p.sql_id) === String(productId));
     if (!prod) return;
 
@@ -4500,7 +4509,7 @@ window.toggleProductStock = function(productId, isAvailable) {
             cache[prod.name.toLowerCase().replace(/[^a-z0-9]/g, '')] = pObj;
         }
         localStorage.setItem('chocoloom_db_catalog_cache', JSON.stringify(cache));
-    } catch(e) {}
+    } catch (e) { }
 
     // 3. BROADCAST IMMEDIATELY (0ms across all local tabs and Supabase Realtime)
     broadcastProductUpdate("STOCK", prod);
@@ -4517,12 +4526,12 @@ window.toggleProductStock = function(productId, isAvailable) {
                 syncProductToNeon(prod),
                 syncCatalogToServer()
             ]);
-        } catch(err) {}
+        } catch (err) { }
     })();
 };
 
 // Delete Product
-window.deleteProductItem = async function(productId) {
+window.deleteProductItem = async function (productId) {
     const prod = AdminState.products.find(p => p.id === productId || p.sql_id === productId);
     if (!prod) return;
 
@@ -4544,7 +4553,7 @@ window.deleteProductItem = async function(productId) {
         let customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
         customs = customs.filter(c => c.id !== productId);
         localStorage.setItem("chocoloom_custom_products", JSON.stringify(customs));
-    } catch(e) {}
+    } catch (e) { }
 
     // Instant UI update
     renderProducts();
@@ -4558,15 +4567,15 @@ window.deleteProductItem = async function(productId) {
     (async () => {
         try {
             if (prod.sql_id) {
-                if (supabaseClient) supabaseClient.from("products").delete().eq("id", prod.sql_id).catch(() => {});
+                if (supabaseClient) supabaseClient.from("products").delete().eq("id", prod.sql_id).catch(() => { });
                 fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?id=eq.${prod.sql_id}`, {
                     method: 'DELETE',
                     headers: { 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}` }
-                }).catch(() => {});
+                }).catch(() => { });
             }
             await deleteProductFromNeon(prod.sql_id || productId, prod.name);
             await syncCatalogToServer();
-        } catch(e) {}
+        } catch (e) { }
     })();
 };
 
@@ -4575,9 +4584,9 @@ function saveCustomProductLocally(prod) {
     try {
         let customs = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
         const orig = prod._originalName || prod.originalName || "";
-        const idx = customs.findIndex(c => 
-            c.id === prod.id || 
-            (prod.sql_id && c.sql_id === prod.sql_id) || 
+        const idx = customs.findIndex(c =>
+            c.id === prod.id ||
+            (prod.sql_id && c.sql_id === prod.sql_id) ||
             (orig && c.name && c.name.toLowerCase().trim() === orig.toLowerCase().trim()) ||
             (c.name && prod.name && c.name.toLowerCase().trim() === prod.name.toLowerCase().trim())
         );
@@ -4597,8 +4606,8 @@ function saveCustomProductLocally(prod) {
             overrides[orig.toLowerCase().trim()] = { ...(overrides[orig.toLowerCase().trim()] || {}), ...prod };
         }
         localStorage.setItem("chocoloom_price_overrides", JSON.stringify(overrides));
-        try { sessionStorage.removeItem('chocoloom_products_cache_v2'); } catch(e) {}
-    } catch(e) {}
+        try { sessionStorage.removeItem('chocoloom_products_cache_v2'); } catch (e) { }
+    } catch (e) { }
 
     syncCatalogToServer();
     sendCrossOriginSync({
@@ -4617,7 +4626,9 @@ function initSyncBridges() {
         "http://127.0.0.1:5500",
         "http://localhost:5500",
         "http://127.0.0.1:5501",
-        "http://localhost:5501"
+        "http://localhost:5501",
+        "http://127.0.0.1:5502",
+        "http://localhost:5502"
     ];
     candidateOrigins.forEach(origin => {
         if (origin !== window.location.origin) {
@@ -4629,7 +4640,7 @@ function initSyncBridges() {
                     ifr.style.display = "none";
                     ifr.src = origin + "/sync_bridge.html";
                     document.body.appendChild(ifr);
-                } catch(e) {}
+                } catch (e) { }
             }
         }
     });
@@ -4645,7 +4656,7 @@ function sendCrossOriginSync(payload) {
             if (ifr.contentWindow) {
                 ifr.contentWindow.postMessage(message, "*");
             }
-        } catch(e) {}
+        } catch (e) { }
     });
 
     // 2. Send to opener or parent if open in window/tab
@@ -4653,17 +4664,17 @@ function sendCrossOriginSync(payload) {
         if (window.opener && !window.opener.closed) {
             window.opener.postMessage(message, "*");
         }
-    } catch(e) {}
+    } catch (e) { }
     try {
         if (window.parent && window.parent !== window) {
             window.parent.postMessage(message, "*");
         }
-    } catch(e) {}
+    } catch (e) { }
 
     // 3. Dispatch locally
     try {
         window.postMessage(message, "*");
-    } catch(e) {}
+    } catch (e) { }
 }
 
 function savePriceOverrideLocally(id, data) {
@@ -4705,16 +4716,16 @@ function savePriceOverrideLocally(id, data) {
                 dbC[data._originalName.toLowerCase().trim()] = { ...(dbC[data._originalName.toLowerCase().trim()] || {}), ...enriched };
             }
             localStorage.setItem("chocoloom_db_catalog_cache", JSON.stringify(dbC));
-        } catch(e) {}
-        try { sessionStorage.removeItem('chocoloom_products_cache_v2'); } catch(e) {}
-    } catch(e) {}
+        } catch (e) { }
+        try { sessionStorage.removeItem('chocoloom_products_cache_v2'); } catch (e) { }
+    } catch (e) { }
 
     // Find full product details from memory to guarantee complete attributes sync to database
     let prodToSync = null;
     if (typeof AdminState !== "undefined" && Array.isArray(AdminState.products)) {
-        prodToSync = AdminState.products.find(p => 
-            p.id === id || 
-            p.sql_id === id || 
+        prodToSync = AdminState.products.find(p =>
+            p.id === id ||
+            p.sql_id === id ||
             (data && data.sql_id && p.sql_id === data.sql_id) ||
             (data && data.name && p.name && p.name.toLowerCase().trim() === data.name.toLowerCase().trim()) ||
             (data && data._originalName && p.name && p.name.toLowerCase().trim() === data._originalName.toLowerCase().trim())
@@ -4730,7 +4741,7 @@ function savePriceOverrideLocally(id, data) {
         if (typeof syncProductToNeon === "function") {
             syncProductToNeon(mergedProd).catch(e => console.warn("Background Neon sync error:", e));
         }
-    } catch(dbErr) {}
+    } catch (dbErr) { }
 
     syncCatalogToServer();
     sendCrossOriginSync({
@@ -4803,7 +4814,7 @@ async function syncCatalogToServer() {
                 try {
                     res = await fetch(target, {
                         method: "POST",
-                        headers: { 
+                        headers: {
                             "Content-Type": "application/json",
                             "X-WP-Nonce": wpConfig.nonce || ""
                         },
@@ -4816,13 +4827,13 @@ async function syncCatalogToServer() {
                 if (res && res.ok) {
                     console.log("✅ Catalog successfully synced to server target:", target);
                 }
-            } catch(e) {}
+            } catch (e) { }
         }));
-    } catch(e) {}
+    } catch (e) { }
 }
 
 // Export complete updated data.js for 1-click permanent persistence
-window.exportDataJsFile = function() {
+window.exportDataJsFile = function () {
     const rawData = window.SWIGGY_DATA || (typeof SWIGGY_DATA !== "undefined" ? SWIGGY_DATA : null);
     if (!rawData) {
         showToast("Base SWIGGY_DATA not loaded!", "fa-solid fa-circle-exclamation", "#ef4444");
@@ -4837,7 +4848,7 @@ window.exportDataJsFile = function() {
         deletedIds = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
         priceOverrides = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
         customProducts = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
-    } catch(e) {}
+    } catch (e) { }
 
     if (exportedData.restaurants && exportedData.restaurants[0] && Array.isArray(exportedData.restaurants[0].menu)) {
         let menu = exportedData.restaurants[0].menu;
@@ -4877,7 +4888,7 @@ window.exportDataJsFile = function() {
 };
 
 // Reset local overrides to original data.js
-window.resetToDataJs = function() {
+window.resetToDataJs = function () {
     if (!confirm("Are you sure you want to clear all local overrides and reset everything to base data.js?")) {
         return;
     }
@@ -4895,8 +4906,47 @@ window.resetToDataJs = function() {
     }
 };
 
+// Remove all products from menu
+window.removeAllAdminProducts = async function () {
+    if (!confirm("Are you sure you want to remove ALL items from the active bakery menu? This will clear the entire product list.")) {
+        return;
+    }
+    const currentList = [...(AdminState.products || [])];
+    const allIds = currentList.map(p => p.id || p.sql_id).filter(Boolean);
+
+    // Save all to deleted list in localStorage
+    try {
+        const deletedIds = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
+        currentList.forEach(p => {
+            if (p.id && !deletedIds.includes(p.id)) deletedIds.push(p.id);
+            if (p.sql_id && !deletedIds.includes(p.sql_id)) deletedIds.push(p.sql_id);
+        });
+        localStorage.setItem("chocoloom_deleted_products", JSON.stringify(deletedIds));
+        localStorage.setItem("chocoloom_custom_products", JSON.stringify([]));
+    } catch (e) { }
+
+    // Clear state
+    AdminState.products = [];
+
+    // Instant UI update
+    renderProductsStats();
+    renderProducts();
+    const badge = document.getElementById("sidebarProductsBadge");
+    if (badge) badge.textContent = "0";
+
+    showToast("All items have been removed from the menu!", "fa-solid fa-trash-can", "#ef4444");
+
+    // Broadcast across tabs
+    broadcastProductUpdate("DELETE_ALL", { ids: allIds });
+
+    // Sync to server endpoints
+    if (typeof syncCatalogToServer === "function") {
+        syncCatalogToServer();
+    }
+};
+
 // 1-Click Sync to Main Site
-window.syncAllToMainSite = async function() {
+window.syncAllToMainSite = async function () {
     showToast("Syncing catalog to main site...", "fa-solid fa-cloud-arrow-up fa-spin", "#7c5cfc");
     await syncCatalogToServer();
     const payload = {
@@ -4910,7 +4960,7 @@ window.syncAllToMainSite = async function() {
     if ("BroadcastChannel" in window) {
         const ch = new BroadcastChannel("chocoloom_orders_bus");
         ch.postMessage(payload);
-        setTimeout(() => { try { ch.close(); } catch(e){} }, 500);
+        setTimeout(() => { try { ch.close(); } catch (e) { } }, 500);
     }
     sendCrossOriginSync(payload);
     setTimeout(() => {
@@ -4995,7 +5045,7 @@ async function syncProductToSupabase(prod) {
                     const items = await findResOrig.json();
                     if (Array.isArray(items) && items.length > 0) targetId = items[0].id;
                 }
-            } catch(e) {}
+            } catch (e) { }
         }
 
         // 1.2 Search by current name in Supabase if targetId still not found
@@ -5008,7 +5058,7 @@ async function syncProductToSupabase(prod) {
                     const items = await findRes.json();
                     if (Array.isArray(items) && items.length > 0) targetId = items[0].id;
                 }
-            } catch(e) {}
+            } catch (e) { }
         }
 
         // 1.3 Search by wildcard name if still not found
@@ -5022,7 +5072,7 @@ async function syncProductToSupabase(prod) {
                     const items2 = await findRes2.json();
                     if (Array.isArray(items2) && items2.length > 0) targetId = items2[0].id;
                 }
-            } catch(e) {}
+            } catch (e) { }
         }
 
         // 2. Direct Supabase REST API (Primary - Works across all browser environments)
@@ -5044,7 +5094,7 @@ async function syncProductToSupabase(prod) {
                     lastError = await patchRes.text();
                     console.error(`❌ [Supabase REST PATCH Error] ${patchRes.status}:`, lastError);
                 }
-            } catch(fetchErr) {
+            } catch (fetchErr) {
                 lastError = fetchErr.message;
                 console.warn('Supabase REST PATCH exception:', fetchErr);
             }
@@ -5068,7 +5118,7 @@ async function syncProductToSupabase(prod) {
                     }
                     if (error) lastError = error.message;
                 }
-            } catch(clientErr) {
+            } catch (clientErr) {
                 console.warn('Supabase JS Client attempt exception:', clientErr);
             }
         }
@@ -5100,13 +5150,13 @@ async function syncProductToSupabase(prod) {
                                 customs[cIdx].sql_id = newSqlId;
                                 localStorage.setItem("chocoloom_custom_products", JSON.stringify(customs));
                             }
-                        } catch(e) {}
+                        } catch (e) { }
                         // Keep price overrides linked
                         try {
                             let overs = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
                             overs[newSqlId] = { ...(overs[prod.id] || {}), ...prod, sql_id: newSqlId };
                             localStorage.setItem("chocoloom_price_overrides", JSON.stringify(overs));
-                        } catch(e) {}
+                        } catch (e) { }
                         console.log(`✅ [Supabase REST] Inserted new product "${prod.name}" (${prod.sql_id})`);
                         // Re-broadcast so customer site knows the permanent sql_id
                         broadcastProductUpdate("SAVE", { ...prod, sql_id: newSqlId });
@@ -5114,7 +5164,7 @@ async function syncProductToSupabase(prod) {
                 } else {
                     lastError = await postRes.text();
                 }
-            } catch(postErr) {
+            } catch (postErr) {
                 lastError = postErr.message;
             }
         }
@@ -5132,12 +5182,12 @@ async function syncProductToSupabase(prod) {
                     type: 'broadcast',
                     event: 'PRODUCT_UPDATE',
                     payload: { ...payload, id: targetId || prod.sql_id, image: finalImage }
-                }).catch(() => {});
-            } catch(bErr) {}
+                }).catch(() => { });
+            } catch (bErr) { }
         }
 
         return { success: updated, error: lastError };
-    } catch(e) {
+    } catch (e) {
         console.warn("Sync product to Supabase exception:", e);
         return { success: false, error: e.message };
     }
@@ -5186,7 +5236,7 @@ async function ensureNeonTablesExist() {
             await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS has_flavours BOOLEAN DEFAULT FALSE;`;
             await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS flavour TEXT;`;
             await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS flavour_prices JSONB DEFAULT '{}'::jsonb;`;
-        } catch(cErr) {}
+        } catch (cErr) { }
         await sql`
             CREATE TABLE IF NOT EXISTS orders (
                 id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -5290,9 +5340,9 @@ async function ensureNeonTablesExist() {
                     updated_at TIMESTAMPTZ DEFAULT NOW()
                 );
             `;
-        } catch(alterErr) {}
+        } catch (alterErr) { }
         return true;
-    } catch(err) {
+    } catch (err) {
         console.warn('Neon table creation error:', err);
         return false;
     }
@@ -5306,7 +5356,7 @@ async function syncProductToNeon(prod) {
 
     try {
         if (!_neonTablesEnsured) {
-            ensureNeonTablesExist().catch(() => {});
+            ensureNeonTablesExist().catch(() => { });
         }
 
         const id = String(prod.sql_id || prod.id || ('choco_' + Date.now())).trim();
@@ -5351,7 +5401,7 @@ async function syncProductToNeon(prod) {
             if (Array.isArray(existingRows) && existingRows.length > 0 && existingRows[0]?.id) {
                 existingId = existingRows[0].id;
             }
-        } catch(findErr) {
+        } catch (findErr) {
             console.warn('Neon check existing product error:', findErr);
         }
 
@@ -5438,7 +5488,7 @@ async function syncProductToNeon(prod) {
             console.log('✅ Inserted new product into Neon Postgres:', name, '(' + id + ')');
             return { success: true, id: id, action: 'INSERT' };
         }
-    } catch(err) {
+    } catch (err) {
         console.warn('Neon sync product error:', err);
         return { success: false, error: err.message };
     }
@@ -5457,13 +5507,13 @@ async function deleteProductFromNeon(prodId, prodName = '') {
             await sql`DELETE FROM products WHERE LOWER(TRIM(name)) = LOWER(TRIM(${String(prodName)}));`;
         }
         console.log('✅ Deleted product from Neon Postgres:', prodId || prodName);
-    } catch(err) {
+    } catch (err) {
         console.warn('Neon delete product error:', err);
     }
 }
 
 // 1-Click Migration & Sync All Products to Neon Postgres
-window.syncAllProductsToNeon = async function() {
+window.syncAllProductsToNeon = async function () {
     const sql = await getNeonClient();
     if (!sql) {
         showToast('Please enter & save your Neon Connection String first!', 'fa-solid fa-triangle-exclamation', '#f59e0b');
@@ -5487,7 +5537,7 @@ window.syncAllProductsToNeon = async function() {
             statusBox.style.color = '#065f46';
             statusBox.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #10b981;"></i> <strong>Neon Synced!</strong> ${count} products active in database.`;
         }
-    } catch(err) {
+    } catch (err) {
         console.error('Neon bulk sync error:', err);
         showToast('Neon sync error: ' + err.message, 'fa-solid fa-circle-exclamation', '#ef4444');
     }
@@ -5515,14 +5565,14 @@ function broadcastProductUpdate(action, prod) {
             try {
                 const chAdmin = new BroadcastChannel("chocoloom_admin_sync");
                 chAdmin.postMessage(payload);
-                setTimeout(() => { try { chAdmin.close(); } catch(e){} }, 500);
-            } catch(e) {}
+                setTimeout(() => { try { chAdmin.close(); } catch (e) { } }, 500);
+            } catch (e) { }
 
             try {
                 const chOrders = new BroadcastChannel("chocoloom_orders_bus");
                 chOrders.postMessage(payload);
-                setTimeout(() => { try { chOrders.close(); } catch(e){} }, 500);
-            } catch(e) {}
+                setTimeout(() => { try { chOrders.close(); } catch (e) { } }, 500);
+            } catch (e) { }
         }
 
         // 2. Supabase Realtime Broadcast (Instant sub-50ms push to customer website)
@@ -5545,13 +5595,308 @@ function broadcastProductUpdate(action, prod) {
                         isDirectAdd: Boolean(prod?.isDirectAdd || (prod && prod.has_weight === false && prod.has_cooling === false && prod.has_flavours === false)),
                         action: action
                     }
-                }).catch(() => {});
-            } catch(e) {}
+                }).catch(() => { });
+            } catch (e) { }
         }
 
         sendCrossOriginSync(payload);
-    } catch(e) {}
+    } catch (e) { }
 }
+
+
+// ==================== LIVE ADMIN ACTIVE DEVICES CONTROLLER (PRESENCE & REMOTE LOCK) ====================
+let adminDevicesChannel = null;
+let currentDeviceId = null;
+let currentDeviceMeta = null;
+let activeDevicesMap = new Map();
+
+function getOrCreateDeviceId() {
+    let id = sessionStorage.getItem('chocoloom_admin_device_id');
+    if (!id) {
+        id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 8);
+        sessionStorage.setItem('chocoloom_admin_device_id', id);
+    }
+    return id;
+}
+
+function detectDeviceMetadata() {
+    const ua = navigator.userAgent || '';
+    let os = 'Unknown OS';
+    if (ua.includes('iPhone')) os = 'iOS (iPhone)';
+    else if (ua.includes('iPad')) os = 'iPadOS';
+    else if (ua.includes('Macintosh') || ua.includes('Mac OS')) os = 'macOS';
+    else if (ua.includes('Windows')) os = 'Windows';
+    else if (ua.includes('Android')) os = 'Android';
+    else if (ua.includes('Linux')) os = 'Linux';
+
+    let browser = 'Browser';
+    if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome';
+    else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+    else if (ua.includes('Edg')) browser = 'Edge';
+    else if (ua.includes('Firefox')) browser = 'Firefox';
+
+    const isMobile = /Mobi|Android|iPhone/i.test(ua);
+    const isTablet = /iPad|Tablet/i.test(ua) || (os.includes('macOS') && navigator.maxTouchPoints > 1);
+    const deviceType = isTablet ? 'Tablet' : (isMobile ? 'Mobile' : 'Desktop');
+
+    let deviceModel = deviceType;
+    if (os.includes('macOS')) deviceModel = 'MacBook / Mac';
+    else if (os.includes('iOS')) deviceModel = 'iPhone';
+    else if (os.includes('iPad')) deviceModel = 'iPad';
+    else if (os.includes('Windows')) deviceModel = 'Windows PC';
+    else if (os.includes('Android')) deviceModel = 'Android Phone';
+
+    return {
+        deviceId: getOrCreateDeviceId(),
+        deviceType,
+        deviceModel,
+        os,
+        browser,
+        screen: `${window.screen.width} × ${window.screen.height}`,
+        unlockedAt: Date.now(),
+        lastActive: Date.now()
+    };
+}
+
+function setupActiveDevicesRealtime() {
+    if (!supabaseClient) return;
+
+    try {
+        if (adminDevicesChannel) {
+            try { adminDevicesChannel.unsubscribe(); } catch (e) { }
+        }
+
+        currentDeviceId = getOrCreateDeviceId();
+        currentDeviceMeta = detectDeviceMetadata();
+
+        adminDevicesChannel = supabaseClient.channel('admin_live_devices', {
+            config: {
+                presence: { key: currentDeviceId }
+            }
+        });
+
+        adminDevicesChannel
+            .on('presence', { event: 'sync' }, () => {
+                const state = adminDevicesChannel.presenceState();
+                handlePresenceSync(state);
+            })
+            .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+                console.log('📱 Active Device connected:', key, newPresences);
+            })
+            .on('presence', { event: 'leave' }, ({ key }) => {
+                console.log('📱 Device disconnected:', key);
+            })
+            .on('broadcast', { event: 'REMOTE_LOCK' }, ({ payload }) => {
+                if (payload) {
+                    if (payload.targetDeviceId === currentDeviceId || 
+                       (payload.target === 'all_others' && payload.fromDeviceId !== currentDeviceId)) {
+                        console.warn('🔒 Remote lock triggered from another device');
+                        window.lockAdminPortal();
+                        showToast('🔒 This device was remotely locked from another device.', 'fa-solid fa-lock', '#ef4444');
+                    }
+                }
+            });
+
+        adminDevicesChannel.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                console.log('⚡ Admin Live Devices Presence Subscribed');
+                if (isUserAuthenticated()) {
+                    await trackCurrentDevicePresence();
+                }
+            }
+        });
+
+        // Periodic presence heartbeat every 25 seconds
+        setInterval(() => {
+            if (isUserAuthenticated() && adminDevicesChannel) {
+                trackCurrentDevicePresence();
+            }
+        }, 25000);
+
+    } catch (e) {
+        console.warn('Active devices realtime init error:', e);
+    }
+}
+
+async function trackCurrentDevicePresence() {
+    if (!adminDevicesChannel || !isUserAuthenticated()) return;
+    try {
+        if (!currentDeviceMeta) currentDeviceMeta = detectDeviceMetadata();
+        currentDeviceMeta.lastActive = Date.now();
+        await adminDevicesChannel.track(currentDeviceMeta);
+        console.log('📱 Tracked current device presence:', currentDeviceMeta.deviceId);
+    } catch (e) {
+        console.warn('Presence track error:', e);
+    }
+}
+
+async function untrackCurrentDevicePresence() {
+    if (!adminDevicesChannel) return;
+    try {
+        await adminDevicesChannel.untrack();
+        console.log('📱 Untracked device presence on lock');
+    } catch (e) { }
+}
+
+function handlePresenceSync(state) {
+    activeDevicesMap.clear();
+
+    if (state) {
+        Object.keys(state).forEach(key => {
+            const list = state[key];
+            if (Array.isArray(list) && list.length > 0) {
+                activeDevicesMap.set(key, list[0]);
+            }
+        });
+    }
+
+    // Always include current device if authenticated
+    if (isUserAuthenticated()) {
+        const myMeta = currentDeviceMeta || detectDeviceMetadata();
+        if (!activeDevicesMap.has(myMeta.deviceId)) {
+            activeDevicesMap.set(myMeta.deviceId, myMeta);
+        }
+    }
+
+    const deviceCount = activeDevicesMap.size;
+
+    // Update Header Pill
+    const countText = document.getElementById('activeDevicesCountText');
+    if (countText) {
+        countText.textContent = deviceCount === 1 ? '1 Device Active' : `${deviceCount} Devices Active`;
+    }
+    const mobileBadge = document.getElementById('mobileDevicesBadge');
+    if (mobileBadge) {
+        mobileBadge.textContent = deviceCount;
+        mobileBadge.style.display = deviceCount > 0 ? 'flex' : 'none';
+    }
+    const sidebarBadge = document.getElementById('sidebarDevicesBadge');
+    if (sidebarBadge) {
+        sidebarBadge.textContent = deviceCount;
+    }
+    const heading = document.getElementById('devicesListCountHeading');
+    if (heading) {
+        heading.textContent = deviceCount === 1 ? '1 Device Currently Active' : `${deviceCount} Devices Currently Active`;
+    }
+
+    renderActiveDevicesList();
+}
+
+function renderActiveDevicesList() {
+    const container = document.getElementById('activeDevicesList');
+    if (!container) return;
+
+    const devices = Array.from(activeDevicesMap.values());
+    if (devices.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: #94a3b8; padding: 32px 16px;">
+                <i class="fa-solid fa-laptop" style="font-size: 32px; margin-bottom: 8px; opacity: 0.5;"></i>
+                <div style="font-size: 14px; font-weight: 600;">No devices currently active</div>
+            </div>
+        `;
+        return;
+    }
+
+    // Sort: current device first, then newest
+    devices.sort((a, b) => {
+        if (a.deviceId === currentDeviceId) return -1;
+        if (b.deviceId === currentDeviceId) return 1;
+        return (b.lastActive || 0) - (a.lastActive || 0);
+    });
+
+    container.innerHTML = devices.map(dev => {
+        const isCurrent = dev.deviceId === currentDeviceId;
+        let icon = 'fa-desktop';
+        if (dev.deviceType === 'Mobile') icon = 'fa-mobile-screen-button';
+        else if (dev.deviceType === 'Tablet') icon = 'fa-tablet-screen-button';
+
+        const timeStr = dev.unlockedAt ? new Date(dev.unlockedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now';
+
+        return `
+            <div class="active-device-card ${isCurrent ? 'is-current' : ''}">
+                <div class="device-card-icon">
+                    <i class="fa-solid ${icon}"></i>
+                </div>
+                <div class="device-card-info">
+                    <div class="device-card-header">
+                        <span class="device-card-title">${escapeHtml(dev.deviceModel || 'Device')}</span>
+                        ${isCurrent 
+                            ? '<span class="device-badge current"><i class="fa-solid fa-circle-check"></i> This Device</span>' 
+                            : '<span class="device-badge online"><span class="status-dot pulse"></span> Live</span>'}
+                    </div>
+                    <div class="device-card-details">
+                        <span><i class="fa-solid fa-globe"></i> ${escapeHtml(dev.browser || 'Browser')} on ${escapeHtml(dev.os || 'OS')}</span>
+                        <span class="dot-sep">•</span>
+                        <span><i class="fa-regular fa-clock"></i> Active since ${timeStr}</span>
+                    </div>
+                </div>
+                ${!isCurrent ? `
+                    <button type="button" class="device-kick-btn" onclick="lockRemoteDevice('${dev.deviceId}')" title="Remotely lock this device">
+                        <i class="fa-solid fa-power-off"></i> Lock
+                    </button>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+window.openActiveDevicesModal = function () {
+    openAdminModal('activeDevicesModal');
+    if (adminDevicesChannel) {
+        handlePresenceSync(adminDevicesChannel.presenceState());
+    } else {
+        handlePresenceSync({});
+    }
+};
+
+window.lockRemoteDevice = async function (targetDeviceId) {
+    if (!adminDevicesChannel || !targetDeviceId) return;
+    if (confirm('Are you sure you want to remotely lock this device? It will be disconnected immediately.')) {
+        try {
+            await adminDevicesChannel.send({
+                type: 'broadcast',
+                event: 'REMOTE_LOCK',
+                payload: {
+                    targetDeviceId,
+                    fromDeviceId: currentDeviceId
+                }
+            });
+            activeDevicesMap.delete(targetDeviceId);
+            renderActiveDevicesList();
+            showToast('🔒 Remote lock command sent.', 'fa-solid fa-shield-check', '#10b981');
+        } catch (e) {
+            console.error('Remote lock error:', e);
+        }
+    }
+};
+
+window.lockAllOtherDevices = async function () {
+    if (!adminDevicesChannel) return;
+    const otherCount = activeDevicesMap.size - (activeDevicesMap.has(currentDeviceId) ? 1 : 0);
+    if (otherCount <= 0) {
+        showToast('No other active devices connected.', 'fa-solid fa-info-circle', '#64748b');
+        return;
+    }
+    if (confirm(`Are you sure you want to remotely lock all other (${otherCount}) logged-in devices?`)) {
+        try {
+            await adminDevicesChannel.send({
+                type: 'broadcast',
+                event: 'REMOTE_LOCK',
+                payload: {
+                    target: 'all_others',
+                    fromDeviceId: currentDeviceId
+                }
+            });
+            const myMeta = activeDevicesMap.get(currentDeviceId);
+            activeDevicesMap.clear();
+            if (myMeta) activeDevicesMap.set(currentDeviceId, myMeta);
+            renderActiveDevicesList();
+            showToast('🔒 Locked all other devices.', 'fa-solid fa-shield-check', '#10b981');
+        } catch (e) {
+            console.error('Remote lock all error:', e);
+        }
+    }
+};
 
 
 // ==================== SECURITY PIN AUTHENTICATION (PIN: 2411) ====================
@@ -5708,6 +6053,7 @@ window.verifyPin = function () {
         }
 
         try { showToast('🔓 Access Granted! Welcome to Chocoloom Admin Portal.'); } catch (e) { }
+        try { if (typeof trackCurrentDevicePresence === 'function') trackCurrentDevicePresence(); } catch (e) { }
         try { loadAllOrders(); } catch (e) { console.error("Error loading orders:", e); }
         try { loadAllProducts(); } catch (e) { console.error("Error loading products:", e); }
         try { if (typeof loadAllBanners === 'function') loadAllBanners(true); } catch (e) { console.error("Error loading banners:", e); }
@@ -5737,6 +6083,7 @@ window.lockAdminPortal = function () {
         localStorage.removeItem('chocoloom_admin_authed');
         sessionStorage.removeItem('chocoloom_admin_authed');
     } catch (e) { }
+    try { if (typeof untrackCurrentDevicePresence === 'function') untrackCurrentDevicePresence(); } catch (e) { }
     const overlay = document.getElementById('adminAuthOverlay');
     if (overlay) {
         overlay.classList.remove('hidden');
@@ -5769,7 +6116,7 @@ function playUnlockChime() {
             osc.start(now + idx * 0.07);
             osc.stop(now + idx * 0.07 + 0.45);
         });
-    } catch(e) {}
+    } catch (e) { }
 }
 
 function playErrorBuzz() {
@@ -5788,7 +6135,7 @@ function playErrorBuzz() {
         gain.connect(ctx.destination);
         osc.start(now);
         osc.stop(now + 0.35);
-    } catch(e) {}
+    } catch (e) { }
 }
 
 function initPinKeyboardListeners() {
@@ -5866,12 +6213,12 @@ function initPinKeyboardListeners() {
 }
 
 // ==================== CLOUD SERVER CONFIGURATION MODAL ====================
-window.openCloudConfigModal = function() {
+window.openCloudConfigModal = function () {
     // Cloud database settings hidden
     return false;
 };
 
-window.saveCloudServerConfig = function() {
+window.saveCloudServerConfig = function () {
     const urlInput = document.getElementById("supabaseConfigUrl");
     const keyInput = document.getElementById("supabaseConfigKey");
     const neonInput = document.getElementById("neonConfigUrl");
@@ -5898,8 +6245,8 @@ window.saveCloudServerConfig = function() {
         try {
             const ch = new BroadcastChannel("chocoloom_orders_bus");
             ch.postMessage(configPayload);
-            setTimeout(() => { try { ch.close(); } catch(e){} }, 500);
-        } catch(e) {}
+            setTimeout(() => { try { ch.close(); } catch (e) { } }, 500);
+        } catch (e) { }
     }
 
     showToast("Cloud credentials saved! Reconnecting services...", "fa-solid fa-circle-check", "#10b981");
@@ -5939,7 +6286,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==================== VIP CARD ORDERS CONTROLLER ====================
-window.loadAllCardOrders = async function(silent = false) {
+window.loadAllCardOrders = async function (silent = false) {
     let cardList = [];
 
     // 1. Neon Serverless Postgres
@@ -5963,7 +6310,7 @@ window.loadAllCardOrders = async function(silent = false) {
             if (!error && Array.isArray(data) && data.length > 0) {
                 cardList = data;
             }
-        } catch (e) {}
+        } catch (e) { }
     }
 
     // 3. Fallback to localStorage
@@ -5973,7 +6320,7 @@ window.loadAllCardOrders = async function(silent = false) {
             if (Array.isArray(local) && local.length > 0) {
                 cardList = local;
             }
-        } catch (e) {}
+        } catch (e) { }
     }
 
     // 4. Master catalog fallback from window.SWIGGY_DATA.cardOrders
@@ -5985,7 +6332,7 @@ window.loadAllCardOrders = async function(silent = false) {
     if (cardList.length > 0 && !localStorage.getItem('chocoloom_card_orders')) {
         try {
             localStorage.setItem('chocoloom_card_orders', JSON.stringify(cardList));
-        } catch(e) {}
+        } catch (e) { }
     }
 
     AdminState.cardOrders = cardList;
@@ -5993,7 +6340,7 @@ window.loadAllCardOrders = async function(silent = false) {
     renderCardOrders();
 };
 
-window.updateCardOrdersBadge = function() {
+window.updateCardOrdersBadge = function () {
     const badge = document.getElementById('sidebarCardsBadge');
     const mobBadge = document.getElementById('mobBadgeCards');
     const activeCount = (AdminState.cardOrders || []).filter(o => o.status !== 'Delivered').length;
@@ -6007,7 +6354,7 @@ window.updateCardOrdersBadge = function() {
     }
 };
 
-window.renderCardOrders = function() {
+window.renderCardOrders = function () {
     const tbody = document.getElementById('cardOrdersTableBody');
     if (!tbody) return;
 
@@ -6178,7 +6525,7 @@ window.renderCardOrders = function() {
     }).join('');
 };
 
-window.filterCardOrders = function(filter) {
+window.filterCardOrders = function (filter) {
     AdminState.cardsActiveFilter = filter;
     document.querySelectorAll('[id^="cardFilter_"]').forEach(el => el.classList.remove('active'));
     const activeBtn = document.getElementById(`cardFilter_${filter.replace(/\s+/g, '')}`);
@@ -6186,13 +6533,13 @@ window.filterCardOrders = function(filter) {
     renderCardOrders();
 };
 
-window.handleSearchCards = function(val) {
+window.handleSearchCards = function (val) {
     AdminState.cardsSearchQuery = (val || '').toLowerCase().trim();
     renderCardOrders();
 };
 
 // Render physical card embossing preview & printable shipping label
-window.openCardLabelModal = function(orderId) {
+window.openCardLabelModal = function (orderId) {
     const order = (AdminState.cardOrders || []).find(o => o.id === orderId || o.order_number === orderId || String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
     if (!order) return;
 
@@ -6329,7 +6676,7 @@ window.openCardLabelModal = function(orderId) {
 // Aliases for compatibility
 window.openCardShippingLabelModal = window.openCardLabelModal;
 
-window.printCardShippingLabel = function() {
+window.printCardShippingLabel = function () {
     const labelCard = document.getElementById('printableCardShippingLabel');
     if (!labelCard) return;
 
@@ -6350,7 +6697,7 @@ window.printCardShippingLabel = function() {
 };
 
 // Update card status with immediate local, Neon, and Supabase persistence
-window.updateCardOrderStatus = async function(orderId, newStatus, courier, awb) {
+window.updateCardOrderStatus = async function (orderId, newStatus, courier, awb) {
     const order = (AdminState.cardOrders || []).find(o => o.id === orderId || o.order_number === orderId || String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
     if (!order) return;
 
@@ -6362,7 +6709,7 @@ window.updateCardOrderStatus = async function(orderId, newStatus, courier, awb) 
     // 1. Immediate localStorage persistence
     try {
         localStorage.setItem('chocoloom_card_orders', JSON.stringify(AdminState.cardOrders));
-    } catch(e) {}
+    } catch (e) { }
 
     // 2. Persist to Neon Serverless Postgres
     try {
@@ -6391,7 +6738,7 @@ window.updateCardOrderStatus = async function(orderId, newStatus, courier, awb) 
                 tracking_number: order.tracking_number || '',
                 updated_at: new Date().toISOString()
             }).or(`id.eq.${order.id},order_number.eq.${order.order_number}`);
-        } catch(e) {}
+        } catch (e) { }
     }
 
     // 4. Reactive UI updates
@@ -6401,7 +6748,7 @@ window.updateCardOrderStatus = async function(orderId, newStatus, courier, awb) 
 };
 
 // Prompt dialog helper to update Courier & AWB
-window.promptForCardTracking = async function(orderId) {
+window.promptForCardTracking = async function (orderId) {
     const order = (AdminState.cardOrders || []).find(o => o.id === orderId || o.order_number === orderId || String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
     if (!order) return;
 
@@ -6422,11 +6769,11 @@ window.promptForCardTracking = async function(orderId) {
     );
 };
 
-window.updateCardTrackingAwb = function(orderNum) {
+window.updateCardTrackingAwb = function (orderNum) {
     window.promptForCardTracking(orderNum);
 };
 
-window.advanceCardOrderStatus = async function(orderNum) {
+window.advanceCardOrderStatus = async function (orderNum) {
     const order = (AdminState.cardOrders || []).find(o => o.order_number === orderNum || o.id === orderNum);
     if (!order) return;
 
@@ -6440,7 +6787,7 @@ window.advanceCardOrderStatus = async function(orderNum) {
 };
 
 // Export all VIP card shipping orders to CSV
-window.exportCardOrdersCSV = function() {
+window.exportCardOrdersCSV = function () {
     const orders = AdminState.cardOrders || [];
     if (!orders || orders.length === 0) {
         showToast('No card orders available to export.');
@@ -6478,7 +6825,7 @@ window.exportCardOrdersCSV = function() {
 
 window.exportCardOrdersCsv = window.exportCardOrdersCSV;
 
-window.simulateIncomingCardOrder = function() {
+window.simulateIncomingCardOrder = function () {
     getAudioContext();
     const demoHolders = [
         { name: 'Kavya Madhavan', phone: '+91 98840 12345', street: 'Tower 4, Prestige Shantiniketan, ITPL', city: 'Bengaluru', pin: '560048', edition: 'Matte Black Titanium VIP' },
@@ -6517,7 +6864,7 @@ window.simulateIncomingCardOrder = function() {
 
     try {
         localStorage.setItem('chocoloom_card_orders', JSON.stringify(AdminState.cardOrders));
-    } catch(e) {}
+    } catch (e) { }
 
     playOrderChime();
     showToast(`👑 New VIP Card Order Received! Emboss: ${newOrder.embossed_name} • ${newOrder.city}`, 'fa-solid fa-crown', '#9333ea');
@@ -6525,7 +6872,7 @@ window.simulateIncomingCardOrder = function() {
     renderCardOrders();
 };
 
-window.handleIncomingCardOrder = function(order, playSound = true) {
+window.handleIncomingCardOrder = function (order, playSound = true) {
     if (!order) return;
     const existing = AdminState.cardOrders.find(o => o.order_number === order.order_number);
     if (!existing) {
@@ -6542,7 +6889,7 @@ window.handleIncomingCardOrder = function(order, playSound = true) {
 // ==================== ADVERTISEMENTS & HERO BANNERS CONTROLLER ====================
 
 // Load all banners (from LocalStorage, save_catalog.php, or data.js)
-window.loadAllBanners = async function(silent = false) {
+window.loadAllBanners = async function (silent = false) {
     let bannersList = [];
 
     // 1. Check LocalStorage
@@ -6554,7 +6901,7 @@ window.loadAllBanners = async function(silent = false) {
                 bannersList = parsed;
             }
         }
-    } catch(e) {}
+    } catch (e) { }
 
     // 2. Fallback to save_catalog.php / catalog_overrides.json
     if (!bannersList.length) {
@@ -6570,9 +6917,9 @@ window.loadAllBanners = async function(silent = false) {
                             break;
                         }
                     }
-                } catch(err) {}
+                } catch (err) { }
             }
-        } catch(e) {}
+        } catch (e) { }
     }
 
     // 3. Fallback to SWIGGY_DATA.banners
@@ -6601,7 +6948,7 @@ window.loadAllBanners = async function(silent = false) {
     // Cache locally
     try {
         localStorage.setItem('chocoloom_banners', JSON.stringify(AdminState.banners));
-    } catch(e) {}
+    } catch (e) { }
 
     updateBannersKPIs();
 
@@ -6611,7 +6958,7 @@ window.loadAllBanners = async function(silent = false) {
 };
 
 // Update KPI Counters & Sidebar Badge
-window.updateBannersKPIs = function() {
+window.updateBannersKPIs = function () {
     const banners = AdminState.banners || [];
     const activeCount = banners.filter(b => b.isActive !== false).length;
     const graphicCount = banners.filter(b => b.isGraphicBanner).length;
@@ -6638,7 +6985,7 @@ window.updateBannersKPIs = function() {
 };
 
 // Filter Banners by Category / Type
-window.filterBanners = function(filter) {
+window.filterBanners = function (filter) {
     AdminState.bannersFilter = filter;
     const pills = document.querySelectorAll('#advertisementsViewSection .filter-pill');
     pills.forEach(p => p.classList.remove('active'));
@@ -6648,13 +6995,13 @@ window.filterBanners = function(filter) {
 };
 
 // Live Search Filter
-window.handleSearchBanners = function(query) {
+window.handleSearchBanners = function (query) {
     AdminState.bannersSearchQuery = (query || '').toLowerCase().trim();
     renderBannersGrid();
 };
 
 // Switch Preview Simulation Mode (Desktop vs Mobile)
-window.setBannersPreviewMode = function(mode) {
+window.setBannersPreviewMode = function (mode) {
     AdminState.bannersPreviewDevice = mode;
     const btnDesktop = document.getElementById('btnPreviewDesktop');
     const btnMobile = document.getElementById('btnPreviewMobile');
@@ -6664,7 +7011,7 @@ window.setBannersPreviewMode = function(mode) {
 };
 
 // Render Banners Grid in Admin Workspace
-window.renderBannersGrid = function() {
+window.renderBannersGrid = function () {
     const container = document.getElementById('bannersGridContainer');
     if (!container) return;
 
@@ -6682,7 +7029,7 @@ window.renderBannersGrid = function() {
     // Filter by search query
     if (AdminState.bannersSearchQuery) {
         const q = AdminState.bannersSearchQuery;
-        banners = banners.filter(b => 
+        banners = banners.filter(b =>
             (b.title && b.title.toLowerCase().includes(q)) ||
             (b.tag && b.tag.toLowerCase().includes(q)) ||
             (b.code && b.code.toLowerCase().includes(q)) ||
@@ -6852,7 +7199,7 @@ window.renderBannersGrid = function() {
 };
 
 // Open Add Banner Modal
-window.openAddBannerModal = function() {
+window.openAddBannerModal = function () {
     const modal = document.getElementById('bannerModal');
     const form = document.getElementById('bannerForm');
     if (!modal || !form) return;
@@ -6879,7 +7226,7 @@ window.openAddBannerModal = function() {
 };
 
 // Open Edit Banner Modal
-window.openEditBannerModal = function(bannerId) {
+window.openEditBannerModal = function (bannerId) {
     const ban = (AdminState.banners || []).find(b => b.id === bannerId);
     if (!ban) return;
 
@@ -6919,7 +7266,7 @@ window.openEditBannerModal = function(bannerId) {
 };
 
 // Handle Format Switch in Modal (Graphic Poster vs Photo Deal)
-window.handleBannerTypeChange = function(type) {
+window.handleBannerTypeChange = function (type) {
     const isGraphic = type === 'graphic';
     const cardGraphic = document.getElementById('cardTypeGraphic');
     const cardPhoto = document.getElementById('cardTypePhoto');
@@ -6937,12 +7284,12 @@ window.handleBannerTypeChange = function(type) {
 };
 
 // Handle Image File Select & FileReader Base64 conversion
-window.handleBannerFileSelect = function(input, targetDevice) {
+window.handleBannerFileSelect = function (input, targetDevice) {
     if (!input || !input.files || !input.files[0]) return;
     const file = input.files[0];
     const reader = new FileReader();
 
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         const dataUrl = e.target.result;
         if (targetDevice === 'desktop') {
             const el = document.getElementById('bannerInputDesktopImage');
@@ -6959,14 +7306,14 @@ window.handleBannerFileSelect = function(input, targetDevice) {
 };
 
 // Quick helper to set preset desktop image
-window.setModalDesktopImage = function(url) {
+window.setModalDesktopImage = function (url) {
     const el = document.getElementById('bannerInputDesktopImage');
     if (el) el.value = url;
     updateModalLivePreview();
 };
 
 // Quick helper to set background color
-window.setModalBgColor = function(color) {
+window.setModalBgColor = function (color) {
     const picker = document.getElementById('bannerInputBgColor');
     const hex = document.getElementById('bannerInputBgHex');
     if (picker) picker.value = color.startsWith('#') ? color : '#ffd735';
@@ -6975,7 +7322,7 @@ window.setModalBgColor = function(color) {
 };
 
 // Toggle Modal Preview Mode (Desktop vs Mobile)
-window.setModalPreviewDevice = function(device) {
+window.setModalPreviewDevice = function (device) {
     AdminState.modalPreviewDevice = device;
     const tabDesk = document.getElementById('modalPreviewTabDesktop');
     const tabMob = document.getElementById('modalPreviewTabMobile');
@@ -6985,7 +7332,7 @@ window.setModalPreviewDevice = function(device) {
 };
 
 // Real-Time Interactive Simulation Sandbox in Modal
-window.updateModalLivePreview = function() {
+window.updateModalLivePreview = function () {
     const container = document.getElementById('modalPreviewContainer');
     if (!container) return;
 
@@ -7068,7 +7415,7 @@ window.updateModalLivePreview = function() {
 };
 
 // Handle Form Submit (Save / Add Advertisement)
-window.handleBannerFormSubmit = async function(e) {
+window.handleBannerFormSubmit = async function (e) {
     if (e && e.preventDefault) e.preventDefault();
 
     const bannerId = document.getElementById('bannerFormId').value.trim() || ('b_' + Date.now());
@@ -7132,7 +7479,7 @@ window.handleBannerFormSubmit = async function(e) {
     // Save to LocalStorage
     try {
         localStorage.setItem('chocoloom_banners', JSON.stringify(AdminState.banners));
-    } catch(err) {}
+    } catch (err) { }
 
     // Instant UI update & modal close (0ms latency)
     closeAdminModal('bannerModal');
@@ -7141,11 +7488,11 @@ window.handleBannerFormSubmit = async function(e) {
     showToast(`🎉 Advertisement "${title}" saved and live on website!`, 'fa-solid fa-circle-check', '#10b981');
 
     // Save to server asynchronously in background
-    syncBannersToServer(false).catch(() => {});
+    syncBannersToServer(false).catch(() => { });
 };
 
 // Toggle Banner Active / Inactive
-window.toggleBannerActive = function(bannerId) {
+window.toggleBannerActive = function (bannerId) {
     const ban = (AdminState.banners || []).find(b => b.id === bannerId);
     if (!ban) return;
 
@@ -7153,7 +7500,7 @@ window.toggleBannerActive = function(bannerId) {
 
     try {
         localStorage.setItem('chocoloom_banners', JSON.stringify(AdminState.banners));
-    } catch(e) {}
+    } catch (e) { }
 
     updateBannersKPIs();
     renderBannersGrid();
@@ -7164,11 +7511,11 @@ window.toggleBannerActive = function(bannerId) {
         ban.isActive ? '#10b981' : '#64748b'
     );
 
-    syncBannersToServer(false).catch(() => {});
+    syncBannersToServer(false).catch(() => { });
 };
 
 // Delete Banner
-window.deleteBanner = function(bannerId) {
+window.deleteBanner = function (bannerId) {
     const ban = (AdminState.banners || []).find(b => b.id === bannerId);
     if (!ban) return;
 
@@ -7180,18 +7527,18 @@ window.deleteBanner = function(bannerId) {
 
     try {
         localStorage.setItem('chocoloom_banners', JSON.stringify(AdminState.banners));
-    } catch(e) {}
+    } catch (e) { }
 
     updateBannersKPIs();
     renderBannersGrid();
 
     showToast(`🗑️ Advertisement "${ban.title}" deleted.`, 'fa-solid fa-trash-can', '#ef4444');
 
-    syncBannersToServer(false).catch(() => {});
+    syncBannersToServer(false).catch(() => { });
 };
 
 // Reorder Banner
-window.moveBanner = function(bannerId, direction) {
+window.moveBanner = function (bannerId, direction) {
     const idx = AdminState.banners.findIndex(b => b.id === bannerId);
     if (idx < 0) return;
 
@@ -7204,16 +7551,16 @@ window.moveBanner = function(bannerId, direction) {
 
     try {
         localStorage.setItem('chocoloom_banners', JSON.stringify(AdminState.banners));
-    } catch(e) {}
+    } catch (e) { }
 
     renderBannersGrid();
     showToast('🔄 Carousel banner order updated!', 'fa-solid fa-arrows-up-down', '#7c5cfc');
 
-    syncBannersToServer(false).catch(() => {});
+    syncBannersToServer(false).catch(() => { });
 };
 
 // Sync Banners to Server (save_catalog.php / catalog_overrides.json) & Broadcast
-window.syncBannersToServer = async function(notify = false) {
+window.syncBannersToServer = async function (notify = false) {
     try {
         const payload = {
             banners: AdminState.banners
@@ -7243,14 +7590,14 @@ window.syncBannersToServer = async function(notify = false) {
                 } finally {
                     if (timer) clearTimeout(timer);
                 }
-            } catch(err) {}
+            } catch (err) { }
         }));
 
         // Cross-origin and cross-port iframe relay bridge
         if (typeof sendCrossOriginSync === 'function') {
             try {
                 sendCrossOriginSync({ banners: AdminState.banners, action: 'BANNERS_UPDATE' });
-            } catch(e) {}
+            } catch (e) { }
         }
 
         // Also trigger full catalog sync to WordPress REST API on both live domains
@@ -7262,7 +7609,7 @@ window.syncBannersToServer = async function(notify = false) {
         if (broadcastChannel) {
             try {
                 broadcastChannel.postMessage({ type: 'BANNERS_UPDATED', banners: AdminState.banners });
-            } catch(e) {}
+            } catch (e) { }
         }
 
         // Trigger local storage event for open client tabs
@@ -7271,7 +7618,7 @@ window.syncBannersToServer = async function(notify = false) {
                 key: 'chocoloom_banners',
                 newValue: JSON.stringify(AdminState.banners)
             }));
-        } catch(e) {}
+        } catch (e) { }
 
         if (notify) {
             showToast(
@@ -7280,7 +7627,7 @@ window.syncBannersToServer = async function(notify = false) {
                 '#10b981'
             );
         }
-    } catch(err) {
+    } catch (err) {
         if (notify) {
             showToast('⚠️ Synced locally in browser', 'fa-solid fa-info-circle', '#f59e0b');
         }
@@ -7288,7 +7635,7 @@ window.syncBannersToServer = async function(notify = false) {
 };
 
 // 1-Click Export / Download catalog_overrides.json directly
-window.exportCatalogOverridesFile = function() {
+window.exportCatalogOverridesFile = function () {
     let existing = { overrides: {}, customProducts: [], deletedProducts: [], banners: [] };
     try {
         existing.overrides = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
@@ -7296,7 +7643,7 @@ window.exportCatalogOverridesFile = function() {
         existing.deletedProducts = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
         existing.banners = AdminState.banners || JSON.parse(localStorage.getItem("chocoloom_banners") || "[]");
         existing.updated_at = new Date().toISOString();
-    } catch(e) {}
+    } catch (e) { }
 
     const blob = new Blob([JSON.stringify(existing, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);

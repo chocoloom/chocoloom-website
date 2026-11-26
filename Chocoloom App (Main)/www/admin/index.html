@@ -99,6 +99,11 @@
             </nav>
 
             <div class="sidebar-footer">
+                <button type="button" class="sidebar-devices-btn" onclick="openActiveDevicesModal()" title="View logged-in devices">
+                    <i class="fa-solid fa-laptop-mobile" style="color: #10b981;"></i>
+                    <span>Active Devices</span>
+                    <span class="nav-badge" id="sidebarDevicesBadge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; margin-left: auto;">1</span>
+                </button>
                 <div class="store-status-card" id="storeStatusBtn" style="cursor: pointer;" title="Toggle Store Online/Offline">
                     <div class="store-status-indicator">
                         <span class="status-dot" id="storeStatusDot"></span>
@@ -130,6 +135,10 @@
                         <span class="mobile-brand-title">CHOCOLOOM</span>
                     </div>
                     <div class="mobile-top-actions">
+                        <button class="mobile-action-icon-btn" onclick="openActiveDevicesModal()" title="Active Devices" style="position: relative;">
+                            <i class="fa-solid fa-laptop-mobile" style="color: #10b981;"></i>
+                            <span class="mobile-devices-badge" id="mobileDevicesBadge">1</span>
+                        </button>
                         <button class="mobile-action-icon-btn" onclick="openManualOrderModal()" title="Create Manual Order">
                             <i class="fa-solid fa-cart-plus" style="color: #10b981;"></i>
                         </button>
@@ -151,6 +160,12 @@
                     <div class="connection-pill" id="connectionStatusPill" title="Live Cloud Sync">
                         <span class="status-dot"></span> Live Cloud Sync
                     </div>
+
+                    <!-- Active Devices Pill/Button -->
+                    <button type="button" class="header-btn devices-btn" id="activeDevicesHeaderBtn" onclick="openActiveDevicesModal()" title="View logged-in devices">
+                        <i class="fa-solid fa-laptop-mobile" style="color: #10b981;"></i>
+                        <span id="activeDevicesCountText">1 Device Active</span>
+                    </button>
 
                     <!-- Audio Chime Toggle -->
                     <button class="header-btn audio-btn" id="audioToggleBtn" title="Toggle Sound Notification">
@@ -1683,6 +1698,39 @@
 
             <div class="auth-footer-hint">
                 <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> Chocoloom Authorized Personnel Only
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Devices & Logged-in Sessions Modal -->
+    <div class="admin-modal-overlay" id="activeDevicesModal">
+        <div class="admin-modal-card" style="max-width: 580px;">
+            <div class="modal-header">
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-shield-halved" style="color: #7c5cfc;"></i> Logged-in Devices
+                    </h3>
+                    <p style="margin: 4px 0 0; font-size: 13px; color: #64748b;">
+                        Live devices currently unlocked and viewing this admin dashboard
+                    </p>
+                </div>
+                <button class="modal-close-btn" onclick="closeAdminModal('activeDevicesModal')">×</button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                        <span class="status-dot" style="background: #10b981;"></span>
+                        <span id="devicesListCountHeading">1 Device Currently Active</span>
+                    </div>
+                    <button type="button" class="header-btn" onclick="lockAllOtherDevices()" style="color: #ef4444; border-color: #fecaca; font-size: 12px; padding: 6px 12px;">
+                        <i class="fa-solid fa-power-off"></i> Lock Other Devices
+                    </button>
+                </div>
+
+                <!-- Devices List Container -->
+                <div class="active-devices-list" id="activeDevicesList">
+                    <!-- Populated dynamically via renderActiveDevicesList() -->
+                </div>
             </div>
         </div>
     </div>
