@@ -243,7 +243,7 @@
                 </a>
 
                 <!-- User Sign In / Profile Navigation Trigger -->
-                <a href="javascript:void(0)" onclick="openProfileScreen(event)" class="nav-item-auth" id="navAuthBtn" title="Account & Profile" style="text-decoration: none;">
+                <a href="javascript:void(0)" onclick="if(window.isUserLoggedIn && window.isUserLoggedIn()){openProfileScreen(event);}else if(typeof openAuthModal==='function'){openAuthModal('passcode');}else{openProfileScreen(event);}" class="nav-item-auth" id="navAuthBtn" title="Account & Profile" style="text-decoration: none;">
                     <i class="fa-regular fa-user"></i>
                     <span class="nav-text">Profile</span>
                 </a>
@@ -251,7 +251,7 @@
                 <!-- Logged In User Pill & Profile Dropdown -->
                 <div class="nav-user-container" id="navUserContainer" style="display: none;">
                     <div class="nav-user-pill" id="navUserPill" onclick="openProfileScreen(event)">
-                        <div class="user-avatar-circle" id="userAvatarCircle">M</div>
+                        <div class="user-avatar-circle" id="userAvatarCircle"><i class="fa-solid fa-user"></i></div>
                         <div class="user-pill-text">
                             <span class="user-pill-greeting"><strong id="userPillName">User</strong></span>
                         </div>
@@ -260,10 +260,10 @@
 
                     <div class="user-profile-dropdown" id="userProfileDropdown">
                         <div class="user-dropdown-header">
-                            <div class="dropdown-avatar" id="dropdownAvatar">M</div>
+                            <div class="dropdown-avatar" id="dropdownAvatar"><i class="fa-solid fa-user"></i></div>
                             <div class="dropdown-info">
-                                <div class="dropdown-name" id="dropdownName">Mohith Kumar</div>
-                                <div class="dropdown-sub" id="dropdownSub">student@srkr.edu.in</div>
+                                <div class="dropdown-name" id="dropdownName">User</div>
+                                <div class="dropdown-sub" id="dropdownSub">user@example.com</div>
                                 <span class="dropdown-badge" id="dropdownBadge"><i class="fa-solid fa-star"></i> Chocoloom VIP</span>
                             </div>
                         </div>
@@ -589,7 +589,7 @@
                             <div class="luxury-card-bottom">
                                 <div class="card-meta-group">
                                     <span class="card-meta-label">CARDHOLDER</span>
-                                    <span class="card-meta-value" id="pageCardHolderName">Mohith Kumar</span>
+                                    <span class="card-meta-value" id="pageCardHolderName">VALUED CUSTOMER</span>
                                 </div>
                                 <div class="card-meta-group" style="text-align: center;">
                                     <span class="card-meta-label">EXPIRES</span>
@@ -743,7 +743,7 @@
                             </div>
                             <div class="delivery-detail-row">
                                 <span style="color: #64748b; font-weight: 600;">Recipient:</span>
-                                <span style="font-weight: 800; color: #0f172a;" id="trackerRecipient">Mohith Kumar</span>
+                                <span style="font-weight: 800; color: #0f172a;" id="trackerRecipient">Valued Customer</span>
                             </div>
                             <div class="delivery-detail-row">
                                 <span style="color: #64748b; font-weight: 600;">Delivery Address:</span>
@@ -864,16 +864,18 @@
             </header>
 
             <!-- User Info Header -->
-            <div class="profile-user-card">
-                <h2 class="profile-user-name" id="profileUserName">Mohith Kumar</h2>
-                <div class="profile-user-meta">
-                    <span class="profile-meta-item">
+            <div class="profile-user-card" id="profileUserCard">
+                <h2 class="profile-user-name" id="profileUserName">Account</h2>
+                <div class="profile-user-meta" id="profileUserMeta">
+                    <span class="profile-meta-item" id="profilePhoneMetaItem">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                        <span id="profileUserPhone">+91-9494768069</span>
+                        <span id="profileUserPhone"></span>
                     </span>
-                    <span class="profile-meta-item">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="10" x="3" y="11" rx="2"/><path d="M7 11V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/><line x1="12" x2="12" y1="2" y2="4"/><circle cx="12" cy="1.5" r="0.5" fill="#475569"/></svg>
-                        <span id="profileUserDob">29 Dec 2007</span>
+                    <span class="profile-meta-item" id="profileDobMetaItem" style="display: none;">
+                        <span id="profileDobIcon" style="display: inline-flex; align-items: center;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="10" x="3" y="11" rx="2"/><path d="M7 11V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/><line x1="12" x2="12" y1="2" y2="4"/><circle cx="12" cy="1.5" r="0.5" fill="#475569"/></svg>
+                        </span>
+                        <span id="profileUserDob"></span>
                     </span>
                 </div>
             </div>
@@ -1092,7 +1094,7 @@
                 if (purchasedView) purchasedView.style.display = 'none';
 
                 // Pre-fill inputs with profile info if available
-                const defaultHolder = (AppState.currentUser?.name || AppState.customerProfile?.name || 'Mohith Kumar').trim();
+                const defaultHolder = (AppState.currentUser?.name || AppState.customerProfile?.name || 'Valued Customer').trim();
                 const nameInput = document.getElementById('orderFormHolderName');
                 if (nameInput && !nameInput.value) {
                     nameInput.value = defaultHolder.toUpperCase();
@@ -1123,7 +1125,7 @@
 
             const cardData = window.getChocowalletCardData() || {};
             const bal = window.getChocowalletBalance();
-            const holder = cardData.cardHolderName || (AppState.currentUser?.name || AppState.customerProfile?.name || 'Mohith Kumar').trim();
+            const holder = cardData.cardHolderName || (AppState.currentUser?.name || AppState.customerProfile?.name || 'Valued Customer').trim();
 
             const balEl = document.getElementById('pageCardBalanceDisplay');
             if (balEl) balEl.textContent = `₹${bal}`;

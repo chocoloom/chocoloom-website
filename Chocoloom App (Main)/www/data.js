@@ -4,15 +4,7 @@
  */
 
 window.SWIGGY_DATA = {
-    "currentUser": {
-        "id": "usr_chocoloom_01",
-        "name": "Mohith Kumar",
-        "phone": "+91-9494768069",
-        "dob": "29 Dec 2007",
-        "email": "mohith@chocoloom.com",
-        "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80",
-        "isVIP": true
-    },
+    "currentUser": null,
     "locations": [
         {
             "id": "loc_bvrm_home",
@@ -851,9 +843,9 @@ window.SWIGGY_DATA = {
         {
             "id": "card_ord_1",
             "order_number": "CL-VIP-8842",
-            "customer_name": "Mohith Kumar",
+            "customer_name": "Rahul Sharma",
             "customer_phone": "+91 98765 43210",
-            "embossed_name": "MOHITH KUMAR",
+            "embossed_name": "RAHUL SHARMA",
             "shipping_address": "Flat No. 402, GVR Towers, SRKR Campus Road, Chinna Amiram, Bhimavaram - 534204",
             "street": "Flat No. 402, GVR Towers, SRKR Campus Road, Chinna Amiram",
             "city": "Bhimavaram",

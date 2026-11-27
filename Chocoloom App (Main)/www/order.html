@@ -252,7 +252,7 @@
                 </div>
 
                 <!-- User Sign In / Profile Navigation Trigger -->
-                <a href="javascript:void(0)" onclick="openProfileScreen(event)" class="nav-item-auth" id="navAuthBtn" title="Account & Profile"
+                <a href="javascript:void(0)" onclick="if(window.isUserLoggedIn && window.isUserLoggedIn()){openProfileScreen(event);}else if(typeof openAuthModal==='function'){openAuthModal('passcode');}else{openProfileScreen(event);}" class="nav-item-auth" id="navAuthBtn" title="Account & Profile"
                     style="text-decoration: none;">
                     <i class="fa-regular fa-user"></i>
                     <span class="nav-text">Profile</span>
@@ -261,7 +261,7 @@
                 <!-- Logged In User Pill & Profile Dropdown -->
                 <div class="nav-user-container" id="navUserContainer" style="display: none;">
                     <div class="nav-user-pill" id="navUserPill" onclick="openProfileScreen(event)">
-                        <div class="user-avatar-circle" id="userAvatarCircle">M</div>
+                        <div class="user-avatar-circle" id="userAvatarCircle"><i class="fa-solid fa-user"></i></div>
                         <div class="user-pill-text">
                             <span class="user-pill-greeting"><strong id="userPillName">User</strong></span>
                         </div>
@@ -1571,7 +1571,7 @@
                                 Name *</label>
                             <div class="uber-phone-box" style="height: 46px; padding: 0 12px; margin-bottom: 0;">
                                 <input type="text" id="otpNewUserName" class="uber-phone-input"
-                                    style="padding-left: 0; font-size: 14px;" placeholder="e.g. Mohith Kumar" required
+                                    style="padding-left: 0; font-size: 14px;" placeholder="e.g. Your Full Name" required
                                     autocomplete="name">
                             </div>
                         </div>
@@ -1674,16 +1674,18 @@
             </header>
 
             <!-- User Info Header -->
-            <div class="profile-user-card">
-                <h2 class="profile-user-name" id="profileUserName">Mohith Kumar</h2>
-                <div class="profile-user-meta">
-                    <span class="profile-meta-item">
+            <div class="profile-user-card" id="profileUserCard">
+                <h2 class="profile-user-name" id="profileUserName">Account</h2>
+                <div class="profile-user-meta" id="profileUserMeta">
+                    <span class="profile-meta-item" id="profilePhoneMetaItem">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                        <span id="profileUserPhone">+91-9494768069</span>
+                        <span id="profileUserPhone"></span>
                     </span>
-                    <span class="profile-meta-item">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="10" x="3" y="11" rx="2"/><path d="M7 11V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/><line x1="12" x2="12" y1="2" y2="4"/><circle cx="12" cy="1.5" r="0.5" fill="#475569"/></svg>
-                        <span id="profileUserDob">29 Dec 2007</span>
+                    <span class="profile-meta-item" id="profileDobMetaItem" style="display: none;">
+                        <span id="profileDobIcon" style="display: inline-flex; align-items: center;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="10" x="3" y="11" rx="2"/><path d="M7 11V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/><line x1="12" x2="12" y1="2" y2="4"/><circle cx="12" cy="1.5" r="0.5" fill="#475569"/></svg>
+                        </span>
+                        <span id="profileUserDob"></span>
                     </span>
                 </div>
             </div>
@@ -1869,10 +1871,10 @@
                 <div
                     style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9;">
                     <div style="width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #ec4899); color: #fff; font-size: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(124, 92, 252, 0.3);"
-                        id="accModalAvatar">M</div>
+                        id="accModalAvatar"><i class="fa-solid fa-user"></i></div>
                     <div>
                         <h4 style="font-size: 17px; font-weight: 900; color: #0f172a; margin: 0 0 4px;"
-                            id="accModalName">Mohith Kumar</h4>
+                            id="accModalName">User Profile</h4>
                         <span id="accModalDiscountBadge"
                             style="display: inline-flex; align-items: center; gap: 5px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px;">
                             <i class="fa-solid fa-graduation-cap"></i> 25% SRKR Student OFF Active

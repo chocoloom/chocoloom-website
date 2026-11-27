@@ -436,7 +436,7 @@ function launchCardOrderConfetti() {
 window.launchCardOrderConfetti = launchCardOrderConfetti;
 
 window.buyChocowalletCard = function (details = {}) {
-    const defaultHolder = (AppState.currentUser?.name || AppState.customerProfile?.name || 'Mohith Kumar').trim();
+    const defaultHolder = (AppState.currentUser?.name || AppState.customerProfile?.name || 'Valued Customer').trim();
     const holderName = (details.cardHolderName || defaultHolder || 'CHOCOLOOM VIP').toUpperCase();
     const phone = details.phone || AppState.currentUser?.phone || AppState.customerProfile?.phone || '+91 98765 43210';
     const street = details.street || AppState.customerProfile?.street || '20-1-6, Gandhi Nagar';
@@ -980,7 +980,7 @@ window.openBuyCardModal = function () {
         modal.className = 'buy-card-modal-backdrop';
         document.body.appendChild(modal);
     }
-    const defaultHolder = (AppState.currentUser?.name || AppState.customerProfile?.name || 'Mohith Kumar').trim();
+    const defaultHolder = (AppState.currentUser?.name || AppState.customerProfile?.name || 'Valued Customer').trim();
     const phone = AppState.currentUser?.phone || AppState.customerProfile?.phone || '';
     const street = AppState.customerProfile?.street || '';
     const city = AppState.customerProfile?.city || 'Bhimavaram';
@@ -12389,7 +12389,11 @@ function updateAuthUI() {
         if (authBtn) {
             authBtn.style.display = 'inline-flex';
             authBtn.onclick = function (e) {
-                if (typeof openProfileScreen === 'function') openProfileScreen(e);
+                if (typeof openAuthModal === 'function') {
+                    openAuthModal('passcode');
+                } else if (typeof openProfileScreen === 'function') {
+                    openProfileScreen(e);
+                }
             };
         }
         if (userContainer) {
@@ -12402,6 +12406,12 @@ function updateAuthUI() {
         if (cartPrompt) cartPrompt.style.display = 'flex';
         if (cartLogged) cartLogged.style.display = 'none';
     }
+
+    try {
+        if (typeof updateProfileScreenUI === 'function') {
+            updateProfileScreenUI(AppState.currentUser);
+        }
+    } catch (e) { }
 
     try {
         if (typeof updateCartUI === 'function') updateCartUI();
@@ -13664,6 +13674,12 @@ window.handleSignUpSubmit = async function (event) {
 
 // Handle User Logout
 window.handleUserLogout = function () {
+    if (!AppState.currentUser) {
+        if (typeof closeProfileScreen === 'function') closeProfileScreen();
+        if (typeof openAuthModal === 'function') openAuthModal('passcode');
+        return;
+    }
+    if (typeof closeProfileScreen === 'function') closeProfileScreen();
     if (AppState.currentUser) {
         saveUserWalletData(AppState.currentUser);
     }
@@ -13699,6 +13715,78 @@ window.handleUserLogout = function () {
     showToast('Signed out successfully', 'fa-solid fa-arrow-right-from-bracket', '#64748b');
 };
 
+// Blinkit-Style Dedicated Fullscreen Profile Screen Dynamic Synchronizer
+function updateProfileScreenUI(user) {
+    const nameEl = document.getElementById('profileUserName');
+    const phoneEl = document.getElementById('profileUserPhone');
+    const dobEl = document.getElementById('profileUserDob');
+    const dobMetaItem = document.getElementById('profileDobMetaItem');
+    const dobIcon = document.getElementById('profileDobIcon');
+    const phoneMetaItem = document.getElementById('profilePhoneMetaItem');
+    const logoutBtnText = document.getElementById('profileLogoutBtnText');
+
+    const u = user || AppState.currentUser || (function () {
+        try {
+            const raw = localStorage.getItem('chocoloom_user_session');
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) { return null; }
+    })();
+
+    if (u && (u.id || u.phone || u.name || u.email)) {
+        // Authenticated user: show strictly their own data
+        const cleanName = (u.name && u.name.trim()) ? u.name.trim() : 'Valued Customer';
+        if (nameEl) nameEl.textContent = cleanName;
+
+        let displayPhone = '';
+        if (u.phone) {
+            const clean = String(u.phone).replace(/\D/g, '').slice(-10);
+            displayPhone = clean ? `+91-${clean}` : String(u.phone);
+        } else if (u.email) {
+            displayPhone = u.email;
+        }
+        if (phoneEl) phoneEl.textContent = displayPhone;
+        if (phoneMetaItem) phoneMetaItem.style.display = displayPhone ? 'inline-flex' : 'none';
+
+        if (dobEl && dobMetaItem) {
+            if (u.dob) {
+                dobEl.textContent = u.dob;
+                if (dobIcon) {
+                    dobIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="10" x="3" y="11" rx="2"/><path d="M7 11V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/><line x1="12" x2="12" y1="2" y2="4"/><circle cx="12" cy="1.5" r="0.5" fill="#475569"/></svg>';
+                }
+                dobMetaItem.style.display = 'inline-flex';
+            } else if (u.isStudent && (u.collegeName || u.college)) {
+                dobEl.textContent = u.collegeName || 'Student Member';
+                if (dobIcon) {
+                    dobIcon.innerHTML = '<i class="fa-solid fa-graduation-cap" style="color: #16a34a; font-size: 13px;"></i>';
+                }
+                dobMetaItem.style.display = 'inline-flex';
+            } else if (u.role) {
+                dobEl.textContent = u.role;
+                if (dobIcon) {
+                    dobIcon.innerHTML = '<i class="fa-solid fa-crown" style="color: #f59e0b; font-size: 13px;"></i>';
+                }
+                dobMetaItem.style.display = 'inline-flex';
+            } else {
+                dobEl.textContent = 'Chocoloom Member';
+                if (dobIcon) {
+                    dobIcon.innerHTML = '<i class="fa-solid fa-star" style="color: #a855f7; font-size: 13px;"></i>';
+                }
+                dobMetaItem.style.display = 'inline-flex';
+            }
+        }
+
+        if (logoutBtnText) logoutBtnText.textContent = 'Log out';
+    } else {
+        // Logged Out / Guest State
+        if (nameEl) nameEl.textContent = 'Guest User';
+        if (phoneEl) phoneEl.textContent = 'Sign in to access your account & orders';
+        if (phoneMetaItem) phoneMetaItem.style.display = 'inline-flex';
+        if (dobMetaItem) dobMetaItem.style.display = 'none';
+        if (logoutBtnText) logoutBtnText.textContent = 'Sign In / Register';
+    }
+}
+window.updateProfileScreenUI = updateProfileScreenUI;
+
 // Blinkit-Style Dedicated Fullscreen Profile Screen Controller
 window.openProfileScreen = function (event) {
     if (event) {
@@ -13709,6 +13797,26 @@ window.openProfileScreen = function (event) {
     const userContainer = document.getElementById('navUserContainer');
     if (userContainer) userContainer.classList.remove('open');
 
+    // 1. Resolve currently authenticated user session strictly
+    let u = (AppState && AppState.currentUser) ? AppState.currentUser : null;
+    if (!u) {
+        try {
+            const raw = localStorage.getItem('chocoloom_user_session');
+            if (raw) {
+                u = JSON.parse(raw);
+                if (AppState) AppState.currentUser = u;
+            }
+        } catch (e) { }
+    }
+
+    // If user is NOT logged in, prompt sign in modal directly
+    if (!u || (!u.id && !u.phone && !u.name && !u.email)) {
+        if (typeof openAuthModal === 'function') {
+            openAuthModal('passcode');
+            return;
+        }
+    }
+
     let profileOverlay = document.getElementById('profileScreenOverlay');
     if (!profileOverlay) {
         if (typeof openAccountDetailsModal === 'function') {
@@ -13717,19 +13825,8 @@ window.openProfileScreen = function (event) {
         return;
     }
 
-    const u = AppState.currentUser || (window.SWIGGY_DATA && window.SWIGGY_DATA.currentUser) || {
-        name: 'Mohith Kumar',
-        phone: '+91-9494768069',
-        dob: '29 Dec 2007'
-    };
-
-    const nameEl = document.getElementById('profileUserName');
-    const phoneEl = document.getElementById('profileUserPhone');
-    const dobEl = document.getElementById('profileUserDob');
-
-    if (nameEl) nameEl.textContent = u.name || 'Mohith Kumar';
-    if (phoneEl) phoneEl.textContent = u.phone || '+91-9494768069';
-    if (dobEl) dobEl.textContent = u.dob || '29 Dec 2007';
+    // Refresh profile screen contents strictly with this authenticated user's data
+    updateProfileScreenUI(u);
 
     profileOverlay.classList.add('open');
     document.body.style.overflow = 'hidden';
