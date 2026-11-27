@@ -391,7 +391,45 @@ window.topUpChocowallet = function (amount = 500) {
 };
 
 // ==================== CELEBRATION CHIME & CONFETTI ====================
-function playCardCelebrationChime() {
+let _orderSuccessAudio = null;
+function getOrderSuccessAudio() {
+    try {
+        if (!_orderSuccessAudio) {
+            const audioPath = (typeof window.getThemeAssetUrl === 'function')
+                ? window.getThemeAssetUrl('assets/sweet-surprise.mp3')
+                : 'assets/sweet-surprise.mp3';
+            _orderSuccessAudio = new Audio(audioPath);
+            _orderSuccessAudio.preload = 'auto';
+        }
+        return _orderSuccessAudio;
+    } catch (e) {
+        return null;
+    }
+}
+
+function playOrderSuccessAudio() {
+    try {
+        const audio = getOrderSuccessAudio();
+        if (audio) {
+            audio.currentTime = 0;
+            audio.volume = 1.0;
+            const playPromise = audio.play();
+            if (playPromise !== undefined && typeof playPromise.catch === 'function') {
+                playPromise.catch(err => {
+                    console.warn('Sweet surprise audio playback restricted, falling back to chime:', err);
+                    playCardCelebrationChimeSynth();
+                });
+            }
+        } else {
+            playCardCelebrationChimeSynth();
+        }
+    } catch (e) {
+        try { playCardCelebrationChimeSynth(); } catch (err) { }
+    }
+}
+window.playOrderSuccessAudio = playOrderSuccessAudio;
+
+function playCardCelebrationChimeSynth() {
     try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) return;
@@ -412,6 +450,10 @@ function playCardCelebrationChime() {
             osc.stop(now + idx * 0.08 + 0.7);
         });
     } catch (e) { }
+}
+
+function playCardCelebrationChime() {
+    playOrderSuccessAudio();
 }
 window.playCardCelebrationChime = playCardCelebrationChime;
 
@@ -9646,6 +9688,14 @@ window.cleanDuplicateOrders = cleanDuplicateOrders;
 function showOrderSuccessModal(createdOrder = null) {
     if (DOM.cartOverlay) DOM.cartOverlay.click();
     closeCart();
+
+    // Play sweet-surprise order confirmation audio celebration
+    if (typeof playOrderSuccessAudio === 'function') {
+        playOrderSuccessAudio();
+    }
+    if (typeof launchCardOrderConfetti === 'function') {
+        launchCardOrderConfetti();
+    }
 
     const modal = document.getElementById('trackingModalBackdrop');
     if (modal) modal.classList.add('open');
