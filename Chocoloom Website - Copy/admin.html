@@ -80,6 +80,16 @@
                     <span class="nav-badge" id="sidebarBannersBadge"
                         style="background: rgba(245, 158, 11, 0.25); color: #fbbf24;">4</span>
                 </button>
+                <button class="nav-link" id="tabNavCoupons" onclick="switchAdminTab('coupons')">
+                    <i class="fa-solid fa-tags" style="color: #10b981;"></i>
+                    <span>Coupons & Offers</span>
+                    <span class="nav-badge" id="sidebarCouponsBadge"
+                        style="background: rgba(16, 185, 129, 0.25); color: #34d399;">6</span>
+                </button>
+                <button class="nav-link" onclick="openAddCouponModal()">
+                    <i class="fa-solid fa-ticket" style="color: #10b981;"></i>
+                    <span>+ Add Coupon</span>
+                </button>
                 <button class="nav-link" onclick="openAddBannerModal()">
                     <i class="fa-solid fa-plus-circle" style="color: #f59e0b;"></i>
                     <span>Add Advertisement</span>
@@ -188,6 +198,12 @@
                     </button>
                     <button class="header-btn" id="testAudioBtn" title="Test Chime Sound">
                         <i class="fa-solid fa-bell"></i> Test Sound
+                    </button>
+
+                    <!-- Add Coupon Button -->
+                    <button class="header-btn" id="headerAddCouponBtn" onclick="openAddCouponModal()"
+                        title="Create and publish a new discount coupon" style="border-color: rgba(16, 185, 129, 0.4); color: #34d399;">
+                        <i class="fa-solid fa-ticket"></i> + Add Coupon
                     </button>
 
                     <!-- Add New Item Button -->
@@ -714,6 +730,113 @@
                     </div>
                 </div>
 
+                <!-- ==================== VIEW 5: COUPONS & OFFERS WORKSPACE ==================== -->
+                <div class="view-section" id="couponsViewSection">
+                    <div class="section-title-row">
+                        <div>
+                            <h2 style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-tags" style="color: #10b981;"></i> Discount Coupons & Offers
+                            </h2>
+                            <p class="section-subtitle">Create, edit, toggle, and distribute discount codes and free delivery vouchers for your customers</p>
+                        </div>
+                        <div class="header-action-group" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <button class="header-btn" onclick="syncCouponsToServer(true)" title="Force sync coupons to live customer store">
+                                <i class="fa-solid fa-arrows-rotate"></i> Sync Live
+                            </button>
+                            <button class="header-btn" onclick="resetCouponsToDefault()" title="Reset coupons to Chocoloom defaults">
+                                <i class="fa-solid fa-clock-rotate-left"></i> Reset Defaults
+                            </button>
+                            <button class="header-btn primary" onclick="openAddCouponModal()" title="Create and publish a new discount coupon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <i class="fa-solid fa-plus"></i> + Add Coupon
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Coupons KPI Statistics Row -->
+                    <section class="stats-grid" style="margin-bottom: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <span>Total Coupons</span>
+                                <h3 id="statTotalCoupons">0</h3>
+                            </div>
+                            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                                <i class="fa-solid fa-tags"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card confirmed">
+                            <div class="stat-info">
+                                <span>Active & Published</span>
+                                <h3 id="statActiveCoupons">0</h3>
+                            </div>
+                            <div class="stat-icon" style="background: rgba(34, 197, 94, 0.15); color: #22c55e;">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card preparing">
+                            <div class="stat-info">
+                                <span>Percentage Deals</span>
+                                <h3 id="statPercentCoupons">0</h3>
+                            </div>
+                            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+                                <i class="fa-solid fa-percent"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card out">
+                            <div class="stat-info">
+                                <span>Flat OFF & Free Delivery</span>
+                                <h3 id="statFlatCoupons">0</h3>
+                            </div>
+                            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+                                <i class="fa-solid fa-truck-fast"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card delivered">
+                            <div class="stat-info">
+                                <span>Student Special</span>
+                                <h3 id="statStudentCoupons">0</h3>
+                            </div>
+                            <div class="stat-icon" style="background: rgba(168, 85, 247, 0.15); color: #a855f7;">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Filter Bar for Coupons -->
+                    <div class="filter-bar">
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
+                            <div class="search-box" style="max-width: 320px;">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="searchCouponsInput"
+                                    placeholder="Search code, title, tag, discount..."
+                                    oninput="handleSearchCoupons(this.value)">
+                            </div>
+
+                            <div class="filter-pills" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <button class="filter-pill active" id="couponFilter_ALL" onclick="filterCoupons('ALL')">All Coupons</button>
+                                <button class="filter-pill" id="couponFilter_ACTIVE" onclick="filterCoupons('ACTIVE')">Active Only</button>
+                                <button class="filter-pill" id="couponFilter_PERCENT" onclick="filterCoupons('PERCENT')">% Discount</button>
+                                <button class="filter-pill" id="couponFilter_FLAT" onclick="filterCoupons('FLAT')">Flat ₹ OFF</button>
+                                <button class="filter-pill" id="couponFilter_FREESHIP" onclick="filterCoupons('FREESHIP')">Free Delivery</button>
+                                <button class="filter-pill" id="couponFilter_STUDENT" onclick="filterCoupons('STUDENT')">🎓 Students</button>
+                                <button class="filter-pill" id="couponFilter_INACTIVE" onclick="filterCoupons('INACTIVE')">Inactive</button>
+                            </div>
+                        </div>
+
+                        <button class="header-btn primary" onclick="openAddCouponModal()" title="Create and publish a new discount coupon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                            <i class="fa-solid fa-plus"></i> + Add Coupon
+                        </button>
+                    </div>
+
+                    <!-- Coupons Cards Grid Container -->
+                    <div class="coupons-grid-wrapper" id="couponsGridContainer">
+                        <!-- Populated dynamically via admin.js -->
+                    </div>
+                </div>
+
             </div>
         </main>
 
@@ -738,6 +861,10 @@
             <button class="mobile-nav-item" id="mobNavProducts" onclick="switchAdminTab('products')">
                 <i class="fa-solid fa-cake-candles"></i>
                 <span>Menu</span>
+            </button>
+            <button class="mobile-nav-item" id="mobNavCoupons" onclick="switchAdminTab('coupons')">
+                <i class="fa-solid fa-tags"></i>
+                <span>Coupons</span>
             </button>
             <button class="mobile-nav-item" id="mobNavAds" onclick="switchAdminTab('advertisements')">
                 <i class="fa-solid fa-rectangle-ad"></i>
@@ -2696,6 +2823,198 @@
                             onclick="closeAdminModal('bannerModal')">Cancel</button>
                         <button type="submit" class="modal-btn primary" id="btnSaveBanner">
                             <i class="fa-solid fa-check"></i> Save & Publish Advertisement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add / Edit Promotional Coupon Modal -->
+    <div class="admin-modal-overlay" id="couponModal"
+        onclick="if(event.target === this) closeAdminModal('couponModal')">
+        <div class="admin-modal-card" style="max-width: 680px; width: 94%;">
+            <div class="modal-header">
+                <h3 id="couponModalHeaderTitle">
+                    <i class="fa-solid fa-tags" style="color: #10b981;"></i> Create New Discount Coupon
+                </h3>
+                <button class="modal-close-btn" onclick="closeAdminModal('couponModal')" aria-label="Close Modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="couponForm" onsubmit="saveCoupon(event)">
+                    <input type="hidden" id="couponInputId">
+
+                    <!-- Code & Title Row -->
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label><span style="color: #ef4444;">*</span> Coupon / Promo Code</label>
+                            <div style="position: relative;">
+                                <i class="fa-solid fa-ticket"
+                                    style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px;"></i>
+                                <input type="text" id="couponInputCode" placeholder="e.g. SUMMER30 or BAKE100"
+                                    style="padding-left: 36px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;"
+                                    required oninput="this.value = this.value.toUpperCase().replace(/\s+/g, ''); updateCouponModalPreview();">
+                            </div>
+                            <span style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Code that customers type in checkout (auto-uppercased)</span>
+                        </div>
+                        <div class="form-group">
+                            <label><span style="color: #ef4444;">*</span> Offer Headline / Title</label>
+                            <input type="text" id="couponInputTitle" placeholder="e.g. Flat 30% OFF up to ₹200"
+                                required oninput="updateCouponModalPreview()">
+                            <span style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Prominent summary shown on the coupon card</span>
+                        </div>
+                    </div>
+
+                    <!-- Discount Type & Values -->
+                    <div class="form-row-3" style="margin-top: 4px;">
+                        <div class="form-group">
+                            <label>Discount Type</label>
+                            <select id="couponInputType" onchange="handleCouponTypeChange(); updateCouponModalPreview();">
+                                <option value="percent">Percentage (% OFF)</option>
+                                <option value="flat">Flat Amount (₹ OFF)</option>
+                                <option value="freeship">Free Delivery (Save ₹35)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="groupCouponPercent">
+                            <label>Discount Percentage (%)</label>
+                            <div style="position: relative;">
+                                <input type="number" id="couponInputPercent" min="1" max="100" value="25"
+                                    placeholder="e.g. 25" oninput="updateCouponModalPreview()">
+                                <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 700;">%</span>
+                            </div>
+                        </div>
+                        <div class="form-group" id="groupCouponMaxDiscount">
+                            <label>Max Discount Cap (₹)</label>
+                            <div style="position: relative;">
+                                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 700;">₹</span>
+                                <input type="number" id="couponInputMaxDiscount" min="1" value="200"
+                                    placeholder="e.g. 200" style="padding-left: 26px;" oninput="updateCouponModalPreview()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flat Amount Group (Initially hidden or visible depending on type) -->
+                    <div class="form-row-2" id="groupCouponFlat" style="display: none; margin-top: 4px;">
+                        <div class="form-group">
+                            <label>Flat Discount Amount (₹)</label>
+                            <div style="position: relative;">
+                                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 700;">₹</span>
+                                <input type="number" id="couponInputFlatOff" min="1" value="100"
+                                    placeholder="e.g. 100" style="padding-left: 26px;" oninput="updateCouponModalPreview()">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label style="color: var(--text-muted);">Free Shipping Note</label>
+                            <div style="font-size: 12px; color: var(--text-muted); padding: 10px; background: rgba(59, 130, 246, 0.08); border-radius: var(--radius-sm); border: 1px solid rgba(59, 130, 246, 0.2);">
+                                🚚 Deducts full delivery charge (₹35) from cart bill
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Minimum Order & Expiry Date Row -->
+                    <div class="form-row-2" style="margin-top: 4px;">
+                        <div class="form-group">
+                            <label>Minimum Cart Total (₹)</label>
+                            <div style="position: relative;">
+                                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 700;">₹</span>
+                                <input type="number" id="couponInputMinOrder" min="0" value="149"
+                                    placeholder="e.g. 149" style="padding-left: 26px;" oninput="updateCouponModalPreview()">
+                            </div>
+                            <span style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Min item subtotal required to apply this coupon</span>
+                        </div>
+                        <div class="form-group">
+                            <label>Valid Till / Expiry Date (Optional)</label>
+                            <input type="date" id="couponInputExpiry" oninput="updateCouponModalPreview()">
+                            <span style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Leave blank for permanent coupon with no expiration</span>
+                        </div>
+                    </div>
+
+                    <!-- Tag / Badge & Preset Styling -->
+                    <div class="form-row-2" style="margin-top: 4px;">
+                        <div class="form-group">
+                            <label>Badge / Tag Label</label>
+                            <input type="text" id="couponInputTag" placeholder="e.g. HOT DEAL 🔥 or SPECIAL"
+                                value="SPECIAL DEAL ✨" oninput="updateCouponModalPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Tag Color Preset</label>
+                            <select id="couponInputTagPreset" onchange="applyCouponTagPreset(this.value); updateCouponModalPreview();">
+                                <option value="green">Emerald Green (Savings / Deal)</option>
+                                <option value="red">Fiery Red (Hot Deal 🔥)</option>
+                                <option value="purple">Royal Purple (Students 🎓)</option>
+                                <option value="gold">Festive Gold (Diwali / Special 🪔)</option>
+                                <option value="blue">Electric Blue (Free Delivery 🚚)</option>
+                                <option value="pink">Party Pink (Celebration 🎉)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Hidden actual color storage -->
+                    <input type="hidden" id="couponInputTagColor" value="#15803d">
+                    <input type="hidden" id="couponInputTagBg" value="#dcfce7">
+
+                    <!-- Description / Terms -->
+                    <div class="form-group" style="margin-top: 4px;">
+                        <label>Description & Terms</label>
+                        <textarea id="couponInputDesc" rows="2"
+                            placeholder="e.g. Enjoy 25% OFF on handmade chocolates, birthday cakes and cupcakes"
+                            oninput="updateCouponModalPreview()">Save on handcrafted cakes, artisan chocolates and sweet treats</textarea>
+                    </div>
+
+                    <!-- Special Conditions & Active Switch -->
+                    <div class="form-row-2" style="margin-top: 8px;">
+                        <div style="background: rgba(124, 92, 252, 0.08); border: 1px solid rgba(124, 92, 252, 0.2); border-radius: 12px; padding: 12px 14px;">
+                            <label class="checkbox-label" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin: 0;">
+                                <div>
+                                    <strong style="font-size: 13px; color: #a78bfa; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-graduation-cap"></i> Students Only
+                                    </strong>
+                                    <span style="font-size: 11.5px; color: var(--text-muted); display: block; margin-top: 2px;">
+                                        Requires student verification badge
+                                    </span>
+                                </div>
+                                <input type="checkbox" id="couponInputIsStudent" onchange="updateCouponModalPreview()" style="width: 18px; height: 18px; cursor: pointer;">
+                            </label>
+                        </div>
+
+                        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 12px 14px;">
+                            <label class="checkbox-label" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin: 0;">
+                                <div>
+                                    <strong style="font-size: 13px; color: #34d399; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-circle-check"></i> Published & Active
+                                    </strong>
+                                    <span style="font-size: 11.5px; color: var(--text-muted); display: block; margin-top: 2px;">
+                                        Available in customer cart immediately
+                                    </span>
+                                </div>
+                                <input type="checkbox" id="couponInputIsActive" checked onchange="updateCouponModalPreview()" style="width: 18px; height: 18px; cursor: pointer;">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Live Customer Cart Preview Sandbox -->
+                    <div class="modal-preview-section" style="margin-top: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 12px; font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px;">
+                                <i class="fa-solid fa-eye" style="color: #10b981;"></i> Customer Cart Live Preview
+                            </span>
+                            <span style="font-size: 11px; color: var(--text-muted);">How customers see this offer in their cart</span>
+                        </div>
+                        <div id="couponModalLivePreview" class="coupon-preview-container" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 14px;">
+                            <!-- Populated in real-time by updateCouponModalPreview() -->
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="modal-footer"
+                        style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-color);">
+                        <button type="button" class="modal-btn secondary"
+                            onclick="closeAdminModal('couponModal')">Cancel</button>
+                        <button type="submit" class="modal-btn primary" id="btnSaveCoupon"
+                            style="background: linear-gradient(135deg, #10b981, #059669); border-color: #059669;">
+                            <i class="fa-solid fa-check"></i> Save & Publish Coupon
                         </button>
                     </div>
                 </form>

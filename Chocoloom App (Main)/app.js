@@ -2265,6 +2265,15 @@ async function loadServerCatalogOverrides() {
                                 hasChanges = true;
                             }
                         }
+                        if (data.coupons && Array.isArray(data.coupons) && data.coupons.length > 0) {
+                            const curC = localStorage.getItem("chocoloom_custom_coupons");
+                            const nextC = JSON.stringify(data.coupons);
+                            if (curC !== nextC) {
+                                localStorage.setItem("chocoloom_custom_coupons", nextC);
+                                if (typeof window.loadDynamicCoupons === "function") window.loadDynamicCoupons();
+                                hasChanges = true;
+                            }
+                        }
                         // Always ensure catalog state is synchronized and UI reflects latest overrides
                         if (typeof window.invalidateProductsCache === "function") window.invalidateProductsCache();
                         if (typeof syncLiveCatalogState === "function") syncLiveCatalogState();
@@ -7734,41 +7743,63 @@ function updateCartUI() {
     const secureCharges = 15;
 
     let couponDiscount = 0;
-    if (AppState.activeCoupon === 'UNICHOCO' || AppState.activeCoupon === 'STUDENT25') {
-        if (typeof isStudentUser === 'function' && !isStudentUser()) {
-            AppState.activeCoupon = null; // UNICHOCO is strictly for students only!
-        } else if (itemTotal >= 149) {
-            couponDiscount = Math.min(200, Math.round(itemTotal * 0.25));
+    if (AppState.activeCoupon) {
+        const activeClean = String(AppState.activeCoupon).trim().toUpperCase();
+        const dynMatch = (window.AVAILABLE_COUPONS || []).find(c => c && c.code && c.code.toUpperCase() === activeClean);
+        if (dynMatch) {
+            if (dynMatch.isStudent && typeof isStudentUser === 'function' && !isStudentUser()) {
+                AppState.activeCoupon = null;
+            } else if (itemTotal >= (dynMatch.minOrder || 0)) {
+                if (typeof dynMatch.calcDiscount === 'function') {
+                    couponDiscount = dynMatch.calcDiscount(itemTotal);
+                } else if (dynMatch.discountType === 'percent') {
+                    couponDiscount = Math.min(Number(dynMatch.maxDiscount) || Infinity, Math.round(itemTotal * (Number(dynMatch.discountPercent || 0) / 100)));
+                } else if (dynMatch.discountType === 'freeship') {
+                    couponDiscount = deliveryFee;
+                } else {
+                    couponDiscount = Number(dynMatch.fixedOff || 0);
+                }
+            }
         }
-    } else if (AppState.activeCoupon === 'DIWALI40' || AppState.activeCoupon === 'DIWALI') {
-        const diwaliStatus = (typeof window.getDiwaliOfferStatus === 'function') ? window.getDiwaliOfferStatus() : { isActive: false, state: 'UPCOMING' };
-        if (!diwaliStatus.isActive) {
-            AppState.activeCoupon = null; // DIWALI40 is strictly valid Nov 7 to Nov 9 only!
-        } else if (itemTotal >= 249) {
-            couponDiscount = Math.min(300, Math.round(itemTotal * 0.40));
-        }
-    } else if (AppState.activeCoupon === 'DIWALI250') {
-        const diwaliStatus = (typeof window.getDiwaliOfferStatus === 'function') ? window.getDiwaliOfferStatus() : { isActive: false, state: 'UPCOMING' };
-        if (!diwaliStatus.isActive) {
-            AppState.activeCoupon = null;
-        } else if (itemTotal >= 699) {
-            couponDiscount = 250;
-        }
-    } else if (AppState.activeCoupon === 'CHOCO50' || AppState.activeCoupon === 'TOMBOLA50' || AppState.activeCoupon === 'TOMBOLA' || AppState.activeCoupon === 'CHOCOLOOM50') {
-        if (itemTotal >= 149) {
-            couponDiscount = Math.min(150, Math.round(itemTotal * 0.50));
-        }
-    } else if (AppState.activeCoupon === 'CHOCO100') {
-        if (itemTotal >= 499) {
-            couponDiscount = 100;
-        }
-    } else if (AppState.activeCoupon === 'FREESHIP' || AppState.activeCoupon === 'FREEDEL') {
-        if (itemTotal >= 299) {
-            couponDiscount = deliveryFee;
-        }
-    } else if (AppState.activeCoupon === 'PARTY20') {
-        if (itemTotal >= 799) {
-            couponDiscount = Math.min(300, Math.round(itemTotal * 0.20));
+    }
+
+    if (couponDiscount === 0 && AppState.activeCoupon) {
+        if (AppState.activeCoupon === 'UNICHOCO' || AppState.activeCoupon === 'STUDENT25') {
+            if (typeof isStudentUser === 'function' && !isStudentUser()) {
+                AppState.activeCoupon = null; // UNICHOCO is strictly for students only!
+            } else if (itemTotal >= 149) {
+                couponDiscount = Math.min(200, Math.round(itemTotal * 0.25));
+            }
+        } else if (AppState.activeCoupon === 'DIWALI40' || AppState.activeCoupon === 'DIWALI') {
+            const diwaliStatus = (typeof window.getDiwaliOfferStatus === 'function') ? window.getDiwaliOfferStatus() : { isActive: false, state: 'UPCOMING' };
+            if (!diwaliStatus.isActive) {
+                AppState.activeCoupon = null; // DIWALI40 is strictly valid Nov 7 to Nov 9 only!
+            } else if (itemTotal >= 249) {
+                couponDiscount = Math.min(300, Math.round(itemTotal * 0.40));
+            }
+        } else if (AppState.activeCoupon === 'DIWALI250') {
+            const diwaliStatus = (typeof window.getDiwaliOfferStatus === 'function') ? window.getDiwaliOfferStatus() : { isActive: false, state: 'UPCOMING' };
+            if (!diwaliStatus.isActive) {
+                AppState.activeCoupon = null;
+            } else if (itemTotal >= 699) {
+                couponDiscount = 250;
+            }
+        } else if (AppState.activeCoupon === 'CHOCO50' || AppState.activeCoupon === 'TOMBOLA50' || AppState.activeCoupon === 'TOMBOLA' || AppState.activeCoupon === 'CHOCOLOOM50') {
+            if (itemTotal >= 149) {
+                couponDiscount = Math.min(150, Math.round(itemTotal * 0.50));
+            }
+        } else if (AppState.activeCoupon === 'CHOCO100') {
+            if (itemTotal >= 499) {
+                couponDiscount = 100;
+            }
+        } else if (AppState.activeCoupon === 'FREESHIP' || AppState.activeCoupon === 'FREEDEL') {
+            if (itemTotal >= 299) {
+                couponDiscount = deliveryFee;
+            }
+        } else if (AppState.activeCoupon === 'PARTY20') {
+            if (itemTotal >= 799) {
+                couponDiscount = Math.min(300, Math.round(itemTotal * 0.20));
+            }
         }
     }
 
@@ -8334,6 +8365,68 @@ window.AVAILABLE_COUPONS = [
     }
 ];
 
+window.BASE_AVAILABLE_COUPONS = JSON.parse(JSON.stringify(window.AVAILABLE_COUPONS));
+
+window.loadDynamicCoupons = function () {
+    try {
+        const stored = localStorage.getItem('chocoloom_custom_coupons');
+        let customCoupons = [];
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    customCoupons = parsed;
+                }
+            } catch (e) { }
+        }
+
+        if (Array.isArray(customCoupons) && customCoupons.length > 0) {
+            const map = new Map();
+            customCoupons.forEach(c => {
+                if (c && c.code) {
+                    const code = c.code.trim().toUpperCase();
+                    map.set(code, {
+                        code: code,
+                        title: c.title || `${code} Special`,
+                        tag: c.tag || 'PROMO DEAL ✨',
+                        tagColor: c.tagColor || '#15803d',
+                        tagBg: c.tagBg || '#dcfce7',
+                        icon: c.icon || 'fa-solid fa-tag',
+                        minOrder: Number(c.minOrder) || 0,
+                        isStudent: Boolean(c.isStudent),
+                        isActive: c.isActive !== false,
+                        discountType: c.discountType || 'percent',
+                        discountPercent: Number(c.discountPercent) || 0,
+                        maxDiscount: Number(c.maxDiscount) || 0,
+                        fixedOff: Number(c.fixedOff) || 0,
+                        calcDiscount: (total) => {
+                            if (c.discountType === 'percent') {
+                                return Math.min(Number(c.maxDiscount) || Infinity, Math.round(total * (Number(c.discountPercent || 0) / 100)));
+                            } else if (c.discountType === 'freeship') {
+                                return 35;
+                            } else {
+                                return Number(c.fixedOff || 0);
+                            }
+                        },
+                        desc: c.description || c.desc || 'Valid on all handcrafted cakes and desserts'
+                    });
+                }
+            });
+
+            // Keep any base coupons not overridden
+            (window.BASE_AVAILABLE_COUPONS || []).forEach(bc => {
+                if (!map.has(bc.code.toUpperCase())) {
+                    map.set(bc.code.toUpperCase(), bc);
+                }
+            });
+
+            window.AVAILABLE_COUPONS = Array.from(map.values()).filter(c => c.isActive !== false);
+        }
+    } catch (e) { }
+};
+
+try { window.loadDynamicCoupons(); } catch (e) { }
+
 window.renderAllAvailableCouponsHTML = function (itemTotal) {
     const list = window.AVAILABLE_COUPONS || [];
     return list.map(c => {
@@ -8493,6 +8586,29 @@ window.applySpecificCoupon = function (code) {
         updateCartUI();
         if (typeof showToast === 'function') {
             showToast('🎉 PARTY20 applied! Flat 20% OFF up to ₹300', 'fa-solid fa-tags', '#16a34a');
+        }
+        return true;
+    }
+
+    // Dynamic or Admin-Created Coupons
+    const dynCoupon = (window.AVAILABLE_COUPONS || []).find(c => c && c.code && c.code.toUpperCase() === clean);
+    if (dynCoupon) {
+        if (dynCoupon.isStudent && typeof isStudentUser === 'function' && !isStudentUser()) {
+            if (typeof showToast === 'function') {
+                showToast(`🎓 Coupon ${clean} is strictly for verified students!`, 'fa-solid fa-graduation-cap', '#7e22ce');
+            }
+            return false;
+        }
+        if (itemTotal < (dynCoupon.minOrder || 0)) {
+            if (typeof showToast === 'function') {
+                showToast(`Add items worth ₹${(dynCoupon.minOrder - itemTotal)} more to unlock ${clean}!`, 'fa-solid fa-bag-shopping', '#f59e0b');
+            }
+        }
+        AppState.activeCoupon = clean;
+        AppState.showAllCoupons = false;
+        updateCartUI();
+        if (typeof showToast === 'function') {
+            showToast(`✨ ${clean} applied! ${dynCoupon.title || ''}`, 'fa-solid fa-tag', '#16a34a');
         }
         return true;
     }

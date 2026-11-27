@@ -149,6 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'customProducts' => $mergedCustoms,
         'deletedProducts' => array_values(array_unique(array_merge($existing['deletedProducts'] ?? [], $payload['deletedProducts'] ?? []))),
         'banners' => isset($payload['banners']) ? $payload['banners'] : ($existing['banners'] ?? []),
+        'coupons' => isset($payload['coupons']) ? $payload['coupons'] : ($existing['coupons'] ?? []),
         'store_status' => isset($payload['store_status']) ? $payload['store_status'] : ($existing['store_status'] ?? 'open')
     ];
 

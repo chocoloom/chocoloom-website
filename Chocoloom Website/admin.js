@@ -151,6 +151,9 @@ const AdminState = {
     bannersSearchQuery: '',
     bannersPreviewDevice: 'desktop',
     modalPreviewDevice: 'desktop',
+    coupons: [],
+    couponsFilter: 'ALL',
+    couponsSearchQuery: '',
     soundEnabled: localStorage.getItem('chocoloom_admin_sound') !== 'false',
     storeOpen: localStorage.getItem('chocoloom_store_status') !== 'closed',
     supabaseConnected: false,
@@ -2507,21 +2510,25 @@ window.switchAdminTab = function (tabName) {
     const mobOrders = document.getElementById('mobNavOrders');
     const mobCards = document.getElementById('mobNavCards');
     const mobProds = document.getElementById('mobNavProducts');
+    const mobCoupons = document.getElementById('mobNavCoupons');
     const mobAds = document.getElementById('mobNavAds');
     if (mobOrders) mobOrders.classList.toggle('active', tabName === 'orders');
     if (mobCards) mobCards.classList.toggle('active', tabName === 'cards');
     if (mobProds) mobProds.classList.toggle('active', tabName === 'products');
+    if (mobCoupons) mobCoupons.classList.toggle('active', tabName === 'coupons');
     if (mobAds) mobAds.classList.toggle('active', tabName === 'advertisements');
     AdminState.currentTab = tabName;
     const ordersNav = document.getElementById("tabNavOrders");
     const prodsNav = document.getElementById("tabNavProducts");
     const adsNav = document.getElementById("tabNavAdvertisements");
+    const couponsNav = document.getElementById("tabNavCoupons");
     const cardsNav = document.getElementById("tabNavCards");
     const usersNav = document.getElementById("tabNavUsers");
 
     const ordersView = document.getElementById("ordersViewSection");
     const prodsView = document.getElementById("productsViewSection");
     const adsView = document.getElementById("advertisementsViewSection");
+    const couponsView = document.getElementById("couponsViewSection");
     const cardsView = document.getElementById("cardsViewSection");
     const usersView = document.getElementById("usersViewSection");
     const searchInput = document.getElementById("searchOrdersInput");
@@ -2529,12 +2536,14 @@ window.switchAdminTab = function (tabName) {
     if (ordersNav) ordersNav.classList.toggle("active", tabName === "orders");
     if (prodsNav) prodsNav.classList.toggle("active", tabName === "products");
     if (adsNav) adsNav.classList.toggle("active", tabName === "advertisements");
+    if (couponsNav) couponsNav.classList.toggle("active", tabName === "coupons");
     if (cardsNav) cardsNav.classList.toggle("active", tabName === "cards");
     if (usersNav) usersNav.classList.toggle("active", tabName === "users");
 
     if (ordersView) ordersView.classList.toggle("active", tabName === "orders");
     if (prodsView) prodsView.classList.toggle("active", tabName === "products");
     if (adsView) adsView.classList.toggle("active", tabName === "advertisements");
+    if (couponsView) couponsView.classList.toggle("active", tabName === "coupons");
     if (cardsView) cardsView.classList.toggle("active", tabName === "cards");
     if (usersView) usersView.classList.toggle("active", tabName === "users");
 
@@ -2547,6 +2556,9 @@ window.switchAdminTab = function (tabName) {
     } else if (tabName === "advertisements") {
         if (searchInput) searchInput.placeholder = "Search advertisements by title, tag, code...";
         loadAllBanners();
+    } else if (tabName === "coupons") {
+        if (searchInput) searchInput.placeholder = "Search coupons by code, title, tag, discount...";
+        loadAllCoupons();
     } else if (tabName === "users") {
         if (searchInput) searchInput.placeholder = "Search registered users...";
         if (typeof loadAllUsers === 'function') loadAllUsers();
@@ -4762,6 +4774,7 @@ async function syncCatalogToServer() {
             customProducts: JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]"),
             deletedProducts: JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]"),
             banners: JSON.parse(localStorage.getItem("chocoloom_banners") || "[]"),
+            coupons: JSON.parse(localStorage.getItem("chocoloom_custom_coupons") || "[]"),
             store_status: localStorage.getItem("chocoloom_store_status") || "open",
             updated_at: new Date().toISOString()
         };
@@ -6057,6 +6070,7 @@ window.verifyPin = function () {
         try { loadAllOrders(); } catch (e) { console.error("Error loading orders:", e); }
         try { loadAllProducts(); } catch (e) { console.error("Error loading products:", e); }
         try { if (typeof loadAllBanners === 'function') loadAllBanners(true); } catch (e) { console.error("Error loading banners:", e); }
+        try { if (typeof loadAllCoupons === 'function') loadAllCoupons(true); } catch (e) { console.error("Error loading coupons:", e); }
         try { if (typeof loadAllCardOrders === 'function') loadAllCardOrders(); } catch (e) { console.error("Error loading card orders:", e); }
     } else {
         // Incorrect PIN
@@ -6275,6 +6289,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadAllOrders();
         loadAllProducts();
         loadAllBanners(true);
+        loadAllCoupons(true);
     }
 
     // Request notification permission smoothly
@@ -7636,12 +7651,13 @@ window.syncBannersToServer = async function (notify = false) {
 
 // 1-Click Export / Download catalog_overrides.json directly
 window.exportCatalogOverridesFile = function () {
-    let existing = { overrides: {}, customProducts: [], deletedProducts: [], banners: [] };
+    let existing = { overrides: {}, customProducts: [], deletedProducts: [], banners: [], coupons: [] };
     try {
         existing.overrides = JSON.parse(localStorage.getItem("chocoloom_price_overrides") || "{}");
         existing.customProducts = JSON.parse(localStorage.getItem("chocoloom_custom_products") || "[]");
         existing.deletedProducts = JSON.parse(localStorage.getItem("chocoloom_deleted_products") || "[]");
         existing.banners = AdminState.banners || JSON.parse(localStorage.getItem("chocoloom_banners") || "[]");
+        existing.coupons = AdminState.coupons || JSON.parse(localStorage.getItem("chocoloom_custom_coupons") || "[]");
         existing.updated_at = new Date().toISOString();
     } catch (e) { }
 
@@ -7656,5 +7672,723 @@ window.exportCatalogOverridesFile = function () {
     URL.revokeObjectURL(url);
     showToast("💾 catalog_overrides.json downloaded!", "fa-solid fa-file-arrow-down", "#10b981");
 };
+
+// ==================== DISCOUNT COUPONS & PROMO OFFERS ENGINE ====================
+
+const DEFAULT_COUPONS = [
+    {
+        id: "c_unichoco",
+        code: "UNICHOCO",
+        title: "Flat 25% OFF up to ₹200",
+        discountType: "percent",
+        discountPercent: 25,
+        maxDiscount: 200,
+        fixedOff: 0,
+        minOrder: 149,
+        description: "Exclusive campus discount for verified college students on all treats",
+        tag: "STUDENTS ONLY 🎓",
+        tagColor: "#7e22ce",
+        tagBg: "#f3e8ff",
+        icon: "fa-solid fa-graduation-cap",
+        isActive: true,
+        isStudent: true
+    },
+    {
+        id: "c_choco50",
+        code: "CHOCO50",
+        title: "Flat 50% OFF up to ₹150",
+        discountType: "percent",
+        discountPercent: 50,
+        maxDiscount: 150,
+        fixedOff: 0,
+        minOrder: 149,
+        description: "Enjoy 50% OFF on handmade chocolates, cupcakes & celebration treats",
+        tag: "HOT DEAL 🔥",
+        tagColor: "#dc2626",
+        tagBg: "#fee2e2",
+        icon: "fa-solid fa-fire",
+        isActive: true,
+        isStudent: false
+    },
+    {
+        id: "c_tombola50",
+        code: "TOMBOLA50",
+        title: "Flat 50% OFF up to ₹150",
+        discountType: "percent",
+        discountPercent: 50,
+        maxDiscount: 150,
+        fixedOff: 0,
+        minOrder: 149,
+        description: "50% OFF Community Tombola Lucky Winner Special!",
+        tag: "LUCKY DRAW 🎟️",
+        tagColor: "#d97706",
+        tagBg: "#fef3c7",
+        icon: "fa-solid fa-ticket",
+        isActive: true,
+        isStudent: false
+    },
+    {
+        id: "c_choco100",
+        code: "CHOCO100",
+        title: "Flat ₹100 Instant OFF",
+        discountType: "flat",
+        discountPercent: 0,
+        maxDiscount: 100,
+        fixedOff: 100,
+        minOrder: 499,
+        description: "Flat ₹100 discount on artisanal birthday cakes and celebration bakes",
+        tag: "FLAT ₹100 OFF 💰",
+        tagColor: "#15803d",
+        tagBg: "#dcfce7",
+        icon: "fa-solid fa-money-bill-wave",
+        isActive: true,
+        isStudent: false
+    },
+    {
+        id: "c_freeship",
+        code: "FREESHIP",
+        title: "Free Delivery (Save ₹35)",
+        discountType: "freeship",
+        discountPercent: 0,
+        maxDiscount: 35,
+        fixedOff: 35,
+        minOrder: 299,
+        description: "Get fast doorstep delivery with zero delivery fee on orders ₹299+",
+        tag: "ZERO DELIVERY 🚚",
+        tagColor: "#0369a1",
+        tagBg: "#e0f2fe",
+        icon: "fa-solid fa-truck-fast",
+        isActive: true,
+        isStudent: false
+    },
+    {
+        id: "c_party20",
+        code: "PARTY20",
+        title: "Flat 20% OFF up to ₹300",
+        discountType: "percent",
+        discountPercent: 20,
+        maxDiscount: 300,
+        fixedOff: 0,
+        minOrder: 799,
+        description: "Save 20% on big party orders, multi-tiered cakes & party packs",
+        tag: "PARTY SPECIAL 🎉",
+        tagColor: "#c026d3",
+        tagBg: "#fae8ff",
+        icon: "fa-solid fa-champagne-glasses",
+        isActive: true,
+        isStudent: false
+    }
+];
+
+// Load all coupons from LocalStorage, catalog_overrides.json or Defaults
+window.loadAllCoupons = async function (silent = false) {
+    let couponsList = [];
+
+    // 1. LocalStorage
+    try {
+        const stored = localStorage.getItem('chocoloom_custom_coupons');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                couponsList = parsed;
+            }
+        }
+    } catch (e) { }
+
+    // 2. Fallback to catalog_overrides.json / save_catalog.php
+    if (!couponsList.length) {
+        try {
+            const endpoints = ['catalog_overrides.json', 'save_catalog.php', '../save_catalog.php'];
+            for (const ep of endpoints) {
+                try {
+                    const res = await fetch(ep + '?v=' + Date.now());
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && Array.isArray(data.coupons) && data.coupons.length > 0) {
+                            couponsList = data.coupons;
+                            break;
+                        }
+                    }
+                } catch (err) { }
+            }
+        } catch (e) { }
+    }
+
+    // 3. Fallback to DEFAULT_COUPONS
+    if (!couponsList.length) {
+        couponsList = JSON.parse(JSON.stringify(DEFAULT_COUPONS));
+    }
+
+    // Sanitize & map properties
+    couponsList = couponsList.map(c => {
+        return {
+            id: c.id || ('coupon_' + (c.code || Date.now()).toLowerCase().replace(/[^a-z0-9]/g, '_')),
+            code: (c.code || '').trim().toUpperCase(),
+            title: c.title || `${c.code} Discount`,
+            discountType: c.discountType || (c.fixedOff ? (c.fixedOff === 35 && c.code.includes('FREE') ? 'freeship' : 'flat') : 'percent'),
+            discountPercent: Number(c.discountPercent) || 0,
+            maxDiscount: Number(c.maxDiscount) || 0,
+            fixedOff: Number(c.fixedOff) || 0,
+            minOrder: Number(c.minOrder) || 0,
+            description: c.description || c.desc || '',
+            tag: c.tag || 'PROMO DEAL ✨',
+            tagColor: c.tagColor || '#15803d',
+            tagBg: c.tagBg || '#dcfce7',
+            icon: c.icon || 'fa-solid fa-tag',
+            isActive: c.isActive !== false,
+            isStudent: Boolean(c.isStudent),
+            validTill: c.validTill || ''
+        };
+    });
+
+    AdminState.coupons = couponsList;
+
+    try {
+        localStorage.setItem('chocoloom_custom_coupons', JSON.stringify(AdminState.coupons));
+    } catch (e) { }
+
+    updateCouponsKPIs();
+
+    if (!silent || AdminState.currentTab === 'coupons') {
+        renderCouponsGrid();
+    }
+};
+
+// Update KPIs & Sidebar Badge
+window.updateCouponsKPIs = function () {
+    const coupons = AdminState.coupons || [];
+    const activeCount = coupons.filter(c => c.isActive !== false).length;
+    const percentCount = coupons.filter(c => c.discountType === 'percent').length;
+    const flatCount = coupons.filter(c => c.discountType === 'flat' || c.discountType === 'freeship').length;
+    const studentCount = coupons.filter(c => c.isStudent).length;
+
+    const badge = document.getElementById('sidebarCouponsBadge');
+    if (badge) badge.textContent = activeCount;
+
+    const elTotal = document.getElementById('statTotalCoupons');
+    if (elTotal) elTotal.textContent = coupons.length;
+
+    const elActive = document.getElementById('statActiveCoupons');
+    if (elActive) elActive.textContent = activeCount;
+
+    const elPercent = document.getElementById('statPercentCoupons');
+    if (elPercent) elPercent.textContent = percentCount;
+
+    const elFlat = document.getElementById('statFlatCoupons');
+    if (elFlat) elFlat.textContent = flatCount;
+
+    const elStudent = document.getElementById('statStudentCoupons');
+    if (elStudent) elStudent.textContent = studentCount;
+};
+
+// Render Coupons Grid
+window.renderCouponsGrid = function () {
+    const container = document.getElementById('couponsGridContainer');
+    if (!container) return;
+
+    let coupons = AdminState.coupons || [];
+
+    // Filter by Active Filter Pill
+    const filter = AdminState.couponsFilter || 'ALL';
+    if (filter === 'ACTIVE') {
+        coupons = coupons.filter(c => c.isActive !== false);
+    } else if (filter === 'PERCENT') {
+        coupons = coupons.filter(c => c.discountType === 'percent');
+    } else if (filter === 'FLAT') {
+        coupons = coupons.filter(c => c.discountType === 'flat');
+    } else if (filter === 'FREESHIP') {
+        coupons = coupons.filter(c => c.discountType === 'freeship');
+    } else if (filter === 'STUDENT') {
+        coupons = coupons.filter(c => c.isStudent);
+    } else if (filter === 'INACTIVE') {
+        coupons = coupons.filter(c => c.isActive === false);
+    }
+
+    // Filter by Search Query
+    const q = (AdminState.couponsSearchQuery || '').trim().toLowerCase();
+    if (q) {
+        coupons = coupons.filter(c => {
+            return (c.code && c.code.toLowerCase().includes(q)) ||
+                   (c.title && c.title.toLowerCase().includes(q)) ||
+                   (c.tag && c.tag.toLowerCase().includes(q)) ||
+                   (c.description && c.description.toLowerCase().includes(q));
+        });
+    }
+
+    if (coupons.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 16px;">
+                <div style="width: 56px; height: 56px; margin: 0 auto 14px; background: rgba(16, 185, 129, 0.1); color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                    <i class="fa-solid fa-tags"></i>
+                </div>
+                <h4 style="font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">No Coupons Found</h4>
+                <p style="font-size: 13px; color: #64748b; max-width: 420px; margin: 0 auto 18px;">
+                    ${q ? `No discount coupons matched "${escapeHtml(q)}". Try a different search keyword.` : 'Create your first promotional discount coupon code for your customers.'}
+                </p>
+                <button type="button" class="header-btn primary" onclick="openAddCouponModal()" style="margin: 0 auto; background: linear-gradient(135deg, #10b981, #059669);">
+                    <i class="fa-solid fa-plus"></i> + Create First Coupon
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = coupons.map(c => {
+        const isActive = c.isActive !== false;
+        let discountDisplay = '';
+        let discountTypeClass = '';
+        if (c.discountType === 'percent') {
+            discountDisplay = `${c.discountPercent}% OFF (Max ₹${c.maxDiscount})`;
+            discountTypeClass = 'is-percent';
+        } else if (c.discountType === 'freeship') {
+            discountDisplay = `Free Delivery (Save ₹35)`;
+            discountTypeClass = 'is-freeship';
+        } else {
+            discountDisplay = `Flat ₹${c.fixedOff} OFF`;
+            discountTypeClass = '';
+        }
+        if (c.isStudent) discountTypeClass += ' is-student';
+
+        return `
+            <div class="coupon-admin-card ${isActive ? '' : 'inactive'} ${discountTypeClass}" id="couponCard_${c.id}">
+                <div class="coupon-card-header">
+                    <div class="coupon-code-pill" title="Click to copy code">
+                        <i class="fa-solid fa-tag" style="color: var(--primary); font-size: 12px;"></i>
+                        <span>${escapeHtml(c.code)}</span>
+                        <button type="button" class="copy-icon-btn" onclick="copyCouponCode('${escapeHtml(c.code)}')" title="Copy Coupon Code">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="coupon-status-indicator ${isActive ? 'active' : 'inactive'}">
+                            <i class="${isActive ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-pause'}"></i>
+                            ${isActive ? 'Active' : 'Paused'}
+                        </span>
+                        <label class="coupon-toggle-switch" title="Toggle Active / Paused">
+                            <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleCouponStatus('${c.id}')">
+                            <span class="coupon-toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="coupon-card-body">
+                    <span class="coupon-tag-badge" style="color: ${escapeHtml(c.tagColor || '#15803d')}; background: ${escapeHtml(c.tagBg || '#dcfce7')};">
+                        ${escapeHtml(c.tag || 'OFFER')}
+                    </span>
+
+                    <h4 class="coupon-card-title">${escapeHtml(c.title)}</h4>
+                    <p class="coupon-card-desc">${escapeHtml(c.description || 'Valid on all handcrafted cakes and desserts')}</p>
+
+                    <div class="coupon-metrics-row">
+                        <span class="coupon-metric-pill" title="Discount value">
+                            <i class="fa-solid fa-badge-percent" style="color: #10b981;"></i>
+                            ${discountDisplay}
+                        </span>
+                        <span class="coupon-metric-pill" title="Minimum cart total">
+                            <i class="fa-solid fa-cart-shopping" style="color: #64748b;"></i>
+                            Min Order: ₹${c.minOrder || 0}
+                        </span>
+                        ${c.isStudent ? `
+                            <span class="coupon-metric-pill" style="color: #7e22ce; background: #f3e8ff; border-color: #e9d5ff;" title="Student verification required">
+                                <i class="fa-solid fa-graduation-cap"></i> Students Only
+                            </span>
+                        ` : ''}
+                        ${c.validTill ? `
+                            <span class="coupon-metric-pill" style="color: #b45309; background: #fef3c7; border-color: #fde68a;" title="Expiry date">
+                                <i class="fa-regular fa-calendar"></i> Expires: ${c.validTill}
+                            </span>
+                        ` : `
+                            <span class="coupon-metric-pill" style="color: #475569;" title="No expiry date">
+                                <i class="fa-regular fa-infinity"></i> No Expiration
+                            </span>
+                        `}
+                    </div>
+                </div>
+
+                <div class="coupon-card-footer">
+                    <div style="font-size: 11px; color: #94a3b8; font-weight: 600;">
+                        ID: ${c.id.slice(0, 14)}
+                    </div>
+                    <div class="coupon-card-actions">
+                        <button type="button" class="coupon-action-btn edit" onclick="openEditCouponModal('${c.id}')" title="Edit this coupon">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                        </button>
+                        <button type="button" class="coupon-action-btn delete" onclick="deleteCoupon('${c.id}')" title="Delete this coupon">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
+// Filter & Search Handlers
+window.filterCoupons = function (filter) {
+    AdminState.couponsFilter = filter;
+    document.querySelectorAll('[id^="couponFilter_"]').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById(`couponFilter_${filter}`);
+    if (activeBtn) activeBtn.classList.add('active');
+    renderCouponsGrid();
+};
+
+window.handleSearchCoupons = function (query) {
+    AdminState.couponsSearchQuery = query;
+    renderCouponsGrid();
+};
+
+// Copy Coupon Code
+window.copyCouponCode = function (code) {
+    if (!code) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(() => {
+            showToast(`📋 Coupon code "${code}" copied!`, 'fa-solid fa-copy', '#10b981');
+        }).catch(() => {
+            fallbackCopy(code);
+        });
+    } else {
+        fallbackCopy(code);
+    }
+
+    function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            showToast(`📋 Coupon code "${text}" copied!`, 'fa-solid fa-copy', '#10b981');
+        } catch (e) {
+            showToast(`Code: ${text}`, 'fa-solid fa-ticket', '#10b981');
+        }
+        document.body.removeChild(ta);
+    }
+};
+
+// Modal Operations
+window.openAddCouponModal = function () {
+    const modal = document.getElementById('couponModal');
+    if (!modal) return;
+
+    document.getElementById('couponModalHeaderTitle').innerHTML = '<i class="fa-solid fa-tags" style="color: #10b981;"></i> Create New Discount Coupon';
+    document.getElementById('couponInputId').value = '';
+    document.getElementById('couponInputCode').value = '';
+    document.getElementById('couponInputTitle').value = '';
+    document.getElementById('couponInputType').value = 'percent';
+    document.getElementById('couponInputPercent').value = '25';
+    document.getElementById('couponInputMaxDiscount').value = '200';
+    document.getElementById('couponInputFlatOff').value = '100';
+    document.getElementById('couponInputMinOrder').value = '149';
+    document.getElementById('couponInputExpiry').value = '';
+    document.getElementById('couponInputTag').value = 'SPECIAL DEAL ✨';
+    document.getElementById('couponInputTagPreset').value = 'green';
+    document.getElementById('couponInputTagColor').value = '#15803d';
+    document.getElementById('couponInputTagBg').value = '#dcfce7';
+    document.getElementById('couponInputDesc').value = 'Save on handcrafted cakes, artisan chocolates and sweet treats';
+    document.getElementById('couponInputIsStudent').checked = false;
+    document.getElementById('couponInputIsActive').checked = true;
+
+    handleCouponTypeChange();
+    updateCouponModalPreview();
+
+    modal.classList.add('open');
+};
+
+window.openEditCouponModal = function (couponId) {
+    const coupon = (AdminState.coupons || []).find(c => c.id === couponId);
+    if (!coupon) return;
+
+    const modal = document.getElementById('couponModal');
+    if (!modal) return;
+
+    document.getElementById('couponModalHeaderTitle').innerHTML = `<i class="fa-solid fa-pen-to-square" style="color: #10b981;"></i> Edit Coupon: ${escapeHtml(coupon.code)}`;
+    document.getElementById('couponInputId').value = coupon.id;
+    document.getElementById('couponInputCode').value = coupon.code;
+    document.getElementById('couponInputTitle').value = coupon.title;
+    document.getElementById('couponInputType').value = coupon.discountType || 'percent';
+    document.getElementById('couponInputPercent').value = coupon.discountPercent || 25;
+    document.getElementById('couponInputMaxDiscount').value = coupon.maxDiscount || 200;
+    document.getElementById('couponInputFlatOff').value = coupon.fixedOff || 100;
+    document.getElementById('couponInputMinOrder').value = coupon.minOrder || 0;
+    document.getElementById('couponInputExpiry').value = coupon.validTill || '';
+    document.getElementById('couponInputTag').value = coupon.tag || 'SPECIAL DEAL ✨';
+    document.getElementById('couponInputTagColor').value = coupon.tagColor || '#15803d';
+    document.getElementById('couponInputTagBg').value = coupon.tagBg || '#dcfce7';
+    document.getElementById('couponInputDesc').value = coupon.description || '';
+    document.getElementById('couponInputIsStudent').checked = Boolean(coupon.isStudent);
+    document.getElementById('couponInputIsActive').checked = coupon.isActive !== false;
+
+    handleCouponTypeChange();
+    updateCouponModalPreview();
+
+    modal.classList.add('open');
+};
+
+window.handleCouponTypeChange = function () {
+    const type = document.getElementById('couponInputType').value;
+    const groupPercent = document.getElementById('groupCouponPercent');
+    const groupMaxDisc = document.getElementById('groupCouponMaxDiscount');
+    const groupFlat = document.getElementById('groupCouponFlat');
+
+    if (type === 'percent') {
+        if (groupPercent) groupPercent.style.display = 'flex';
+        if (groupMaxDisc) groupMaxDisc.style.display = 'flex';
+        if (groupFlat) groupFlat.style.display = 'none';
+    } else if (type === 'flat') {
+        if (groupPercent) groupPercent.style.display = 'none';
+        if (groupMaxDisc) groupMaxDisc.style.display = 'none';
+        if (groupFlat) groupFlat.style.display = 'grid';
+    } else if (type === 'freeship') {
+        if (groupPercent) groupPercent.style.display = 'none';
+        if (groupMaxDisc) groupMaxDisc.style.display = 'none';
+        if (groupFlat) groupFlat.style.display = 'grid';
+    }
+};
+
+window.applyCouponTagPreset = function (preset) {
+    const presets = {
+        green: { color: '#15803d', bg: '#dcfce7', label: 'SAVINGS DEAL 💰' },
+        red: { color: '#dc2626', bg: '#fee2e2', label: 'HOT DEAL 🔥' },
+        purple: { color: '#7e22ce', bg: '#f3e8ff', label: 'STUDENTS ONLY 🎓' },
+        gold: { color: '#b45309', bg: '#fef3c7', label: 'FESTIVE SPECIAL 🪔' },
+        blue: { color: '#0369a1', bg: '#e0f2fe', label: 'ZERO DELIVERY 🚚' },
+        pink: { color: '#c026d3', bg: '#fae8ff', label: 'PARTY SPECIAL 🎉' }
+    };
+
+    const sel = presets[preset] || presets.green;
+    document.getElementById('couponInputTagColor').value = sel.color;
+    document.getElementById('couponInputTagBg').value = sel.bg;
+    if (!document.getElementById('couponInputTag').value || document.getElementById('couponInputTag').value === 'SPECIAL DEAL ✨') {
+        document.getElementById('couponInputTag').value = sel.label;
+    }
+};
+
+window.updateCouponModalPreview = function () {
+    const previewContainer = document.getElementById('couponModalLivePreview');
+    if (!previewContainer) return;
+
+    const code = (document.getElementById('couponInputCode')?.value || 'PROMOCODE').toUpperCase().trim();
+    const title = document.getElementById('couponInputTitle')?.value.trim() || 'Flat Discount Offer';
+    const desc = document.getElementById('couponInputDesc')?.value.trim() || 'Save on delicious handcrafted treats';
+    const tag = document.getElementById('couponInputTag')?.value.trim() || 'SPECIAL DEAL ✨';
+    const tagColor = document.getElementById('couponInputTagColor')?.value || '#15803d';
+    const tagBg = document.getElementById('couponInputTagBg')?.value || '#dcfce7';
+    const minOrder = Number(document.getElementById('couponInputMinOrder')?.value) || 0;
+    const isStudent = document.getElementById('couponInputIsStudent')?.checked;
+    const type = document.getElementById('couponInputType')?.value || 'percent';
+
+    let calcDesc = '';
+    if (type === 'percent') {
+        const pct = document.getElementById('couponInputPercent')?.value || '25';
+        const cap = document.getElementById('couponInputMaxDiscount')?.value || '200';
+        calcDesc = `Saves ${pct}% up to ₹${cap} on orders ₹${minOrder}+`;
+    } else if (type === 'freeship') {
+        calcDesc = `Free delivery saves ₹35 on orders ₹${minOrder}+`;
+    } else {
+        const flat = document.getElementById('couponInputFlatOff')?.value || '100';
+        calcDesc = `Flat ₹${flat} OFF instant savings on orders ₹${minOrder}+`;
+    }
+
+    previewContainer.innerHTML = `
+        <div class="cart-offer-card" style="margin: 0;">
+            <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+                    <span class="cart-offer-badge-code">
+                        <i class="fa-solid fa-tag" style="font-size: 10px; color: var(--primary);"></i> ${escapeHtml(code)}
+                    </span>
+                    <span style="font-size: 10px; font-weight: 800; color: ${escapeHtml(tagColor)}; background: ${escapeHtml(tagBg)}; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.3px;">
+                        ${escapeHtml(tag)}
+                    </span>
+                    ${isStudent ? `
+                        <span style="font-size: 10px; font-weight: 800; color: #7e22ce; background: #f3e8ff; padding: 2px 7px; border-radius: 4px;">
+                            🎓 Students Only
+                        </span>
+                    ` : ''}
+                </div>
+                <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 2px;">
+                    ${escapeHtml(title)}
+                </div>
+                <div style="font-size: 11px; color: #64748b; line-height: 1.35; margin-bottom: 4px;">
+                    ${escapeHtml(desc)}
+                </div>
+                <div style="font-size: 11px; color: #16a34a; font-weight: 700;">
+                    <i class="fa-solid fa-sparkles"></i> ${escapeHtml(calcDesc)}
+                </div>
+            </div>
+            <div style="flex-shrink: 0;">
+                <button type="button" class="cart-offer-apply-btn">
+                    APPLY
+                </button>
+            </div>
+        </div>
+    `;
+};
+
+// Save Coupon (Create or Edit)
+window.saveCoupon = async function (e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const idInput = document.getElementById('couponInputId').value;
+    const code = document.getElementById('couponInputCode').value.trim().toUpperCase();
+    const title = document.getElementById('couponInputTitle').value.trim();
+    const type = document.getElementById('couponInputType').value;
+    const percent = Number(document.getElementById('couponInputPercent').value) || 0;
+    const maxDiscount = Number(document.getElementById('couponInputMaxDiscount').value) || 0;
+    const flatOff = Number(document.getElementById('couponInputFlatOff').value) || 0;
+    const minOrder = Number(document.getElementById('couponInputMinOrder').value) || 0;
+    const expiry = document.getElementById('couponInputExpiry').value;
+    const tag = document.getElementById('couponInputTag').value.trim() || 'PROMO DEAL ✨';
+    const tagColor = document.getElementById('couponInputTagColor').value || '#15803d';
+    const tagBg = document.getElementById('couponInputTagBg').value || '#dcfce7';
+    const desc = document.getElementById('couponInputDesc').value.trim();
+    const isStudent = document.getElementById('couponInputIsStudent').checked;
+    const isActive = document.getElementById('couponInputIsActive').checked;
+
+    if (!code) {
+        showToast('Please enter a coupon code', 'fa-solid fa-triangle-exclamation', '#ef4444');
+        return;
+    }
+    if (!title) {
+        showToast('Please enter an offer title', 'fa-solid fa-triangle-exclamation', '#ef4444');
+        return;
+    }
+
+    const couponObj = {
+        id: idInput || ('c_' + code.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now().toString().slice(-4)),
+        code: code,
+        title: title,
+        discountType: type,
+        discountPercent: type === 'percent' ? percent : 0,
+        maxDiscount: type === 'percent' ? maxDiscount : (type === 'freeship' ? 35 : flatOff),
+        fixedOff: type === 'flat' ? flatOff : (type === 'freeship' ? 35 : 0),
+        minOrder: minOrder,
+        description: desc,
+        tag: tag,
+        tagColor: tagColor,
+        tagBg: tagBg,
+        icon: isStudent ? 'fa-solid fa-graduation-cap' : (type === 'freeship' ? 'fa-solid fa-truck-fast' : 'fa-solid fa-tag'),
+        isActive: isActive,
+        isStudent: isStudent,
+        validTill: expiry,
+        updatedAt: new Date().toISOString()
+    };
+
+    let coupons = AdminState.coupons || [];
+    const existingIdx = coupons.findIndex(c => c.id === couponObj.id || c.code === couponObj.code);
+
+    if (existingIdx >= 0) {
+        coupons[existingIdx] = { ...coupons[existingIdx], ...couponObj };
+    } else {
+        coupons.unshift(couponObj);
+    }
+
+    AdminState.coupons = coupons;
+
+    try {
+        localStorage.setItem('chocoloom_custom_coupons', JSON.stringify(AdminState.coupons));
+    } catch (err) { }
+
+    updateCouponsKPIs();
+    renderCouponsGrid();
+    closeAdminModal('couponModal');
+
+    showToast(`🎉 Coupon "${code}" saved & published!`, 'fa-solid fa-check', '#10b981');
+
+    syncCouponsToServer(false).catch(() => { });
+};
+
+// Toggle Coupon Status
+window.toggleCouponStatus = async function (couponId) {
+    const coupon = (AdminState.coupons || []).find(c => c.id === couponId);
+    if (!coupon) return;
+
+    coupon.isActive = !coupon.isActive;
+
+    try {
+        localStorage.setItem('chocoloom_custom_coupons', JSON.stringify(AdminState.coupons));
+    } catch (e) { }
+
+    updateCouponsKPIs();
+    renderCouponsGrid();
+
+    const statusText = coupon.isActive ? 'activated' : 'paused';
+    showToast(`Coupon "${coupon.code}" ${statusText}`, coupon.isActive ? 'fa-solid fa-circle-check' : 'fa-solid fa-pause', coupon.isActive ? '#10b981' : '#f59e0b');
+
+    syncCouponsToServer(false).catch(() => { });
+};
+
+// Delete Coupon
+window.deleteCoupon = async function (couponId) {
+    const coupon = (AdminState.coupons || []).find(c => c.id === couponId);
+    if (!coupon) return;
+
+    if (!confirm(`Are you sure you want to delete coupon "${coupon.code}"? Customers will no longer be able to use it.`)) {
+        return;
+    }
+
+    AdminState.coupons = (AdminState.coupons || []).filter(c => c.id !== couponId);
+
+    try {
+        localStorage.setItem('chocoloom_custom_coupons', JSON.stringify(AdminState.coupons));
+    } catch (e) { }
+
+    updateCouponsKPIs();
+    renderCouponsGrid();
+
+    showToast(`🗑️ Coupon "${coupon.code}" removed`, 'fa-solid fa-trash', '#ef4444');
+
+    syncCouponsToServer(false).catch(() => { });
+};
+
+// Reset to Default Coupons
+window.resetCouponsToDefault = function () {
+    if (!confirm("Reset all coupons back to Chocoloom default coupons (UNICHOCO, CHOCO50, TOMBOLA50, CHOCO100, FREESHIP, PARTY20)?")) {
+        return;
+    }
+
+    AdminState.coupons = JSON.parse(JSON.stringify(DEFAULT_COUPONS));
+
+    try {
+        localStorage.setItem('chocoloom_custom_coupons', JSON.stringify(AdminState.coupons));
+    } catch (e) { }
+
+    updateCouponsKPIs();
+    renderCouponsGrid();
+
+    showToast("🔄 Coupons reset to Chocoloom defaults!", "fa-solid fa-clock-rotate-left", "#7c5cfc");
+
+    syncCouponsToServer(false).catch(() => { });
+};
+
+// Sync Coupons to Server & Broadcast Channel
+window.syncCouponsToServer = async function (notify = false) {
+    try {
+        localStorage.setItem('chocoloom_custom_coupons', JSON.stringify(AdminState.coupons));
+
+        if (typeof syncCatalogToServer === 'function') {
+            await syncCatalogToServer();
+        }
+
+        if (broadcastChannel) {
+            broadcastChannel.postMessage({
+                type: 'COUPONS_UPDATED',
+                coupons: AdminState.coupons,
+                timestamp: Date.now()
+            });
+        }
+
+        if (notify) {
+            showToast('✅ Coupons synced to live website & cloud!', 'fa-solid fa-cloud-check', '#10b981');
+        }
+    } catch (err) {
+        if (notify) {
+            showToast('⚠️ Coupons saved locally in browser', 'fa-solid fa-info-circle', '#f59e0b');
+        }
+    }
+};
+
 
 
