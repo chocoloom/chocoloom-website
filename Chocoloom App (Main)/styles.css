@@ -5250,22 +5250,23 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
 
 /* 2. Center Pill Container (Liquid Glass Smoky Capsule) */
 .dock-main-pill {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.05) 45%, rgba(20, 20, 32, 0.12) 100%),
-                rgba(28, 28, 40, 0.38);
-    -webkit-backdrop-filter: blur(28px) saturate(190%);
-    backdrop-filter: blur(28px) saturate(190%);
-    border: 1px solid rgba(255, 255, 255, 0.26);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 45%, rgba(15, 15, 24, 0.25) 100%),
+                rgba(20, 20, 28, 0.85);
+    -webkit-backdrop-filter: blur(28px) saturate(200%);
+    backdrop-filter: blur(28px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     border-radius: 9999px;
     padding: 4px;
     height: 52px;
     display: flex;
     align-items: center;
     gap: 4px;
+    box-sizing: border-box;
     box-shadow: 
-        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.45),
-        inset 0 -1px 1.5px 0 rgba(0, 0, 0, 0.15),
-        0 12px 30px -4px rgba(0, 0, 0, 0.22),
-        0 4px 10px rgba(0, 0, 0, 0.10);
+        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.35),
+        inset 0 -1px 1.5px 0 rgba(0, 0, 0, 0.25),
+        0 12px 30px -4px rgba(0, 0, 0, 0.45),
+        0 4px 10px rgba(0, 0, 0, 0.25);
     flex-shrink: 0;
     position: relative;
     overflow: hidden;
@@ -5304,10 +5305,11 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
 
 /* Common Dock Item Buttons */
 .dock-tab-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 6px 18px;
+    padding: 0 18px;
     height: 44px;
     border: 1px solid transparent;
     background: transparent;
@@ -5317,6 +5319,7 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
     color: #e2e8f0;
     font-size: 13px;
     font-weight: 600;
+    line-height: 1;
     letter-spacing: -0.2px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
     transition: color 0.2s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
@@ -5324,7 +5327,14 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
     outline: none;
     white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
     z-index: 2;
+}
+
+.dock-tab-btn span:not(.dock-tab-icon) {
+    display: inline-block;
+    line-height: 1;
+    vertical-align: middle;
 }
 
 .dock-tab-btn:hover {
@@ -5372,13 +5382,13 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
 /* 3. Right Pill Container (Liquid Glass Smoky Capsule) */
 .dock-dining-pill,
 .dock-uni-pill {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.05) 45%, rgba(20, 20, 32, 0.12) 100%),
-                rgba(28, 28, 40, 0.38);
-    -webkit-backdrop-filter: blur(28px) saturate(190%);
-    backdrop-filter: blur(28px) saturate(190%);
-    border: 1px solid rgba(255, 255, 255, 0.26);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 45%, rgba(15, 15, 24, 0.25) 100%),
+                rgba(20, 20, 28, 0.85);
+    -webkit-backdrop-filter: blur(28px) saturate(200%);
+    backdrop-filter: blur(28px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     border-radius: 9999px;
-    padding: 0 15px !important;
+    padding: 0 16px !important;
     height: 52px !important;
     min-width: 82px !important;
     max-width: 96px !important;
@@ -5388,10 +5398,10 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
     justify-content: center !important;
     box-sizing: border-box !important;
     box-shadow: 
-        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.45),
-        inset 0 -1px 1.5px 0 rgba(0, 0, 0, 0.15),
-        0 12px 30px -4px rgba(0, 0, 0, 0.22),
-        0 4px 10px rgba(0, 0, 0, 0.10);
+        inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.35),
+        inset 0 -1px 1.5px 0 rgba(0, 0, 0, 0.25),
+        0 12px 30px -4px rgba(0, 0, 0, 0.45),
+        0 4px 10px rgba(0, 0, 0, 0.25);
     color: #ffffff;
     cursor: pointer;
     outline: none;
@@ -5413,11 +5423,6 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
         inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.55),
         0 14px 34px -4px rgba(0, 0, 0, 0.28);
 }
-    border-color: rgba(255, 255, 255, 0.25);
-    box-shadow: 
-        inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.45),
-        0 18px 46px -4px rgba(0, 0, 0, 0.6);
-}
 
 .dock-dining-pill:active,
 .dock-uni-pill:active {
@@ -5437,19 +5442,21 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
 
 /* One Badge Logo inside Right Pill */
 .dock-one-logo {
-    height: 28px !important;
-    width: 61px !important;
-    max-width: 61px !important;
-    max-height: 28px !important;
+    height: 26px !important;
+    width: auto !important;
+    max-width: 60px !important;
+    max-height: 26px !important;
     object-fit: contain !important;
     display: block !important;
     flex-shrink: 0 !important;
+    vertical-align: middle !important;
+    margin: 0 auto !important;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45)) !important;
     transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), filter 0.22s ease !important;
 }
 
 .dock-uni-pill {
-    padding: 0 15px !important;
+    padding: 0 16px !important;
     height: 52px !important;
     min-width: 82px !important;
     max-width: 96px !important;
@@ -5496,18 +5503,24 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
 
 /* Responsiveness on mobile devices */
 @media (max-width: 480px) {
+    .dock-main-pill,
+    .dock-dining-pill,
+    .dock-uni-pill {
+        height: 52px !important;
+    }
+
     .dock-one-logo {
-        height: 24px !important;
-        width: 52px !important;
-        max-width: 52px !important;
-        max-height: 24px !important;
+        height: 26px !important;
+        width: auto !important;
+        max-width: 58px !important;
+        max-height: 26px !important;
     }
 
     .dock-uni-pill {
-        padding: 0 12px !important;
-        height: 46px !important;
-        min-width: 68px !important;
-        max-width: 80px !important;
+        padding: 0 14px !important;
+        height: 52px !important;
+        min-width: 76px !important;
+        max-width: 90px !important;
     }
 }
 
@@ -5517,24 +5530,18 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
         gap: 6px;
     }
 
-    .dock-ai-circle {
-        width: 44px;
-        height: 44px;
-    }
-
-    .dock-ai-inner {
-        width: 38px;
-        height: 38px;
-    }
-
     .dock-main-pill,
     .dock-dining-pill,
     .dock-uni-pill {
         height: 46px !important;
     }
 
+    .dock-slider-thumb {
+        height: 38px !important;
+    }
+
     .dock-tab-btn {
-        padding: 5px 12px;
+        padding: 0 12px;
         font-size: 12px;
         height: 38px;
     }
@@ -5549,7 +5556,7 @@ body:has(.cart-drawer.open) .chocoloom-bottom-dock,
 
     .dock-one-logo {
         height: 22px !important;
-        width: 48px !important;
+        width: auto !important;
         max-width: 48px !important;
         max-height: 22px !important;
     }
